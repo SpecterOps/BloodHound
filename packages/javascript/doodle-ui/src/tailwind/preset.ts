@@ -36,8 +36,8 @@ export default {
             textColor: {
                 main: 'var(--text-main)',
                 light: 'var(--text-light)',
-                muted: 'var(--text-muted)',
-                disabled: 'var(--text-disabled)',
+                muted: 'var(--text-light)',
+                disabled: 'var(--disabled)',
                 contrast: 'var(--contrast)',
                 inverse: 'var(--text-contrast)',
                 faint: 'var(--text-faint)',
@@ -78,6 +78,14 @@ export default {
 
                 disabled: 'var(--disabled)',
                 contrast: 'var(--contrast)',
+
+                // Shared control and surface tokens
+                'border-control': 'var(--border-control)',
+                'control-accent': 'var(--control-accent)',
+                surface: 'var(--surface)',
+                'surface-subtle': 'var(--surface-subtle)',
+                'surface-hover': 'var(--surface-hover)',
+
                 link: 'var(--link-main)',
                 'link-hover': 'var(--link-hover)',
                 error: 'var(--error)',

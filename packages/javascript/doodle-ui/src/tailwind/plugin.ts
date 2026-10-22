@@ -57,6 +57,13 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--tertiary-variant': light.tertiary.variant,
             '--disabled': light.disabled,
 
+            // Shared control and surface tokens
+            '--border-control': palette.grey[700],
+            '--control-accent': 'var(--secondary)',
+            '--surface': common.white,
+            '--surface-subtle': palette.neutral.light[100],
+            '--surface-hover': palette.neutral.light[300],
+
             // // NEUTRALS
             '--neutral-50': palette.neutral.light[50],
             '--neutral-100': palette.neutral.light[100],
@@ -72,25 +79,21 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // TEXT
             '--text-main': common.dark,
             '--text-light': text.light,
-            '--text-muted': 'var(--text-light)',
             '--text-contrast': common.white,
-            '--text-disabled': light.text.disabled,
             '--text-faint': text.faint,
-            // '--text-primary': light.primary.main,
-            // '--text-secondary': light.secondary.main,
 
             // LINKS
-            '--link-main': light.secondary.main,
-            '--link-hover': light.secondary.variant,
+            '--link-main': 'var(--secondary)',
+            '--link-hover': 'var(--secondary-variant)',
 
             // FOCUS
-            '--focus-ring': light.secondary.main,
+            '--focus-ring': 'var(--secondary)',
             '--focus-ring-offset': common.white,
             '--focus-ring-width': focusRingWidth,
             '--focus-ring-offset-width': focusRingOffsetWidth,
 
             // // ELEVATION
-            // '--elevation-0': elevation.light[0],
+            '--elevation-0': elevation.light[0],
             '--elevation-1': elevation.light[1],
             '--elevation-2': elevation.light[2],
             '--elevation-3': elevation.light[3],
@@ -113,14 +116,14 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': light.status.indeterminate.fill,
 
             // // BRAND COLORS
-            '--bhe-main': light.primary.main,
-            // '--sp-main': light.primary.main,
+            '--bhe-main': 'var(--primary)', // TODO BED-10220 is this necessary?
+            // '--sp-main': 'var(--primary)',
             '--bhce-main': light['bhce-main'],
             // '--logo-neutral': common.black,
-            // '--brand-primary-dark-purple': light.primary.variant,
-            // '--brand-primary-deep-purple': light.primary.main,
-            // '--brand-primary-medium-blue': light.secondary.main,
-            // '--brand-secondary-highlight-green': light.tertiary.main,
+            // '--brand-primary-dark-purple': 'var(--primary-variant)',
+            // '--brand-primary-deep-purple': 'var(--primary)',
+            // '--brand-primary-medium-blue': 'var(--secondary)',
+            // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
             // // Components/Button
             '--secondary-btn-fill': palette.neutral.light[300],
@@ -130,77 +133,77 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--transparent-btn-border': palette.neutral.light[400],
             '--icon-btn-fill': palette.neutral.light[400],
             '--btn-disabled-fill': palette.neutral.light[200],
-            '--toggle-btn-fill': common.white,
+            '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.light[500],
-            '--toggle-group-fill': palette.neutral.light[100],
-            '--checkbox-border': palette.grey[700],
+            '--toggle-group-fill': 'var(--surface-subtle)',
+            '--checkbox-border': 'var(--border-control)',
             '--checkbox-hover': light.secondary.main,
-            '--checkbox-unchecked-fill': common.white,
+            '--checkbox-unchecked-fill': 'var(--surface)',
             '--checkbox-fill': common.dark,
             '--checkbox-check': common.white,
 
             // // Components/Input
-            // '--input-label': common.dark,
+            // '--input-label': 'var(--text-main)',
             '--input-border-default': palette.grey[700],
-            '--input-border-focus': light.secondary.main,
-            // '--input-border-hover': light.secondary.main,
+            '--input-border-focus': 'var(--control-accent)',
+            // '--input-border-hover': 'var(--secondary)',
             '--input-border-disabled': palette.neutral.light[900],
             '--input-placeholder-text': text.placeholder,
-            '--input-outlined-border-default': palette.grey[700],
-            '--input-outlined-border-hover': light.secondary.main,
+            '--input-outlined-border-default': 'var(--border-control)',
+            '--input-outlined-border-hover': 'var(--secondary)',
 
             // // Components/Textarea
-            '--textarea-fill': common.white,
-            '--textarea-border-default': palette.grey[700],
-            '--textarea-border-hover': light.secondary.main,
+            '--textarea-fill': 'var(--surface)',
+            '--textarea-border-default': 'var(--border-control)',
+            '--textarea-border-hover': 'var(--secondary)',
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.light[200],
             '--radio-border-default': palette.neutral.light[400],
-            '--radio-border-hover': light.secondary.main,
+            '--radio-border-hover': 'var(--control-accent)',
             '--radio-disabled-border': palette.neutral.light[300],
             '--radio-disabled-fill': palette.neutral.light[100],
             '--radio-indicator-fill': light.primary.main,
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
-            '--select-trigger-fill': palette.neutral.light[100],
+            '--select-trigger-fill': 'var(--surface-subtle)',
             '--select-trigger-placeholder-text': palette.neutral.light[400],
             '--select-trigger-outlined-fill': common.white,
             '--select-border-default': palette.neutral.dark[700],
-            '--select-border-focus': light.secondary.main,
+            '--select-border-focus': 'var(--control-accent)',
             '--select-content-border': palette.neutral.light[400],
             '--select-content-fill': common.white,
             '--select-item-checked-text': light.primary.main,
             '--select-separator-fill': palette.neutral.light[200],
             '--dropdown-trigger-border': palette.neutral.light[400],
             '--dropdown-popover-border': palette.neutral.light[400],
-            '--dropdown-popover-fill': common.white,
-            '--dropdown-option-hover-fill': palette.neutral.light[300],
+            '--dropdown-popover-fill': 'var(--surface)',
+            '--dropdown-option-hover-fill': 'var(--surface-hover)',
             '--dropdown-option-disabled-fill': palette.neutral.light[300],
-            '--dropdown-tooltip-fill': palette.neutral.light[300],
+            '--dropdown-tooltip-fill': 'var(--surface-hover)',
             '--switch-fill': palette.neutral.dark[700],
             '--switch-disabled-fill': palette.neutral.light[300],
             '--switch-thumb-fill': palette.neutral.light[50],
             '--switch-thumb-disabled-fill': palette.neutral.light[400],
 
             // // Components/Data Display/ DataTable
-            '--data-table-fill': palette.neutral.light[100],
-            '--data-table-header-fill': palette.neutral.light[100],
+            '--data-table-fill': 'var(--surface-subtle)',
+            '--data-table-header-fill': 'var(--surface-subtle)',
             '--data-table-row-even-fill': palette.neutral.light[200],
-            '--data-table-row-odd-fill': palette.neutral.light[100],
-            '--data-table-row-hover-fill': palette.neutral.light[300],
+            '--data-table-row-odd-fill': 'var(--surface-subtle)',
+            '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': light.primary.main,
 
             // // Components/Data Display/ Menu
-            // '--menu-bg': elevation.light[0],
+            // '--menu-bg': 'var(--elevation-0)',
 
             // // Components/Data Display/ Badge & Chip
             '--badge-primary-fill': light.badge.primary.fill,
-            '--badge-primary-outline': light.badge.primary.outline,
+            '--badge-primary-outline': 'var(--primary)',
 
             '--badge-secondary-fill': light.badge.secondary.fill,
-            '--badge-secondary-outline': light.badge.secondary.outline,
+            '--badge-secondary-outline': 'var(--secondary)',
 
             '--badge-grey-fill': light.badge.grey.fill,
             '--badge-grey-outline': light.badge.grey.outline,
@@ -233,9 +236,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--nav-control-btn-focus': palette.neutral.light[500],
 
             // // Components/ SideNav/ Nav items
-            // '--nav-item-default': common.dark,
-            // '--nav-item-hover': light.secondary.main,
-            // '--nav-item-active': light.primary.main,
+            // '--nav-item-default': 'var(--text-main)',
+            // '--nav-item-hover': 'var(--secondary)',
+            // '--nav-item-active': 'var(--primary)',
 
             // // Components / Graph
             // '--platform-badge-bg': elevation.light[2],
@@ -243,11 +246,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components / Graph / Edge
             // '--edge-color': light.edge.color,
             // '--edge-label-bg': palette.neutral.light[200],
-            // '--edge-label-text': common.dark,
+            // '--edge-label-text': 'var(--text-main)',
 
             // // Utilities
-            // '--icon': common.dark,
-            // '--icon-contrast': common.white,
+            // '--icon': 'var(--text-main)',
+            // '--icon-contrast': 'var(--text-contrast)',
             '--icon-disabled': palette.grey[700],
             // '--divider': palette.neutral.light[500],
 
@@ -259,34 +262,27 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--tertiary': '#02c577',
             // '--tertiary-variant': '#5cc791',
 
-            // same as common.white
-            '--neutral-1': '#ffffff',
-            // same as neutral-100
-            '--neutral-2': '#f4f4f4',
-            '--neutral-3': '#e3e7ea',
-            '--neutral-4': '#dadee1',
-            '--neutral-5': '#cacfd3',
+            '--neutral-1': 'var(--neutral-light-1)',
+            '--neutral-2': 'var(--neutral-light-2)',
+            '--neutral-3': 'var(--neutral-light-3)',
+            '--neutral-4': 'var(--neutral-light-4)',
+            '--neutral-5': 'var(--neutral-light-5)',
 
             '--link': '#1a30ff',
 
             '--error': '#b44641',
 
-            // same as common.white
-            '--neutral-light-1': '#ffffff',
-            // same as neutral-100
-            '--neutral-light-2': '#f4f4f4',
-            '--neutral-light-3': '#e3e7ea',
-            '--neutral-light-4': '#dadee1',
-            // same as neutral-light-400
-            '--neutral-light-5': '#cacfd3',
+            '--neutral-light-1': common.white,
+            '--neutral-light-2': palette.neutral.light[100],
+            '--neutral-light-3': palette.neutral.light[200],
+            '--neutral-light-4': palette.neutral.light[300],
+            '--neutral-light-5': palette.neutral.light[400],
 
-            // same palette.neutral.dark[50]
-            '--neutral-dark-1': '#121212',
-            '--neutral-dark-2': '#222222',
-            '--neutral-dark-3': '#272727',
-            '--neutral-dark-4': '#2c2c2c',
-            // same as palette.neutral.dark[700]
-            '--neutral-dark-5': '#2e2e2e',
+            '--neutral-dark-1': palette.neutral.dark[50],
+            '--neutral-dark-2': palette.neutral.dark[400],
+            '--neutral-dark-3': palette.neutral.dark[500],
+            '--neutral-dark-4': palette.neutral.dark[600],
+            '--neutral-dark-5': palette.neutral.dark[700],
         },
 
         '.dark': {
@@ -295,9 +291,16 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--primary-variant': dark.primary.variant,
             '--secondary': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
-            // '--tertiary': dark.tertiary.main,
-            // '--tertiary-variant': dark.tertiary.variant,
+            '--tertiary': dark.tertiary.main,
+            '--tertiary-variant': dark.tertiary.variant,
             '--disabled': dark.disabled,
+
+            // Shared control and surface tokens
+            '--border-control': dark.input.border,
+            '--control-accent': secondaryVariant2,
+            '--surface': common.dark,
+            '--surface-subtle': palette.neutral.dark[400],
+            '--surface-hover': palette.neutral.dark[600],
 
             // // NEUTRALS
             '--neutral-50': palette.neutral.dark[50],
@@ -315,18 +318,17 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--text-main': common.white,
             '--text-light': text.dark,
             '--text-contrast': common.dark,
-            '--text-disabled': dark.text.disabled,
             '--text-faint': dark.text.faint,
 
             // '--text-primary': dark.primary.main,
             // '--text-secondary': dark.secondary.main,
 
             // LINKS
-            '--link-main': dark.secondary.main,
-            '--link-hover': dark.secondary.variant,
+            '--link-main': 'var(--secondary)',
+            '--link-hover': 'var(--secondary-variant)',
 
             // FOCUS
-            '--focus-ring': dark.secondary.main,
+            '--focus-ring': 'var(--secondary)',
             '--focus-ring-offset': palette.neutral.dark[50],
 
             // // ELEVATION
@@ -353,14 +355,14 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': dark.status.indeterminate.fill,
 
             // // BRAND COLORS
-            '--bhe-main': dark.primary.main,
-            // '--sp-main': dark.primary.main,
+            '--bhe-main': 'var(--primary)',
+            // '--sp-main': 'var(--primary)',
             '--bhce-main': dark['bhce-main'],
             // '--logo-neutral': common.white,
-            // '--brand-primary-dark-purple': dark.primary.variant,
-            // '--brand-primary-deep-purple': dark.primary.main,
-            // '--brand-primary-medium-blue': dark.secondary.main,
-            // '--brand-secondary-highlight-green': dark.tertiary.main,
+            // '--brand-primary-dark-purple': 'var(--primary-variant)',
+            // '--brand-primary-deep-purple': 'var(--primary)',
+            // '--brand-primary-medium-blue': 'var(--secondary)',
+            // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
             // // Components/Button
             '--secondary-btn-fill': palette.neutral.dark[700],
@@ -369,78 +371,78 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--transparent-btn-border': palette.neutral.dark[700],
             '--icon-btn-fill': palette.neutral.light[400],
             '--btn-disabled-fill': palette.neutral.dark[700],
-            '--toggle-btn-fill': common.dark,
+            '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.dark[600],
-            '--toggle-group-fill': palette.neutral.dark[400],
-            '--checkbox-border': dark.input.border,
+            '--toggle-group-fill': 'var(--surface-subtle)',
+            '--checkbox-border': 'var(--border-control)',
             '--checkbox-hover': dark.badge.secondary.outline,
-            '--checkbox-unchecked-fill': common.dark,
+            '--checkbox-unchecked-fill': 'var(--surface)',
             '--checkbox-fill': common.white,
             '--checkbox-check': common.dark,
 
             // // Components/Input
-            // '--input-label': common.white,
+            // '--input-label': 'var(--text-main)',
             '--input-border-default': palette.neutral.light[400],
-            '--input-border-focus': secondaryVariant2,
-            // '--input-border-hover': dark.secondary.main,
+            '--input-border-focus': 'var(--control-accent)',
+            // '--input-border-hover': 'var(--secondary)',
             '--input-border-disabled': palette.neutral.dark[900],
 
             '--input-placeholder-text': dark.input.placeholder,
-            '--input-outlined-border-default': dark.input.border,
-            '--input-outlined-border-hover': dark.secondary.main,
+            '--input-outlined-border-default': 'var(--border-control)',
+            '--input-outlined-border-hover': 'var(--secondary)',
 
             // // Components/Textarea
-            '--textarea-fill': common.dark,
-            '--textarea-border-default': dark.input.border,
-            '--textarea-border-hover': dark.secondary.main,
+            '--textarea-fill': 'var(--surface)',
+            '--textarea-border-default': 'var(--border-control)',
+            '--textarea-border-hover': 'var(--secondary)',
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],
             '--radio-border-default': palette.neutral.light[400],
-            '--radio-border-hover': secondaryVariant2,
+            '--radio-border-hover': 'var(--control-accent)',
             '--radio-disabled-border': palette.neutral.dark[600],
             '--radio-disabled-fill': palette.neutral.dark[400],
             '--radio-indicator-fill': secondaryVariant2,
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
-            '--select-trigger-fill': palette.neutral.dark[400],
+            '--select-trigger-fill': 'var(--surface-subtle)',
             '--select-trigger-placeholder-text': dark.input.placeholder,
             '--select-trigger-outlined-fill': palette.neutral.dark[50],
             '--select-border-default': palette.neutral.light[400],
-            '--select-border-focus': secondaryVariant2,
+            '--select-border-focus': 'var(--control-accent)',
             '--select-content-border': palette.neutral.light[900],
             '--select-content-fill': palette.neutral.dark[400],
             '--select-item-checked-text': secondaryVariant2,
             '--select-separator-fill': palette.neutral.light[200],
             '--dropdown-trigger-border': palette.neutral.light[400],
             '--dropdown-popover-border': palette.neutral.dark[700],
-            '--dropdown-popover-fill': common.dark,
-            '--dropdown-option-hover-fill': palette.neutral.dark[600],
+            '--dropdown-popover-fill': 'var(--surface)',
+            '--dropdown-option-hover-fill': 'var(--surface-hover)',
             '--dropdown-option-disabled-fill': palette.neutral.dark[700],
-            '--dropdown-tooltip-fill': palette.neutral.dark[600],
+            '--dropdown-tooltip-fill': 'var(--surface-hover)',
             '--switch-fill': common.white,
             '--switch-disabled-fill': common.disabled,
             '--switch-thumb-fill': palette.neutral.dark[50],
             '--switch-thumb-disabled-fill': palette.neutral.light[400],
 
             // // Components/Data Display/ DataTable
-            '--data-table-fill': palette.neutral.dark[400],
-            '--data-table-header-fill': palette.neutral.dark[400],
+            '--data-table-fill': 'var(--surface-subtle)',
+            '--data-table-header-fill': 'var(--surface-subtle)',
             '--data-table-row-even-fill': palette.neutral.dark[500],
-            '--data-table-row-odd-fill': palette.neutral.dark[400],
-            '--data-table-row-hover-fill': palette.neutral.dark[600],
+            '--data-table-row-odd-fill': 'var(--surface-subtle)',
+            '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
 
             // // Components/Data Display/ Menu
-            // '--menu-bg': elevation.dark[2],
+            // '--menu-bg': 'var(--elevation-2)',
 
             // // Components/Data Display/ Badge & Chip
             '--badge-primary-fill': dark.badge.primary.fill,
-            '--badge-primary-outline': dark.badge.primary.outline,
+            '--badge-primary-outline': 'var(--primary)',
 
             '--badge-secondary-fill': dark.badge.secondary.fill,
-            '--badge-secondary-outline': dark.badge.secondary.outline,
+            '--badge-secondary-outline': 'var(--secondary)',
 
             '--badge-grey-fill': dark.badge.grey.fill,
             '--badge-grey-outline': dark.badge.grey.outline,
@@ -473,9 +475,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--nav-control-btn-focus': palette.neutral.dark[400],
 
             // // Components/ SideNav/ Nav items
-            // '--nav-item-default': common.white,
-            // '--nav-item-hover': dark.secondary.main,
-            // '--nav-item-active': dark.primary.main,
+            // '--nav-item-default': 'var(--text-main)',
+            // '--nav-item-hover': 'var(--secondary)',
+            // '--nav-item-active': 'var(--primary)',
 
             // // Components / Graph
             // '--platform-badge-bg': elevation.dark[2],
@@ -483,23 +485,22 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components / Graph / Edge
             // '--edge-color': dark.edge.color,
             // '--edge-label-bg': palette.neutral.dark[500],
-            // '--edge-label-text': common.white,
+            // '--edge-label-text': 'var(--text-main)',
 
             // // Utilities
-            // '--icon': common.white,
-            // '--icon-contrast': common.dark,
+            // '--icon': 'var(--text-main)',
+            // '--icon-contrast': 'var(--text-contrast)',
             '--icon-disabled': common.disabled,
             // '--divider': palette.neutral.dark[500],
 
             ///////////// Legacy below //////////
             // same as common.white
             '--contrast': '#ffffff',
-            // same palette.neutral.dark[50]
-            '--neutral-1': '#121212',
-            '--neutral-2': '#222222',
-            '--neutral-3': '#272727',
-            '--neutral-4': '#2c2c2c',
-            '--neutral-5': '#2e2e2e',
+            '--neutral-1': 'var(--neutral-dark-1)',
+            '--neutral-2': 'var(--neutral-dark-2)',
+            '--neutral-3': 'var(--neutral-dark-3)',
+            '--neutral-4': 'var(--neutral-dark-4)',
+            '--neutral-5': 'var(--neutral-dark-5)',
 
             '--link': secondaryVariant2,
 
