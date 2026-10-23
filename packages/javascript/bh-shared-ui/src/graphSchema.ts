@@ -1070,6 +1070,7 @@ export enum AzureRelationshipKind {
     AZMGGrantAppRoles = 'AZMGGrantAppRoles',
     AZMGGrantRole = 'AZMGGrantRole',
     SyncedToEntraUser = 'SyncedToEntraUser',
+    CloudSyncGroupWriteback = 'AZCloudSyncGroupWriteback',
     AZRoleEligible = 'AZRoleEligible',
     AZRoleApprover = 'AZRoleApprover',
     AZAuthenticatesTo = 'AZAuthenticatesTo',
@@ -1170,6 +1171,8 @@ export function AzureRelationshipKindToDisplay(value: AzureRelationshipKind): st
             return 'AZMGGrantRole';
         case AzureRelationshipKind.SyncedToEntraUser:
             return 'SyncedToEntraUser';
+        case AzureRelationshipKind.CloudSyncGroupWriteback:
+            return 'CloudSyncGroupWriteback';
         case AzureRelationshipKind.AZRoleEligible:
             return 'AZRoleEligible';
         case AzureRelationshipKind.AZRoleApprover:
@@ -1226,6 +1229,7 @@ export enum AzureKindProperties {
     Subject = 'subject',
     Audiences = 'audiences',
     FederatedIdentityCredentialAppID = 'federatedidentitycredentialappid',
+    IsCloudManaged = 'iscloudmanaged',
 }
 export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string | undefined {
     switch (value) {
@@ -1317,6 +1321,8 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
             return 'Audiences';
         case AzureKindProperties.FederatedIdentityCredentialAppID:
             return 'Federated Identity Credential Application ID';
+        case AzureKindProperties.IsCloudManaged:
+            return 'Is Cloud Managed';
         default:
             return undefined;
     }
@@ -1361,6 +1367,7 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZMGGrantAppRoles,
         AzureRelationshipKind.AZMGGrantRole,
         AzureRelationshipKind.SyncedToEntraUser,
+        AzureRelationshipKind.CloudSyncGroupWriteback,
         AzureRelationshipKind.AZRoleEligible,
         AzureRelationshipKind.AZRoleApprover,
         AzureRelationshipKind.Contains,
