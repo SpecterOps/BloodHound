@@ -20,3 +20,5 @@ export type FieldDisplayProps = {
     label: EntityField['label'];
     values: { value: string; accessibleLabel?: string }[];
 };
+
+export type ObjectInfoFieldLayout = 'spread' | 'inline';

@@ -17,7 +17,7 @@
 import { VisuallyHidden } from 'doodle-ui';
 import { ReactNode } from 'react';
 import { cn } from '../../utils';
-import { FieldDisplayProps } from './Field.types';
+import { FieldDisplayProps } from './types';
 
 type FieldRowsProps = FieldDisplayProps & {
     rowClassName?: string;

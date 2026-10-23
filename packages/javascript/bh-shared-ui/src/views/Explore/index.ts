@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export * from './BasicObjectInfoFields';
 export * from './ContextMenu/AssetGroupMenuItemPrivilegeZonesEnabled';
 export { default as ContextMenuPrivilegeZonesEnabled } from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
 export { default as CopyMenuItem } from './ContextMenu/CopyMenuItem';

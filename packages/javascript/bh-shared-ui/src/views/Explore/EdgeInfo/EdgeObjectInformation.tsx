@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { NodeDetails, RelationshipDetails } from 'js-client-library';
 import { FC, useEffect } from 'react';
+import { FieldsContainer, ObjectInfoFields } from '../../../components/ObjectInfoFields';
 import { usePreviousValue } from '../../../hooks';
 import { EntityField, formatObjectInfoFields } from '../../../utils';
-import { FieldsContainer, ObjectInfoFields } from '../fragments';
 import { useObjectInfoPanelContext } from '../providers';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 

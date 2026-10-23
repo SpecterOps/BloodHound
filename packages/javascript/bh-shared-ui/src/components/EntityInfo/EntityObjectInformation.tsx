@@ -18,10 +18,10 @@ import { useEffect } from 'react';
 import { kindObjectsToKindNames, useExploreParams, usePreviousValue, usePrimaryKind, useTagsQuery } from '../../hooks';
 import { getLabelNamesFromKinds, getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
 import { EntityField, formatObjectInfoFields } from '../../utils';
-import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
+
 import { SearchValue } from '../../views/Explore/ExploreSearch';
-import { FieldsContainer, ObjectInfoFields } from '../../views/Explore/fragments';
 import { useObjectInfoPanelContext } from '../../views/Explore/providers/ObjectInfoPanelProvider';
+import { BasicObjectInfoFields, FieldsContainer, ObjectInfoFields } from '../ObjectInfoFields';
 import EntityInfoCollapsibleSection from './EntityInfoCollapsibleSection';
 
 const sectionLabel = 'Object Information';

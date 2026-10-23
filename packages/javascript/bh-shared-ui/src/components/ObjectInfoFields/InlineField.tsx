@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Typography } from 'doodle-ui';
-import { FieldDisplayProps } from './Field.types';
 import FieldRows from './FieldRows';
+import { FieldDisplayProps } from './types';
 
 const InlineField = ({ label, values }: FieldDisplayProps) => (
     <FieldRows

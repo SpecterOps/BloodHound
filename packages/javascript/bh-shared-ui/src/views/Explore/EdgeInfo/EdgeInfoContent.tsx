@@ -19,12 +19,12 @@ import { ElementType, FC, Fragment } from 'react';
 import { KindInfoItems } from '../../../components/EntityInfo/KindInfoItems';
 import EdgeInfoComponents from '../../../components/HelpTexts';
 import ACLInheritance from '../../../components/HelpTexts/shared/ACLInheritance';
+import { FieldsContainer } from '../../../components/ObjectInfoFields';
 import { ActiveDirectoryKindProperties, CommonKindProperties } from '../../../graphSchema';
 import { useExploreParams, useExploreSelectedItem, useGetNodeById } from '../../../hooks';
 import { usePrimaryKind } from '../../../hooks/usePrimaryKind';
 import { isBuiltInKind } from '../../../utils';
 import { EdgeSections } from '../ExploreSearch/EdgeFilter/edgeCategories';
-import { FieldsContainer } from '../fragments';
 import EdgeInfoCollapsibleSection from './EdgeInfoCollapsibleSection';
 import EdgeObjectInformation from './EdgeObjectInformation';
 

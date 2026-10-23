@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { cn } from '../../utils';
-import { FieldDisplayProps } from './Field.types';
 import FieldRows from './FieldRows';
+import { FieldDisplayProps } from './types';
 
 const SpreadField = ({ label, values, isList }: FieldDisplayProps & { isList: boolean }) => (
     <FieldRows

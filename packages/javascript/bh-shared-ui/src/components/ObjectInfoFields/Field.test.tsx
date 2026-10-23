@@ -15,8 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '../../test-utils';
-import { EntityField } from '../../utils';
-import { Field, ObjectInfoFields, exclusionList } from './fragments';
+import { Field } from './Field';
 
 describe.each(['spread', 'inline'] as const)('Field (%s layout)', (layout) => {
     it.each([
@@ -96,23 +95,5 @@ describe.each(['spread', 'inline'] as const)('Field (%s layout)', (layout) => {
         render(<Field layout={layout} label='Test Field (String)' value='NONE' keyprop='test-field-string' />);
         expect(screen.getByText('NONE')).not.toHaveAttribute('aria-hidden');
         expect(screen.queryByText('Empty array, zero values')).not.toBeInTheDocument();
-    });
-});
-
-describe('ObjectInfoFields', () => {
-    it('should filter properties that we do not want to display in the entity panel', () => {
-        const properties: EntityField[] = exclusionList.map((key) => {
-            return { label: key, value: 'test', keyprop: key };
-        });
-        const validProperty: EntityField = { label: 'Object ID', value: 'OBJECT_ID' };
-        properties.push(validProperty);
-
-        render(<ObjectInfoFields fields={properties} />);
-
-        expect(screen.getByText('Object ID')).toBeInTheDocument();
-
-        exclusionList.forEach((property) => {
-            expect(screen.queryByText(property)).not.toBeInTheDocument();
-        });
     });
 });

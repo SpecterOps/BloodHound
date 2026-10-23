@@ -16,42 +16,10 @@
 
 import { Alert, Typography } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
-import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
-import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
-import { FieldDisplayProps } from './Field.types';
-import InlineField from './InlineField';
-import SpreadField from './SpreadField';
 
 const accordionCountClassName =
     'flex h-[1.6rem] min-w-12 items-center justify-center rounded-lg bg-neutral-5 px-2 text-[0.9rem] font-bold leading-[1.6em]';
-
-export const exclusionList = [
-    'gid',
-    'admin_rights_count',
-    'admin_rights_risk_percent',
-    ActiveDirectoryKindProperties.HasSPN,
-    CommonKindProperties.SystemTags,
-    'isTierZero',
-    CommonKindProperties.UserTags,
-    'neo4jImportId',
-    CommonKindProperties.Name,
-    CommonKindProperties.ObjectID,
-    CommonKindProperties.DisplayName,
-    AzureKindProperties.ServicePrincipalID,
-    AzureKindProperties.FederatedIdentityCredentialAppID,
-    'serverreferencecomputer',
-    'serverreferencecomputername',
-    'siteservernode',
-    'siteservernodename',
-    'highvalue',
-    'reconcile',
-    ActiveDirectoryKindProperties.InheritanceHashes,
-    ActiveDirectoryKindProperties.InheritanceHash,
-];
-
-const filterNegatedFields = (fields: EntityField[]): EntityField[] =>
-    fields.filter((field: EntityField) => !exclusionList.includes(field.keyprop || ''));
 
 export const Section: React.FC<PropsWithChildren<{ label?: string | null; className?: string }>> = ({
     label,
@@ -109,96 +77,5 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
                 count !== undefined && <span className={accordionCountClassName}>{count.toLocaleString()}</span>
             )}
         </div>
-    );
-};
-
-export type ObjectInfoFieldLayout = 'spread' | 'inline';
-
-export const FieldsContainer: React.FC<PropsWithChildren<{ layout?: ObjectInfoFieldLayout }>> = ({
-    children,
-    layout = 'spread',
-}) => {
-    return (
-        <div
-            className={cn(
-                '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
-                layout === 'spread' && 'rounded-lg text-caption'
-            )}>
-            {children}
-        </div>
-    );
-};
-
-const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | undefined => {
-    if (Array.isArray(value) && value.length === 0) {
-        return 'Empty array, zero values';
-    }
-
-    if (value === '') {
-        return 'Empty string';
-    }
-
-    if (value === null) {
-        return 'Null value';
-    }
-};
-
-export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> = (entityField) => {
-    const { label, value, layout = 'spread' } = entityField;
-
-    try {
-        if (
-            value === undefined ||
-            (value !== null && !Array.isArray(value) && typeof value === 'object' && Object.keys(value).length === 0)
-        )
-            return null;
-    } catch (e) {
-        return null;
-    }
-
-    const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
-    const formattedValue = format(entityField);
-    const isList = Array.isArray(formattedValue);
-
-    const values = typeof formattedValue === 'string' ? [formattedValue] : formattedValue;
-    const displayProps: FieldDisplayProps = {
-        label,
-        values: (values ?? []).map((formattedItem, index) => ({
-            value: formattedItem,
-            accessibleLabel:
-                Array.isArray(value) && value.length > 0
-                    ? getEmptyValueAccessibleLabel(value[index])
-                    : emptyValueAccessibleLabel,
-        })),
-    };
-
-    return layout === 'inline' ? (
-        <InlineField label={displayProps.label} values={displayProps.values} />
-    ) : (
-        <SpreadField label={displayProps.label} values={displayProps.values} isList={isList} />
-    );
-};
-
-export const ObjectInfoFields: React.FC<{ fields: EntityField[]; layout?: ObjectInfoFieldLayout }> = ({
-    fields,
-    layout,
-}): JSX.Element => {
-    const filteredFields = filterNegatedFields(fields);
-
-    return (
-        <>
-            {filteredFields.map((field: EntityField) => {
-                return (
-                    <Field
-                        kind={field.kind}
-                        label={field.label}
-                        value={field.value}
-                        keyprop={`${field.keyprop}`}
-                        key={`${field.keyprop}-${field.label}`}
-                        layout={layout}
-                    />
-                );
-            })}
-        </>
     );
 };
