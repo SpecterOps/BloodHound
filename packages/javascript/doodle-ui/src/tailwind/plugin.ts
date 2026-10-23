@@ -28,7 +28,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--common-dark': common.dark,
             '--common-white': common.white,
 
-            // // UTILITIES / risk level
+            // UTILITIES / risk level
             // '--risk-critical': palette.purple.A300,
             // '--risk-high': palette.red.A300,
             // '--risk-moderate': palette.brown[300],
@@ -64,7 +64,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--surface-subtle': palette.neutral.light[100],
             '--surface-hover': palette.neutral.light[300],
 
-            // // NEUTRALS
+            // NEUTRALS
             '--neutral-50': palette.neutral.light[50],
             '--neutral-100': palette.neutral.light[100],
             '--neutral-200': palette.neutral.light[200],
@@ -76,7 +76,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-800': palette.neutral.light[800],
             '--neutral-900': palette.neutral.light[900],
 
-            // // TEXT
+            // TEXT
             '--text-main': common.dark,
             '--text-light': text.light,
             '--text-contrast': common.white,
@@ -92,7 +92,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--focus-ring-width': focusRingWidth,
             '--focus-ring-offset-width': focusRingOffsetWidth,
 
-            // // ELEVATION
+            // ELEVATION
             '--elevation-0': elevation.light[0],
             '--elevation-1': elevation.light[1],
             '--elevation-2': elevation.light[2],
@@ -115,7 +115,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-info-fill': light.status.info.fill,
             '--status-indeterminate-fill': light.status.indeterminate.fill,
 
-            // // BRAND COLORS
+            // BRAND COLORS
             '--bhe-main': 'var(--primary)', // TODO BED-10220 is this necessary?
             // '--sp-main': 'var(--primary)',
             '--bhce-main': light['bhce-main'],
@@ -125,7 +125,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // // Components/Button
+            // Components/Button
             '--secondary-btn-fill': palette.neutral.light[300],
             '--secondary-btn-active-fill': palette.neutral.light[400],
             // TODO remove
@@ -137,7 +137,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--toggle-btn-border': palette.neutral.light[500],
             '--toggle-group-fill': 'var(--surface-subtle)',
 
-            // // Components/Checkbox
+            // Components/Checkbox
             '--checkbox-checked-active-border': 'var(--primary)',
             '--checkbox-disabled-checked-hover-fill': 'var(--checkbox-fill)',
             '--checkbox-border': 'var(--border-control)',
@@ -149,7 +149,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--checkbox-disabled-fill': palette.neutral.light[100],
             '--checkbox-focus-ring': 'var(--secondary)',
 
-            // // Components/Input
+            // Components/Input
             '--input-fill': common.white,
             '--input-disabled-fill': palette.neutral.light[100],
             '--input-outlined-hover-focus-border': 'var(--input-outlined-border-hover)',
@@ -162,7 +162,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-outlined-border-default': 'var(--border-control)',
             '--input-outlined-border-hover': 'var(--secondary)',
 
-            // // Components/Textarea
+            // Components/Textarea
             '--textarea-disabled-fill': palette.neutral.light[100],
             '--textarea-focus-border': 'var(--textarea-border-default)',
             '--textarea-hover-focus-border': 'var(--textarea-border-hover)',
@@ -170,7 +170,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
 
-            // // Components/RadioGroup
+            // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.light[200],
             '--radio-border-default': palette.neutral.light[400],
             '--radio-border-hover': 'var(--control-accent)',
@@ -178,7 +178,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--radio-disabled-fill': palette.neutral.light[100],
             '--radio-indicator-fill': light.primary.main,
 
-            // // Components/Input/Selectors
+            // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
             '--select-open-fill': 'var(--primary)',
             '--select-open-disabled-fill': 'var(--primary)',
@@ -211,7 +211,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--switch-thumb-fill': palette.neutral.light[50],
             '--switch-thumb-disabled-fill': palette.neutral.light[400],
 
-            // // Components/Data Display/ DataTable
+            // Components/Data Display/ DataTable
             '--data-table-fill': 'var(--surface-subtle)',
             '--data-table-header-fill': 'var(--surface-subtle)',
             '--data-table-row-even-fill': palette.neutral.light[200],
@@ -219,10 +219,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': light.primary.main,
 
-            // // Components/Data Display/ Menu
+            // Components/Data Display/ Menu
             // '--menu-bg': 'var(--elevation-0)',
 
-            // // Components/Data Display/ Badge & Chip
+            // Components/Data Display/ Badge & Chip
             '--badge-primary-fill': light.badge.primary.fill,
             '--badge-primary-outline': 'var(--primary)',
 
@@ -244,14 +244,14 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--badge-blue-fill': light.badge.blue.fill,
             '--badge-blue-outline': light.badge.blue.outline,
 
-            // // Components/Data Display/Badge & Chip / Chip
+            // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.light[300],
             // '--chip-indeterminate-hover': palette.neutral.light[600],
             // '--chip-outline-fill': common.white,
             // '--chip-outline-hover': palette.neutral.light[100],
             // '--chip-outline-active': palette.neutral.light[300],
 
-            // // Components/ SideNav
+            // Components/ SideNav
             // '--sidenav-bg': palette.neutral.light[50],
             // '--sidenav-bg-hover': palette.neutral.light[200],
             // '--sidenav-bg-active': palette.neutral.light[300],
@@ -259,20 +259,20 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--nav-control-btn-hover': palette.neutral.light[600],
             // '--nav-control-btn-focus': palette.neutral.light[500],
 
-            // // Components/ SideNav/ Nav items
+            // Components/ SideNav/ Nav items
             // '--nav-item-default': 'var(--text-main)',
             // '--nav-item-hover': 'var(--secondary)',
             // '--nav-item-active': 'var(--primary)',
 
-            // // Components / Graph
+            // Components / Graph
             // '--platform-badge-bg': elevation.light[2],
 
-            // // Components / Graph / Edge
+            // Components / Graph / Edge
             // '--edge-color': light.edge.color,
             // '--edge-label-bg': palette.neutral.light[200],
             // '--edge-label-text': 'var(--text-main)',
 
-            // // Utilities
+            // Utilities
             // '--icon': 'var(--text-main)',
             // '--icon-contrast': 'var(--text-contrast)',
             '--icon-disabled': palette.grey[700],
@@ -326,7 +326,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--surface-subtle': palette.neutral.dark[400],
             '--surface-hover': palette.neutral.dark[600],
 
-            // // NEUTRALS
+            // NEUTRALS
             '--neutral-50': palette.neutral.dark[50],
             '--neutral-100': palette.neutral.dark[100],
             '--neutral-200': palette.neutral.dark[200],
@@ -338,7 +338,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--neutral-800': palette.neutral.dark[800],
             '--neutral-900': palette.neutral.dark[900],
 
-            // // TEXT
+            // TEXT
             '--text-main': common.white,
             '--text-light': text.dark,
             '--text-contrast': common.dark,
@@ -355,7 +355,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--focus-ring': 'var(--secondary)',
             '--focus-ring-offset': palette.neutral.dark[50],
 
-            // // ELEVATION
+            // ELEVATION
             // '--elevation-0': elevation.dark[0],
             '--elevation-1': elevation.dark[1],
             '--elevation-2': elevation.dark[2],
@@ -378,7 +378,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-info-fill': dark.status.info.fill,
             '--status-indeterminate-fill': dark.status.indeterminate.fill,
 
-            // // BRAND COLORS
+            // BRAND COLORS
             '--bhe-main': 'var(--primary)',
             // '--sp-main': 'var(--primary)',
             '--bhce-main': dark['bhce-main'],
@@ -388,7 +388,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // // Components/Button
+            // Components/Button
             '--secondary-btn-fill': palette.neutral.dark[700],
             '--secondary-btn-active-fill': palette.neutral.dark[700],
             '--tertiary-btn-border': palette.neutral.light[400],
@@ -399,7 +399,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--toggle-btn-border': palette.neutral.dark[600],
             '--toggle-group-fill': 'var(--surface-subtle)',
 
-            // // Components/Checkbox
+            // Components/Checkbox
             '--checkbox-checked-active-border': 'var(--primary-variant)',
             '--checkbox-disabled-checked-hover-fill': 'var(--checkbox-hover)',
             '--checkbox-border': 'var(--border-control)',
@@ -411,7 +411,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--checkbox-disabled-fill': palette.neutral.dark[400],
             '--checkbox-focus-ring': secondaryVariant2,
 
-            // // Components/Input
+            // Components/Input
             '--input-fill': palette.neutral.dark[50],
             '--input-disabled-fill': palette.neutral.dark[400],
             '--input-outlined-hover-focus-border': 'var(--input-outlined-border-default)',
@@ -425,7 +425,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--input-outlined-border-default': 'var(--border-control)',
             '--input-outlined-border-hover': 'var(--secondary)',
 
-            // // Components/Textarea
+            // Components/Textarea
             '--textarea-disabled-fill': palette.neutral.dark[400],
             '--textarea-focus-border': 'var(--textarea-border-default)',
             '--textarea-hover-focus-border': 'var(--textarea-border-default)',
@@ -433,7 +433,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
 
-            // // Components/RadioGroup
+            // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],
             '--radio-border-default': palette.neutral.light[400],
             '--radio-border-hover': 'var(--control-accent)',
@@ -441,13 +441,13 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--radio-disabled-fill': palette.neutral.dark[400],
             '--radio-indicator-fill': secondaryVariant2,
 
-            // // Components/Input/Selectors
+            // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
             '--select-open-fill': 'var(--input-fill)',
             '--select-open-disabled-fill': 'var(--select-disabled-fill)',
             '--select-disabled-placeholder-text': 'var(--select-trigger-placeholder-text)',
             '--select-invalid-placeholder-open-text': 'var(--select-highlight-text)',
-            '--select-open-focus-border': 'var(--input-outlined-border-default)',
+            // '--select-open-focus-border': 'var(--input-outlined-border-default)',
             '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
             '--select-highlight-text': 'var(--common-dark)',
             '--select-placeholder-text': 'var(--select-trigger-placeholder-text)',
@@ -474,7 +474,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--switch-thumb-fill': palette.neutral.dark[50],
             '--switch-thumb-disabled-fill': palette.neutral.light[400],
 
-            // // Components/Data Display/ DataTable
+            // Components/Data Display/ DataTable
             '--data-table-fill': 'var(--surface-subtle)',
             '--data-table-header-fill': 'var(--surface-subtle)',
             '--data-table-row-even-fill': palette.neutral.dark[500],
@@ -482,10 +482,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
 
-            // // Components/Data Display/ Menu
+            // Components/Data Display/ Menu
             // '--menu-bg': 'var(--elevation-2)',
 
-            // // Components/Data Display/ Badge & Chip
+            // Components/Data Display/ Badge & Chip
             '--badge-primary-fill': dark.badge.primary.fill,
             '--badge-primary-outline': 'var(--primary)',
 
@@ -507,14 +507,14 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--badge-blue-fill': dark.badge.blue.fill,
             '--badge-blue-outline': dark.badge.blue.outline,
 
-            // // Components/Data Display/Badge & Chip / Chip
+            // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.dark[500],
             // '--chip-indeterminate-hover': palette.neutral.dark[300],
             // '--chip-outline-fill': elevation.dark[1],
             // '--chip-outline-hover': palette.neutral.dark[200],
             // '--chip-outline-active': palette.neutral.dark[400],
 
-            // // Components/ SideNav
+            // Components/ SideNav
             // '--sidenav-bg': palette.neutral.dark[300],
             // '--sidenav-bg-hover': palette.neutral.dark[200],
             // '--sidenav-bg-active': palette.neutral.dark[600],
@@ -522,20 +522,20 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--nav-control-btn-hover': palette.neutral.dark[500],
             // '--nav-control-btn-focus': palette.neutral.dark[400],
 
-            // // Components/ SideNav/ Nav items
+            // Components/ SideNav/ Nav items
             // '--nav-item-default': 'var(--text-main)',
             // '--nav-item-hover': 'var(--secondary)',
             // '--nav-item-active': 'var(--primary)',
 
-            // // Components / Graph
+            // Components / Graph
             // '--platform-badge-bg': elevation.dark[2],
 
-            // // Components / Graph / Edge
+            // Components / Graph / Edge
             // '--edge-color': dark.edge.color,
             // '--edge-label-bg': palette.neutral.dark[500],
             // '--edge-label-text': 'var(--text-main)',
 
-            // // Utilities
+            // Utilities
             // '--icon': 'var(--text-main)',
             // '--icon-contrast': 'var(--text-contrast)',
             '--icon-disabled': common.disabled,
