@@ -17,7 +17,6 @@
 // import { Route, Routes } from 'react-router-dom';
 import { DocumentationIcon, StorybookIcon } from './components/Icons';
 import { PortalCard } from './components/PortalCard';
-import { PortalSection } from './components/PortalSection';
 
 // const App = () => (
 //     <Routes>
@@ -78,14 +77,8 @@ export default function App() {
                     />
                 </section>
 
-                <div className='destination-grid'>
-                    <PortalSection eyebrow='01 / Design system' id='storybook' title='Doodle UI Storybook' />
-                    <PortalSection eyebrow='02 / Knowledge base' id='documentation' title='Documentation' />
-                </div>
-
                 <footer>
-                    <span>BloodHound Enterprise</span>
-                    <span>Built for the people who build BloodHound.</span>
+                    <span>© 2026 Specter Ops, Inc.</span>
                 </footer>
             </div>
         </main>
