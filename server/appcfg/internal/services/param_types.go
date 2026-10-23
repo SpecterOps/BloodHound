@@ -82,6 +82,11 @@ func (s *ISODuration) UnmarshalJSON(b []byte) error {
 
 // ## Param types list
 
+type ScheduledAnalysisParameter struct {
+	Enabled bool   `json:"enabled,omitempty"`
+	RRule   string `json:"rrule,omitempty" validate:"rrule"`
+}
+
 // Example:
 // type POCGraphStorageOptimizationParam struct {
 //	AfterBoot          bool `json:"after_boot"`
