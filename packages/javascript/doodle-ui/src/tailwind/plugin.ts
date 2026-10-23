@@ -476,7 +476,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--select-open-disabled-fill': 'var(--select-disabled-fill)',
             '--select-disabled-placeholder-text': 'var(--select-trigger-placeholder-text)',
             '--select-invalid-placeholder-open-text': 'var(--select-highlight-text)',
-            '--select-open-focus-border': 'var(--input-outlined-border-default)',
+            // '--select-open-focus-border': 'var(--input-outlined-border-default)',
             '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
             '--select-highlight-text': 'var(--common-dark)',
             '--select-placeholder-text': 'var(--select-trigger-placeholder-text)',
