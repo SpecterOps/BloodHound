@@ -1,0 +1,669 @@
+[
+  {
+    "workspace": "cmd/ui",
+    "name": "unused-underscore",
+    "file": "src/poc.ts",
+    "source": "export {}; const _unused = 1;",
+    "diagnostics": [
+      {
+        "rule": "@typescript-eslint/no-unused-vars",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "caught-error",
+    "file": "src/poc.ts",
+    "source": "export function check() { try { throw 1; } catch (error) { console.log(\"caught\"); } }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "type-only-usage",
+    "file": "src/poc.ts",
+    "source": "const value = 1; export type Example = typeof value;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "unused-rest-sibling",
+    "file": "src/poc.ts",
+    "source": "export const source = { a: 1, b: 2 }; const { a, ...rest } = source; export { rest };",
+    "diagnostics": [
+      {
+        "rule": "@typescript-eslint/no-unused-vars",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "sx-prop",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <div sx={{ color: \"red\" }}>Example</div>;",
+    "diagnostics": [
+      {
+        "rule": "react/no-unknown-property",
+        "severity": 2
+      },
+      {
+        "rule": "sx-props/no-sx-props",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "missing-key",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => [<div>Example</div>];",
+    "diagnostics": [
+      {
+        "rule": "react/jsx-key",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "hook-use-callback",
+    "file": "src/poc.ts",
+    "source": "export function callback(use: (value: number) => void) { use(1); }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "conditional-hook",
+    "file": "src/poc.tsx",
+    "source": "import { useState } from \"react\"; export function Example({active}: {active: boolean}) { if(active) { useState(0); } return <div/>; }",
+    "diagnostics": [
+      {
+        "rule": "react-hooks/rules-of-hooks",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "image-alt",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <img src=\"example.png\"/>;",
+    "diagnostics": [
+      {
+        "rule": "jsx-a11y/alt-text",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "unused-directive",
+    "file": "src/poc.ts",
+    "source": "// eslint-disable-next-line no-debugger\nexport const valid = 1;",
+    "diagnostics": [
+      {
+        "rule": null,
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "missing-story-default",
+    "file": "src/poc.stories.tsx",
+    "source": "export const Example = {};",
+    "diagnostics": []
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "ambient-module",
+    "file": "src/poc.d.ts",
+    "source": "declare module \"untyped\";",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "unused-underscore",
+    "file": "src/poc.ts",
+    "source": "export {}; const _unused = 1;",
+    "diagnostics": [
+      {
+        "rule": "@typescript-eslint/no-unused-vars",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "caught-error",
+    "file": "src/poc.ts",
+    "source": "export function check() { try { throw 1; } catch (error) { console.log(\"caught\"); } }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "type-only-usage",
+    "file": "src/poc.ts",
+    "source": "const value = 1; export type Example = typeof value;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "unused-rest-sibling",
+    "file": "src/poc.ts",
+    "source": "export const source = { a: 1, b: 2 }; const { a, ...rest } = source; export { rest };",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "sx-prop",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <div sx={{ color: \"red\" }}>Example</div>;",
+    "diagnostics": [
+      {
+        "rule": "react/no-unknown-property",
+        "severity": 2
+      },
+      {
+        "rule": "sx-props/no-sx-props",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "missing-key",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => [<div>Example</div>];",
+    "diagnostics": [
+      {
+        "rule": "react/jsx-key",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "hook-use-callback",
+    "file": "src/poc.ts",
+    "source": "export function callback(use: (value: number) => void) { use(1); }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "conditional-hook",
+    "file": "src/poc.tsx",
+    "source": "import { useState } from \"react\"; export function Example({active}: {active: boolean}) { if(active) { useState(0); } return <div/>; }",
+    "diagnostics": [
+      {
+        "rule": "react-hooks/rules-of-hooks",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "image-alt",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <img src=\"example.png\"/>;",
+    "diagnostics": [
+      {
+        "rule": "jsx-a11y/alt-text",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "unused-directive",
+    "file": "src/poc.ts",
+    "source": "// eslint-disable-next-line no-debugger\nexport const valid = 1;",
+    "diagnostics": [
+      {
+        "rule": null,
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "missing-story-default",
+    "file": "src/poc.stories.tsx",
+    "source": "export const Example = {};",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "ambient-module",
+    "file": "src/poc.d.ts",
+    "source": "declare module \"untyped\";",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "unused-underscore",
+    "file": "src/poc.ts",
+    "source": "export {}; const _unused = 1;",
+    "diagnostics": [
+      {
+        "rule": "@typescript-eslint/no-unused-vars",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "caught-error",
+    "file": "src/poc.ts",
+    "source": "export function check() { try { throw 1; } catch (error) { console.log(\"caught\"); } }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "type-only-usage",
+    "file": "src/poc.ts",
+    "source": "const value = 1; export type Example = typeof value;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "unused-rest-sibling",
+    "file": "src/poc.ts",
+    "source": "export const source = { a: 1, b: 2 }; const { a, ...rest } = source; export { rest };",
+    "diagnostics": [
+      {
+        "rule": "@typescript-eslint/no-unused-vars",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "sx-prop",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <div sx={{ color: \"red\" }}>Example</div>;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "missing-key",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => [<div>Example</div>];",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "hook-use-callback",
+    "file": "src/poc.ts",
+    "source": "export function callback(use: (value: number) => void) { use(1); }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "conditional-hook",
+    "file": "src/poc.tsx",
+    "source": "import { useState } from \"react\"; export function Example({active}: {active: boolean}) { if(active) { useState(0); } return <div/>; }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "image-alt",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <img src=\"example.png\"/>;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "unused-directive",
+    "file": "src/poc.ts",
+    "source": "// eslint-disable-next-line no-debugger\nexport const valid = 1;",
+    "diagnostics": [
+      {
+        "rule": null,
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "missing-story-default",
+    "file": "src/poc.stories.tsx",
+    "source": "export const Example = {};",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "ambient-module",
+    "file": "src/poc.d.ts",
+    "source": "declare module \"untyped\";",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "unused-underscore",
+    "file": "src/poc.ts",
+    "source": "export {}; const _unused = 1;",
+    "diagnostics": [
+      {
+        "rule": "@typescript-eslint/no-unused-vars",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "caught-error",
+    "file": "src/poc.ts",
+    "source": "export function check() { try { throw 1; } catch (error) { console.log(\"caught\"); } }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "type-only-usage",
+    "file": "src/poc.ts",
+    "source": "const value = 1; export type Example = typeof value;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "unused-rest-sibling",
+    "file": "src/poc.ts",
+    "source": "export const source = { a: 1, b: 2 }; const { a, ...rest } = source; export { rest };",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "sx-prop",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <div sx={{ color: \"red\" }}>Example</div>;",
+    "diagnostics": [
+      {
+        "rule": "react/no-unknown-property",
+        "severity": 2
+      },
+      {
+        "rule": "sx-props/no-sx-props",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "missing-key",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => [<div>Example</div>];",
+    "diagnostics": [
+      {
+        "rule": "react/jsx-key",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "hook-use-callback",
+    "file": "src/poc.ts",
+    "source": "export function callback(use: (value: number) => void) { use(1); }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "conditional-hook",
+    "file": "src/poc.tsx",
+    "source": "import { useState } from \"react\"; export function Example({active}: {active: boolean}) { if(active) { useState(0); } return <div/>; }",
+    "diagnostics": [
+      {
+        "rule": "react-hooks/rules-of-hooks",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "image-alt",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <img src=\"example.png\"/>;",
+    "diagnostics": [
+      {
+        "rule": "jsx-a11y/alt-text",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "unused-directive",
+    "file": "src/poc.ts",
+    "source": "// eslint-disable-next-line no-debugger\nexport const valid = 1;",
+    "diagnostics": [
+      {
+        "rule": null,
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "missing-story-default",
+    "file": "src/poc.stories.tsx",
+    "source": "export const Example = {};",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "ambient-module",
+    "file": "src/poc.d.ts",
+    "source": "declare module \"untyped\";",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "unused-underscore",
+    "file": "src/poc.ts",
+    "source": "export {}; const _unused = 1;",
+    "diagnostics": [
+      {
+        "rule": "@typescript-eslint/no-unused-vars",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "caught-error",
+    "file": "src/poc.ts",
+    "source": "export function check() { try { throw 1; } catch (error) { console.log(\"caught\"); } }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "type-only-usage",
+    "file": "src/poc.ts",
+    "source": "const value = 1; export type Example = typeof value;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "unused-rest-sibling",
+    "file": "src/poc.ts",
+    "source": "export const source = { a: 1, b: 2 }; const { a, ...rest } = source; export { rest };",
+    "diagnostics": [
+      {
+        "rule": "@typescript-eslint/no-unused-vars",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "sx-prop",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <div sx={{ color: \"red\" }}>Example</div>;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "missing-key",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => [<div>Example</div>];",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "hook-use-callback",
+    "file": "src/poc.ts",
+    "source": "export function callback(use: (value: number) => void) { use(1); }",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "conditional-hook",
+    "file": "src/poc.tsx",
+    "source": "import { useState } from \"react\"; export function Example({active}: {active: boolean}) { if(active) { useState(0); } return <div/>; }",
+    "diagnostics": [
+      {
+        "rule": "react-hooks/rules-of-hooks",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "image-alt",
+    "file": "src/poc.tsx",
+    "source": "export const Example = () => <img src=\"example.png\"/>;",
+    "diagnostics": [
+      {
+        "rule": "jsx-a11y/alt-text",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "unused-directive",
+    "file": "src/poc.ts",
+    "source": "// eslint-disable-next-line no-debugger\nexport const valid = 1;",
+    "diagnostics": [
+      {
+        "rule": null,
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "missing-story-default",
+    "file": "src/poc.stories.tsx",
+    "source": "export const Example = {};",
+    "diagnostics": [
+      {
+        "rule": "storybook/default-exports",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "ambient-module",
+    "file": "src/poc.d.ts",
+    "source": "declare module \"untyped\";",
+    "diagnostics": []
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "browser-globals",
+    "file": "src/browser.js",
+    "source": "export const root = window.document ?? document;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "cmd/ui",
+    "name": "unknown-browser-global",
+    "file": "src/browser.js",
+    "source": "export const root = nonexistentBrowserGlobal;",
+    "diagnostics": [
+      {
+        "rule": "no-undef",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "browser-globals",
+    "file": "src/browser.js",
+    "source": "export const root = window.document ?? document;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-shared-ui",
+    "name": "unknown-browser-global",
+    "file": "src/browser.js",
+    "source": "export const root = nonexistentBrowserGlobal;",
+    "diagnostics": [
+      {
+        "rule": "no-undef",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "browser-globals",
+    "file": "src/browser.js",
+    "source": "export const root = window.document ?? document;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/js-client-library",
+    "name": "unknown-browser-global",
+    "file": "src/browser.js",
+    "source": "export const root = nonexistentBrowserGlobal;",
+    "diagnostics": [
+      {
+        "rule": "no-undef",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "browser-globals",
+    "file": "src/browser.js",
+    "source": "export const root = window.document ?? document;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/bh-playwright-testing",
+    "name": "unknown-browser-global",
+    "file": "src/browser.js",
+    "source": "export const root = nonexistentBrowserGlobal;",
+    "diagnostics": [
+      {
+        "rule": "no-undef",
+        "severity": 2
+      }
+    ]
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "browser-globals",
+    "file": "src/browser.js",
+    "source": "export const root = window.document ?? document;",
+    "diagnostics": []
+  },
+  {
+    "workspace": "packages/javascript/doodle-ui",
+    "name": "unknown-browser-global",
+    "file": "src/browser.js",
+    "source": "export const root = nonexistentBrowserGlobal;",
+    "diagnostics": [
+      {
+        "rule": "no-undef",
+        "severity": 2
+      }
+    ]
+  }
+]

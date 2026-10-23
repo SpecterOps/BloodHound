@@ -22,11 +22,19 @@
         "check-types": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-types",
         "lint": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run lint",
         "format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run format",
-        "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-format"
+        "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-format",
+        "test:lint": "node --test tools/oxc/parity.test.mjs"
     },
     "packageManager": "yarn@4.13.0",
     "devDependencies": {
+        "@eslint/compat": "2.0.3",
         "all-contributors-cli": "^6.26.1",
+        "eslint-plugin-jsx-a11y": "6.10.2",
+        "eslint-plugin-react": "patch:eslint-plugin-react@npm%3A7.34.1#~/.yarn/patches/eslint-plugin-react-npm-7.34.1-93be695b40.patch",
+        "eslint-plugin-react-hooks": "4.6.0",
+        "eslint-plugin-react-refresh": "0.4.6",
+        "eslint-plugin-storybook": "patch:eslint-plugin-storybook@npm%3A0.8.0#~/.yarn/patches/eslint-plugin-storybook-npm-0.8.0-8d2a99710e.patch",
+        "oxlint": "1.88.0",
         "prettier": "^3.2.5",
         "typescript": "^5.9.3"
     },
