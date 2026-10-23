@@ -21,17 +21,17 @@ get:
   operationId: ListAvailableCollectorJobs
   summary: List collector jobs available to the authenticated collector
   description: Returns due jobs eligible for the caller, ordered by priority
-    descending and creation time ascending.
+    ascending and creation time ascending.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   parameters:
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
     - name: sort_by
       in: query
-      description: Sortable columns are `priority`, `created_at`, `run_at`, `job_key`.
-        Default is `-priority`, then `created_at` (highest priority, oldest first).
+      description: Sortable columns are `priority`, `created_at`, `run_at`.
+        Default is `priority`, then `created_at` (both ascending).
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'
     - name: job_type_id
@@ -82,5 +82,7 @@ get:
       $ref: './../responses/unauthorized.yaml'
     403:
       $ref: './../responses/forbidden.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
