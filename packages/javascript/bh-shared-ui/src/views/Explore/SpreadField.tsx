@@ -14,28 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { VisuallyHidden } from 'doodle-ui';
 import { cn } from '../../utils';
 import { FieldDisplayProps } from './Field.types';
+import FieldRows from './FieldRows';
 
 const SpreadField = ({ label, values, isList }: FieldDisplayProps & { isList: boolean }) => (
-    <>
-        {values.map(({ value, accessibleLabel }, index) => (
-            <div className={cn('flex flex-row flex-wrap p-2', isList && 'justify-end')} key={index}>
-                {index === 0 && <div className='mr-2 grow shrink-0 font-bold'>{label}</div>}
-                <div className='overflow-hidden text-ellipsis break-all' title={value}>
-                    {accessibleLabel ? (
-                        <>
-                            <span aria-hidden='true'>{value}</span>
-                            <VisuallyHidden>{accessibleLabel}</VisuallyHidden>
-                        </>
-                    ) : (
-                        value
-                    )}
-                </div>
+    <FieldRows
+        label={<div className='mr-2 grow shrink-0 font-bold'>{label}</div>}
+        values={values}
+        rowClassName={cn('flex flex-row flex-wrap', isList && 'justify-end')}
+        renderValue={(value, content) => (
+            <div className='overflow-hidden text-ellipsis break-all' title={value}>
+                {content}
             </div>
-        ))}
-    </>
+        )}
+    />
 );
 
 export default SpreadField;

@@ -14,31 +14,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography, VisuallyHidden } from 'doodle-ui';
+import { Typography } from 'doodle-ui';
 import { FieldDisplayProps } from './Field.types';
+import FieldRows from './FieldRows';
 
 const InlineField = ({ label, values }: FieldDisplayProps) => (
-    <>
-        {values.map(({ value, accessibleLabel }, index) => (
-            <div className='p-2' key={index}>
-                {index === 0 && (
-                    <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                        {typeof label === 'string' ? label.replace(/:$/, '') : label}
-                    </Typography>
-                )}
-                <Typography component='span' variant='body2' className='break-words' title={value}>
-                    {accessibleLabel ? (
-                        <>
-                            <span aria-hidden='true'>{value}</span>
-                            <VisuallyHidden>{accessibleLabel}</VisuallyHidden>
-                        </>
-                    ) : (
-                        value
-                    )}
-                </Typography>
-            </div>
-        ))}
-    </>
+    <FieldRows
+        label={
+            <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                {typeof label === 'string' ? label.replace(/:$/, '') : label}
+            </Typography>
+        }
+        values={values}
+        renderValue={(value, content) => (
+            <Typography component='span' variant='body2' className='break-words' title={value}>
+                {content}
+            </Typography>
+        )}
+    />
 );
 
 export default InlineField;

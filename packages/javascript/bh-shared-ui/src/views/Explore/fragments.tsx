@@ -172,9 +172,9 @@ export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> =
     };
 
     return layout === 'inline' ? (
-        <InlineField {...displayProps} />
+        <InlineField label={displayProps.label} values={displayProps.values} />
     ) : (
-        <SpreadField {...displayProps} isList={Array.isArray(formattedValue)} />
+        <SpreadField label={displayProps.label} values={displayProps.values} isList={Array.isArray(formattedValue)} />
     );
 };
 
