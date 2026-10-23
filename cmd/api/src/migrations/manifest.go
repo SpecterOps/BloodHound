@@ -48,8 +48,11 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 		} else {
 			return false, fmt.Errorf("unable to get graph db migration data: %w", err)
 		}
+	} else if releaseVersion := version.GetVersion(); releaseVersion.IsDevelopment() {
+		// Development builds always report the same version, so always migrate to re-assert the schema
+		return true, nil
 	} else {
-		return version.GetVersion().GreaterThan(currentMigration), nil
+		return releaseVersion.GreaterThan(currentMigration), nil
 	}
 }
 
