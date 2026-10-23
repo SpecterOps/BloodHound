@@ -17,8 +17,9 @@
 import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
-import { EntityField, format } from '../../utils';
+import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
+import InlineField from './InlineField';
 
 const accordionCountClassName =
     'flex h-[1.6rem] min-w-12 items-center justify-center rounded-lg bg-neutral-5 px-2 text-[0.9rem] font-bold leading-[1.6em]';
@@ -109,9 +110,18 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
     );
 };
 
-export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
+export type ObjectInfoFieldLayout = 'spread' | 'inline';
+
+export const FieldsContainer: React.FC<PropsWithChildren<{ layout?: ObjectInfoFieldLayout }>> = ({
+    children,
+    layout = 'spread',
+}) => {
     return (
-        <div className='rounded-lg text-xs [&>:nth-child(even)]:bg-neutral-2 [&>:nth-child(odd)]:bg-neutral-3'>
+        <div
+            className={cn(
+                '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
+                layout === 'spread' && 'rounded-lg text-caption'
+            )}>
             {children}
         </div>
     );
@@ -131,8 +141,8 @@ const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | und
     }
 };
 
-export const Field: React.FC<EntityField> = (entityField) => {
-    const { label, value, keyprop } = entityField;
+export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> = (entityField) => {
+    const { label, value, keyprop, layout = 'spread' } = entityField;
 
     try {
         if (
@@ -146,6 +156,23 @@ export const Field: React.FC<EntityField> = (entityField) => {
 
     const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
+
+    if (layout === 'inline') {
+        const values = typeof formattedValue === 'string' ? [formattedValue] : formattedValue;
+
+        return (
+            <InlineField
+                label={label}
+                values={(values ?? []).map((formattedItem, index) => ({
+                    value: formattedItem,
+                    accessibleLabel:
+                        Array.isArray(value) && value.length > 0
+                            ? getEmptyValueAccessibleLabel(value[index])
+                            : emptyValueAccessibleLabel,
+                }))}
+            />
+        );
+    }
 
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
@@ -192,7 +219,10 @@ export const Field: React.FC<EntityField> = (entityField) => {
     return <>{content}</>;
 };
 
-export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {
+export const ObjectInfoFields: React.FC<{ fields: EntityField[]; layout?: ObjectInfoFieldLayout }> = ({
+    fields,
+    layout,
+}): JSX.Element => {
     const filteredFields = filterNegatedFields(fields);
 
     return (
@@ -205,6 +235,7 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
                         value={field.value}
                         keyprop={`${field.keyprop}`}
                         key={`${field.keyprop}-${field.label}`}
+                        layout={layout}
                     />
                 );
             })}
