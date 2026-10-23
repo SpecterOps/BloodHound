@@ -18,7 +18,7 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
     
 get:
-  operationId: ListCollectorJobHistory
+  operationId: ListCollectorJobHistoryRecords
   summary: List collector job history
   description: Returns immutable terminal collector job records. Filter
     `outcome=failed` to triage dead-lettered jobs.

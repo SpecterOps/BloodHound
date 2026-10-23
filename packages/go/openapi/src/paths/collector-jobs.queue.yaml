@@ -17,103 +17,103 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
 
-get:
-  operationId: ListCollectorJobs
-  summary: List live collector jobs
-  description: Returns a paginated list of non-terminal collector job queue entries.
-  tags:
-    - Collector Jobs (Experimental)
-    - Enterprise
-  parameters:
-    - $ref: './../parameters/query.skip.yaml'
-    - $ref: './../parameters/query.limit.yaml'
-    - name: sort_by
-      in: query
-      description: Sortable columns are `priority`, `created_at`, `run_at`, `job_key`.
-        Default is `created_at`(oldest first).
-      schema:
-        $ref: './../schemas/api.params.query.sort-by.yaml'
-    - name: job_schedule_id
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
-    - name: job_profile_id
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
-    - name: job_type_id
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
-    - name: job_key
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
-    - name: status
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
-    - name: priority
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
-    - name: scope_client_id
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
-    - name: claimed_by
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
-    - name: run_at
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.time.yaml'
-    - name: unclaimed_deadline_at
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.time.yaml'
-    - name: claimed_at
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.time.yaml'
-    - name: claim_expires_at
-      in: query
-      schema:
-        $ref: './../schemas/api.params.predicate.filter.time.yaml'
-    - $ref: './../parameters/query.created-at.yaml'
-    - $ref: './../parameters/query.updated-at.yaml'
-  responses:
-    200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: './../schemas/api.response.pagination.yaml'
-              - type: object
-                required:
-                  - data
-                properties:
-                  data:
-                    type: object
-                    required:
-                      - jobs
-                    properties:
-                      jobs:
-                        type: array
-                        items:
-                          $ref: './../schemas/model.collector-job.yaml'
-    400:
-      $ref: './../responses/bad-request.yaml'
-    401:
-      $ref: './../responses/unauthorized.yaml'
-    403:
-      $ref: './../responses/forbidden.yaml'
-    429:
-      $ref: './../responses/too-many-requests.yaml'
-    500:
-      $ref: './../responses/internal-server-error.yaml'
+#get:
+#  operationId: ListCollectorJobs
+#  summary: List live collector jobs
+#  description: Returns a paginated list of non-terminal collector job queue entries.
+#  tags:
+#    - Collector Jobs (Experimental)
+#    - Enterprise
+#  parameters:
+#    - $ref: './../parameters/query.skip.yaml'
+#    - $ref: './../parameters/query.limit.yaml'
+#    - name: sort_by
+#      in: query
+#      description: Sortable columns are `priority`, `created_at`, `run_at`, `job_key`.
+#        Default is `created_at`(oldest first).
+#      schema:
+#        $ref: './../schemas/api.params.query.sort-by.yaml'
+#    - name: job_schedule_id
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
+#    - name: job_profile_id
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
+#    - name: job_type_id
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.integer-strict.yaml'
+#    - name: job_key
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
+#    - name: status
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.string-strict.yaml'
+#    - name: priority
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.integer.yaml'
+#    - name: scope_client_id
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
+#    - name: claimed_by
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
+#    - name: run_at
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+#    - name: unclaimed_deadline_at
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+#    - name: claimed_at
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+#    - name: claim_expires_at
+#      in: query
+#      schema:
+#        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+#    - $ref: './../parameters/query.created-at.yaml'
+#    - $ref: './../parameters/query.updated-at.yaml'
+#  responses:
+#    200:
+#      description: OK
+#      content:
+#        application/json:
+#          schema:
+#            allOf:
+#              - $ref: './../schemas/api.response.pagination.yaml'
+#              - type: object
+#                required:
+#                  - data
+#                properties:
+#                  data:
+#                    type: object
+#                    required:
+#                      - jobs
+#                    properties:
+#                      jobs:
+#                        type: array
+#                        items:
+#                          $ref: './../schemas/model.collector-job.yaml'
+#    400:
+#      $ref: './../responses/bad-request.yaml'
+#    401:
+#      $ref: './../responses/unauthorized.yaml'
+#    403:
+#      $ref: './../responses/forbidden.yaml'
+#    429:
+#      $ref: './../responses/too-many-requests.yaml'
+#    500:
+#      $ref: './../responses/internal-server-error.yaml'
 
 post:
   operationId: CreateCollectorJob
@@ -183,7 +183,16 @@ post:
                   job:
                     $ref: './../schemas/model.collector-job.yaml'
     400:
-      $ref: './../responses/bad-request.yaml'
+      description: |
+        **Bad Request**
+        This could be due to one of the following reasons:
+        - JSON payload is missing or malformed
+        - The data sent is not valid (ex- sending a `string` in an `integer` field)
+        - The request body references a profile, job type, secret or client that doesn't exist
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/api.error-wrapper.yaml'
     401:
       $ref: './../responses/unauthorized.yaml'
     403:

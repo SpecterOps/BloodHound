@@ -19,7 +19,7 @@ parameters:
   - $ref: './../parameters/path.collector-job-id.yaml'
     
 get:
-  operationId: GetCollectorJobHistory
+  operationId: GetCollectorJobHistoryRecord
   summary: Get a collector job history record
   tags:
     - Collector Jobs (Experimental)

@@ -736,8 +736,8 @@ paths:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
   # collector jobs
-#  /api/v2/collie-job-queue:
-#    $ref: './paths/collector-jobs.queue.yaml'
+  /api/v2/collie-job-queue:
+    $ref: './paths/collector-jobs.queue.yaml'
   /api/v2/collie-job-queue/available:
     $ref: './paths/collector-jobs.queue.available.yaml'
   /api/v2/collie-job-queue/current:
@@ -756,8 +756,8 @@ paths:
     $ref: './paths/collector-jobs.queue.id.end.yaml'
   /api/v2/collie-job-types:
     $ref: './paths/collector-jobs.types.yaml'
-#  /api/v2/collie-job-types/{collector_job_type_id}:
-#    $ref: './paths/collector-jobs.types.id.yaml'
+  /api/v2/collie-job-types/{collector_job_type_id}:
+    $ref: './paths/collector-jobs.types.id.yaml'
   /api/v2/collie-job-profiles:
     $ref: './paths/collector-jobs.profiles.yaml'
   /api/v2/collie-job-profiles/{collector_job_profile_id}:
@@ -772,8 +772,8 @@ paths:
     $ref: './paths/collector-jobs.secrets.id.yaml'
   /api/v2/collie-job-history:
     $ref: './paths/collector-jobs.history.yaml'
-#  /api/v2/collie-job-history/{collector_job_id}:
-#    $ref: './paths/collector-jobs.history.id.yaml'
+  /api/v2/collie-job-history/{collector_job_id}:
+    $ref: './paths/collector-jobs.history.id.yaml'
 
   # management operations
   /api/v2/clients/{client_id}/management:

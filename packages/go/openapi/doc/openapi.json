@@ -17409,6 +17409,147 @@
         }
       }
     },
+    "/api/v2/collie-job-queue": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "CreateCollectorJob",
+        "summary": "Enqueue a collector job",
+        "description": "Enqueues immediately due work from either an existing profile or schema-validated inline parameters.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "job_profile_id"
+                    ],
+                    "properties": {
+                      "job_profile_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "priority": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "job_type_id",
+                      "params"
+                    ],
+                    "properties": {
+                      "job_type_id": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "params": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "secret_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                      },
+                      "scope_client_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                      },
+                      "priority": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "job"
+                      ],
+                      "properties": {
+                        "job": {
+                          "$ref": "#/components/schemas/model.collector-job"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "**Bad Request**\nThis could be due to one of the following reasons:\n- JSON payload is missing or malformed\n- The data sent is not valid (ex- sending a `string` in an `integer` field)\n- The request body references a profile, job type, secret or client that doesn't exist\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "A job for the supplied `job_profile_id` already exists in the collector job queue. Applies only to profile-based requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/collie-job-queue/available": {
       "parameters": [
         {
@@ -17821,16 +17962,6 @@
           "404": {
             "$ref": "#/components/responses/not-found"
           },
-          "409": {
-            "description": "The job is not running.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/api.error-wrapper"
-                }
-              }
-            }
-          },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
           }
@@ -17934,6 +18065,77 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-types/{collector_job_type_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "collector_job_type_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCollectorJobType",
+        "summary": "Get a collector job type",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "$ref": "#/components/schemas/model.collector-job-type"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -19148,7 +19350,7 @@
         }
       ],
       "get": {
-        "operationId": "ListCollectorJobHistory",
+        "operationId": "ListCollectorJobHistoryRecords",
         "summary": "List collector job history",
         "description": "Returns immutable terminal collector job records. Filter `outcome=failed` to triage dead-lettered jobs.",
         "tags": [
@@ -19279,6 +19481,70 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-history/{collector_job_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetCollectorJobHistoryRecord",
+        "summary": "Get a collector job history record",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "record"
+                      ],
+                      "properties": {
+                        "record": {
+                          "$ref": "#/components/schemas/model.collector-job-history"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -29318,6 +29584,7 @@
           "version",
           "params",
           "scope_client_id",
+          "external_secret_key_id",
           "secret_key_id",
           "priority",
           "status",
@@ -29365,6 +29632,9 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "external_secret_key_id": {
+            "$ref": "#/components/schemas/null.string.response"
           },
           "secret_key_id": {
             "allOf": [
