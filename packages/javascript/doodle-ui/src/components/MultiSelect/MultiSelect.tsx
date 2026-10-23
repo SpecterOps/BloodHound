@@ -143,7 +143,7 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
                 multiSelectRowStyles,
                 'text-base font-normal leading-4',
                 option.disabled
-                    ? 'cursor-not-allowed bg-btn-disabled-fill text-text-disabled'
+                    ? 'cursor-not-allowed bg-btn-disabled-fill text-text-disabled dark:bg-btn-disabled-fill-dark'
                     : multiSelectInteractiveRowStyles
             )}
             labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'

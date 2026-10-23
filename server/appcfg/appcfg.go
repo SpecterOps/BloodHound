@@ -20,13 +20,36 @@
 package appcfg
 
 import (
+	"context"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/server/appcfg/internal/adapter"
 	"github.com/specterops/bloodhound/server/appcfg/internal/appdb"
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 	"github.com/specterops/bloodhound/server/appcfg/internal/routes"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 )
+
+type ParameterKey = services.ParameterKey
+type Parameter = services.Parameter
+type ScheduledAnalysisParameter = services.ScheduledAnalysisParameter
+
+const ScheduledAnalysis = services.ScheduledAnalysis
+
+// ConfigurationAdapter lets other slices read configuration
+type ConfigurationAdapter interface {
+	GetApplicationConfiguration(ctx context.Context, parameterKey ParameterKey) (Parameter, error)
+}
+
+func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
+	var (
+		store   = appdb.NewStore(pool)
+		service = services.NewService(store)
+	)
+
+	return adapter.NewConfigurationAdapter(store, service)
+}
 
 // Register builds the appcfg store -> service -> handler chain and attaches
 // the appcfg routes to the provided router. It is called from the modules
