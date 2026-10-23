@@ -158,6 +158,7 @@ export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> =
 
     const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
+    const isList = Array.isArray(formattedValue);
 
     const values = typeof formattedValue === 'string' ? [formattedValue] : formattedValue;
     const displayProps: FieldDisplayProps = {
@@ -174,7 +175,7 @@ export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> =
     return layout === 'inline' ? (
         <InlineField label={displayProps.label} values={displayProps.values} />
     ) : (
-        <SpreadField label={displayProps.label} values={displayProps.values} isList={Array.isArray(formattedValue)} />
+        <SpreadField label={displayProps.label} values={displayProps.values} isList={isList} />
     );
 };
 

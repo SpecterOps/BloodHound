@@ -19,6 +19,24 @@ import { EntityField } from '../../utils';
 import { Field, ObjectInfoFields, exclusionList } from './fragments';
 
 describe.each(['spread', 'inline'] as const)('Field (%s layout)', (layout) => {
+    it.each([
+        { description: 'single-item', values: ['HOST/one'] },
+        { description: 'multiple-item', values: ['HOST/one', 'HOST/two'] },
+    ])('aligns $description lists for the selected layout with one label', ({ values }) => {
+        render(<Field layout={layout} label='Service Principal Names:' value={values} />);
+
+        expect(screen.getAllByText(/^Service Principal Names:?$/)).toHaveLength(1);
+        values.forEach((value) => {
+            const element = screen.getByText(value);
+            expect(element).toHaveAttribute('title', value);
+            if (layout === 'spread') {
+                expect(element.parentElement).toHaveClass('justify-end');
+            } else {
+                expect(element.parentElement).not.toHaveClass('justify-end');
+            }
+        });
+    });
+
     it('preserves rich labels', () => {
         render(<Field layout={layout} label={<span>Rich label</span>} value='value' />);
         expect(screen.getByText('Rich label')).toBeInTheDocument();
