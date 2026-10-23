@@ -132,10 +132,11 @@ func TestHandlers_GetDatapipeStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var (
-				mockSvc = mocks.NewMockService(t)
-				h       = handlers.NewHandlers(mockSvc)
-				rr      = httptest.NewRecorder()
-				req     = newRequest(t)
+				mockSvc      = mocks.NewMockService(t)
+				mockFFReader = mocks.NewMockFeatureFlagReader(t)
+				h            = handlers.NewHandlers(mockSvc, mockFFReader)
+				rr           = httptest.NewRecorder()
+				req          = newRequest(t)
 			)
 
 			mockSvc.EXPECT().
@@ -197,10 +198,11 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 
 	t.Run("Get all params returns 200", func(t *testing.T) {
 		var (
-			mockSvc = mocks.NewMockService(t)
-			h       = handlers.NewHandlers(mockSvc)
-			rr      = httptest.NewRecorder()
-			req     = newRequest(t)
+			mockSvc      = mocks.NewMockService(t)
+			mockFFReader = mocks.NewMockFeatureFlagReader(t)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			rr           = httptest.NewRecorder()
+			req          = newRequest(t)
 		)
 
 		mockSvc.EXPECT().
@@ -224,10 +226,11 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 
 	t.Run("Get all params returns 500 on unexpected database error", func(t *testing.T) {
 		var (
-			mockSvc = mocks.NewMockService(t)
-			h       = handlers.NewHandlers(mockSvc)
-			rr      = httptest.NewRecorder()
-			req     = newRequest(t)
+			mockSvc      = mocks.NewMockService(t)
+			mockFFReader = mocks.NewMockFeatureFlagReader(t)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			rr           = httptest.NewRecorder()
+			req          = newRequest(t)
 		)
 
 		mockSvc.EXPECT().
@@ -245,10 +248,11 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 
 	t.Run("returns 200 querying a single param", func(t *testing.T) {
 		var (
-			mockSvc = mocks.NewMockService(t)
-			h       = handlers.NewHandlers(mockSvc)
-			rr      = httptest.NewRecorder()
-			req     = newRequest(t)
+			mockSvc      = mocks.NewMockService(t)
+			mockFFReader = mocks.NewMockFeatureFlagReader(t)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			rr           = httptest.NewRecorder()
+			req          = newRequest(t)
 		)
 
 		filter := params.Filter{
@@ -283,10 +287,11 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 
 	t.Run("returns 400 querying a single protected param", func(t *testing.T) {
 		var (
-			mockSvc = mocks.NewMockService(t)
-			h       = handlers.NewHandlers(mockSvc)
-			rr      = httptest.NewRecorder()
-			req     = newRequest(t)
+			mockSvc      = mocks.NewMockService(t)
+			mockFFReader = mocks.NewMockFeatureFlagReader(t)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			rr           = httptest.NewRecorder()
+			req          = newRequest(t)
 		)
 
 		filter := params.Filter{
@@ -311,10 +316,11 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 
 	t.Run("get single param returns 500 on unexpected error", func(t *testing.T) {
 		var (
-			mockSvc = mocks.NewMockService(t)
-			h       = handlers.NewHandlers(mockSvc)
-			rr      = httptest.NewRecorder()
-			req     = newRequest(t)
+			mockSvc      = mocks.NewMockService(t)
+			mockFFReader = mocks.NewMockFeatureFlagReader(t)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			rr           = httptest.NewRecorder()
+			req          = newRequest(t)
 		)
 
 		filter := params.Filter{
@@ -363,16 +369,21 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 
 	t.Run("Update param returns error", func(t *testing.T) {
 		var (
-			mockSvc   = mocks.NewMockService(t)
-			h         = handlers.NewHandlers(mockSvc)
-			rr        = httptest.NewRecorder()
-			inputBody = `{"key":"akey","value":{"subparam":"avalue"}}`
-			req       = newRequest(t, inputBody)
+			mockSvc      = mocks.NewMockService(t)
+			mockFFReader = mocks.NewMockFeatureFlagReader(t)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			rr           = httptest.NewRecorder()
+			inputBody    = `{"key":"akey","value":{"subparam":"avalue"}}`
+			req          = newRequest(t, inputBody)
 		)
 
 		mockSvc.EXPECT().
 			IsAPIAllowedKey(services.ParameterKey("akey")).
 			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.ParameterKey("akey"), mock.Anything).
+			Return(nil).
 			Once()
 		mockSvc.EXPECT().
 			UpsertApplicationConfiguration(req.Context(), services.ParameterKey("akey"), mock.Anything).
@@ -385,5 +396,68 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 		var envelope = errorEnvelope{}
 		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
 		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("Update api token expiration fails on disabled feature flag", func(t *testing.T) {
+		var (
+			mockSvc      = mocks.NewMockService(t)
+			mockFFReader = mocks.NewMockFeatureFlagReader(t)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			rr           = httptest.NewRecorder()
+			inputBody    = `{"key":"` + string(services.APITokenExpiration) + `","value":{"subparam":"avalue"}}`
+			req          = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.APITokenExpiration).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.APITokenExpiration, mock.Anything).
+			Return(nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, mock.Anything).
+			Return(false, nil).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusForbidden, rr.Code)
+		var envelope = errorEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("Update api token expiration succeeds on enabled feature flag", func(t *testing.T) {
+		var (
+			mockSvc      = mocks.NewMockService(t)
+			mockFFReader = mocks.NewMockFeatureFlagReader(t)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			rr           = httptest.NewRecorder()
+			inputBody    = `{"key":"` + string(services.APITokenExpiration) + `","value":{"subparam":"avalue"}}`
+			req          = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.APITokenExpiration).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.APITokenExpiration, mock.Anything).
+			Return(nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, mock.Anything).
+			Return(true, nil).
+			Once()
+		mockSvc.EXPECT().
+			UpsertApplicationConfiguration(req.Context(), services.APITokenExpiration, mock.Anything).
+			Return(nil).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
 	})
 }

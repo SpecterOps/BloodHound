@@ -45,13 +45,19 @@ type Service interface {
 	ValidateValue(key services.ParameterKey, value types.JSONBObject) utils.Errors
 }
 
-type Handlers struct {
-	service Service
+type FeatureFlagReader interface {
+	IsEnabled(ctx context.Context, key string) (bool, error)
 }
 
-func NewHandlers(service Service) *Handlers {
+type Handlers struct {
+	service  Service
+	ffReader FeatureFlagReader
+}
+
+func NewHandlers(service Service, ffReader FeatureFlagReader) *Handlers {
 	return &Handlers{
-		service: service,
+		service:  service,
+		ffReader: ffReader,
 	}
 }
 
@@ -132,7 +138,16 @@ func (s *Handlers) SetApplicationConfiguration(response http.ResponseWriter, req
 		return
 	}
 
-	// validate feature flag special case (TODO BED-9765)
+	// validate feature flag special case
+	if setConfigBody.Key == services.APITokenExpiration {
+		if enabled, err := s.ffReader.IsEnabled(ctx, "api_key_expiration_support"); err != nil {
+			handleServiceError(ctx, response, err)
+			return
+		} else if !enabled {
+			responses.WriteError(ctx, http.StatusForbidden, fmt.Sprintf("Configuration parameter %s is not available.", setConfigBody.Key), response)
+			return
+		}
+	}
 
 	// update the parameter
 	if err := s.service.UpsertApplicationConfiguration(ctx, setConfigBody.Key, setConfigBody.Value); err != nil {

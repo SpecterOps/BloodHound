@@ -33,11 +33,12 @@ import (
 
 func TestRegister(t *testing.T) {
 	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-		mock       = mocks.NewMockService(t)
-		handlerSet = handlers.NewHandlers(mock)
+		cfg          = config.Configuration{}
+		authorizer   = auth.NewAuthorizer(nil)
+		routerInst   = router.NewRouter(cfg, authorizer, "")
+		mockService  = mocks.NewMockService(t)
+		mockFFReader = mocks.NewMockFeatureFlagReader(t)
+		handlerSet   = handlers.NewHandlers(mockService, mockFFReader)
 	)
 
 	routes.Register(&routerInst, handlerSet)
@@ -61,11 +62,12 @@ func TestRegister(t *testing.T) {
 // wireup ever loses RequireAuth, this test will fail.
 func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-		mock       = mocks.NewMockService(t)
-		handlerSet = handlers.NewHandlers(mock)
+		cfg          = config.Configuration{}
+		authorizer   = auth.NewAuthorizer(nil)
+		routerInst   = router.NewRouter(cfg, authorizer, "")
+		mockService  = mocks.NewMockService(t)
+		mockFFReader = mocks.NewMockFeatureFlagReader(t)
+		handlerSet   = handlers.NewHandlers(mockService, mockFFReader)
 	)
 
 	routes.Register(&routerInst, handlerSet)

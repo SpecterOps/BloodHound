@@ -29,6 +29,7 @@ import (
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 	"github.com/specterops/bloodhound/server/appcfg/internal/routes"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
+	"github.com/specterops/bloodhound/server/featureflags"
 )
 
 type ParameterKey = services.ParameterKey
@@ -56,9 +57,10 @@ func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
 // registry and receives only the infrastructure it directly needs.
 func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (
+		ffReader   = featureflags.NewFeatureFlagRequestAdapter(pool)
 		store      = appdb.NewStore(pool)
 		service    = services.NewService(store)
-		handlerSet = handlers.NewHandlers(service)
+		handlerSet = handlers.NewHandlers(service, ffReader)
 	)
 
 	routes.Register(routerInst, handlerSet)
