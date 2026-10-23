@@ -18,6 +18,7 @@ package services_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -113,6 +114,69 @@ func setUpMockWithParam(t *testing.T, ctx context.Context, paramKey services.Par
 	mockDB := mocks.NewMockDatabase(t)
 	mockDB.EXPECT().GetConfigurationParameter(ctx, paramKey).Return(parameter, error(nil))
 	return services.NewService(mockDB)
+}
+
+func TestService_ValidateValue(t *testing.T) {
+	mockDB := mocks.NewMockDatabase(t)
+	svc := services.NewService(mockDB)
+
+	// specific validator tag rules are already tested elsewhere
+	var cases = []struct {
+		name            string
+		parameterKey    services.ParameterKey
+		input           string
+		expectError     bool
+		expectErrorLike string
+	}{
+		{
+			name:         "happy: input matches type",
+			parameterKey: services.APITokenExpiration,
+			input:        `{"enabled":true, "expiration_period":200}`,
+			expectError:  false,
+		},
+		{
+			name:         "happy: input matches type with a different parameter",
+			parameterKey: services.ClientMetricsKey,
+			input:        `{"enabled":true}`,
+			expectError:  false,
+		},
+		{
+			name:            "sad: too few fields",
+			parameterKey:    services.APITokenExpiration,
+			input:           `{"expiration_period":200}`,
+			expectError:     true,
+			expectErrorLike: "value property contains an invalid field",
+		},
+		{
+			name:            "sad: too many fields",
+			parameterKey:    services.APITokenExpiration,
+			input:           `{"enabled":true, "expiration_period":200, "blah":"blah"}`,
+			expectError:     true,
+			expectErrorLike: "value property contains an invalid field",
+		},
+		{
+			name:            "sad: value out of range",
+			parameterKey:    services.APITokenExpiration,
+			input:           `{"enabled":true, "expiration_period":500}`,
+			expectError:     true,
+			expectErrorLike: "ExpirationPeriod: must be <= 365",
+		},
+	}
+
+	for _, cc := range cases {
+		t.Run(cc.name, func(t *testing.T) {
+			var object types.JSONBObject
+			err := json.Unmarshal([]byte(cc.input), &object)
+			require.NoError(t, err)
+
+			errs := svc.ValidateValue(cc.parameterKey, object)
+			if !cc.expectError {
+				assert.Nil(t, errs)
+			} else {
+				assert.Contains(t, errs.Error(), cc.expectErrorLike)
+			}
+		})
+	}
 }
 
 func TestService_GetConfig(t *testing.T) {
