@@ -258,6 +258,7 @@ const GraphView: FC = () => {
         dispatch(setExploreLayout(defaultGraphLayout));
         dispatch(setIsExploreLayoutSelected(false));
         dispatch(setIsExploreTableSelected(false));
+        sigmaChartRef.current?.runSequentialLayout();
     }, [dispatch]);
 
     const setLayout = useCallback(

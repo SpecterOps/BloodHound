@@ -33,6 +33,7 @@ import GraphView from './GraphView';
 
 const captureGraph = vi.hoisted(() => vi.fn());
 const captureProps = vi.hoisted(() => vi.fn());
+const runSequentialLayout = vi.hoisted(() => vi.fn());
 
 // Mock sigma here to avoid rendering conflicts in jsdom
 vi.mock('src/components/SigmaChart', async () => {
@@ -44,7 +45,7 @@ vi.mock('src/components/SigmaChart', async () => {
             captureProps(props);
             useImperativeHandle(ref, () => ({
                 runStandardLayout: vi.fn(),
-                runSequentialLayout: vi.fn(),
+                runSequentialLayout,
                 resetCamera: vi.fn(),
                 zoomTo: vi.fn(),
             }));
@@ -637,7 +638,9 @@ describe('GraphView', () => {
             await user.click(layoutMenu);
 
             const standardOption = await screen.findByTestId('explore_graph-controls_standard-buttonLabel');
+            runSequentialLayout.mockClear();
             await user.click(standardOption);
+            expect(runSequentialLayout).toHaveBeenCalledOnce();
 
             await user.click(layoutMenu);
 
@@ -679,7 +682,9 @@ describe('GraphView', () => {
             await user.click(layoutMenu);
 
             const tableOption = await screen.findByTestId('explore_graph-controls_table-buttonLabel');
+            runSequentialLayout.mockClear();
             await user.click(tableOption);
+            expect(runSequentialLayout).toHaveBeenCalledOnce();
 
             await waitFor(() => {
                 expect(screen.queryByRole('table')).not.toBeInTheDocument();
