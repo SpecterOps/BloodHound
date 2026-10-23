@@ -160,10 +160,6 @@ export enum ActiveDirectoryRelationshipKind {
     ClaimSpecialIdentity = 'ClaimSpecialIdentity',
     CoerceAndRelayNTLMToLDAP = 'CoerceAndRelayNTLMToLDAP',
     CoerceAndRelayNTLMToLDAPS = 'CoerceAndRelayNTLMToLDAPS',
-    ContainsIdentity = 'ContainsIdentity',
-    PropagatesACEsTo = 'PropagatesACEsTo',
-    GPOAppliesTo = 'GPOAppliesTo',
-    CanApplyGPO = 'CanApplyGPO',
     HasTrustKeys = 'HasTrustKeys',
     WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
     WritePublicInformation = 'WritePublicInformation',
@@ -333,14 +329,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToLDAP';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS:
             return 'CoerceAndRelayNTLMToLDAPS';
-        case ActiveDirectoryRelationshipKind.ContainsIdentity:
-            return 'ContainsIdentity';
-        case ActiveDirectoryRelationshipKind.PropagatesACEsTo:
-            return 'PropagatesACEsTo';
-        case ActiveDirectoryRelationshipKind.GPOAppliesTo:
-            return 'GPOAppliesTo';
-        case ActiveDirectoryRelationshipKind.CanApplyGPO:
-            return 'CanApplyGPO';
         case ActiveDirectoryRelationshipKind.HasTrustKeys:
             return 'HasTrustKeys';
         case ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities:
@@ -370,8 +358,6 @@ export const EdgeCompositionRelationships = [
     'CoerceAndRelayNTLMToADCS',
     'CoerceAndRelayNTLMToLDAP',
     'CoerceAndRelayNTLMToLDAPS',
-    'GPOAppliesTo',
-    'CanApplyGPO',
 ];
 export enum ActiveDirectoryKindProperties {
     AdminCount = 'admincount',
@@ -868,10 +854,6 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
-        ActiveDirectoryRelationshipKind.ContainsIdentity,
-        ActiveDirectoryRelationshipKind.PropagatesACEsTo,
-        ActiveDirectoryRelationshipKind.GPOAppliesTo,
-        ActiveDirectoryRelationshipKind.CanApplyGPO,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
         ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
         ActiveDirectoryRelationshipKind.WritePublicInformation,
