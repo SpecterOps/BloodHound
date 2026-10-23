@@ -183,7 +183,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--select-disabled-placeholder-text': 'var(--disabled)',
             '--select-invalid-placeholder-open-text': 'var(--input-placeholder-text)',
             '--select-open-focus-border': 'var(--primary)',
-            '--select-open-invalid-hover-focus-border': 'var(--primary)',
+            '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
             '--select-highlight-text': 'var(--common-white)',
             '--select-placeholder-text': 'inherit',
             '--select-disabled-fill': palette.neutral.light[100],
