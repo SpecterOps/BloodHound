@@ -84,10 +84,13 @@ const ConfirmationDialog: React.FC<{
             <DialogPortal>
                 <DialogContent>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
-                    <DialogDescription className='text-lg'>{text}</DialogDescription>
+                    <DialogDescription asChild className='text-lg'>
+                        {/* Description can contain block elements that cannot be nested inside a paragraph, so using a div asChild */}
+                        <div>{text}</div>
+                    </DialogDescription>
                     {challengeText && (
                         <DialogDescription asChild className='text-sm'>
-                            <div className='pb-1'>
+                            <div className='pb-1 flex flex-col gap-1'>
                                 Please input "{challengeText}" prior to clicking confirm.
                                 <Input
                                     placeholder={challengeText}

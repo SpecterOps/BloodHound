@@ -910,6 +910,9 @@ class BHEAPIClient {
     createCollectorJobSecret = (request: CreateCollectorJobSecretRequest, options?: RequestOptions) =>
         this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collie-job-secrets', request, options);
 
+    deleteCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collie-job-secrets/${secretId}`, options);
+
     /* clients */
 
     getClients = (
