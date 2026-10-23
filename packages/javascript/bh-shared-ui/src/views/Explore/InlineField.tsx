@@ -15,14 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Typography, VisuallyHidden } from 'doodle-ui';
-import { EntityField } from '../../utils';
+import { FieldDisplayProps } from './Field.types';
 
-type InlineFieldProps = {
-    label: EntityField['label'];
-    values: { value: string; accessibleLabel?: string }[];
-};
-
-const InlineField = ({ label, values }: InlineFieldProps) => (
+const InlineField = ({ label, values }: FieldDisplayProps) => (
     <>
         {values.map(({ value, accessibleLabel }, index) => (
             <div className='p-2' key={index}>

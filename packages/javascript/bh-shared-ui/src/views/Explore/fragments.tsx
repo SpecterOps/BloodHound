@@ -14,12 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
+import { Alert, Typography } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
+import { FieldDisplayProps } from './Field.types';
 import InlineField from './InlineField';
+import SpreadField from './SpreadField';
 
 const accordionCountClassName =
     'flex h-[1.6rem] min-w-12 items-center justify-center rounded-lg bg-neutral-5 px-2 text-[0.9rem] font-bold leading-[1.6em]';
@@ -142,7 +144,7 @@ const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | und
 };
 
 export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> = (entityField) => {
-    const { label, value, keyprop, layout = 'spread' } = entityField;
+    const { label, value, layout = 'spread' } = entityField;
 
     try {
         if (
@@ -157,66 +159,23 @@ export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> =
     const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
 
-    if (layout === 'inline') {
-        const values = typeof formattedValue === 'string' ? [formattedValue] : formattedValue;
+    const values = typeof formattedValue === 'string' ? [formattedValue] : formattedValue;
+    const displayProps: FieldDisplayProps = {
+        label,
+        values: (values ?? []).map((formattedItem, index) => ({
+            value: formattedItem,
+            accessibleLabel:
+                Array.isArray(value) && value.length > 0
+                    ? getEmptyValueAccessibleLabel(value[index])
+                    : emptyValueAccessibleLabel,
+        })),
+    };
 
-        return (
-            <InlineField
-                label={label}
-                values={(values ?? []).map((formattedItem, index) => ({
-                    value: formattedItem,
-                    accessibleLabel:
-                        Array.isArray(value) && value.length > 0
-                            ? getEmptyValueAccessibleLabel(value[index])
-                            : emptyValueAccessibleLabel,
-                }))}
-            />
-        );
-    }
-
-    let content: React.ReactNode;
-    if (typeof formattedValue === 'string') {
-        content = (
-            <div className='flex flex-row flex-wrap p-2'>
-                <div className='mr-2 grow shrink-0 font-bold'>{label}</div>
-                <div className='overflow-hidden text-ellipsis break-all' title={formattedValue}>
-                    {emptyValueAccessibleLabel ? (
-                        <>
-                            <span aria-hidden='true'>{formattedValue}</span>
-                            <VisuallyHidden>{emptyValueAccessibleLabel}</VisuallyHidden>
-                        </>
-                    ) : (
-                        formattedValue
-                    )}
-                </div>
-            </div>
-        );
-    } else {
-        content = formattedValue!.map((value: string, index: number) => {
-            const listItemEmptyValueAccessibleLabel =
-                Array.isArray(entityField.value) && entityField.value.length > 0
-                    ? getEmptyValueAccessibleLabel(entityField.value[index])
-                    : emptyValueAccessibleLabel;
-
-            return (
-                <div className='flex flex-row flex-wrap justify-end p-2' key={`${keyprop}-${index}`}>
-                    {index === 0 && <div className='mr-2 grow shrink-0 font-bold'>{label}</div>}
-                    <div className='overflow-hidden text-ellipsis break-all' title={value}>
-                        {listItemEmptyValueAccessibleLabel ? (
-                            <>
-                                <span aria-hidden='true'>{value}</span>
-                                <VisuallyHidden>{listItemEmptyValueAccessibleLabel}</VisuallyHidden>
-                            </>
-                        ) : (
-                            value
-                        )}
-                    </div>
-                </div>
-            );
-        });
-    }
-
-    return <>{content}</>;
+    return layout === 'inline' ? (
+        <InlineField {...displayProps} />
+    ) : (
+        <SpreadField {...displayProps} isList={Array.isArray(formattedValue)} />
+    );
 };
 
 export const ObjectInfoFields: React.FC<{ fields: EntityField[]; layout?: ObjectInfoFieldLayout }> = ({
