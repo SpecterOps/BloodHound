@@ -65,13 +65,14 @@ func (s Service) ValidateValue(key ParameterKey, value types.JSONBObject) utils.
 		return utils.Errors{errors.New("invalid key")}
 	}
 	paramTypeInstance := paramdef.GetType()
+	paramTypePointer := reflect.New(reflect.TypeOf(paramTypeInstance))
 
 	// numField panics when val is not a struct, so we need both checks
-	if val := reflect.Indirect(reflect.ValueOf(paramTypeInstance)); val.Kind() != reflect.Struct || val.NumField() != len(objMap) {
+	if val := paramTypePointer.Elem(); val.Kind() != reflect.Struct || val.NumField() != len(objMap) {
 		return utils.Errors{errors.New("value property contains an invalid field")}
-	} else if err := value.Map(&paramTypeInstance); err != nil {
+	} else if err := value.Map(paramTypePointer.Interface()); err != nil {
 		return utils.Errors{err}
-	} else if errs := validation.Validate(paramTypeInstance); errs != nil {
+	} else if errs := validation.Validate(paramTypePointer.Interface()); errs != nil {
 		return errs
 	}
 

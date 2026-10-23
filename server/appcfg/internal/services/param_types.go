@@ -82,20 +82,20 @@ func (s *ISODuration) UnmarshalJSON(b []byte) error {
 
 // ## Param types list
 
-type PasswordExpiration struct {
+type PasswordExpirationParameter struct {
 	Duration ISODuration `json:"duration"`
 }
 
-type Neo4jParameters struct {
+type Neo4jParameter struct {
 	WriteFlushSize int `json:"write_flush_size,omitempty"`
 	BatchWriteSize int `json:"batch_write_size,omitempty"`
 }
 
-type CitrixRDPSupport struct {
+type CitrixRDPSupportParameter struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
 
-type PruneTTLParameters struct {
+type PruneTTLParameter struct {
 	BaseTTL           ISODuration `json:"base_ttl,omitempty" validate:"duration,min=P4D,max=P30D"`
 	HasSessionEdgeTTL ISODuration `json:"has_session_edge_ttl,omitempty" validate:"duration,min=P2D,max=P7D"`
 }
@@ -113,13 +113,13 @@ type TrustedProxiesParameters struct {
 	TrustedProxies int `json:"trusted_proxies,omitempty"`
 }
 
-type TieringParameters struct {
+type TieringParameter struct {
 	TierLimit                int  `json:"tier_limit,omitempty"`
 	LabelLimit               int  `json:"label_limit,omitempty"`
 	MultiTierAnalysisEnabled bool `json:"multi_tier_analysis_enabled,omitempty"`
 }
 
-type AGTParameters struct {
+type AGTParameter struct {
 	DAWGsWorkerLimit     int `json:"dawgs_worker_limit,omitempty"`
 	ExpansionWorkerLimit int `json:"expansion_worker_limit,omitempty"`
 	SelectorWorkerLimit  int `json:"selector_worker_limit,omitempty"`
@@ -133,7 +133,7 @@ type SessionTTLHoursParameter struct {
 	Hours int `json:"hours,omitempty"`
 }
 
-type StaleClientUpdatedLogic struct {
+type StaleClientUpdatedLogicParameter struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
 
@@ -149,11 +149,11 @@ type APITokensParameter struct {
 	Enabled bool `json:"enabled"`
 }
 
-type EnvironmentTargetedAccessControlParameters struct {
+type EnvironmentTargetedAccessControlParameter struct {
 	Enabled bool `json:"enabled,omitempty"`
 }
 
-type SupportAccountProvisioningParameters struct {
+type SupportAccountProvisioningParameter struct {
 	// Setting disabled as false means that you are explicitly opting into the feature
 	Enabled    bool        `json:"enabled,omitempty"`
 	SessionTTL ISODuration `json:"session_ttl,omitempty"`
@@ -222,7 +222,7 @@ var (
 		// Example:
 		// GraphStorageOptimizationKey: {
 		// 	AllowAPIAccess: false,
-		//  GetType: func() any { return &GraphStorageOptimizationParameter{} },
+		//  GetType: func() any { return GraphStorageOptimizationParameter{} },
 		// 	HydrationRules: ParamTypeHydrationRules[POCGraphStorageOptimizationParam]{
 		// 		Default: POCGraphStorageOptimizationParam{
 		// 			AfterBoot:          false,
@@ -238,71 +238,71 @@ var (
 		// },
 		PasswordExpirationWindow: {
 			AllowAPIAccess: true,
-			GetType:        func() any { return &PasswordExpiration{} },
+			GetType:        func() any { return PasswordExpirationParameter{} },
 		},
 		Neo4jConfigs: {
 			AllowAPIAccess: true,
-			GetType:        func() any { return &Neo4jParameters{} },
+			GetType:        func() any { return Neo4jParameter{} },
 		},
 		PruneTTL: {
 			AllowAPIAccess: true,
-			GetType:        func() any { return &PruneTTLParameters{} },
+			GetType:        func() any { return PruneTTLParameter{} },
 		},
 		CitrixRDPSupportKey: {
 			AllowAPIAccess: true,
-			GetType:        func() any { return &CitrixRDPSupport{} },
+			GetType:        func() any { return CitrixRDPSupportParameter{} },
 		},
 		ReconciliationKey: {
 			AllowAPIAccess: true,
-			GetType:        func() any { return &ReconciliationParameter{} },
+			GetType:        func() any { return ReconciliationParameter{} },
 		},
 		ScheduledAnalysis: {
 			AllowAPIAccess: true,
-			GetType:        func() any { return &ScheduledAnalysisParameter{} },
+			GetType:        func() any { return ScheduledAnalysisParameter{} },
 		},
 		ClientMetricsKey: {
 			AllowAPIAccess: true,
-			GetType:        func() any { return &ClientMetricsParameter{} },
+			GetType:        func() any { return ClientMetricsParameter{} },
 		},
 		APITokenExpiration: {
 			AllowAPIAccess: true,
-			GetType:        func() any { return &APITokenExpirationParameter{} },
+			GetType:        func() any { return APITokenExpirationParameter{} },
 		},
 		TrustedProxiesConfig: {
-			GetType: func() any { return &TrustedProxiesParameters{} },
+			GetType: func() any { return TrustedProxiesParameters{} },
 		},
 		FedEULACustomTextKey: {
-			GetType: func() any { return &FedEULACustomTextParameter{} },
+			GetType: func() any { return FedEULACustomTextParameter{} },
 		},
 		TierManagementParameterKey: {
-			GetType: func() any { return &TieringParameters{} },
+			GetType: func() any { return TieringParameter{} },
 		},
 		SessionTTLHours: {
-			GetType: func() any { return &SessionTTLHoursParameter{} },
+			GetType: func() any { return SessionTTLHoursParameter{} },
 		},
 		StaleClientUpdatedLogicKey: {
-			GetType: func() any { return &StaleClientUpdatedLogic{} },
+			GetType: func() any { return StaleClientUpdatedLogicParameter{} },
 		},
 		RetainIngestedFilesKey: {
-			GetType: func() any { return &RetainIngestedFilesParameter{} },
+			GetType: func() any { return RetainIngestedFilesParameter{} },
 		},
 		AGTParameterKey: {
-			GetType: func() any { return &AGTParameters{} },
+			GetType: func() any { return AGTParameter{} },
 		},
 		TimeoutLimit: {
-			GetType: func() any { return &TimeoutLimitParameter{} },
+			GetType: func() any { return TimeoutLimitParameter{} },
 		},
 		APITokens: {
-			GetType: func() any { return &APITokensParameter{} },
+			GetType: func() any { return APITokensParameter{} },
 		},
 		EnvironmentTargetedAccessControlKey: {
-			GetType: func() any { return &EnvironmentTargetedAccessControlParameters{} },
+			GetType: func() any { return EnvironmentTargetedAccessControlParameter{} },
 		},
 		SupportAccountProvisioningKey: {
-			GetType: func() any { return &SupportAccountProvisioningParameters{} },
+			GetType: func() any { return SupportAccountProvisioningParameter{} },
 		},
 		GraphStorageOptimizationKey: {
-			GetType: func() any { return &GraphStorageOptimizationParameter{} },
+			GetType: func() any { return GraphStorageOptimizationParameter{} },
 		},
 	}
 )
