@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import tailwindColors from 'tailwindcss/colors';
 import { PluginCreator } from 'tailwindcss/types/config';
 import { common, dark, elevation, light, palette, text } from './colors';
 
@@ -126,13 +127,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
             // Components/Button
-            '--secondary-btn-fill': palette.neutral.light[300],
-            '--secondary-btn-active-fill': palette.neutral.light[400],
             // TODO remove
-            '--tertiary-btn-border': palette.neutral.light[400],
-            '--transparent-btn-border': palette.neutral.light[400],
-            '--icon-btn-fill': palette.neutral.light[400],
-            '--btn-disabled-fill': palette.neutral.light[200],
             '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.light[500],
             '--toggle-group-fill': 'var(--surface-subtle)',
@@ -206,10 +201,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--dropdown-option-hover-fill': 'var(--surface-hover)',
             '--dropdown-option-disabled-fill': palette.neutral.light[300],
             '--dropdown-tooltip-fill': 'var(--surface-hover)',
-            '--switch-fill': palette.neutral.dark[700],
-            '--switch-disabled-fill': palette.neutral.light[300],
-            '--switch-thumb-fill': palette.neutral.light[50],
-            '--switch-thumb-disabled-fill': palette.neutral.light[400],
 
             // Components/Data Display/ DataTable
             '--data-table-fill': 'var(--surface-subtle)',
@@ -219,30 +210,54 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': light.primary.main,
 
-            // Components/Data Display/ Menu
-            // '--menu-bg': 'var(--elevation-0)',
+            // // Components/Switch
+            '--switch-fill': palette.neutral.dark[700],
+            '--switch-disabled-fill': palette.neutral.light[300],
+            '--switch-thumb-fill': palette.neutral.light[50],
 
-            // Components/Data Display/ Badge & Chip
-            '--badge-primary-fill': light.badge.primary.fill,
-            '--badge-primary-outline': 'var(--primary)',
+            // // Components/Button
+            '--button-secondary-fill': palette.neutral.light[300],
+            '--button-secondary-active-fill': palette.neutral.light[400],
+            '--button-icon-fill': palette.neutral.light[400],
+            '--button-disabled-fill': palette.neutral.light[200],
+            '--button-transparent-border': palette.neutral.light[400],
+            '--button-disabled-text': palette.grey[700],
+            '--button-primary-text': 'var(--common-white)',
+            '--button-secondary-text': 'var(--common-dark)',
+            '--button-highlight-text': 'var(--common-white)',
+            '--button-primary-active-fill': light.primary.variant,
+            '--button-text-active': light.primary.variant,
 
-            '--badge-secondary-fill': light.badge.secondary.fill,
-            '--badge-secondary-outline': 'var(--secondary)',
+            // // Components/Menu
+            '--menu-content-fill': common.white,
+            '--menu-item-highlight-fill': light.secondary.main,
+            '--menu-item-active-fill': light.primary.main,
+            '--menu-item-disabled-fill': palette.neutral.light[200],
+            '--menu-separator-fill': palette.neutral.light[300],
+            '--menu-content-border': palette.neutral.light[300],
+            '--menu-sub-content-border': tailwindColors.gray[200],
+            '--menu-item-highlight-border': light.secondary.main,
+            '--menu-item-highlight-text': common.white,
+            '--menu-item-disabled-text': palette.grey[700],
 
-            '--badge-grey-fill': light.badge.grey.fill,
-            '--badge-grey-outline': light.badge.grey.outline,
-
-            '--badge-red-fill': light.badge.red.fill,
-            '--badge-red-outline': light.badge.red.outline,
-
-            '--badge-orange-fill': light.badge.orange.fill,
-            '--badge-orange-outline': light.badge.orange.outline,
-
-            '--badge-green-fill': light.badge.green.fill,
-            '--badge-green-outline': light.badge.green.outline,
-
-            '--badge-blue-fill': light.badge.blue.fill,
-            '--badge-blue-outline': light.badge.blue.outline,
+            // // Components/Data Display/Badge & Chip / Badge
+            '--badge-primary-surface': light.badge.primary.fill,
+            '--badge-primary-accent': light.badge.primary.outline,
+            '--badge-secondary-surface': light.badge.secondary.fill,
+            '--badge-secondary-accent': light.badge.secondary.outline,
+            '--badge-grey-surface': light.badge.grey.fill,
+            '--badge-grey-accent': light.badge.grey.outline,
+            '--badge-red-surface': light.badge.red.fill,
+            '--badge-red-accent': light.badge.red.outline,
+            '--badge-orange-surface': light.badge.orange.fill,
+            '--badge-orange-accent': light.badge.orange.outline,
+            '--badge-green-surface': light.badge.green.fill,
+            '--badge-green-accent': light.badge.green.outline,
+            '--badge-blue-surface': light.badge.blue.fill,
+            '--badge-blue-accent': light.badge.blue.outline,
+            '--badge-error-surface': 'var(--status-error-main)',
+            '--badge-warning-surface': 'var(--status-warning-main)',
+            '--badge-success-surface': 'var(--status-success-main)',
 
             // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.light[300],
@@ -388,13 +403,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // Components/Button
-            '--secondary-btn-fill': palette.neutral.dark[700],
-            '--secondary-btn-active-fill': palette.neutral.dark[700],
-            '--tertiary-btn-border': palette.neutral.light[400],
-            '--transparent-btn-border': palette.neutral.dark[700],
-            '--icon-btn-fill': palette.neutral.light[400],
-            '--btn-disabled-fill': palette.neutral.dark[700],
+            // Components/Toggle
             '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.dark[600],
             '--toggle-group-fill': 'var(--surface-subtle)',
@@ -469,10 +478,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--dropdown-option-hover-fill': 'var(--surface-hover)',
             '--dropdown-option-disabled-fill': palette.neutral.dark[700],
             '--dropdown-tooltip-fill': 'var(--surface-hover)',
-            '--switch-fill': common.white,
-            '--switch-disabled-fill': common.disabled,
-            '--switch-thumb-fill': palette.neutral.dark[50],
-            '--switch-thumb-disabled-fill': palette.neutral.light[400],
 
             // Components/Data Display/ DataTable
             '--data-table-fill': 'var(--surface-subtle)',
@@ -482,30 +487,54 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
 
-            // Components/Data Display/ Menu
-            // '--menu-bg': 'var(--elevation-2)',
+            // // Components/Switch
+            '--switch-fill': common.white,
+            '--switch-disabled-fill': common.disabled,
+            '--switch-thumb-fill': palette.neutral.dark[50],
 
-            // Components/Data Display/ Badge & Chip
-            '--badge-primary-fill': dark.badge.primary.fill,
-            '--badge-primary-outline': 'var(--primary)',
+            // // Components/Button
+            '--button-secondary-fill': palette.neutral.dark[700],
+            '--button-secondary-active-fill': palette.neutral.dark[700],
+            '--button-icon-fill': palette.neutral.light[400],
+            '--button-disabled-fill': palette.neutral.dark[700],
+            '--button-transparent-border': palette.neutral.dark[700],
+            '--button-disabled-text': common.disabled,
+            '--button-primary-text': 'var(--common-dark)',
+            '--button-secondary-text': 'var(--common-white)',
+            '--button-highlight-text': 'var(--common-dark)',
+            '--button-primary-active-fill': dark.primary.variant,
+            '--button-text-active': 'var(--primary)',
 
-            '--badge-secondary-fill': dark.badge.secondary.fill,
-            '--badge-secondary-outline': 'var(--secondary)',
+            // // Components/Menu
+            '--menu-content-fill': palette.neutral.dark[400],
+            '--menu-item-highlight-fill': dark.secondary.main,
+            '--menu-item-active-fill': dark.primary.main,
+            '--menu-item-disabled-fill': palette.neutral.dark[700],
+            '--menu-separator-fill': palette.neutral.dark[600],
+            '--menu-content-border': palette.neutral.dark[600],
+            '--menu-sub-content-border': palette.neutral.dark[600],
+            '--menu-item-highlight-border': dark.secondary.main,
+            '--menu-item-highlight-text': common.black,
+            '--menu-item-disabled-text': common.disabled,
 
-            '--badge-grey-fill': dark.badge.grey.fill,
-            '--badge-grey-outline': dark.badge.grey.outline,
-
-            '--badge-red-fill': dark.badge.red.fill,
-            '--badge-red-outline': dark.badge.red.outline,
-
-            '--badge-orange-fill': dark.badge.orange.fill,
-            '--badge-orange-outline': dark.badge.orange.outline,
-
-            '--badge-green-fill': dark.badge.green.fill,
-            '--badge-green-outline': dark.badge.green.outline,
-
-            '--badge-blue-fill': dark.badge.blue.fill,
-            '--badge-blue-outline': dark.badge.blue.outline,
+            // // Components/Data Display/Badge & Chip / Badge
+            '--badge-primary-surface': dark.badge.primary.fill,
+            '--badge-primary-accent': dark.badge.primary.outline,
+            '--badge-secondary-surface': dark.badge.secondary.fill,
+            '--badge-secondary-accent': dark.badge.secondary.outline,
+            '--badge-grey-surface': dark.badge.grey.fill,
+            '--badge-grey-accent': dark.badge.grey.outline,
+            '--badge-red-surface': dark.badge.red.fill,
+            '--badge-red-accent': dark.badge.red.outline,
+            '--badge-orange-surface': dark.badge.orange.fill,
+            '--badge-orange-accent': dark.badge.orange.outline,
+            '--badge-green-surface': dark.badge.green.fill,
+            '--badge-green-accent': dark.badge.green.outline,
+            '--badge-blue-surface': dark.badge.blue.fill,
+            '--badge-blue-accent': dark.badge.blue.outline,
+            '--badge-error-surface': 'var(--status-error-fill)',
+            '--badge-warning-surface': 'var(--status-warning-fill)',
+            '--badge-success-surface': 'var(--status-success-fill)',
 
             // Components/Data Display/Badge & Chip / Chip
             // '--chip-indeterminate': palette.neutral.dark[500],
