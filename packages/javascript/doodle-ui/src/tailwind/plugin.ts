@@ -180,7 +180,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--select-disabled-placeholder-text': 'var(--disabled)',
             '--select-invalid-placeholder-open-text': 'var(--input-placeholder-text)',
             '--select-open-focus-border': 'var(--primary)',
-            '--select-open-invalid-hover-focus-border': 'var(--primary)',
+            '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
             '--select-highlight-text': 'var(--common-white)',
             '--select-placeholder-text': 'inherit',
             '--select-disabled-fill': palette.neutral.light[100],
@@ -210,12 +210,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': light.primary.main,
 
-            // // Components/Switch
+            // Components/Switch
             '--switch-fill': palette.neutral.dark[700],
             '--switch-disabled-fill': palette.neutral.light[300],
             '--switch-thumb-fill': palette.neutral.light[50],
 
-            // // Components/Button
+            // Components/Button
             '--button-secondary-fill': palette.neutral.light[300],
             '--button-secondary-active-fill': palette.neutral.light[400],
             '--button-icon-fill': palette.neutral.light[400],
@@ -228,7 +228,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--button-primary-active-fill': light.primary.variant,
             '--button-text-active': light.primary.variant,
 
-            // // Components/Menu
+            // Components/Menu
             '--menu-content-fill': common.white,
             '--menu-item-highlight-fill': light.secondary.main,
             '--menu-item-active-fill': light.primary.main,
@@ -240,7 +240,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--menu-item-highlight-text': common.white,
             '--menu-item-disabled-text': palette.grey[700],
 
-            // // Components/Data Display/Badge & Chip / Badge
+            // Components/Data Display/Badge & Chip / Badge
             '--badge-primary-surface': light.badge.primary.fill,
             '--badge-primary-accent': light.badge.primary.outline,
             '--badge-secondary-surface': light.badge.secondary.fill,
@@ -487,12 +487,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
 
-            // // Components/Switch
+            // Components/Switch
             '--switch-fill': common.white,
             '--switch-disabled-fill': common.disabled,
             '--switch-thumb-fill': palette.neutral.dark[50],
 
-            // // Components/Button
+            // Components/Button
             '--button-secondary-fill': palette.neutral.dark[700],
             '--button-secondary-active-fill': palette.neutral.dark[700],
             '--button-icon-fill': palette.neutral.light[400],
@@ -505,7 +505,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--button-primary-active-fill': dark.primary.variant,
             '--button-text-active': 'var(--primary)',
 
-            // // Components/Menu
+            // Components/Menu
             '--menu-content-fill': palette.neutral.dark[400],
             '--menu-item-highlight-fill': dark.secondary.main,
             '--menu-item-active-fill': dark.primary.main,
@@ -517,7 +517,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--menu-item-highlight-text': common.black,
             '--menu-item-disabled-text': common.disabled,
 
-            // // Components/Data Display/Badge & Chip / Badge
+            // Components/Data Display/Badge & Chip / Badge
             '--badge-primary-surface': dark.badge.primary.fill,
             '--badge-primary-accent': dark.badge.primary.outline,
             '--badge-secondary-surface': dark.badge.secondary.fill,
