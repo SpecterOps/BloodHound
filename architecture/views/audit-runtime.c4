@@ -1,0 +1,32 @@
+// BloodHound Community Edition - Audit Runtime
+
+views {
+
+  view auditRuntime of bloodhound.apiServer {
+    title 'Audit Logging – Runtime Foundation'
+    description 'The audit service persists lifecycle records while the leader-scoped data-pruning daemon maintains monthly partitions.'
+
+    include
+      bloodhound.apiServer.auditService,
+      bloodhound.apiServer.auditStore,
+      bloodhound.apiServer.gcDaemon,
+      bloodhound.postgresql
+
+    style bloodhound.apiServer.auditService {
+      color primary
+    }
+
+    style bloodhound.apiServer.auditStore {
+      notation 'Audit persistence adapter'
+      color muted
+    }
+
+    style bloodhound.apiServer.gcDaemon {
+      color indigo
+    }
+
+    style bloodhound.postgresql {
+      color green
+    }
+  }
+}
