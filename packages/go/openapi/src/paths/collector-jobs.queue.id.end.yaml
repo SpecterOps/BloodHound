@@ -61,11 +61,5 @@ post:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
-    409:
-      description: The job is not running.
-      content:
-        application/json:
-          schema:
-            $ref: './../schemas/api.error-wrapper.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'

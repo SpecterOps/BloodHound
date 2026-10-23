@@ -190,6 +190,13 @@ post:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
+    409:
+      description: A job for the supplied `job_profile_id` already exists in the
+        collector job queue. Applies only to profile-based requests.
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/api.error-wrapper.yaml'
     429:
       $ref: './../responses/too-many-requests.yaml'
     500:

@@ -41,6 +41,7 @@ import {
 } from './StepperContext';
 
 interface Step {
+    dataAnalytics?: string;
     title: string;
     description?: ReactNode;
     content?: ReactNode;
@@ -83,7 +84,7 @@ const BasicStepper = ({
                         isLoading={step.isLoading}
                         isDisabled={step.isDisabled}
                         isCompleted={step.isCompleted}>
-                        <StepperTrigger>
+                        <StepperTrigger data-analytics={step.dataAnalytics}>
                             <StepperIndicator>{index + 1}</StepperIndicator>
                             {step.description != null ? (
                                 <div className='flex flex-col max-sm:group-data-[orientation=horizontal]/stepper-nav:text-center'>
