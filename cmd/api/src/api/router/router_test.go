@@ -95,3 +95,47 @@ func TestRouter_PanicRecoveryWrapsMatchedRouteRateLimit(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, response.Code, "the panic handler should recover a panic from the limiter")
 }
+
+func TestRouter_AuditExclusion(t *testing.T) {
+	type testData struct {
+		name             string
+		register         func(routerInst *router.Router)
+		routeTemplate    string
+		expectedExcluded bool
+	}
+
+	tests := []testData{
+		{
+			name: "Success: exact route is excluded",
+			register: func(routerInst *router.Router) {
+				routerInst.GET("/health", func(http.ResponseWriter, *http.Request) {}).ExcludeFromAudit()
+			},
+			routeTemplate:    "/health",
+			expectedExcluded: true,
+		},
+		{
+			name: "Success: path prefix is excluded",
+			register: func(routerInst *router.Router) {
+				routerInst.PathPrefix("/ui", http.HandlerFunc(func(http.ResponseWriter, *http.Request) {})).ExcludeFromAudit()
+			},
+			routeTemplate:    "/ui",
+			expectedExcluded: true,
+		},
+		{
+			name: "Success: ordinary route remains audited",
+			register: func(routerInst *router.Router) {
+				routerInst.GET("/api/v2/test", func(http.ResponseWriter, *http.Request) {})
+			},
+			routeTemplate: "/api/v2/test",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			routerInst := router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
+			testCase.register(&routerInst)
+
+			require.Equal(t, testCase.expectedExcluded, routerInst.IsAuditExcluded(testCase.routeTemplate))
+		})
+	}
+}

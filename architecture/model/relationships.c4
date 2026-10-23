@@ -64,7 +64,9 @@ model {
   bloodhound.apiServer.apiDaemon -[uses]-> bloodhound.apiServer.httpRouter 'Serves'
   bloodhound.apiServer.httpRouter -[uses]-> bloodhound.apiServer.authMiddleware 'Applies to requests'
   bloodhound.apiServer.authMiddleware -[uses]-> bloodhound.apiServer.authenticator 'Validates credentials'
-  bloodhound.apiServer.httpRouter -[uses]-> bloodhound.apiServer.restApi 'Dispatches to handlers'
+  bloodhound.apiServer.authMiddleware -[uses]-> bloodhound.apiServer.auditMiddleware 'Passes accepted requests'
+  bloodhound.apiServer.auditMiddleware -[uses]-> bloodhound.apiServer.restApi 'Dispatches to eligible handlers'
+  bloodhound.apiServer.auditMiddleware -[uses]-> bloodhound.apiServer.auditService 'Records request lifecycle'
   bloodhound.apiServer.restApi -[uses]-> bloodhound.apiServer.authorizer 'Checks permissions'
 
   // REST API → services
@@ -104,6 +106,11 @@ model {
 
   // GC daemon
   bloodhound.apiServer.gcDaemon -[uses]-> bloodhound.apiServer.databaseClient 'Sweeps expired data'
+  bloodhound.apiServer.gcDaemon -[uses]-> bloodhound.apiServer.auditStore 'Maintains audit partitions'
+
+  // Audit runtime
+  bloodhound.apiServer.auditService -[uses]-> bloodhound.apiServer.auditStore 'Persists lifecycle records'
+  bloodhound.apiServer.auditStore -[sync]-> bloodhound.postgresql 'Writes audit rows and manages partitions'
 
   // Data access → databases
   bloodhound.apiServer.databaseClient -[sync]-> bloodhound.postgresql 'SQL queries'

@@ -47,6 +47,7 @@ type Router struct {
 	postroutingMiddleware    *postroutingMiddlewareStack
 	mux                      *mux.Router
 	authorizer               auth.Authorizer
+	auditExcludedRoutes      map[string]struct{}
 }
 
 type postroutingMiddlewareStack struct {
@@ -119,9 +120,21 @@ func (s *postroutingMiddlewareStack) EnsureMatchedRouteRateLimit(factory func() 
 // Route represents a route to a http.Handler. The handler is stored, wrapped by a middleware.Wrapper struct to allow
 // for easier middleware registration that may be unique for each route.
 type Route struct {
-	handler    *middleware.Wrapper
-	mux        *mux.Route
-	authorizer auth.Authorizer
+	handler             *middleware.Wrapper
+	mux                 *mux.Route
+	authorizer          auth.Authorizer
+	auditExcludedRoutes map[string]struct{}
+}
+
+// ExcludeFromAudit opts this route out of endpoint auditing.
+func (s *Route) ExcludeFromAudit() *Route {
+	template, err := s.mux.GetPathTemplate()
+	if err != nil {
+		panic(fmt.Sprintf("router: audit exclusion requires a path template: %v", err))
+	}
+
+	s.auditExcludedRoutes[template] = struct{}{}
+	return s
 }
 
 func (s *Route) Queries(pairs ...string) *Route {
@@ -214,7 +227,18 @@ func NewRouter(cfg config.Configuration, authorizer auth.Authorizer, contentSecu
 	postroutingMiddleware := &postroutingMiddlewareStack{}
 	muxRouter.Use(postroutingMiddleware.Middleware)
 
-	return Router{mux: muxRouter, authorizer: authorizer, postroutingMiddleware: postroutingMiddleware}
+	return Router{
+		mux:                   muxRouter,
+		authorizer:            authorizer,
+		postroutingMiddleware: postroutingMiddleware,
+		auditExcludedRoutes:   make(map[string]struct{}),
+	}
+}
+
+// IsAuditExcluded reports whether a route opted out of endpoint auditing.
+func (s Router) IsAuditExcluded(routeTemplate string) bool {
+	_, excluded := s.auditExcludedRoutes[routeTemplate]
+	return excluded
 }
 
 // UsePostrouting appends middleware after authentication in the matched-route
@@ -295,8 +319,9 @@ func (s Router) PathPrefix(template string, handler http.Handler) *Route {
 	middlewareWrapper.UseBefore(s.buildRouteMiddleware()...)
 
 	return &Route{
-		handler: middlewareWrapper,
-		mux:     s.mux.PathPrefix(template).Handler(middlewareWrapper),
+		handler:             middlewareWrapper,
+		mux:                 s.mux.PathPrefix(template).Handler(middlewareWrapper),
+		auditExcludedRoutes: s.auditExcludedRoutes,
 	}
 }
 
@@ -305,9 +330,10 @@ func (s Router) HandleFunc(template string, handlerFunc func(http.ResponseWriter
 	middlewareWrapper.UseBefore(s.buildRouteMiddleware()...)
 
 	return &Route{
-		handler:    middlewareWrapper,
-		mux:        s.mux.Handle(template, middlewareWrapper),
-		authorizer: s.authorizer,
+		handler:             middlewareWrapper,
+		mux:                 s.mux.Handle(template, middlewareWrapper),
+		authorizer:          s.authorizer,
+		auditExcludedRoutes: s.auditExcludedRoutes,
 	}
 }
 

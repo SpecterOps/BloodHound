@@ -22,11 +22,13 @@ package modules
 import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	alerts "github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/appcfg"
+	"github.com/specterops/bloodhound/server/audit"
 	"github.com/specterops/bloodhound/server/extensions"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
@@ -48,10 +50,15 @@ type Deps struct {
 	RateLimitMiddleware func() mux.MiddlewareFunc
 }
 
+// Services contains runtime dependencies needed after module registration.
+type Services struct {
+	AuditRuntime *audit.Runtime
+}
+
 // Register wires up all feature modules with the provided infrastructure.
 // Each feature module builds its own store → service → handler chain and
 // attaches its routes to the shared router.
-func Register(deps Deps) {
+func Register(deps Deps) Services {
 	if deps.Router == nil {
 		panic("modules: Register requires a non-nil Router")
 	}
@@ -81,4 +88,9 @@ func Register(deps Deps) {
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
 	extensions.Register(deps.Router, deps.Pool)
+
+	auditRuntime := audit.Register(deps.Pool)
+	deps.Router.UsePostrouting(middleware.AuditMiddleware(auditRuntime.Service, deps.Router.MuxRouter(), deps.Router.IsAuditExcluded))
+
+	return Services{AuditRuntime: auditRuntime}
 }
