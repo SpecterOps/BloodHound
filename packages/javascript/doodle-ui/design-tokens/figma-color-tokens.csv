@@ -1,0 +1,93 @@
+figma_name,token_name,css_variable,tailwind_classes,light_hex,dark_hex,scope,deprecated_class_names,notes
+Color/bhce/main,bhce-main,--bhce-main,bg-bhce-main; border-bhce-main; text-bhce-main,#E02F35,#E02F35,global,,
+Color/bhe/main,bhe-main,--bhe-main,bg-bhe-main; border-bhe-main; text-bhe-main,#2C2677,#2C2677,global,,
+Color/border/control,border-control,--border-control,bg-border-control; border-border-control; text-border-control,#616161,#616161,global,,Shared global token introduced by the color-token cleanup.
+Color/btn/disabled/fill,btn-disabled-fill,,bg-btn-disabled-fill; border-btn-disabled-fill; dark:bg-btn-disabled-fill-dark; dark:border-btn-disabled-fill-dark,#E3E7EA,#2E2E2E,component,,Uses an explicit dark utility class.
+Color/checkbox/border,checkbox-border,--border-control,border-checkbox-border; text-checkbox-border,#616161,#616161,component,,
+Color/checkbox/unchecked/fill,checkbox-unchecked-fill,--surface,bg-checkbox-unchecked-fill,#FFFFFF,#FFFFFF,component,,
+Color/common/dark,common-dark,--common-dark,bg-common-dark; border-common-dark; text-common-dark,#121212,#121212,global,,
+Color/common/white,common-white,--common-white,bg-common-white; border-common-white; text-common-white,#FFFFFF,#FFFFFF,global,,
+Color/contrast,contrast,--contrast,bg-contrast; border-contrast; text-contrast,#121212,#121212,component; global,,
+Color/control/accent,control-accent,--control-accent,bg-control-accent; border-control-accent; text-control-accent,#4A3BD7,#4A3BD7,global,,Shared global token introduced by the color-token cleanup.
+Color/disabled,disabled,--disabled,bg-disabled; border-disabled; text-disabled,#616161,#616161,component; global,text-text-disabled,
+Color/dropdown/option/disabled/fill,dropdown-option-disabled-fill,--dropdown-option-disabled-fill,bg-dropdown-option-disabled-fill; border-dropdown-option-disabled-fill; text-dropdown-option-disabled-fill,#DADEE1,#DADEE1,global,,
+Color/dropdown/option/hover/fill,dropdown-option-hover-fill,--dropdown-option-hover-fill,bg-dropdown-option-hover-fill; border-dropdown-option-hover-fill; text-dropdown-option-hover-fill,#DADEE1,#DADEE1,global,,
+Color/dropdown/popover/border,dropdown-popover-border,--dropdown-popover-border,bg-dropdown-popover-border; border-dropdown-popover-border; text-dropdown-popover-border,#CACFD3,#CACFD3,global,,
+Color/dropdown/popover/fill,dropdown-popover-fill,--dropdown-popover-fill,bg-dropdown-popover-fill; border-dropdown-popover-fill; text-dropdown-popover-fill,#FFFFFF,#FFFFFF,global,,
+Color/dropdown/tooltip/fill,dropdown-tooltip-fill,--dropdown-tooltip-fill,bg-dropdown-tooltip-fill; border-dropdown-tooltip-fill; text-dropdown-tooltip-fill,#DADEE1,#DADEE1,global,,
+Color/dropdown/trigger/border,dropdown-trigger-border,--dropdown-trigger-border,bg-dropdown-trigger-border; border-dropdown-trigger-border; text-dropdown-trigger-border,#CACFD3,#CACFD3,global,,
+Color/elevation/1,elevation-1,--elevation-1,bg-elevation-1; border-elevation-1; text-elevation-1,#FFFFFF,#FFFFFF,global,,
+Color/elevation/2,elevation-2,--elevation-2,bg-elevation-2; border-elevation-2; text-elevation-2,#F4F4F4,#F4F4F4,global,,
+Color/elevation/3,elevation-3,--elevation-3,bg-elevation-3; border-elevation-3; text-elevation-3,#E3E7EA,#E3E7EA,global,,
+Color/elevation/4,elevation-4,--elevation-4,bg-elevation-4; border-elevation-4; text-elevation-4,#DADEE1,#DADEE1,global,,
+Color/elevation/5,elevation-5,--elevation-5,bg-elevation-5; border-elevation-5; text-elevation-5,#CACFD3,#CACFD3,global,,
+Color/error,error,--error,bg-error; border-error; text-error,#B44641,#B44641,global,,
+Color/faint,faint,--text-faint,text-faint,#707070,#707070,component,,
+Color/icon/disabled,icon-disabled,--icon-disabled,bg-icon-disabled; border-icon-disabled; text-icon-disabled,#616161,#616161,global,,
+Color/input/border/default,input-border-default,,dark:ring-input-border-default-dark; ring-input-border-default,#616161,#CACFD3,component,,Uses an explicit dark utility class.
+Color/input/border/default/dark,input-border-default-dark,,border-input-border-default-dark,#CACFD3,#CACFD3,component,,
+Color/input/border/disabled,input-border-disabled,,border-input-border-disabled; dark:border-input-border-disabled-dark,#848C91,#363636,component,,Uses an explicit dark utility class.
+Color/input/fill/disabled,input-fill-disabled,,bg-input-fill-disabled; dark:bg-input-fill-disabled-dark,#F4F4F4,#222222,component,,Uses an explicit dark utility class.
+Color/input/placeholder/text,input-placeholder-text,,dark:text-input-placeholder-text-dark; text-input-placeholder-text,#6D6D6D,#868686,component,,Uses an explicit dark utility class.
+Color/inverse,inverse,--text-contrast,text-inverse,#FFFFFF,#FFFFFF,component,text-text-contrast,
+Color/light,light,--text-light,text-light,#505050,#505050,component,text-text-light,
+Color/link,link,--link-main,bg-link; border-link; text-link,#4A3BD7,#4A3BD7,global,,
+Color/link/hover,link-hover,--link-hover,bg-link-hover; border-link-hover; text-link-hover,#3729BB,#3729BB,global,,
+Color/main,main,--text-main,text-main,#121212,#121212,component,text-text-main,
+Color/muted,muted,--text-light,text-muted,#505050,#505050,component,text-text-muted,
+Color/neutral/1,neutral-1,--neutral-1,bg-neutral-1; border-neutral-1; text-neutral-1,#FFFFFF,#FFFFFF,global,,Legacy theme-aware alias.
+Color/neutral/100,neutral-100,--neutral-100,bg-neutral-100; border-neutral-100; text-neutral-100,#F4F4F4,#F4F4F4,global,,
+Color/neutral/2,neutral-2,--neutral-2,bg-neutral-2; border-neutral-2; text-neutral-2,#F4F4F4,#F4F4F4,global,,Legacy theme-aware alias.
+Color/neutral/200,neutral-200,--neutral-200,bg-neutral-200; border-neutral-200; text-neutral-200,#E3E7EA,#E3E7EA,global,,
+Color/neutral/3,neutral-3,--neutral-3,bg-neutral-3; border-neutral-3; text-neutral-3,#E3E7EA,#E3E7EA,global,,Legacy theme-aware alias.
+Color/neutral/300,neutral-300,--neutral-300,bg-neutral-300; border-neutral-300; text-neutral-300,#DADEE1,#DADEE1,global,,
+Color/neutral/4,neutral-4,--neutral-4,bg-neutral-4; border-neutral-4; text-neutral-4,#DADEE1,#DADEE1,global,,Legacy theme-aware alias.
+Color/neutral/400,neutral-400,--neutral-400,bg-neutral-400; border-neutral-400; text-neutral-400,#CACFD3,#CACFD3,global,,
+Color/neutral/5,neutral-5,--neutral-5,bg-neutral-5; border-neutral-5; text-neutral-5,#CACFD3,#CACFD3,global,,Legacy theme-aware alias.
+Color/neutral/50,neutral-50,--neutral-50,bg-neutral-50; border-neutral-50; text-neutral-50,#F2F2F2,#F2F2F2,global,,
+Color/neutral/500,neutral-500,--neutral-500,bg-neutral-500; border-neutral-500; text-neutral-500,#C0C6CB,#C0C6CB,global,,
+Color/neutral/600,neutral-600,--neutral-600,bg-neutral-600; border-neutral-600; text-neutral-600,#B2B8BD,#B2B8BD,global,,
+Color/neutral/700,neutral-700,--neutral-700,bg-neutral-700; border-neutral-700; text-neutral-700,#A6ADB2,#A6ADB2,global,,
+Color/neutral/800,neutral-800,--neutral-800,bg-neutral-800; border-neutral-800; text-neutral-800,#979FA4,#979FA4,global,,
+Color/neutral/900,neutral-900,--neutral-900,bg-neutral-900; border-neutral-900; text-neutral-900,#848C91,#848C91,global,,
+Color/neutral/dark/1,neutral-dark-1,--neutral-dark-1,bg-neutral-dark-1; border-neutral-dark-1; text-neutral-dark-1,#121212,#121212,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/dark/2,neutral-dark-2,--neutral-dark-2,bg-neutral-dark-2; border-neutral-dark-2; text-neutral-dark-2,#222222,#222222,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/dark/3,neutral-dark-3,--neutral-dark-3,bg-neutral-dark-3; border-neutral-dark-3; text-neutral-dark-3,#272727,#272727,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/dark/4,neutral-dark-4,--neutral-dark-4,bg-neutral-dark-4; border-neutral-dark-4; text-neutral-dark-4,#2C2C2C,#2C2C2C,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/dark/5,neutral-dark-5,--neutral-dark-5,bg-neutral-dark-5; border-neutral-dark-5; text-neutral-dark-5,#2E2E2E,#2E2E2E,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/1,neutral-light-1,--neutral-light-1,bg-neutral-light-1; border-neutral-light-1; text-neutral-light-1,#FFFFFF,#FFFFFF,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/2,neutral-light-2,--neutral-light-2,bg-neutral-light-2; border-neutral-light-2; text-neutral-light-2,#F4F4F4,#F4F4F4,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/3,neutral-light-3,--neutral-light-3,bg-neutral-light-3; border-neutral-light-3; text-neutral-light-3,#E3E7EA,#E3E7EA,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/4,neutral-light-4,--neutral-light-4,bg-neutral-light-4; border-neutral-light-4; text-neutral-light-4,#DADEE1,#DADEE1,global,,Fixed-color neutral; does not switch with theme.
+Color/neutral/light/5,neutral-light-5,--neutral-light-5,bg-neutral-light-5; border-neutral-light-5; text-neutral-light-5,#CACFD3,#CACFD3,global,,Fixed-color neutral; does not switch with theme.
+Color/primary,primary,--primary,bg-primary; border-primary; text-primary,#2C2677,#2C2677,global,bg-primary-main; text-primary-main; border-primary-main,
+Color/primary/variant,primary-variant,--primary-variant,bg-primary-variant; border-primary-variant; text-primary-variant,#0D0A30,#0D0A30,global,,
+Color/radio/border/default,radio-border-default,--radio-border-default,bg-radio-border-default; border-radio-border-default; text-radio-border-default,#CACFD3,#CACFD3,global,,
+Color/radio/border/hover,radio-border-hover,--radio-border-hover,bg-radio-border-hover; border-radio-border-hover; text-radio-border-hover,#4A3BD7,#4A3BD7,global,,
+Color/radio/disabled/border,radio-disabled-border,--radio-disabled-border,bg-radio-disabled-border; border-radio-disabled-border; text-radio-disabled-border,#DADEE1,#DADEE1,global,,
+Color/radio/disabled/fill,radio-disabled-fill,--radio-disabled-fill,bg-radio-disabled-fill; border-radio-disabled-fill; text-radio-disabled-fill,#F4F4F4,#F4F4F4,global,,
+Color/radio/indicator/fill,radio-indicator-fill,--radio-indicator-fill,bg-radio-indicator-fill; border-radio-indicator-fill; text-radio-indicator-fill,#2C2677,#2C2677,global,,
+Color/radio/label/focus/fill,radio-label-focus-fill,--radio-label-focus-fill,bg-radio-label-focus-fill; border-radio-label-focus-fill; text-radio-label-focus-fill,#E3E7EA,#E3E7EA,global,,
+Color/secondary,secondary,--secondary,bg-secondary; border-secondary; text-secondary,#4A3BD7,#4A3BD7,global,bg-secondary-main; text-secondary-main; border-secondary-main,
+Color/secondary/variant,secondary-variant,--secondary-variant,bg-secondary-variant; border-secondary-variant; text-secondary-variant,#3729BB,#3729BB,global,,
+Color/secondary/variant/2,secondary-variant-2,--secondary-variant-2,bg-secondary-variant-2; border-secondary-variant-2; text-secondary-variant-2,#99A3FF,#99A3FF,global,,
+Color/select/content/fill,select-content-fill,,bg-select-content-fill; dark:bg-select-content-fill-dark,#FFFFFF,#222222,component,,Uses an explicit dark utility class.
+Color/select/trigger/outlined/fill,select-trigger-outlined-fill,,bg-select-trigger-outlined-fill; dark:bg-select-trigger-outlined-fill-dark,#FFFFFF,#121212,component,,Uses an explicit dark utility class.
+Color/status/error/fill,status-error-fill,--status-error-fill,bg-status-error-fill; border-status-error-fill; text-status-error-fill,#FEEBEE,#FEEBEE,global,,
+Color/status/error/main,status-error-main,--status-error-main,bg-status-error-main; border-status-error-main; text-status-error-main,#B44641,#B44641,global,,
+Color/status/error/text,status-error-text,--status-error-text,bg-status-error-text; border-status-error-text; text-status-error-text,#5F2120,#5F2120,global,,
+Color/status/indeterminate/fill,status-indeterminate-fill,--status-indeterminate-fill,bg-status-indeterminate-fill; border-status-indeterminate-fill; text-status-indeterminate-fill,#222222,#222222,global,,
+Color/status/info/fill,status-info-fill,--status-info-fill,bg-status-info-fill; border-status-info-fill; text-status-info-fill,#E1F5FE,#E1F5FE,global,,
+Color/status/info/main,status-info-main,--status-info-main,bg-status-info-main; border-status-info-main; text-status-info-main,#0288D1,#0288D1,global,,
+Color/status/info/text,status-info-text,--status-info-text,bg-status-info-text; border-status-info-text; text-status-info-text,#004465,#004465,global,,
+Color/status/success/fill,status-success-fill,--status-success-fill,bg-status-success-fill; border-status-success-fill; text-status-success-fill,#E8F5E9,#E8F5E9,global,,
+Color/status/success/main,status-success-main,--status-success-main,bg-status-success-main; border-status-success-main; text-status-success-main,#43A047,#43A047,global,,
+Color/status/success/text,status-success-text,--status-success-text,bg-status-success-text; border-status-success-text; text-status-success-text,#1E4620,#1E4620,global,,
+Color/status/warning/fill,status-warning-fill,--status-warning-fill,bg-status-warning-fill; border-status-warning-fill; text-status-warning-fill,#FFE1D1,#FFE1D1,global,,
+Color/status/warning/main,status-warning-main,--status-warning-main,bg-status-warning-main; border-status-warning-main; text-status-warning-main,#E65100,#E65100,global,,
+Color/status/warning/text,status-warning-text,--status-warning-text,bg-status-warning-text; border-status-warning-text; text-status-warning-text,#6D3900,#6D3900,global,,
+Color/surface,surface,--surface,bg-surface; border-surface; text-surface,#FFFFFF,#FFFFFF,global,,Shared global token introduced by the color-token cleanup.
+Color/surface/hover,surface-hover,--surface-hover,bg-surface-hover; border-surface-hover; text-surface-hover,#DADEE1,#DADEE1,global,,Shared global token introduced by the color-token cleanup.
+Color/surface/subtle,surface-subtle,--surface-subtle,bg-surface-subtle; border-surface-subtle; text-surface-subtle,#F4F4F4,#F4F4F4,global,,Shared global token introduced by the color-token cleanup.
+Color/tertiary,tertiary,--tertiary,bg-tertiary; border-tertiary; text-tertiary,#00AA66,#00AA66,global,bg-tertiary-main; text-tertiary-main; border-tertiary-main,
+Color/tertiary/variant,tertiary-variant,--tertiary-variant,bg-tertiary-variant; border-tertiary-variant; text-tertiary-variant,#008751,#008751,global,,

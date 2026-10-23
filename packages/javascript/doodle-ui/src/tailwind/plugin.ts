@@ -17,8 +17,8 @@ import tailwindColors from 'tailwindcss/colors';
 import { PluginCreator } from 'tailwindcss/types/config';
 import { common, dark, elevation, light, palette, text } from './colors';
 
-const secondaryVariant2 = '#99a3ff';
 const darkDataTableRowSelectedOutline = '#4A42B5';
+const secondaryVariant2 = '#99a3ff';
 const focusRingWidth = '2px';
 const focusRingOffsetWidth = '2px';
 
@@ -51,15 +51,19 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // MAIN
             '--primary': light.primary.main,
-            '--primary-main': light.primary.main,
             '--primary-variant': light.primary.variant,
             '--secondary': light.secondary.main,
-            '--secondary-main': light.secondary.main,
             '--secondary-variant': light.secondary.variant,
-            // '--tertiary': light.tertiary.main,
-            '--tertiary-main': light.tertiary.main,
-            // '--tertiary-variant': light.tertiary.variant,
+            '--tertiary': light.tertiary.main,
+            '--tertiary-variant': light.tertiary.variant,
             '--disabled': light.disabled,
+
+            // Shared control and surface tokens
+            '--border-control': palette.grey[700],
+            '--control-accent': 'var(--secondary)',
+            '--surface': common.white,
+            '--surface-subtle': palette.neutral.light[100],
+            '--surface-hover': palette.neutral.light[300],
 
             // // NEUTRALS
             '--neutral-50': palette.neutral.light[50],
@@ -76,25 +80,21 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // TEXT
             '--text-main': common.dark,
             '--text-light': text.light,
-            '--text-muted': 'var(--text-light)',
             '--text-contrast': common.white,
-            '--text-disabled': light.text.disabled,
             '--text-faint': text.faint,
-            // '--text-primary': light.primary.main,
-            // '--text-secondary': light.secondary.main,
 
             // LINKS
-            '--link-main': light.secondary.main,
-            '--link-hover': light.secondary.variant,
+            '--link-main': 'var(--secondary)',
+            '--link-hover': 'var(--secondary-variant)',
 
             // FOCUS
-            '--focus-ring': light.secondary.main,
+            '--focus-ring': 'var(--secondary)',
             '--focus-ring-offset': common.white,
             '--focus-ring-width': focusRingWidth,
             '--focus-ring-offset-width': focusRingOffsetWidth,
 
             // // ELEVATION
-            // '--elevation-0': elevation.light[0],
+            '--elevation-0': elevation.light[0],
             '--elevation-1': elevation.light[1],
             '--elevation-2': elevation.light[2],
             '--elevation-3': elevation.light[3],
@@ -117,73 +117,114 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': light.status.indeterminate.fill,
 
             // // BRAND COLORS
-            '--bhe-main': light.primary.main,
-            // '--sp-main': light.primary.main,
+            '--bhe-main': 'var(--primary)', // TODO BED-10220 is this necessary?
+            // '--sp-main': 'var(--primary)',
             '--bhce-main': light['bhce-main'],
             // '--logo-neutral': common.black,
-            // '--brand-primary-dark-purple': light.primary.variant,
-            // '--brand-primary-deep-purple': light.primary.main,
-            // '--brand-primary-medium-blue': light.secondary.main,
-            // '--brand-secondary-highlight-green': light.tertiary.main,
+            // '--brand-primary-dark-purple': 'var(--primary-variant)',
+            // '--brand-primary-deep-purple': 'var(--primary)',
+            // '--brand-primary-medium-blue': 'var(--secondary)',
+            // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // // Components/Button
-            '--toggle-btn-fill': common.white,
-            '--toggle-btn-border': palette.neutral.light[500],
-            '--toggle-group-fill': palette.neutral.light[100],
-            '--checkbox-border': palette.grey[700],
+            // // Components/Checkbox
+            '--checkbox-invalid-hover-border': 'var(--status-error-main)',
+            '--checkbox-unchecked-active-hover-border': 'var(--primary-variant)',
+            '--checkbox-checked-active-hover-fill': 'var(--primary-variant)',
+            '--checkbox-border': 'var(--border-control)',
             '--checkbox-hover': light.secondary.main,
-            '--checkbox-unchecked-fill': common.white,
-            '--checkbox-fill': common.dark,
             '--checkbox-check': common.white,
+            '--checkbox-unchecked-fill': 'var(--surface)',
+            '--checkbox-fill': common.dark,
+            '--checkbox-checked-active-border': 'var(--primary)',
+            '--checkbox-disabled-checked-hover-fill': 'var(--checkbox-fill)',
+            '--checkbox-checked-fill': 'var(--checkbox-fill)',
+            '--checkbox-disabled-fill': palette.neutral.light[100],
+            '--checkbox-focus-ring': 'var(--secondary)',
+
+            // // Components/DataTable
+            '--data-table-fill': 'var(--surface-subtle)',
+            '--data-table-header-fill': 'var(--surface-subtle)',
+            '--data-table-row-even-fill': palette.neutral.light[200],
+            '--data-table-row-odd-fill': 'var(--surface-subtle)',
+            '--data-table-row-hover-fill': 'var(--surface-hover)',
+            '--data-table-row-selected': 'inset 0px 0px 0px 2px var(--primary)',
+            '--data-table-wrapper-border': 'var(--neutral-light-4)',
+            '--data-table-resize-fill': 'var(--neutral-5)',
+            '--data-table-resize-active-fill': 'var(--primary)',
 
             // // Components/Input
-            // '--input-label': common.dark,
+            '--input-disabled-invalid-border': 'var(--status-error-main)',
+            '--input-border-default': palette.grey[700],
+            '--input-border-focus': 'var(--control-accent)',
+            '--input-border-disabled': palette.neutral.light[900],
+            '--input-outlined-border-default': 'var(--border-control)',
+            '--input-outlined-border-hover': 'var(--secondary)',
+            '--input-placeholder-text': text.placeholder,
             '--input-fill': common.white,
             '--input-fill-disabled': palette.neutral.light[100],
-            '--input-border-default': palette.grey[700],
-            // '--input-border-hover': light.secondary.main,
-            '--input-border-disabled': palette.neutral.light[900],
-            '--input-placeholder-text': text.placeholder,
-            '--input-outlined-border-default': palette.grey[700],
-            '--input-outlined-border-hover': light.secondary.main,
+            '--input-disabled-fill': palette.neutral.light[100],
+            '--input-outlined-hover-focus-border': 'var(--input-outlined-border-hover)',
+
+            // // Components/Select
+            '--select-disabled-open-border': 'var(--primary)',
+            '--select-disabled-highlighted-fill': 'var(--secondary)',
+            '--select-trigger-fill': 'var(--surface-subtle)',
+            '--select-trigger-outlined-fill': common.white,
+            '--select-content-fill': common.white,
+            '--select-separator-fill': palette.neutral.light[200],
+            '--select-item-disabled-fill': palette.neutral.light[300],
+            '--select-trigger-placeholder-text': palette.neutral.light[400],
+            '--select-item-checked-text': light.primary.main,
+            '--select-border-default': palette.neutral.dark[700],
+            '--select-border-focus': 'var(--control-accent)',
+            '--select-content-border': palette.neutral.light[400],
+            '--select-open-fill': 'var(--primary)',
+            '--select-open-disabled-fill': 'var(--primary)',
+            '--select-disabled-placeholder-text': 'var(--disabled)',
+            '--select-invalid-placeholder-open-text': 'var(--input-placeholder-text)',
+            '--select-open-focus-border': 'var(--primary)',
+            '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
+            '--select-highlight-text': 'var(--common-white)',
+            '--select-placeholder-text': 'inherit',
+            '--select-disabled-fill': palette.neutral.light[100],
+            '--select-outlined-hover-focus-border': 'var(--input-outlined-border-hover)',
+            '--select-outlined-focus-border': 'var(--input-outlined-border-default)',
 
             // // Components/Textarea
-            '--textarea-fill': common.white,
-            '--textarea-border-default': palette.grey[700],
-            '--textarea-border-hover': light.secondary.main,
+            '--textarea-fill': 'var(--surface)',
+            '--textarea-border-default': 'var(--border-control)',
+            '--textarea-border-hover': 'var(--secondary)',
+            '--textarea-disabled-fill': palette.neutral.light[100],
+            '--textarea-focus-border': 'var(--textarea-border-default)',
+            '--textarea-hover-focus-border': 'var(--textarea-border-hover)',
+
+            // // Components/Toggle
+            '--toggle-hover-border': 'var(--secondary)',
+            '--toggle-active-border': 'var(--primary-variant)',
+            '--toggle-selected-border': 'var(--primary)',
+            '--toggle-disabled-border': 'var(--button-disabled-fill)',
+            '--toggle-disabled-hover-text': 'var(--disabled)',
+            '--toggle-btn-fill': 'var(--surface)',
+            '--toggle-group-fill': 'var(--surface-subtle)',
+            '--toggle-btn-border': palette.neutral.light[500],
+            '--toggle-highlight-text': 'var(--common-white)',
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.light[200],
             '--radio-border-default': palette.neutral.light[400],
-            '--radio-border-hover': light.secondary.main,
+            '--radio-border-hover': 'var(--control-accent)',
             '--radio-disabled-border': palette.neutral.light[300],
             '--radio-disabled-fill': palette.neutral.light[100],
             '--radio-indicator-fill': light.primary.main,
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
-            '--select-trigger-fill': palette.neutral.light[100],
-            '--select-trigger-placeholder-text': palette.neutral.light[400],
-            '--select-trigger-outlined-fill': common.white,
-            '--select-border-default': palette.neutral.dark[700],
-            '--select-border-focus': light.secondary.main,
-            '--select-content-border': palette.neutral.light[400],
-            '--select-content-fill': common.white,
-            '--select-item-checked-text': light.primary.main,
-            '--select-separator-fill': palette.neutral.light[200],
             '--dropdown-trigger-border': palette.neutral.light[400],
             '--dropdown-popover-border': palette.neutral.light[400],
-            '--dropdown-popover-fill': common.white,
-            '--dropdown-option-hover-fill': palette.neutral.light[300],
+            '--dropdown-popover-fill': 'var(--surface)',
+            '--dropdown-option-hover-fill': 'var(--surface-hover)',
             '--dropdown-option-disabled-fill': palette.neutral.light[300],
-            '--dropdown-tooltip-fill': palette.neutral.light[300],
-            // // Components/Data Display/ DataTable
-            '--data-table-fill': palette.neutral.light[100],
-            '--data-table-header-fill': palette.neutral.light[100],
-            '--data-table-row-even-fill': palette.neutral.light[200],
-            '--data-table-row-odd-fill': palette.neutral.light[100],
-            '--data-table-row-hover-fill': palette.neutral.light[300],
-            '--data-table-row-selected-outline': light.primary.main,
+            '--dropdown-tooltip-fill': 'var(--surface-hover)',
 
             // // Components/Switch
             '--switch-fill': palette.neutral.dark[700],
@@ -250,9 +291,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--nav-control-btn-focus': palette.neutral.light[500],
 
             // // Components/ SideNav/ Nav items
-            // '--nav-item-default': common.dark,
-            // '--nav-item-hover': light.secondary.main,
-            // '--nav-item-active': light.primary.main,
+            // '--nav-item-default': 'var(--text-main)',
+            // '--nav-item-hover': 'var(--secondary)',
+            // '--nav-item-active': 'var(--primary)',
 
             // // Components / Graph
             // '--platform-badge-bg': elevation.light[2],
@@ -260,11 +301,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components / Graph / Edge
             // '--edge-color': light.edge.color,
             // '--edge-label-bg': palette.neutral.light[200],
-            // '--edge-label-text': common.dark,
+            // '--edge-label-text': 'var(--text-main)',
 
             // // Utilities
-            // '--icon': common.dark,
-            // '--icon-contrast': common.white,
+            // '--icon': 'var(--text-main)',
+            // '--icon-contrast': 'var(--text-contrast)',
             '--icon-disabled': palette.grey[700],
             // '--divider': palette.neutral.light[500],
 
@@ -273,52 +314,48 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--contrast': '#121212',
 
             '--secondary-variant-2': secondaryVariant2,
-            '--tertiary': '#02c577',
-            '--tertiary-variant': '#5cc791',
+            // '--tertiary': '#02c577',
+            // '--tertiary-variant': '#5cc791',
 
-            // same as common.white
-            '--neutral-1': '#ffffff',
-            // same as neutral-100
-            '--neutral-2': '#f4f4f4',
-            '--neutral-3': '#e3e7ea',
-            '--neutral-4': '#dadee1',
-            '--neutral-5': '#cacfd3',
+            '--neutral-1': 'var(--neutral-light-1)',
+            '--neutral-2': 'var(--neutral-light-2)',
+            '--neutral-3': 'var(--neutral-light-3)',
+            '--neutral-4': 'var(--neutral-light-4)',
+            '--neutral-5': 'var(--neutral-light-5)',
 
             '--link': '#1a30ff',
 
             '--error': '#b44641',
 
-            // same as common.white
-            '--neutral-light-1': '#ffffff',
-            // same as neutral-100
-            '--neutral-light-2': '#f4f4f4',
-            '--neutral-light-3': '#e3e7ea',
-            '--neutral-light-4': '#dadee1',
-            // same as neutral-light-400
-            '--neutral-light-5': '#cacfd3',
+            '--neutral-light-1': common.white,
+            '--neutral-light-2': palette.neutral.light[100],
+            '--neutral-light-3': palette.neutral.light[200],
+            '--neutral-light-4': palette.neutral.light[300],
+            '--neutral-light-5': palette.neutral.light[400],
 
-            // same palette.neutral.dark[50]
-            '--neutral-dark-1': '#121212',
-            '--neutral-dark-2': '#222222',
-            '--neutral-dark-3': '#272727',
-            '--neutral-dark-4': '#2c2c2c',
-            // same as palette.neutral.dark[700]
-            '--neutral-dark-5': '#2e2e2e',
+            '--neutral-dark-1': palette.neutral.dark[50],
+            '--neutral-dark-2': palette.neutral.dark[400],
+            '--neutral-dark-3': palette.neutral.dark[500],
+            '--neutral-dark-4': palette.neutral.dark[600],
+            '--neutral-dark-5': palette.neutral.dark[700],
         },
 
         '.dark': {
             // MAIN
             '--primary': dark.primary.main,
-            '--primary-main': dark.primary.main,
             '--primary-variant': dark.primary.variant,
             '--secondary': dark.secondary.main,
-
-            '--secondary-main': dark.secondary.main,
             '--secondary-variant': dark.secondary.variant,
-            // '--tertiary': dark.tertiary.main,
-            '--tertiary-main': dark.tertiary.main,
-            // '--tertiary-variant': dark.tertiary.variant,
+            '--tertiary': dark.tertiary.main,
+            '--tertiary-variant': dark.tertiary.variant,
             '--disabled': dark.disabled,
+
+            // Shared control and surface tokens
+            '--border-control': dark.input.border,
+            '--control-accent': secondaryVariant2,
+            '--surface': common.dark,
+            '--surface-subtle': palette.neutral.dark[400],
+            '--surface-hover': palette.neutral.dark[600],
 
             // // NEUTRALS
             '--neutral-50': palette.neutral.dark[50],
@@ -336,21 +373,18 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--text-main': common.white,
             '--text-light': text.dark,
             '--text-contrast': common.dark,
-            '--text-disabled': dark.text.disabled,
             '--text-faint': dark.text.faint,
 
             // '--text-primary': dark.primary.main,
             // '--text-secondary': dark.secondary.main,
 
             // LINKS
-            '--link-main': dark.secondary.main,
-            '--link-hover': dark.secondary.variant,
+            '--link-main': 'var(--secondary)',
+            '--link-hover': 'var(--secondary-variant)',
 
             // FOCUS
-            '--focus-ring': dark.secondary.main,
+            '--focus-ring': 'var(--secondary)',
             '--focus-ring-offset': palette.neutral.dark[50],
-            '--focus-ring-width': focusRingWidth,
-            '--focus-ring-offset-width': focusRingOffsetWidth,
 
             // // ELEVATION
             // '--elevation-0': elevation.dark[0],
@@ -376,75 +410,114 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--status-indeterminate-fill': dark.status.indeterminate.fill,
 
             // // BRAND COLORS
-            '--bhe-main': dark.primary.main,
-            // '--sp-main': dark.primary.main,
+            '--bhe-main': 'var(--primary)',
+            // '--sp-main': 'var(--primary)',
             '--bhce-main': dark['bhce-main'],
             // '--logo-neutral': common.white,
-            // '--brand-primary-dark-purple': dark.primary.variant,
-            // '--brand-primary-deep-purple': dark.primary.main,
-            // '--brand-primary-medium-blue': dark.secondary.main,
-            // '--brand-secondary-highlight-green': dark.tertiary.main,
+            // '--brand-primary-dark-purple': 'var(--primary-variant)',
+            // '--brand-primary-deep-purple': 'var(--primary)',
+            // '--brand-primary-medium-blue': 'var(--secondary)',
+            // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // // Components/Button
-            '--toggle-btn-fill': common.dark,
-            '--toggle-btn-border': palette.neutral.dark[600],
-            '--toggle-group-fill': palette.neutral.dark[400],
-            '--checkbox-border': dark.input.border,
+            // // Components/Checkbox
+            '--checkbox-invalid-hover-border': 'var(--checkbox-hover)',
+            '--checkbox-unchecked-active-hover-border': 'var(--checkbox-hover)',
+            '--checkbox-checked-active-hover-fill': 'var(--checkbox-hover)',
+            '--checkbox-border': 'var(--border-control)',
             '--checkbox-hover': dark.badge.secondary.outline,
-            '--checkbox-unchecked-fill': common.dark,
-            '--checkbox-fill': common.white,
             '--checkbox-check': common.dark,
+            '--checkbox-unchecked-fill': 'var(--surface)',
+            '--checkbox-fill': common.white,
+            '--checkbox-checked-active-border': 'var(--primary-variant)',
+            '--checkbox-disabled-checked-hover-fill': 'var(--checkbox-hover)',
+            '--checkbox-checked-fill': 'var(--primary)',
+            '--checkbox-disabled-fill': palette.neutral.dark[400],
+            '--checkbox-focus-ring': secondaryVariant2,
+
+            // // Components/DataTable
+            '--data-table-fill': 'var(--surface-subtle)',
+            '--data-table-header-fill': 'var(--surface-subtle)',
+            '--data-table-row-even-fill': palette.neutral.dark[500],
+            '--data-table-row-odd-fill': 'var(--surface-subtle)',
+            '--data-table-row-hover-fill': 'var(--surface-hover)',
+            '--data-table-row-selected': `inset 0px 0px 0px 2px ${darkDataTableRowSelectedOutline}`,
+            '--data-table-wrapper-border': 'var(--neutral-900)',
+            '--data-table-resize-fill': 'var(--neutral-light-5)',
+            '--data-table-resize-active-fill': 'var(--secondary)',
 
             // // Components/Input
-            // '--input-label': common.white,
+            '--input-disabled-invalid-border': 'var(--input-border-disabled)',
+            '--input-border-default': palette.neutral.light[400],
+            '--input-border-focus': 'var(--control-accent)',
+            '--input-border-disabled': palette.neutral.dark[900],
+            '--input-outlined-border-default': 'var(--border-control)',
+            '--input-outlined-border-hover': 'var(--secondary)',
+            '--input-placeholder-text': dark.input.placeholder,
             '--input-fill': palette.neutral.dark[50],
             '--input-fill-disabled': palette.neutral.dark[400],
-            '--input-border-default': palette.neutral.light[400],
-            '--input-border-focus': secondaryVariant2,
-            // '--input-border-hover': dark.secondary.main,
-            '--input-border-disabled': palette.neutral.dark[900],
+            '--input-disabled-fill': palette.neutral.dark[400],
+            '--input-outlined-hover-focus-border': 'var(--input-outlined-border-default)',
 
-            '--input-placeholder-text': dark.input.placeholder,
-            '--input-outlined-border-default': dark.input.border,
-            '--input-outlined-border-hover': dark.secondary.main,
+            // // Components/Select
+            '--select-disabled-open-border': 'var(--input-border-disabled)',
+            '--select-disabled-highlighted-fill': 'var(--select-item-disabled-fill)',
+            '--select-trigger-fill': 'var(--surface-subtle)',
+            '--select-trigger-outlined-fill': palette.neutral.dark[50],
+            '--select-content-fill': palette.neutral.dark[400],
+            '--select-separator-fill': palette.neutral.light[200],
+            '--select-item-disabled-fill': palette.neutral.dark[700],
+            '--select-trigger-placeholder-text': dark.input.placeholder,
+            '--select-item-checked-text': secondaryVariant2,
+            '--select-border-default': palette.neutral.light[400],
+            '--select-border-focus': 'var(--control-accent)',
+            '--select-content-border': palette.neutral.light[900],
+            '--select-open-fill': 'var(--input-fill)',
+            '--select-open-disabled-fill': 'var(--select-disabled-fill)',
+            '--select-disabled-placeholder-text': 'var(--select-trigger-placeholder-text)',
+            '--select-invalid-placeholder-open-text': 'var(--input-placeholder-text)',
+            '--select-open-focus-border': 'var(--input-outlined-border-default)',
+            '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
+            '--select-highlight-text': 'var(--common-dark)',
+            '--select-placeholder-text': 'var(--select-trigger-placeholder-text)',
+            '--select-disabled-fill': palette.neutral.dark[400],
+            '--select-outlined-hover-focus-border': 'var(--input-outlined-border-default)',
+            '--select-outlined-focus-border': 'var(--input-outlined-border-default)',
 
             // // Components/Textarea
-            '--textarea-fill': common.dark,
-            '--textarea-border-default': dark.input.border,
-            '--textarea-border-hover': dark.secondary.main,
+            '--textarea-fill': 'var(--surface)',
+            '--textarea-border-default': 'var(--border-control)',
+            '--textarea-border-hover': 'var(--secondary)',
+            '--textarea-disabled-fill': palette.neutral.dark[400],
+            '--textarea-focus-border': 'var(--textarea-border-default)',
+            '--textarea-hover-focus-border': 'var(--textarea-border-default)',
+
+            // // Components/Toggle
+            '--toggle-hover-border': 'var(--toggle-btn-border)',
+            '--toggle-active-border': 'var(--toggle-btn-border)',
+            '--toggle-selected-border': 'var(--toggle-btn-border)',
+            '--toggle-disabled-border': 'var(--toggle-btn-border)',
+            '--toggle-disabled-hover-text': 'var(--toggle-highlight-text)',
+            '--toggle-btn-fill': 'var(--surface)',
+            '--toggle-group-fill': 'var(--surface-subtle)',
+            '--toggle-btn-border': palette.neutral.dark[600],
+            '--toggle-highlight-text': 'var(--common-dark)',
 
             // // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],
             '--radio-border-default': palette.neutral.light[400],
-            '--radio-border-hover': secondaryVariant2,
+            '--radio-border-hover': 'var(--control-accent)',
             '--radio-disabled-border': palette.neutral.dark[600],
             '--radio-disabled-fill': palette.neutral.dark[400],
             '--radio-indicator-fill': secondaryVariant2,
 
             // // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
-            '--select-trigger-fill': palette.neutral.dark[400],
-            '--select-trigger-placeholder-text': dark.input.placeholder,
-            '--select-trigger-outlined-fill': palette.neutral.dark[50],
-            '--select-border-default': palette.neutral.light[400],
-            '--select-border-focus': secondaryVariant2,
-            '--select-content-border': palette.neutral.light[900],
-            '--select-content-fill': palette.neutral.dark[400],
-            '--select-item-checked-text': secondaryVariant2,
-            '--select-separator-fill': palette.neutral.light[200],
             '--dropdown-trigger-border': palette.neutral.light[400],
             '--dropdown-popover-border': palette.neutral.dark[700],
-            '--dropdown-popover-fill': common.dark,
-            '--dropdown-option-hover-fill': palette.neutral.dark[600],
+            '--dropdown-popover-fill': 'var(--surface)',
+            '--dropdown-option-hover-fill': 'var(--surface-hover)',
             '--dropdown-option-disabled-fill': palette.neutral.dark[700],
-            '--dropdown-tooltip-fill': palette.neutral.dark[600],
-            // // Components/Data Display/ DataTable
-            '--data-table-fill': palette.neutral.dark[400],
-            '--data-table-header-fill': palette.neutral.dark[400],
-            '--data-table-row-even-fill': palette.neutral.dark[500],
-            '--data-table-row-odd-fill': palette.neutral.dark[400],
-            '--data-table-row-hover-fill': palette.neutral.dark[600],
-            '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
+            '--dropdown-tooltip-fill': 'var(--surface-hover)',
 
             // // Components/Switch
             '--switch-fill': common.white,
@@ -511,9 +584,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--nav-control-btn-focus': palette.neutral.dark[400],
 
             // // Components/ SideNav/ Nav items
-            // '--nav-item-default': common.white,
-            // '--nav-item-hover': dark.secondary.main,
-            // '--nav-item-active': dark.primary.main,
+            // '--nav-item-default': 'var(--text-main)',
+            // '--nav-item-hover': 'var(--secondary)',
+            // '--nav-item-active': 'var(--primary)',
 
             // // Components / Graph
             // '--platform-badge-bg': elevation.dark[2],
@@ -521,23 +594,22 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // // Components / Graph / Edge
             // '--edge-color': dark.edge.color,
             // '--edge-label-bg': palette.neutral.dark[500],
-            // '--edge-label-text': common.white,
+            // '--edge-label-text': 'var(--text-main)',
 
             // // Utilities
-            // '--icon': common.white,
-            // '--icon-contrast': common.dark,
+            // '--icon': 'var(--text-main)',
+            // '--icon-contrast': 'var(--text-contrast)',
             '--icon-disabled': common.disabled,
             // '--divider': palette.neutral.dark[500],
 
             ///////////// Legacy below //////////
             // same as common.white
             '--contrast': '#ffffff',
-            // same palette.neutral.dark[50]
-            '--neutral-1': '#121212',
-            '--neutral-2': '#222222',
-            '--neutral-3': '#272727',
-            '--neutral-4': '#2c2c2c',
-            '--neutral-5': '#2e2e2e',
+            '--neutral-1': 'var(--neutral-dark-1)',
+            '--neutral-2': 'var(--neutral-dark-2)',
+            '--neutral-3': 'var(--neutral-dark-3)',
+            '--neutral-4': 'var(--neutral-dark-4)',
+            '--neutral-5': 'var(--neutral-dark-5)',
 
             '--link': secondaryVariant2,
 

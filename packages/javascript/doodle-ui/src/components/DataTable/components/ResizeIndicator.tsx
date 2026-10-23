@@ -38,8 +38,8 @@ export const ResizeIndicator = <TData, TValue>({
                 onMouseDown: header.getResizeHandler(),
                 onTouchStart: header.getResizeHandler(),
                 className: cn(
-                    `resizer opacity-0 absolute top-0 right-0 w-1 bg-neutral-5 dark:bg-neutral-light-5 cursor-col-resize select-none touch-none group-hover:opacity-100 group-[.isResizing~_&:hover]:opacity-0 group-[.isResizing~_&:hover]:cursor-default [th:has(~_.isResizing)_>_&]:!opacity-0 [th:has(~_.isResizing)_>_&]:cursor-default`,
-                    header.column.getIsResizing() ? 'bg-primary opacity-100 dark:bg-secondary' : ''
+                    `resizer opacity-0 absolute top-0 right-0 w-1 bg-[color:var(--data-table-resize-fill)] cursor-col-resize select-none touch-none group-hover:opacity-100 group-[.isResizing~_&:hover]:opacity-0 group-[.isResizing~_&:hover]:cursor-default [th:has(~_.isResizing)_>_&]:!opacity-0 [th:has(~_.isResizing)_>_&]:cursor-default`,
+                    header.column.getIsResizing() ? 'bg-[color:var(--data-table-resize-active-fill)] opacity-100' : ''
                 ),
             }}
             style={{
