@@ -15,112 +15,397 @@
 
     SPDX-License-Identifier: Apache-2.0
 */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-    /* DoodleUI components draw their focus ring from these, so they follow the theme too */
-    html[data-theme] {
-        --focus-ring: var(--dp-color-focus);
-        --focus-ring-offset: var(--dp-color-canvas);
+    :root {
+        --color-ink: theme('colors.portal.ink');
+        --color-ink-muted: theme('colors.portal.ink-muted');
+        --color-night: theme('colors.portal.night');
+        --color-night-deep: theme('colors.portal.night-deep');
+        --color-panel: theme('colors.portal.panel');
+        --color-line: theme('colors.portal.line');
+        --color-blue: theme('colors.portal.blue');
+        --color-orange: theme('colors.portal.orange');
+        --font-sans: theme('fontFamily.sans');
+        --font-display: theme('fontFamily.heading');
     }
 
     html {
-        @apply bg-dp-canvas font-dp-body text-dp-text antialiased;
+        scroll-behavior: smooth;
     }
 
-    :focus-visible {
-        outline: 2px solid var(--dp-color-focus);
-        outline-offset: 2px;
+    body {
+        background: var(--color-night-deep);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    ::selection {
+        background: var(--color-orange);
+        color: var(--color-ink);
     }
 }
 
-@layer components {
-    /*
-        The graph motif: a source node with edges branching to each destination, echoing the attack path
-        graphs BloodHound draws. Used by the landing page.
-    */
-    .graph-tree {
-        --graph-edge-width: 2px;
-        --graph-branch-length: 2.5rem;
-        --graph-edge-color: var(--dp-color-hero-edge);
-    }
-    .graph-tree > li {
-        @apply relative py-3;
-        padding-left: var(--graph-branch-length);
-    }
-    .graph-tree > li::before,
-    .graph-tree > li::after {
-        @apply pointer-events-none absolute left-0;
-        content: '';
-        border-color: var(--graph-edge-color);
-    }
-    /* The trunk; it stops at the last branch */
-    .graph-tree > li::before {
-        @apply inset-y-0 origin-top;
-        border-left-width: var(--graph-edge-width);
-    }
-    .graph-tree > li:last-child::before {
-        bottom: 50%;
-    }
-    /* The branch out to the destination's node */
-    .graph-tree > li::after {
-        @apply top-1/2 origin-left;
-        width: var(--graph-branch-length);
-        border-top-width: var(--graph-edge-width);
-        margin-top: calc(var(--graph-edge-width) / -2);
+.site-shell {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: radial-gradient(
+            circle at 86% 6%,
+            color-mix(in srgb, var(--color-blue) 13%, transparent),
+            transparent 28%
+        ),
+        radial-gradient(circle at 0% 38%, color-mix(in srgb, var(--color-orange) 9%, transparent), transparent 22%),
+        var(--color-night-deep);
+}
+
+.ambient-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.19;
+    background-image: linear-gradient(color-mix(in srgb, var(--color-line) 48%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--color-line) 48%, transparent) 1px, transparent 1px);
+    background-size: 5rem 5rem;
+    mask-image: linear-gradient(to bottom, black, transparent 72%);
+    pointer-events: none;
+}
+
+.content-wrap {
+    position: relative;
+    z-index: 1;
+    width: min(100% - 2rem, 76rem);
+    margin-inline: auto;
+}
+
+.site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 6rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-line) 75%, transparent);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.brand-mark {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 0.5rem;
+    background: var(--color-orange);
+    color: var(--color-ink);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+}
+
+.brand-divider {
+    width: 1px;
+    height: 1rem;
+    background: var(--color-line);
+}
+
+.brand-context,
+.header-label {
+    color: var(--color-ink-muted);
+}
+
+.header-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.hero {
+    max-width: 52rem;
+    padding-block: 7rem 4.5rem;
+}
+
+.eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-blue);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.eyebrow-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--color-orange);
+    box-shadow: 0 0 1rem color-mix(in srgb, var(--color-orange) 80%, transparent);
+}
+
+.hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 8vw, 6.8rem);
+    font-weight: 600;
+    line-height: 0.93;
+    letter-spacing: -0.065em;
+}
+
+.hero-copy {
+    max-width: 38rem;
+    margin-top: 2rem;
+    color: var(--color-ink-muted);
+    font-size: 1.125rem;
+    line-height: 1.7;
+}
+
+.portal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding-bottom: 8rem;
+}
+
+.portal-card {
+    position: relative;
+    display: flex;
+    min-height: 25rem;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: 1.25rem;
+    padding: 2rem;
+    background: color-mix(in srgb, var(--color-panel) 80%, transparent);
+    box-shadow: 0 1.5rem 4rem color-mix(in srgb, black 18%, transparent);
+    transition:
+        border-color 180ms ease,
+        transform 180ms ease,
+        background 180ms ease;
+}
+
+.portal-card::before {
+    position: absolute;
+    width: 14rem;
+    height: 14rem;
+    top: -6rem;
+    right: -5rem;
+    border-radius: 50%;
+    background: var(--card-accent);
+    filter: blur(4rem);
+    opacity: 0.1;
+    content: '';
+    transition: opacity 180ms ease;
+}
+
+.portal-card[data-accent='blue'] {
+    --card-accent: var(--color-blue);
+}
+
+.portal-card[data-accent='orange'] {
+    --card-accent: var(--color-orange);
+}
+
+.portal-card:hover {
+    border-color: color-mix(in srgb, var(--card-accent) 72%, var(--color-line));
+    background: color-mix(in srgb, var(--color-panel) 94%, transparent);
+    transform: translateY(-0.35rem);
+}
+
+.portal-card:hover::before {
+    opacity: 0.18;
+}
+
+.portal-card:focus-visible,
+.back-link:focus-visible,
+.brand:focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: 0.3rem;
+}
+
+.card-icon {
+    display: grid;
+    width: 3.75rem;
+    height: 3.75rem;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--card-accent) 35%, var(--color-line));
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--card-accent) 12%, var(--color-panel));
+    color: var(--card-accent);
+}
+
+.card-icon svg {
+    width: 1.75rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+}
+
+.card-index {
+    color: var(--color-ink-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+}
+
+.card-title {
+    max-width: 22rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.04em;
+}
+
+.card-description {
+    max-width: 26rem;
+    margin-top: 1rem;
+    color: var(--color-ink-muted);
+    line-height: 1.65;
+}
+
+.card-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-line);
+    color: var(--card-accent);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.card-action svg {
+    width: 1.35rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+    transition: transform 180ms ease;
+}
+
+.portal-card:hover .card-action svg {
+    transform: translateX(0.25rem);
+}
+
+.destination-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding-block: 2rem 8rem;
+}
+
+.destination-section {
+    scroll-margin-top: 2rem;
+    border-top: 1px solid var(--color-line);
+    padding-top: 2rem;
+}
+
+.section-eyebrow {
+    color: var(--color-orange);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.section-title {
+    margin-top: 1rem;
+    font-family: var(--font-display);
+    font-size: 1.65rem;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+}
+
+.destination-section p {
+    max-width: 28rem;
+    margin-top: 0.75rem;
+    color: var(--color-ink-muted);
+    line-height: 1.6;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 1.5rem;
+    color: var(--color-blue);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 2rem 3rem;
+    border-top: 1px solid var(--color-line);
+    color: var(--color-ink-muted);
+    font-size: 0.75rem;
+}
+
+@media (max-width: 48rem) {
+    .site-header {
+        min-height: 5rem;
     }
 
-    .graph-node {
-        @apply grid shrink-0 place-items-center rounded-full border-2 border-dp-hero-edge bg-dp-hero-node text-dp-hero-text;
+    .header-label,
+    .brand-context,
+    .brand-divider {
+        display: none;
     }
-    .graph-source-node {
-        @apply block rounded-full bg-dp-marker;
-        box-shadow: 0 0 0 6px color-mix(in srgb, var(--dp-color-marker) 25%, transparent);
+
+    .hero {
+        padding-block: 5rem 3rem;
+    }
+
+    .portal-grid,
+    .destination-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .portal-grid {
+        padding-bottom: 5rem;
+    }
+
+    .portal-card {
+        min-height: 22rem;
+    }
+
+    .destination-grid {
+        padding-bottom: 5rem;
+    }
+
+    footer {
+        flex-direction: column;
     }
 }
 
-/* The one page-load moment: the landing graph's edges draw out from the source node */
-@media (prefers-reduced-motion: no-preference) {
-    .graph-lead {
-        transform-origin: top;
-        animation: graph-draw-trunk 260ms ease-in 100ms both;
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
     }
-    .graph-tree-animated > li::before {
-        animation: graph-draw-trunk 200ms linear both;
-    }
-    .graph-tree-animated > li::after {
-        animation: graph-draw-branch 220ms ease-out both;
-    }
-    .graph-tree-animated > li:nth-child(1)::before {
-        animation-delay: 360ms;
-    }
-    .graph-tree-animated > li:nth-child(1)::after {
-        animation-delay: 460ms;
-    }
-    .graph-tree-animated > li:nth-child(2)::before {
-        animation-delay: 560ms;
-    }
-    .graph-tree-animated > li:nth-child(2)::after {
-        animation-delay: 660ms;
-    }
-    .graph-tree-animated > li:nth-child(n + 3)::before {
-        animation-delay: 760ms;
-    }
-    .graph-tree-animated > li:nth-child(n + 3)::after {
-        animation-delay: 860ms;
-    }
-}
 
-@keyframes graph-draw-trunk {
-    from {
-        transform: scaleY(0);
-    }
-}
-
-@keyframes graph-draw-branch {
-    from {
-        transform: scaleX(0);
+    .portal-card,
+    .card-action svg {
+        transition: none;
     }
 }
