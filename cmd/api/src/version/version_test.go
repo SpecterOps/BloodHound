@@ -86,3 +86,17 @@ func TestVersion_GreaterThan(t *testing.T) {
 		t.Fatalf("Expected version %s to match %s", greater, lesser)
 	}
 }
+
+func TestVersion_IsDevelopment(t *testing.T) {
+	if parsed, err := Parse("v999.999.999"); err != nil {
+		t.Fatalf("Parsing version failed: %v", err)
+	} else if !parsed.IsDevelopment() {
+		t.Fatalf("Expected version %s to be a development version", parsed)
+	}
+
+	if parsed, err := Parse("v9.1.0"); err != nil {
+		t.Fatalf("Parsing version failed: %v", err)
+	} else if parsed.IsDevelopment() {
+		t.Fatalf("Expected version %s to not be a development version", parsed)
+	}
+}
