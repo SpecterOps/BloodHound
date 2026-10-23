@@ -44,7 +44,7 @@ export function PortalCard({ accent, description, href, icon, index, title }: Po
             </div>
 
             <div className='card-action' aria-hidden='true'>
-                <span>Explore</span>
+                <span>Open</span>
                 <svg viewBox='0 0 24 24' fill='none'>
                     <path d='M5 12h13M13 7l5 5-5 5' />
                 </svg>
