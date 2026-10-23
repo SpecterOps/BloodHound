@@ -21,6 +21,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"time"
 )
 
@@ -32,6 +33,24 @@ type Database interface {
 	GetKindInfos(ctx context.Context, kindName string) ([]KindInfo, error)
 	GetExtension(ctx context.Context, id int32) (Extension, error)
 	GetRelationshipKind(ctx context.Context, id int32) (RelationshipKind, error)
+}
+
+var (
+	ErrKindInfoNotFound          = errors.New("kind info not found")
+	ErrKindInfoKindNotFound      = errors.New("kind info references a kind that does not exist")
+	ErrKindInfoDuplicatePosition = errors.New("kind info position already in use for this kind")
+	ErrKindInfoDuplicateInfoKey  = errors.New("kind info key already in use for this kind")
+)
+
+// represents a slice of entity panel definitions
+type KindInfoInputs []KindInfoInput
+
+// KindInfoInput represents one entity panel definition as provided in a user's upload JSON
+type KindInfoInput struct {
+	InfoKey  string
+	Title    string
+	Position int32
+	Content  json.RawMessage
 }
 
 // KindInfo holds the data associated with a single entity panel.

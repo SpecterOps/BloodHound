@@ -19,6 +19,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // tableKind is the kind table joined when resolving node kinds to their names.
@@ -27,6 +28,7 @@ const tableKind = "kind"
 // pgxQuerier lists only the pgx methods this package actually calls against PostgreSQL.
 type pgxQuerier interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 }
 
 // Store reads OpenGraph extension schema data from PostgreSQL. Callers receive
