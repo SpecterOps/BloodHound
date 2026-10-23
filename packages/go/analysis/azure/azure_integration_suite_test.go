@@ -24,6 +24,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -35,6 +36,8 @@ import (
 	"github.com/specterops/dawgs"
 	"github.com/specterops/dawgs/drivers/pg"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
 	"github.com/stretchr/testify/require"
 )
 
@@ -202,4 +205,75 @@ func NewAzureRole(t *testing.T, suite *IntegrationTestSuite, name, objectID, rol
 		azure.RoleTemplateID: roleTemplateID,
 		azure.TenantID:       tenantID,
 	}), azure.Entity, azure.Role)
+}
+
+type appRoleAssignmentFixture struct {
+	tenant              *graph.Node
+	microsoftGraph      *graph.Node
+	source              *graph.Node
+	otherSource         *graph.Node
+	application         *graph.Node
+	role                *graph.Node
+	ordinaryGroup       *graph.Node
+	roleAssignableGroup *graph.Node
+}
+
+type appRoleAssignmentEdge struct {
+	target graph.ID
+	kind   graph.Kind
+}
+
+func newAppRoleAssignmentObjectID(t *testing.T) string {
+	t.Helper()
+	var objectID, err = uuid.NewV4()
+	require.NoError(t, err)
+	return objectID.String()
+}
+
+func newAppRoleAssignmentFixture(t *testing.T, suite *IntegrationTestSuite) appRoleAssignmentFixture {
+	t.Helper()
+	var (
+		tenantID = newAppRoleAssignmentObjectID(t)
+		fixture  = appRoleAssignmentFixture{
+			tenant:         NewAzureTenant(t, suite, tenantID),
+			microsoftGraph: NewAzureServicePrincipal(t, suite, "Microsoft Graph", newAppRoleAssignmentObjectID(t), tenantID),
+			source:         NewAzureServicePrincipal(t, suite, "Source", newAppRoleAssignmentObjectID(t), tenantID),
+			otherSource:    NewAzureServicePrincipal(t, suite, "Other source", newAppRoleAssignmentObjectID(t), tenantID),
+			application:    NewAzureApplication(t, suite, "Application", newAppRoleAssignmentObjectID(t), tenantID),
+			role:           NewAzureRole(t, suite, "Role", newAppRoleAssignmentObjectID(t), newAppRoleAssignmentObjectID(t), tenantID),
+		}
+	)
+	fixture.ordinaryGroup = NewNode(t, suite, graph.AsProperties(graph.PropertyMap{
+		common.ObjectID:          newAppRoleAssignmentObjectID(t),
+		azure.TenantID:           tenantID,
+		azure.IsAssignableToRole: false,
+	}), azure.Entity, azure.Group)
+	fixture.roleAssignableGroup = NewNode(t, suite, graph.AsProperties(graph.PropertyMap{
+		common.ObjectID:          newAppRoleAssignmentObjectID(t),
+		azure.TenantID:           tenantID,
+		azure.IsAssignableToRole: true,
+	}), azure.Entity, azure.Group)
+	for _, node := range []*graph.Node{fixture.microsoftGraph, fixture.source, fixture.otherSource, fixture.application, fixture.role, fixture.ordinaryGroup, fixture.roleAssignableGroup} {
+		NewRelationship(t, suite, fixture.tenant, node, azure.Contains)
+	}
+	return fixture
+}
+
+func requireAppRoleAssignmentEdges(t *testing.T, suite *IntegrationTestSuite, source *graph.Node, expected []appRoleAssignmentEdge) {
+	t.Helper()
+	var actual []appRoleAssignmentEdge
+	require.NoError(t, suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		relationships, err := ops.FetchRelationships(tx.Relationships().Filter(query.And(
+			query.Equals(query.StartID(), source.ID),
+			query.KindIn(query.Relationship(), azure.AZMGGrantRole, azure.AZMGGrantAppRoles, azure.AZMGAddSecret, azure.AZMGAddOwner, azure.AZMGAddMember),
+		)))
+		if err != nil {
+			return err
+		}
+		for _, relationship := range relationships {
+			actual = append(actual, appRoleAssignmentEdge{target: relationship.EndID, kind: relationship.Kind})
+		}
+		return nil
+	}))
+	require.ElementsMatch(t, expected, actual)
 }

@@ -251,15 +251,7 @@ func postAppRoleAssignmentsForTenant(ctx context.Context, db graph.Database, sin
 			return err
 		} else if err := postAZMGGroupMemberReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
 			return err
-		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx, db, sink, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
+		} else if err := postAZMGRoleManagementReadWriteDirectoryEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
 			return err
 		} else if err := postAZMGServicePrincipalEndpointReadWriteAllEdges(ctx, db, sink, tenantContainsServicePrincipalRelationships); err != nil {
 			return err
@@ -397,129 +389,128 @@ func postAZMGGroupMemberReadWriteAllEdges(ctx context.Context, db graph.Database
 	})
 }
 
-func postAZMGRoleManagementReadWriteDirectoryEdgesPart1(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
-			return err
-		} else if tenantContainsRoleRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Role); err != nil {
-			return err
-		} else {
-			for _, tenantContainsRoleRelationship := range tenantContainsRoleRelationships {
-				for _, sourceNode := range sourceNodes {
-					sink.Submit(ctx, post.EnsureRelationshipJob{
-						FromID: sourceNode.ID,
-						ToID:   tenantContainsRoleRelationship.StartID,
-						Kind:   azure.AZMGGrantAppRoles,
-					})
-				}
-			}
+// fetchTenantContainedNodeBitmap collects endpoint IDs without fetching node or relationship properties.
+func fetchTenantContainedNodeBitmap(tx graph.Transaction, tenant *graph.Node, nodeCriteria graph.Criteria) (cardinality.Duplex[uint64], error) {
+	var nodeIDs = cardinality.NewBitmap64()
+	if err := tx.Relationships().Filter(query.And(
+		query.Equals(query.StartID(), tenant.ID),
+		query.Kind(query.Relationship(), azure.Contains),
+		nodeCriteria,
+	)).FetchKinds(func(cursor graph.Cursor[graph.RelationshipKindsResult]) error {
+		for relationship := range cursor.Chan() {
+			nodeIDs.Add(relationship.EndID.Uint64())
 		}
-
-		return nil
-	})
+		return cursor.Error()
+	}); err != nil {
+		return nil, err
+	}
+	return nodeIDs, nil
 }
 
-func postAZMGRoleManagementReadWriteDirectoryEdgesPart2(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
+// postAZMGRoleManagementReadWriteDirectoryEdges emits two kinds of control edges
+// from service principals granted the Microsoft Graph application permission
+// RoleManagement.ReadWrite.Directory:
+//
+//   - AZMGGrantRole: from each permission holder to every directory role contained
+//     in the tenant. This permission authorizes creating directory role assignments.
+//   - AZMGAddMember: from permission holders that also have GroupMember.ReadWrite.All,
+//     Group.ReadWrite.All, or Directory.ReadWrite.All to tenant groups whose
+//     IsAssignableToRole property is true. Role-assignable groups require role
+//     management permission in addition to permission to write group membership.
+//
+// Permission grants are scoped by resource service principals contained in the
+// tenant. Membership requires both permissions on the same source principal in
+// that tenant; permissions held by different principals or in different tenants
+// are not combined. All emitted role and group targets are tenant-contained.
+//
+// Role management alone does not authorize credential, ownership, or application
+// role assignment writes. Those capabilities are handled under their own permissions.
+//
+// Microsoft Graph permission requirements:
+// https://learn.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0#permissions
+// https://learn.microsoft.com/en-us/graph/api/group-post-members?view=graph-rest-1.0#permissions
+// Higher-privileged alternatives to GroupMember.ReadWrite.All are also listed at:
+// https://learn.microsoft.com/en-us/graph/api/group-delete-members?view=graph-rest-1.0#permissions
+func postAZMGRoleManagementReadWriteDirectoryEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
 	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
-			return err
-		} else if tenantContainsRoleRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Role); err != nil {
-			return err
-		} else {
-			for _, tenantContainsRoleRelationship := range tenantContainsRoleRelationships {
-				for _, sourceNode := range sourceNodes {
-					sink.Submit(ctx, post.EnsureRelationshipJob{
-						FromID: sourceNode.ID,
-						ToID:   tenantContainsRoleRelationship.EndID,
-						Kind:   azure.AZMGGrantRole,
-					})
-				}
-			}
+		var (
+			tenantServicePrincipalIDs = make([]graph.ID, 0, len(tenantContainsServicePrincipalRelationships))
+			roleManagementSources     = cardinality.NewBitmap64()
+			groupWriteSources         = cardinality.NewBitmap64()
+			roleIDs                   cardinality.Duplex[uint64]
+			groupIDs                  cardinality.Duplex[uint64]
+			err                       error
+		)
+		if len(tenantContainsServicePrincipalRelationships) == 0 {
+			return nil
+		}
+		for _, relationship := range tenantContainsServicePrincipalRelationships {
+			tenantServicePrincipalIDs = append(tenantServicePrincipalIDs, relationship.EndID)
 		}
 
-		return nil
-	})
-}
-
-func postAZMGRoleManagementReadWriteDirectoryEdgesPart3(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
-			return err
-		} else {
-			for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
-				for _, sourceNode := range sourceNodes {
-					sink.Submit(ctx, post.EnsureRelationshipJob{
-						FromID: sourceNode.ID,
-						ToID:   tenantContainsServicePrincipalRelationship.EndID,
-						Kind:   azure.AZMGAddSecret,
-					})
-
-					sink.Submit(ctx, post.EnsureRelationshipJob{
-						FromID: sourceNode.ID,
-						ToID:   tenantContainsServicePrincipalRelationship.EndID,
-						Kind:   azure.AZMGAddOwner,
-					})
+		// Collect both permission sets in one query scoped to this tenant's resource service principals.
+		if err := tx.Relationships().Filter(query.And(
+			query.Kind(query.Start(), azure.ServicePrincipal),
+			query.Kind(query.End(), azure.ServicePrincipal),
+			query.InIDs(query.EndID(), tenantServicePrincipalIDs...),
+			query.KindIn(query.Relationship(), azure.RoleManagementReadWriteDirectory, azure.GroupMemberReadWriteAll, azure.GroupReadWriteAll, azure.DirectoryReadWriteAll),
+		)).FetchKinds(func(cursor graph.Cursor[graph.RelationshipKindsResult]) error {
+			for relationship := range cursor.Chan() {
+				if relationship.Kind.Is(azure.RoleManagementReadWriteDirectory) {
+					roleManagementSources.Add(relationship.StartID.Uint64())
+				} else {
+					groupWriteSources.Add(relationship.StartID.Uint64())
 				}
 			}
+			return cursor.Error()
+		}); err != nil {
+			return err
+		}
+		if roleManagementSources.Cardinality() == 0 {
+			return ctx.Err()
 		}
 
-		return nil
-	})
-}
-
-func postAZMGRoleManagementReadWriteDirectoryEdgesPart4(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
+		roleIDs, err = fetchTenantContainedNodeBitmap(tx, tenant, query.Kind(query.End(), azure.Role))
+		if err != nil {
 			return err
-		} else if tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App); err != nil {
-			return err
-		} else {
-			for _, tenantContainsAppRelationship := range tenantContainsAppRelationships {
-				for _, sourceNode := range sourceNodes {
-					sink.Submit(ctx, post.EnsureRelationshipJob{
-						FromID: sourceNode.ID,
-						ToID:   tenantContainsAppRelationship.EndID,
-						Kind:   azure.AZMGAddSecret,
-					})
-
-					sink.Submit(ctx, post.EnsureRelationshipJob{
-						FromID: sourceNode.ID,
-						ToID:   tenantContainsAppRelationship.EndID,
-						Kind:   azure.AZMGAddOwner,
-					})
-				}
-			}
 		}
 
-		return nil
-	})
-}
+		// Every role-management source can grant directory roles, regardless of group-write permissions.
+		roleManagementSources.Each(func(sourceID uint64) bool {
+			roleIDs.Each(func(targetID uint64) bool {
+				return sink.Submit(ctx, post.EnsureRelationshipJob{
+					FromID: graph.ID(sourceID),
+					ToID:   graph.ID(targetID),
+					Kind:   azure.AZMGGrantRole,
+				})
+			})
+			return ctx.Err() == nil
+		})
 
-func postAZMGRoleManagementReadWriteDirectoryEdgesPart5(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node, tenantContainsServicePrincipalRelationships []*graph.Relationship) error {
-	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.RoleManagementReadWriteDirectory); err != nil {
+		// Intersect only the membership sources; preserve the full role-management source set.
+		groupWriteSources.And(roleManagementSources)
+		if groupWriteSources.Cardinality() == 0 {
+			return ctx.Err()
+		}
+		groupIDs, err = fetchTenantContainedNodeBitmap(tx, tenant, query.And(
+			query.Kind(query.End(), azure.Group),
+			query.Equals(query.EndProperty(azure.IsAssignableToRole.String()), true),
+		))
+		if err != nil {
 			return err
-		} else if tenantContainsGroupRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.Group); err != nil {
-			return err
-		} else {
-			for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
-				for _, sourceNode := range sourceNodes {
-					sink.Submit(ctx, post.EnsureRelationshipJob{
-						FromID: sourceNode.ID,
-						ToID:   tenantContainsGroupRelationship.EndID,
-						Kind:   azure.AZMGAddMember,
-					})
-
-					sink.Submit(ctx, post.EnsureRelationshipJob{
-						FromID: sourceNode.ID,
-						ToID:   tenantContainsGroupRelationship.EndID,
-						Kind:   azure.AZMGAddOwner,
-					})
-				}
-			}
 		}
 
-		return nil
+		groupWriteSources.Each(func(sourceID uint64) bool {
+			groupIDs.Each(func(targetID uint64) bool {
+				return sink.Submit(ctx, post.EnsureRelationshipJob{
+					FromID: graph.ID(sourceID),
+					ToID:   graph.ID(targetID),
+					Kind:   azure.AZMGAddMember,
+				})
+			})
+			return ctx.Err() == nil
+		})
+		return ctx.Err()
 	})
 }
 

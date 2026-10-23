@@ -1119,18 +1119,6 @@ func (s *AZMGRoleManagementReadWriteDirectoryHarness) Setup(testCtx *GraphTestCo
 
 	testCtx.NewRelationship(s.ServicePrincipal, s.MicrosoftGraph, azure.RoleManagementReadWriteDirectory)
 
-	testCtx.NewRelationship(s.ServicePrincipal, s.MicrosoftGraph, azure.AZMGAddSecret)
-	testCtx.NewRelationship(s.ServicePrincipal, s.MicrosoftGraph, azure.AZMGAddOwner)
-
-	testCtx.NewRelationship(s.ServicePrincipal, s.ServicePrincipalB, azure.AZMGAddSecret)
-	testCtx.NewRelationship(s.ServicePrincipal, s.ServicePrincipalB, azure.AZMGAddOwner)
-
-	testCtx.NewRelationship(s.ServicePrincipal, s.Application, azure.AZMGAddSecret)
-	testCtx.NewRelationship(s.ServicePrincipal, s.Application, azure.AZMGAddOwner)
-
-	testCtx.NewRelationship(s.ServicePrincipal, s.Group, azure.AZMGAddSecret)
-	testCtx.NewRelationship(s.ServicePrincipal, s.Group, azure.AZMGAddOwner)
-
 	testCtx.NewRelationship(s.ServicePrincipal, s.Role, azure.AZMGGrantRole)
 }
 
