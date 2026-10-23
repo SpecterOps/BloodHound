@@ -34,6 +34,7 @@ const ConfirmationDialog: React.FC<{
     onConfirm: () => void;
     challengeText?: string;
     isLoading?: boolean;
+    isConfirmDisabled?: boolean;
     error?: string;
     cancelIcon?: ReactNode;
     confirmIcon?: ReactNode;
@@ -47,6 +48,7 @@ const ConfirmationDialog: React.FC<{
     text,
     onCancel,
     isLoading,
+    isConfirmDisabled,
     error,
     challengeText = '',
     onConfirm,
@@ -116,7 +118,11 @@ const ConfirmationDialog: React.FC<{
                         <Button
                             data-analytics={confirmDataAnalytics}
                             onClick={handleConfirm}
-                            disabled={isLoading || challengeText.toLowerCase() !== challengeTextReply.toLowerCase()}
+                            disabled={
+                                isLoading ||
+                                isConfirmDisabled ||
+                                challengeText.toLowerCase() !== challengeTextReply.toLowerCase()
+                            }
                             data-testid='confirmation-dialog_button-yes'>
                             {renderButtonContent(confirmText, confirmIcon)}
                         </Button>
