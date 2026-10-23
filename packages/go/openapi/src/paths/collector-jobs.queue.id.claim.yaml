@@ -17,7 +17,7 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - $ref: './../parameters/path.collector-job-id.yaml'
-    
+
 post:
   operationId: ClaimCollectorJob
   summary: Claim a collector job
@@ -58,5 +58,7 @@ post:
         application/json:
           schema:
             $ref: './../schemas/api.error-wrapper.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'

@@ -742,14 +742,14 @@ paths:
     $ref: './paths/collector-jobs.queue.available.yaml'
   /api/v2/collie-job-queue/current:
     $ref: './paths/collector-jobs.queue.current.yaml'
-#  /api/v2/collie-job-queue/{collector_job_id}:
-#    $ref: './paths/collector-jobs.queue.id.yaml'
+  /api/v2/collie-job-queue/{collector_job_id}:
+    $ref: './paths/collector-jobs.queue.id.yaml'
   /api/v2/collie-job-queue/{collector_job_id}/claim:
     $ref: './paths/collector-jobs.queue.id.claim.yaml'
   /api/v2/collie-job-queue/{collector_job_id}/start:
     $ref: './paths/collector-jobs.queue.id.start.yaml'
-#  /api/v2/collie-job-queue/{collector_job_id}/heartbeat:
-#    $ref: './paths/collector-jobs.queue.id.heartbeat.yaml'
+  /api/v2/collie-job-queue/{collector_job_id}/heartbeat:
+    $ref: './paths/collector-jobs.queue.id.heartbeat.yaml'
   /api/v2/collie-job-queue/{collector_job_id}/ingest:
     $ref: './paths/collector-jobs.queue.id.ingest.yaml'
   /api/v2/collie-job-queue/{collector_job_id}/end:

@@ -17664,6 +17664,9 @@
           "403": {
             "$ref": "#/components/responses/forbidden"
           },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
           }
@@ -17718,6 +17721,51 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/{collector_job_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "delete": {
+        "operationId": "CancelCollectorJob",
+        "summary": "Cancel a live collector job",
+        "description": "Atomically records a cancelled history outcome and deletes the queue entry from any non-terminal state.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
@@ -17791,6 +17839,9 @@
               }
             }
           },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
           }
@@ -17840,6 +17891,51 @@
               }
             }
           },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/{collector_job_id}/heartbeat": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "post": {
+        "operationId": "HeartbeatCollectorJob",
+        "summary": "Renew a collector job claim",
+        "description": "Renews `claim_expires_at` for the current holder. A missing, inactive, or no-longer-owned job returns 404 so the collector aborts local work.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
           }
@@ -17888,6 +17984,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
@@ -17961,6 +18060,9 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
           },
           "500": {
             "$ref": "#/components/responses/internal-server-error"
