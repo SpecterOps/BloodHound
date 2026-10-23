@@ -49,6 +49,7 @@ const (
 	EnvironmentTargetedAccessControlKey ParameterKey = "auth.environment_targeted_access_control"
 	SupportAccountProvisioningKey       ParameterKey = "auth.support_account_provisioning"
 	GraphStorageOptimizationKey         ParameterKey = "analysis.graph_storage_optimization"
+	CustomSubClaimKey                   ParameterKey = "auth.custom_sub_claim_key"
 )
 
 // Map is a convenience function for mapping the data stored in the Value Parameter struct member onto
@@ -172,6 +173,10 @@ type GraphStorageOptimizationParameter struct {
 	AfterBoot          bool `json:"after_boot"`
 	AfterAnalysis      bool `json:"after_analysis"`
 	MinIntervalSeconds int  `json:"min_interval_seconds"`
+}
+
+type CustomSubClaimKeyParameter struct {
+	ClaimKey string `json:"claim_key"`
 }
 
 // # Param definitions
@@ -303,6 +308,9 @@ var (
 		},
 		GraphStorageOptimizationKey: {
 			GetType: func() any { return GraphStorageOptimizationParameter{} },
+		},
+		CustomSubClaimKey: {
+			GetType: func() any { return CustomSubClaimKeyParameter{} },
 		},
 	}
 )
