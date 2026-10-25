@@ -1587,6 +1587,15 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		propMap[ad.VulnerableNetlogonSecurityDescriptor.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Value
 	}
 
+	windowsBuildCollected := computer.DCRegistryData.CurrentBuildNumber.Collected && computer.DCRegistryData.CurrentBuildRevision.Collected
+	propMap[ad.WindowsBuildCollected.String()] = windowsBuildCollected
+	if windowsBuildCollected {
+		if buildNumber, err := strconv.Atoi(strings.TrimSpace(computer.DCRegistryData.CurrentBuildNumber.Value)); err == nil {
+			propMap[ad.WindowsBuildNumber.String()] = buildNumber
+		}
+		propMap[ad.WindowsBuildRevision.String()] = computer.DCRegistryData.CurrentBuildRevision.Value
+	}
+
 	return IngestibleNode{
 		ObjectID:    computer.ObjectIdentifier,
 		PropertyMap: propMap,

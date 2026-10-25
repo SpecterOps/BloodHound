@@ -265,6 +265,8 @@ BEGIN
 	PERFORM genscript_upsert_kind('HasTrustKeys');
 	PERFORM genscript_upsert_kind('WriteAltSecurityIdentities');
 	PERFORM genscript_upsert_kind('WritePublicInformation');
+	PERFORM genscript_upsert_kind('WriteSupersededManagedAccountLink');
+	PERFORM genscript_upsert_kind('WriteSupersededServiceAccountState');
 	PERFORM genscript_upsert_kind('ProtectAdminGroups');
 	PERFORM genscript_upsert_kind('DMSAPrecededBy');
 	PERFORM genscript_upsert_kind('CreateDMSA');
@@ -398,6 +400,8 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'HasTrustKeys', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteAltSecurityIdentities', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WritePublicInformation', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteSupersededManagedAccountLink', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteSupersededServiceAccountState', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ProtectAdminGroups', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'DMSAPrecededBy', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CreateDMSA', '', true);

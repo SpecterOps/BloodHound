@@ -413,6 +413,27 @@ VulnerableNetlogonSecurityDescriptorCollected: types.#StringEnum & {
 	representation: "vulnerablenetlogonsecuritydescriptorcollected"
 }
 
+WindowsBuildNumber: types.#StringEnum & {
+	symbol:         "WindowsBuildNumber"
+	schema:         "ad"
+	name:           "Windows Build Number"
+	representation: "windowsbuildnumber"
+}
+
+WindowsBuildCollected: types.#StringEnum & {
+	symbol:         "WindowsBuildCollected"
+	schema:         "ad"
+	name:           "Windows Build Collected"
+	representation: "windowsbuildcollected"
+}
+
+WindowsBuildRevision: types.#StringEnum & {
+	symbol:         "WindowsBuildRevision"
+	schema:         "ad"
+	name:           "Windows Build Revision"
+	representation: "windowsbuildrevision"
+}
+
 CrossCertificatePair: types.#StringEnum & {
 	symbol:         "CrossCertificatePair"
 	schema:         "ad"
@@ -1124,6 +1145,9 @@ Properties: [
 	StrongCertificateBindingEnforcement,
 	VulnerableNetlogonSecurityDescriptor,
 	VulnerableNetlogonSecurityDescriptorCollected,
+	WindowsBuildNumber,
+	WindowsBuildCollected,
+	WindowsBuildRevision,
 	EKUs,
 	SubjectAltRequireUPN,
 	SubjectAltRequireDNS,
@@ -1797,6 +1821,16 @@ WritePublicInformation: types.#Kind & {
 	schema: "active_directory"
 }
 
+WriteSupersededManagedAccountLink: types.#Kind & {
+	symbol: "WriteSupersededManagedAccountLink"
+	schema: "active_directory"
+}
+
+WriteSupersededServiceAccountState: types.#Kind & {
+	symbol: "WriteSupersededServiceAccountState"
+	schema: "active_directory"
+}
+
 DMSAPrecededBy: types.#Kind & {
 	symbol: "DMSAPrecededBy"
 	schema: "active_directory"
@@ -1907,6 +1941,8 @@ RelationshipKinds: [
 	HasTrustKeys,
 	WriteAltSecurityIdentities,
 	WritePublicInformation,
+	WriteSupersededManagedAccountLink,
+	WriteSupersededServiceAccountState,
 	ProtectAdminGroups,
 	DMSAPrecededBy,
 	CreateDMSA,
@@ -1946,6 +1982,8 @@ ACLRelationships: [
 	OwnsLimitedRights,
 	WriteAltSecurityIdentities,
 	WritePublicInformation,
+	WriteSupersededManagedAccountLink,
+	WriteSupersededServiceAccountState,
 	CreateDMSA,
 	BadSuccessor,
 	OuroborosSelfEnroll,
