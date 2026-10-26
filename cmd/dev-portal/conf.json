@@ -19,8 +19,7 @@
         "defaultPage": "DEVREADME.md",
         "repositoryUrl": "https://github.com/SpecterOps/BloodHound/blob/main/",
         "include": [
-            "**/*.md",
-            ".github/**/*.md"
+            "**/*.md"
         ],
         "exclude": [
             "**/node_modules/**",
