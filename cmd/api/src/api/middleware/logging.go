@@ -172,7 +172,7 @@ func LoggingMiddleware(_ auth.IdentityResolver, bypassLimitsParam bool) func(htt
 				logAttrs = append(logAttrs,
 					slog.String("method", request.Method),
 					slog.String("request_uri", request.URL.RequestURI()),
-					slog.String("query_path", request.URL.Path),
+					slog.String("request_path", request.URL.Path),
 				)
 				slog.LogAttrs(
 					request.Context(),
