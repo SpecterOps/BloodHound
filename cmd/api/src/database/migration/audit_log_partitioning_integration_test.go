@@ -73,17 +73,6 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, isRangePartitioned(t, database, "audit_logs"))
 
-	const seededRows = 50001
-	require.NoError(t, database.Exec(`
-		INSERT INTO audit_logs (created_at, action, actor_id, actor_name, status)
-		SELECT
-			'2025-06-15T00:00:00Z'::timestamptz,
-			'seed_action',
-			'actor-' || generated_id,
-			'Seed Actor',
-			'success'
-		FROM generate_series(1, ?) AS generated_id
-	`, seededRows).Error)
 	require.NoError(t, database.Exec(`
 		INSERT INTO audit_logs (created_at, action, status)
 		VALUES
@@ -93,7 +82,7 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 	`).Error)
 
 	var (
-		totalSeeded = int64(seededRows + 3)
+		totalSeeded = int64(3)
 		sourceMaxID = scalarInt64(t, database, `SELECT MAX(id) FROM audit_logs`)
 	)
 
@@ -101,21 +90,28 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.True(t, isRangePartitioned(t, database, "audit_logs"))
-	assert.Equal(t, totalSeeded, scalarInt64(t, database, `SELECT count(*) FROM audit_logs`))
-	assert.Equal(t, int64(seededRows), scalarInt64(t, database, `SELECT count(*) FROM audit_logs_2025_06`))
-	assert.Equal(t, int64(2), scalarInt64(t, database, `SELECT count(*) FROM audit_logs_default`))
-	assert.Equal(t, int64(0), scalarInt64(t, database, `SELECT count(*) FROM audit_logs WHERE source <> 'legacy'`))
+	assert.Zero(t, scalarInt64(t, database, `SELECT count(*) FROM audit_logs`))
+	assert.Zero(t, scalarInt64(t, database, `SELECT count(*) FROM audit_logs_default`))
 	assert.Equal(t, sourceMaxID, scalarInt64(t, database, `SELECT last_value FROM audit_logs_id_seq`))
-
-	assert.Equal(t,
-		scalarString(t, database, `SELECT 'audit_logs_' || to_char(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY_MM')`),
-		scalarString(t, database, `SELECT tableoid::regclass::text FROM audit_logs WHERE action = 'current_action'`),
-	)
 	assert.False(t, isRangePartitioned(t, database, "audit_logs_old"))
 	assert.Equal(t, totalSeeded, scalarInt64(t, database, `SELECT count(*) FROM audit_logs_old`))
 	assert.Equal(t, "audit_logs", scalarString(t, database, `
 		SELECT tablename FROM pg_indexes WHERE indexname = 'idx_audit_logs_created_at'
 	`))
+
+	var nextID int64
+	require.NoError(t, database.Raw(`
+		INSERT INTO audit_logs (action, status, source)
+		VALUES ('post_migration_action', 'success', 'legacy')
+		RETURNING id
+	`).Scan(&nextID).Error)
+	assert.Greater(t, nextID, sourceMaxID)
+	assert.Equal(t, int64(1), scalarInt64(t, database, `SELECT count(*) FROM audit_logs`))
+	assert.Equal(t, totalSeeded, scalarInt64(t, database, `SELECT count(*) FROM audit_logs_old`))
+	assert.Equal(t,
+		scalarString(t, database, `SELECT 'audit_logs_' || to_char(CURRENT_TIMESTAMP, 'YYYY_MM')`),
+		scalarString(t, database, `SELECT tableoid::regclass::text FROM audit_logs WHERE action = 'post_migration_action'`),
+	)
 
 	results, err := provider.UpTo(testContext.ctx, auditPartitioningVersion)
 	require.NoError(t, err)

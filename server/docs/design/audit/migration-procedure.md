@@ -1,5 +1,7 @@
 # Audit Logs Partitioning Migration Procedure
 
+> **Superseded:** This RFC-era procedure describes a historical backfill and down migration that are not part of the accepted implementation. See BHADR-0032 and the current migration for the approved forward-only coexistence strategy.
+
 **Related RFC:** [bh-rfc-7.md](../../../../rfc/bh-rfc-7.md)
 **Status:** Implementation Guidance
 **Last Updated:** 2026-06-16

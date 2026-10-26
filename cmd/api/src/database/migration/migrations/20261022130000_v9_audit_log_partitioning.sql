@@ -17,8 +17,8 @@
 -- +goose NO TRANSACTION
 -- +goose Up
 
--- The copy runs in one transaction and restarts from an empty staging table
--- after a failure. audit_logs_old is retained as a recovery snapshot.
+-- Existing records remain in audit_logs_old during the three-month
+-- coexistence period. New records are written only to partitioned audit_logs.
 
 -- +goose StatementBegin
 DO $$
@@ -67,7 +67,7 @@ END $$;
 -- +goose StatementBegin
 DO $$
 DECLARE
-    current_month DATE := DATE '2024-01-01';
+    current_month DATE := date_trunc('month', CURRENT_TIMESTAMP)::date;
     partition_end_date DATE := (date_trunc('month', CURRENT_TIMESTAMP) + interval '2 months')::date;
 BEGIN
     IF to_regclass('audit_logs_partitioned') IS NULL THEN
@@ -92,64 +92,15 @@ END $$;
 -- +goose StatementBegin
 DO $$
 DECLARE
-    batch_size CONSTANT BIGINT := 50000;
-    source_max BIGINT;
-    window_high BIGINT;
-    window_low BIGINT := 0;
-BEGIN
-    IF to_regclass('audit_logs_partitioned') IS NULL THEN
-        RETURN;
-    END IF;
-
-    SELECT COALESCE(MAX(id), 0) INTO source_max FROM audit_logs;
-
-    WHILE window_low < source_max LOOP
-        window_high := window_low + batch_size;
-
-        INSERT INTO audit_logs_partitioned (
-            id, created_at, action, actor_id, actor_name, actor_email,
-            request_id, source_ip_address, status, commit_id, fields, source
-        )
-        SELECT
-            id,
-            COALESCE(created_at, '2020-01-01'::timestamptz),
-            action,
-            actor_id,
-            actor_name,
-            actor_email,
-            request_id,
-            source_ip_address,
-            status::text::audit_log_status,
-            commit_id,
-            fields,
-            'legacy'
-        FROM audit_logs
-        WHERE id > window_low AND id <= window_high
-        ON CONFLICT (id, created_at) DO NOTHING;
-
-        window_low := window_high;
-    END LOOP;
-END $$;
--- +goose StatementEnd
-
--- +goose StatementBegin
-DO $$
-DECLARE
     max_id BIGINT;
     sequence_value BIGINT;
-    source_count BIGINT;
-    staging_count BIGINT;
 BEGIN
     IF to_regclass('audit_logs_partitioned') IS NULL THEN
         RETURN;
     END IF;
 
-    SELECT count(*) INTO source_count FROM audit_logs;
-    SELECT count(*) INTO staging_count FROM audit_logs_partitioned;
-
-    IF staging_count <> source_count THEN
-        RAISE EXCEPTION 'audit_logs backfill incomplete: source=% staging=%', source_count, staging_count;
-    END IF;
+    SELECT MAX(id) INTO max_id FROM audit_logs;
+    SELECT last_value INTO sequence_value FROM audit_logs_id_seq;
 
     ALTER SEQUENCE audit_logs_id_seq OWNED BY NONE;
     ALTER TABLE audit_logs RENAME TO audit_logs_old;
@@ -164,9 +115,6 @@ BEGIN
 
     ALTER TABLE audit_logs_partitioned RENAME TO audit_logs;
     ALTER SEQUENCE audit_logs_id_seq OWNED BY audit_logs.id;
-
-    SELECT MAX(id) INTO max_id FROM audit_logs;
-    SELECT last_value INTO sequence_value FROM audit_logs_id_seq;
 
     IF max_id IS NOT NULL AND max_id > sequence_value THEN
         PERFORM setval('audit_logs_id_seq', max_id, true);
