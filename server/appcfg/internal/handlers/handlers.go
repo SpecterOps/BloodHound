@@ -60,6 +60,13 @@ type AuthTokensSideEffects interface {
 	UpdateAuthTokenExpiration(ctx context.Context) error
 }
 
+// Note ffReader, dataPipeSideEffects, and authTokensSideEffects are included
+// for custom Update Config special handling of particular configs.
+// I chose to inject them directly into handler rather than into service and having handler call
+// service for this functionality. I did this to avoid adding extra dependencies
+// to service when only this Update Config handler needs it, and other business
+// logic (such as getting a config value) does not.
+// This may not be a good pattern to repeat elsewhere.
 type Handlers struct {
 	service               Service
 	ffReader              FeatureFlagReader
