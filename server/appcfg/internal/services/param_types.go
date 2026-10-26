@@ -218,10 +218,6 @@ var (
 	// (and are actually calling GetConfig) will have hydrationRules. Other parameters
 	// will only exist in here to specify API access rules.
 	//
-	// IMPORTANT: keep defined keys and allowAPIAccess values in sync with
-	// bhce/cmd/api/src/model/appcfg/parameter.go `IsValidKey and `IsProtectedKey` until
-	// PUT /config has been migrated to onion
-	//
 	// This is exported to allow test overrides
 	ParamTypeDefinitions = map[ParameterKey]ParamTypeDefinition{
 		// Example:
