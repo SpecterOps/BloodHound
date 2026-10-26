@@ -144,7 +144,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     return (
                         <div className='dark:text-neutral-light-1 text-nowrap text-black w-full'>
                             <p className='underline mb-0.5'>{name}</p>
-                            <p className='text-text-muted'>{email}</p>
+                            <p className='text-muted'>{email}</p>
                         </div>
                     );
                 },

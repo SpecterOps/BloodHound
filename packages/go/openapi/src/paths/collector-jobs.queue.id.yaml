@@ -18,41 +18,41 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - $ref: './../parameters/path.collector-job-id.yaml'
 
-get:
-  operationId: GetCollectorJob
-  summary: Get a live collector job
-  tags:
-    - Collector Jobs
-    - Enterprise
-  responses:
-    200:
-      description: OK
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - data
-            properties:
-              data:
-                type: object
-                required:
-                  - job
-                properties:
-                  job:
-                    $ref: './../schemas/model.collector-job.yaml'
-    400:
-      $ref: './../responses/bad-request.yaml'
-    401:
-      $ref: './../responses/unauthorized.yaml'
-    403:
-      $ref: './../responses/forbidden.yaml'
-    404:
-      $ref: './../responses/not-found.yaml'
-    429:
-      $ref: './../responses/too-many-requests.yaml'
-    500:
-      $ref: './../responses/internal-server-error.yaml'
+#get:
+#  operationId: GetCollectorJob
+#  summary: Get a live collector job
+#  tags:
+#    - Collector Jobs (Experimental)
+#    - Enterprise
+#  responses:
+#    200:
+#      description: OK
+#      content:
+#        application/json:
+#          schema:
+#            type: object
+#            required:
+#              - data
+#            properties:
+#              data:
+#                type: object
+#                required:
+#                  - job
+#                properties:
+#                  job:
+#                    $ref: './../schemas/model.collector-job.yaml'
+#    400:
+#      $ref: './../responses/bad-request.yaml'
+#    401:
+#      $ref: './../responses/unauthorized.yaml'
+#    403:
+#      $ref: './../responses/forbidden.yaml'
+#    404:
+#      $ref: './../responses/not-found.yaml'
+#    429:
+#      $ref: './../responses/too-many-requests.yaml'
+#    500:
+#      $ref: './../responses/internal-server-error.yaml'
 
 delete:
   operationId: CancelCollectorJob
@@ -60,7 +60,7 @@ delete:
   description: Atomically records a cancelled history outcome and deletes the
     queue entry from any non-terminal state.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     204:
