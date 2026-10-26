@@ -159,7 +159,7 @@ dev-portal *ARGS='up':
     storybook_reason=""
     if [[ ! -f "$storybook_marker" ]]; then
       storybook_reason="no build found"
-    elif [[ -n "$(find "$doodle_ui/src" "$doodle_ui/.storybook" "$doodle_ui/package.json" "$doodle_ui/vite.config.ts" -newer "$storybook_marker" -print -quit)" ]]; then
+    elif [[ -n "$(find "$doodle_ui" \( -name node_modules -o -name dist -o -name coverage -o -name storybook-static \) -prune -o -type f -newer "$storybook_marker" -print -quit)" ]]; then
       storybook_reason="Doodle UI changed since the last build"
     fi
     if [[ -n "$storybook_reason" ]]; then
