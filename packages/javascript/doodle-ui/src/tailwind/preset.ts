@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
+import { palette } from './colors';
 
 export default {
     theme: {
@@ -31,6 +32,14 @@ export default {
             },
         },
         extend: {
+            backgroundColor: {
+                'btn-disabled-fill': palette.neutral.light[200],
+                'btn-disabled-fill-dark': palette.neutral.dark[700],
+            },
+            borderColor: {
+                'btn-disabled-fill': palette.neutral.light[200],
+                'btn-disabled-fill-dark': palette.neutral.dark[700],
+            },
             colors: {
                 // Legacy
                 'neutral-1': 'var(--neutral-1)',
@@ -88,11 +97,6 @@ export default {
                 'common-white': 'var(--common-white)',
                 // contrast: 'var(--common-dark)',
 
-                'switch-fill': 'var(--switch-fill)',
-                'switch-disabled-fill': 'var(--switch-disabled-fill)',
-                'switch-thumb-fill': 'var(--switch-thumb-fill)',
-                'switch-thumb-disabled-fill': 'var(--switch-thumb-disabled-fill)',
-
                 'neutral-50': 'var(--neutral-50)',
                 'neutral-100': 'var(--neutral-100)',
                 'neutral-200': 'var(--neutral-200)',
@@ -141,12 +145,6 @@ export default {
                 // 'brand-secondary-highlight-light-blue': 'var(--brand-secondary-highlight-light-blue)',
                 // 'brand-secondary-highlight-green': 'var(--brand-secondary-highlight-green)',
 
-                'secondary-btn-fill': 'var(--secondary-btn-fill)',
-                'secondary-btn-active-fill': 'var(--secondary-btn-active-fill)',
-                'tertiary-btn-border': 'var(--tertiary-btn-border)',
-                'transparent-btn-border': 'var(--transparent-btn-border)',
-                'icon-btn-fill': 'var(--icon-btn-fill)',
-                'btn-disabled-fill': 'var(--btn-disabled-fill)',
                 'toggle-btn-fill': 'var(--toggle-btn-fill)',
                 'toggle-btn-border': 'var(--toggle-btn-border)',
                 'toggle-group-fill': 'var(--toggle-group-fill)',
@@ -200,29 +198,6 @@ export default {
                 'data-table-row-odd-fill': 'var(--data-table-row-odd-fill)',
                 'data-table-row-hover-fill': 'var(--data-table-row-hover-fill)',
                 'data-table-row-selected-outline': 'var(--data-table-row-selected-outline)',
-
-                // 'menu-bg': 'var(--menu-bg)',
-
-                'badge-primary-fill': 'var(--badge-primary-fill)',
-                'badge-primary-outline': 'var(--badge-primary-outline)',
-
-                'badge-secondary-fill': 'var(--badge-secondary-fill)',
-                'badge-secondary-outline': 'var(--badge-secondary-outline)',
-
-                'badge-grey-fill': 'var(--badge-grey-fill)',
-                'badge-grey-outline': 'var(--badge-grey-outline)',
-
-                'badge-red-fill': 'var(--badge-red-fill)',
-                'badge-red-outline': 'var(--badge-red-outline)',
-
-                'badge-orange-fill': 'var(--badge-orange-fill)',
-                'badge-orange-outline': 'var(--badge-orange-outline)',
-
-                'badge-green-fill': 'var(--badge-green-fill)',
-                'badge-green-outline': 'var(--badge-green-outline)',
-
-                'badge-blue-fill': 'var(--badge-blue-fill)',
-                'badge-blue-outline': 'var(--badge-blue-outline)',
 
                 // 'sidenav-bg': 'var(--sidenav-bg)',
                 // 'sidenav-bg-hover': 'var(--sidenav-bg-hover)',

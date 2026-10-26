@@ -192,7 +192,7 @@ x-tagGroups:
       - Client Ingest
       - Clients
       - Jobs
-      - Collector Jobs
+      - Collector Jobs (Experimental)
       - Tasks
       - Events (Schedules)
       - Attack Paths
@@ -736,44 +736,44 @@ paths:
     $ref: './paths/jobs.jobs.id.log.yaml'
 
   # collector jobs
-#  /api/v2/collie-job-queue:
-#    $ref: './paths/collector-jobs.queue.yaml'
-#  /api/v2/collie-job-queue/available:
-#    $ref: './paths/collector-jobs.queue.available.yaml'
-#  /api/v2/collie-job-queue/current:
-#    $ref: './paths/collector-jobs.queue.current.yaml'
-#  /api/v2/collie-job-queue/{collector_job_id}:
-#    $ref: './paths/collector-jobs.queue.id.yaml'
-#  /api/v2/collie-job-queue/{collector_job_id}/claim:
-#    $ref: './paths/collector-jobs.queue.id.claim.yaml'
-#  /api/v2/collie-job-queue/{collector_job_id}/start:
-#    $ref: './paths/collector-jobs.queue.id.start.yaml'
-#  /api/v2/collie-job-queue/{collector_job_id}/heartbeat:
-#    $ref: './paths/collector-jobs.queue.id.heartbeat.yaml'
-#  /api/v2/collie-job-queue/{collector_job_id}/ingest:
-#    $ref: './paths/collector-jobs.queue.id.ingest.yaml'
-#  /api/v2/collie-job-queue/{collector_job_id}/end:
-#    $ref: './paths/collector-jobs.queue.id.end.yaml'
-#  /api/v2/collie-job-types:
-#    $ref: './paths/collector-jobs.types.yaml'
-#  /api/v2/collie-job-types/{collector_job_type_id}:
-#    $ref: './paths/collector-jobs.types.id.yaml'
-#  /api/v2/collie-job-profiles:
-#    $ref: './paths/collector-jobs.profiles.yaml'
-#  /api/v2/collie-job-profiles/{collector_job_profile_id}:
-#    $ref: './paths/collector-jobs.profiles.id.yaml'
-#  /api/v2/collie-job-schedules:
-#    $ref: './paths/collector-jobs.schedules.yaml'
-#  /api/v2/collie-job-schedules/{collector_job_schedule_id}:
-#    $ref: './paths/collector-jobs.schedules.id.yaml'
-#  /api/v2/collie-job-secrets:
-#    $ref: './paths/collector-jobs.secrets.yaml'
-#  /api/v2/collie-job-secrets/{collector_job_secret_id}:
-#    $ref: './paths/collector-jobs.secrets.id.yaml'
-#  /api/v2/collie-job-history:
-#    $ref: './paths/collector-jobs.history.yaml'
-#  /api/v2/collie-job-history/{collector_job_id}:
-#    $ref: './paths/collector-jobs.history.id.yaml'
+  /api/v2/collie-job-queue:
+    $ref: './paths/collector-jobs.queue.yaml'
+  /api/v2/collie-job-queue/available:
+    $ref: './paths/collector-jobs.queue.available.yaml'
+  /api/v2/collie-job-queue/current:
+    $ref: './paths/collector-jobs.queue.current.yaml'
+  /api/v2/collie-job-queue/{collector_job_id}:
+    $ref: './paths/collector-jobs.queue.id.yaml'
+  /api/v2/collie-job-queue/{collector_job_id}/claim:
+    $ref: './paths/collector-jobs.queue.id.claim.yaml'
+  /api/v2/collie-job-queue/{collector_job_id}/start:
+    $ref: './paths/collector-jobs.queue.id.start.yaml'
+  /api/v2/collie-job-queue/{collector_job_id}/heartbeat:
+    $ref: './paths/collector-jobs.queue.id.heartbeat.yaml'
+  /api/v2/collie-job-queue/{collector_job_id}/ingest:
+    $ref: './paths/collector-jobs.queue.id.ingest.yaml'
+  /api/v2/collie-job-queue/{collector_job_id}/end:
+    $ref: './paths/collector-jobs.queue.id.end.yaml'
+  /api/v2/collie-job-types:
+    $ref: './paths/collector-jobs.types.yaml'
+  /api/v2/collie-job-types/{collector_job_type_id}:
+    $ref: './paths/collector-jobs.types.id.yaml'
+  /api/v2/collie-job-profiles:
+    $ref: './paths/collector-jobs.profiles.yaml'
+  /api/v2/collie-job-profiles/{collector_job_profile_id}:
+    $ref: './paths/collector-jobs.profiles.id.yaml'
+  /api/v2/collie-job-schedules:
+    $ref: './paths/collector-jobs.schedules.yaml'
+  /api/v2/collie-job-schedules/{collector_job_schedule_id}:
+    $ref: './paths/collector-jobs.schedules.id.yaml'
+  /api/v2/collie-job-secrets:
+    $ref: './paths/collector-jobs.secrets.yaml'
+  /api/v2/collie-job-secrets/{collector_job_secret_id}:
+    $ref: './paths/collector-jobs.secrets.id.yaml'
+  /api/v2/collie-job-history:
+    $ref: './paths/collector-jobs.history.yaml'
+  /api/v2/collie-job-history/{collector_job_id}:
+    $ref: './paths/collector-jobs.history.id.yaml'
 
   # management operations
   /api/v2/clients/{client_id}/management:
