@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box } from '@mui/material';
+import NodeIcon from '../../components/NodeIcon';
 import { ActiveDirectoryNodeKind, AzureNodeKind, CommonKindProperties } from '../../graphSchema';
 import { EntityKinds, KnownNodeProperties, formatPotentiallyUnknownLabel } from '../../utils';
-import type { SearchValue } from '../../views/Explore/ExploreSearch/types';
-import NodeIcon from '../NodeIcon';
-import { Field } from './Field';
+import { SearchValue } from './ExploreSearch/types';
+import { Field } from './fragments';
 
 interface BasicObjectInfoFieldsProps {
     properties: Record<string, any> & {

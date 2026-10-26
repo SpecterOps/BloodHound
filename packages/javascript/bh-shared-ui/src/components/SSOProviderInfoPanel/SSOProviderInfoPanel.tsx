@@ -20,8 +20,8 @@ import fileDownload from 'js-file-download';
 import { FC, useMemo } from 'react';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
+import { Field, FieldsContainer } from '../../views/Explore/fragments';
 import LabelWithCopy from '../LabelWithCopy';
-import { Field, FieldsContainer } from '../ObjectInfoFields';
 
 const SAMLProviderInfoPanel: FC<{
     samlProviderDetails: SAMLProviderInfo;
