@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { cn } from '../utils';
 
 export const CheckboxVariants = cva(
-    [
+    cn(
         'peer shrink-0 rounded-sm border border-[color:var(--checkbox-border)] ring-offset-background',
         'enabled:hover:border-[color:var(--checkbox-hover)] enabled:active:border-primary-variant',
         'focus:outline-none',
@@ -29,8 +30,8 @@ export const CheckboxVariants = cva(
         'enabled:active:data-[state=checked]:border-[color:var(--checkbox-checked-active-border)] enabled:active:data-[state=indeterminate]:border-[color:var(--checkbox-checked-active-border)]',
         'enabled:hover:active:data-[state=checked]:border-[color:var(--checkbox-hover)] enabled:hover:active:data-[state=indeterminate]:border-[color:var(--checkbox-hover)]',
         'disabled:hover:data-[state=checked]:bg-[color:var(--checkbox-disabled-checked-hover-fill)]',
-        'enabled:aria-[invalid=true]:data-[state=unchecked]:border-status-error-main',
-    ],
+        'enabled:aria-[invalid=true]:data-[state=unchecked]:border-status-error-main'
+    ),
     {
         variants: {
             size: {

@@ -16,28 +16,28 @@
 import { cva } from 'class-variance-authority';
 import { cn } from '../utils';
 
-export const buttonBaseClasses = [
+export const buttonBaseClasses = cn(
     'inline-flex items-center justify-center whitespace-nowrap rounded-3xl transition-colors',
     'focus:outline-none focus-visible:focus-ring',
     'disabled:text-[color:var(--button-disabled-text)] disabled:pointer-events-none disabled:opacity-50',
-    'has-[svg]:gap-2 [&>svg]:shrink-0',
-];
+    'has-[svg]:gap-2 [&>svg]:shrink-0'
+);
 
-export const primaryClasses = [
+export const primaryClasses = cn(
     'bg-primary text-[color:var(--button-primary-text)] shadow-outer-1',
     'hover:bg-secondary',
     'focus-visible:bg-secondary',
     'active:bg-[color:var(--button-primary-active-fill)]',
-    'disabled:shadow-none disabled:bg-[color:var(--button-disabled-fill)]',
-];
+    'disabled:shadow-none disabled:bg-[color:var(--button-disabled-fill)]'
+);
 
-export const secondaryClasses = [
+export const secondaryClasses = cn(
     'bg-[color:var(--button-secondary-fill)] text-[color:var(--button-secondary-text)] shadow-outer-1',
     'hover:bg-secondary hover:text-[color:var(--button-highlight-text)]',
     'focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
     'active:bg-[color:var(--button-secondary-active-fill)] active:text-[color:var(--button-secondary-text)]',
-    'disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none',
-];
+    'disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none'
+);
 
 export const ButtonVariants = cva(buttonBaseClasses, {
     variants: {
@@ -49,20 +49,20 @@ export const ButtonVariants = cva(buttonBaseClasses, {
             /**
              * @deprecated Use TextButton instead.
              */
-            transparent: [
+            transparent: cn(
                 'border border-[color:var(--button-transparent-border)] bg-transparent text-main',
                 'hover:border-secondary hover:bg-secondary hover:text-[color:var(--button-highlight-text)] hover:no-underline',
-                'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
-            ],
+                'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]'
+            ),
             // TODO - legacy, remove in BED-7635
             /**
              * @deprecated Use IconButton instead.
              */
-            icon: [
+            icon: cn(
                 'rounded-full bg-[color:var(--button-icon-fill)] text-common-dark shadow-outer-1 has-[svg]:p-2',
                 'hover:border-2 hover:border-primary',
-                'active:border-none',
-            ],
+                'active:border-none'
+            ),
         },
         // TODO - remove as the only usage of this is with variant="text"
         /**
@@ -90,7 +90,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
 });
 
 export const TextButtonBaseClasses = cn(
-    ...buttonBaseClasses,
+    buttonBaseClasses,
     'px-2 py-1 has-[svg]:px-1',
     'active:text-[color:var(--button-text-active)]',
     'hover:text-secondary',
