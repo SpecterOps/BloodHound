@@ -26,5 +26,20 @@ export default {
     darkMode: ['class'],
     plugins: [DoodleUIPlugin],
     presets: [DoodleUIPreset],
-    theme: {},
+    theme: {
+        extend: {
+            colors: {
+                portal: {
+                    ink: '#f7f7ff',
+                    'ink-muted': '#a9aad0',
+                    night: '#100e38',
+                    'night-deep': '#090824',
+                    panel: '#17134d',
+                    line: '#312b76',
+                    blue: '#6da8ff',
+                    orange: '#ff5d35',
+                },
+            },
+        },
+    },
 };
