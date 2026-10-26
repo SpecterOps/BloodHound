@@ -45,7 +45,7 @@ type Args struct {
 
 func Run(env environment.Environment, args Args) error {
 	var (
-		ignoreDir   = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", ".yarn", "sha256"}
+		ignoreDir   = []string{".git", ".vscode", ".devcontainer", "node_modules", "dist", "storybook-static", ".yarn", "sha256"}
 		ignorePaths = []string{
 			filepath.Join("tools", "docker-compose", "configs", "pgadmin", "pgpass"),
 			"justfile",
