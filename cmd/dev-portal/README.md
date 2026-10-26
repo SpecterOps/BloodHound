@@ -13,7 +13,8 @@ just dev-portal down     # stop and remove the stack
 Then open <http://dev-portal.localhost:8888>.
 
 On `up`, the recipe also builds the Doodle UI Storybook (`packages/javascript/doodle-ui/storybook-static`) when it is
-missing or older than any file in Doodle UI's `src/`, `.storybook/`, or `package.json`. nginx serves the build at
+missing or older than any file in the Doodle UI package (excluding `node_modules/`, `dist/`, `coverage/`, and
+`storybook-static/`). nginx serves the build at
 `/doodle-ui-storybook/`, and the portal's Storybook page (`#/storybook`) embeds it.
 
 The stack (`docker-compose.dev-portal.yml`) runs a Traefik proxy on `127.0.0.1:8888` and an nginx file server. It uses

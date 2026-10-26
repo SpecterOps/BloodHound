@@ -19,7 +19,7 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 
 const destinations = [
-    { title: 'Doodle UI Storybook', href: '#/storybook', accent: 'blue' },
+    { title: 'Doodle UI Storybook', href: '#/storybook?path=%2Fdocs%2Fabout--docs', accent: 'blue' },
     { title: 'Documentation', href: '#documentation', accent: 'orange' },
 ];
 

@@ -50,9 +50,20 @@ const CONTENT_TYPES: Record<string, string> = {
 // dev and preview servers have no such path, so this plugin serves the same build directory there. Unlike
 // `just dev-portal`, it never builds or checks freshness: it serves whatever is currently in
 // storybook-static, and responds 404 until `yarn workspace doodle-ui build-storybook` has been run.
-const doodleUIStorybookMiddleware: Connect.NextHandleFunction = (request, response, next) => {
+//
+// Serving happens in a post hook so Vite's host check runs first. The requested path is captured
+// beforehand because Vite's SPA fallback rewrites request.url to /index.html before post hooks run.
+const storybookRequestPaths = new WeakMap<Connect.IncomingMessage, string>();
+
+const captureDoodleUIStorybookPath: Connect.NextHandleFunction = (request, _response, next) => {
     const requestPath = decodeURIComponent((request.url ?? '').split('?')[0]);
-    if (!requestPath.startsWith(STORYBOOK_URL_PREFIX)) return next();
+    if (requestPath.startsWith(STORYBOOK_URL_PREFIX)) storybookRequestPaths.set(request, requestPath);
+    next();
+};
+
+const doodleUIStorybookMiddleware: Connect.NextHandleFunction = (request, response, next) => {
+    const requestPath = storybookRequestPaths.get(request);
+    if (requestPath === undefined) return next();
 
     let filePath = path.join(STORYBOOK_BUILD_DIR, requestPath.slice(STORYBOOK_URL_PREFIX.length));
     if (filePath !== STORYBOOK_BUILD_DIR && !filePath.startsWith(STORYBOOK_BUILD_DIR + path.sep)) {
@@ -74,10 +85,12 @@ const doodleUIStorybookMiddleware: Connect.NextHandleFunction = (request, respon
 const serveDoodleUIStorybook = (): Plugin => ({
     name: 'serve-doodle-ui-storybook',
     configureServer(server) {
-        server.middlewares.use(doodleUIStorybookMiddleware);
+        server.middlewares.use(captureDoodleUIStorybookPath);
+        return () => server.middlewares.use(doodleUIStorybookMiddleware);
     },
     configurePreviewServer(server) {
-        server.middlewares.use(doodleUIStorybookMiddleware);
+        server.middlewares.use(captureDoodleUIStorybookPath);
+        return () => server.middlewares.use(doodleUIStorybookMiddleware);
     },
 });
 
