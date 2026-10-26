@@ -20,7 +20,6 @@
         "audit": "yarn npm audit --recursive",
         "dev": "yarn storybook",
         "build": "tsc && vite build && yarn build:styles",
-        "build-storybook": "storybook build",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "test": "TZ=America/Los_Angeles vitest",
         "preview": "vite preview",
