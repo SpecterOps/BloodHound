@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { cn } from '../utils';
 
 const badgeBaseClasses = [
     'inline-flex min-w-16 items-center justify-center',
@@ -60,6 +61,6 @@ export const BadgeVariants = cva(badgeBaseClasses, {
     },
 });
 
-export const badgeIconClasses = ['badge-icon flex shrink-0 items-center', '[&>svg]:h-3 [&>svg]:w-3'];
+export const badgeIconClasses = cn('badge-icon flex shrink-0 items-center', '[&>svg]:h-3 [&>svg]:w-3');
 
 export const badgeLabelClasses = 'badge-label translate-y-[1px]';

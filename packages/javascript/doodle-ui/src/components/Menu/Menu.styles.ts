@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { cn } from '../utils';
 
 const menuPopupBaseStyles = [
     'z-50 min-w-[8rem] overflow-hidden rounded-md bg-[color:var(--menu-content-fill)] p-1 shadow-md',
@@ -20,31 +21,31 @@ const menuPopupBaseStyles = [
     'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
 ];
 
-export const menuContentStyles = [
+export const menuContentStyles = cn(
     ...menuPopupBaseStyles,
     'border border-[color:var(--menu-content-border)]',
-    'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
-];
+    'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2'
+);
 
-export const menuItemStyles = [
+export const menuItemStyles = cn(
     'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent p-2 text-sm outline-none',
     'data-[highlighted]:border-[color:var(--menu-item-highlight-border)] data-[highlighted]:bg-[color:var(--menu-item-highlight-fill)] data-[highlighted]:text-[color:var(--menu-item-highlight-text)]',
     'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
     'data-[highlighted]:active:bg-[color:var(--menu-item-active-fill)]',
-    'data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-[color:var(--menu-item-disabled-fill)] data-[disabled]:text-[color:var(--menu-item-disabled-text)]',
-];
+    'data-[disabled]:pointer-events-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-[color:var(--menu-item-disabled-fill)] data-[disabled]:text-[color:var(--menu-item-disabled-text)]'
+);
 
-export const menuSubTriggerStyles = [
+export const menuSubTriggerStyles = cn(
     'relative flex cursor-pointer select-none items-center rounded-lg border border-transparent px-2 py-1.5 text-sm outline-none',
     'data-[highlighted]:border-[color:var(--menu-item-highlight-border)] data-[highlighted]:bg-[color:var(--menu-item-highlight-fill)] data-[highlighted]:text-[color:var(--menu-item-highlight-text)]',
     'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)] data-[state=open]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-    'data-[state=open]:bg-[color:var(--menu-item-highlight-fill)] data-[state=open]:text-[color:var(--menu-item-highlight-text)]',
-];
+    'data-[state=open]:bg-[color:var(--menu-item-highlight-fill)] data-[state=open]:text-[color:var(--menu-item-highlight-text)]'
+);
 
-export const menuSubContentStyles = [
+export const menuSubContentStyles = cn(
     ...menuPopupBaseStyles,
     'border border-[color:var(--menu-sub-content-border)]',
-    'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2',
-];
+    'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2'
+);
 
 export const menuSeparatorStyles = 'my-1 h-px bg-[color:var(--menu-separator-fill)]';

@@ -70,7 +70,7 @@ const SelectTrigger = React.forwardRef<
         {children}
         <SelectPrimitive.Icon asChild>
             {isLoading ? (
-                <FontAwesomeIcon icon={faSpinner} className={cn(selectLoadingIconClasses)} />
+                <FontAwesomeIcon icon={faSpinner} className={selectLoadingIconClasses} />
             ) : (
                 <FontAwesomeIcon icon={faChevronDown} className={selectIconClasses} />
             )}

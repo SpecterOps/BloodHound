@@ -30,7 +30,7 @@ const defaultIconButtonClasses = [
 
 export const IconButtonVariants = cva(
     [
-        ...buttonBaseClasses,
+        buttonBaseClasses,
         'inline-grid h-fit aspect-square box-border',
         'shrink-0 place-items-center align-middle rounded-full border-0 p-2',
     ],
