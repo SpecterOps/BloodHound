@@ -109,17 +109,19 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
     );
 };
 
-export const FieldsContainer: React.FC<PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
-    <div
-        className={cn(
-            '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
-            className
-        )}>
-        {children}
-    </div>
-);
+export const FieldsContainer: React.FC<PropsWithChildren<{ className?: string }>> = ({ children, className }) => {
+    return (
+        <div
+            className={cn(
+                '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
+                className
+            )}>
+            {children}
+        </div>
+    );
+};
 
-const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | undefined => {
+const getEmptyValueScreenReaderLabel = (value: EntityField['value']): string | undefined => {
     if (Array.isArray(value) && value.length === 0) {
         return 'Empty array, zero values';
     }
@@ -146,48 +148,70 @@ export const Field: React.FC<EntityField> = (entityField) => {
         return null;
     }
 
-    const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
+    const emptyValueScreenReaderLabel = getEmptyValueScreenReaderLabel(value);
     const formattedValue = format(entityField);
-    const values = typeof formattedValue === 'string' ? [formattedValue] : formattedValue;
 
-    return (
-        <>
-            {values.map((formattedItem, index) => {
-                const accessibleLabel =
-                    Array.isArray(value) && value.length > 0
-                        ? getEmptyValueAccessibleLabel(value[index])
-                        : emptyValueAccessibleLabel;
+    let content: React.ReactNode;
+    if (typeof formattedValue === 'string') {
+        content = (
+            <div className='flex flex-wrap items-baseline justify-between p-2 text-left'>
+                <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                    {typeof label === 'string' ? label.replace(/:$/, '') : label}
+                </Typography>
+                <Typography
+                    component='span'
+                    variant='body2'
+                    className='min-w-0 max-w-full break-words'
+                    title={formattedValue}>
+                    {emptyValueScreenReaderLabel ? (
+                        <>
+                            <span aria-hidden='true'>{formattedValue}</span>
+                            <VisuallyHidden>{emptyValueScreenReaderLabel}</VisuallyHidden>
+                        </>
+                    ) : (
+                        formattedValue
+                    )}
+                </Typography>
+            </div>
+        );
+    } else {
+        content = formattedValue.map((formattedItem, index) => {
+            const screenReaderLabel =
+                Array.isArray(value) && value.length > 0
+                    ? getEmptyValueScreenReaderLabel(value[index])
+                    : emptyValueScreenReaderLabel;
 
-                return (
-                    <div
-                        className='flex flex-wrap items-baseline justify-between p-2 text-left'
-                        key={`${keyprop}-${index}`}>
-                        {index === 0 ? (
-                            <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                                {typeof label === 'string' ? label.replace(/:$/, '') : label}
-                            </Typography>
-                        ) : (
-                            <span aria-hidden='true' />
-                        )}
-                        <Typography
-                            component='span'
-                            variant='body2'
-                            className='min-w-0 max-w-full break-words'
-                            title={formattedItem}>
-                            {accessibleLabel ? (
-                                <>
-                                    <span aria-hidden='true'>{formattedItem}</span>
-                                    <VisuallyHidden>{accessibleLabel}</VisuallyHidden>
-                                </>
-                            ) : (
-                                formattedItem
-                            )}
+            return (
+                <div
+                    className='flex flex-wrap items-baseline justify-between p-2 text-left'
+                    key={`${keyprop}-${index}`}>
+                    {index === 0 ? (
+                        <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                            {typeof label === 'string' ? label.replace(/:$/, '') : label}
                         </Typography>
-                    </div>
-                );
-            })}
-        </>
-    );
+                    ) : (
+                        <span aria-hidden='true' />
+                    )}
+                    <Typography
+                        component='span'
+                        variant='body2'
+                        className='min-w-0 max-w-full break-words'
+                        title={formattedItem}>
+                        {screenReaderLabel ? (
+                            <>
+                                <span aria-hidden='true'>{formattedItem}</span>
+                                <VisuallyHidden>{screenReaderLabel}</VisuallyHidden>
+                            </>
+                        ) : (
+                            formattedItem
+                        )}
+                    </Typography>
+                </div>
+            );
+        });
+    }
+
+    return <>{content}</>;
 };
 
 export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {
