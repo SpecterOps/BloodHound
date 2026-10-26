@@ -32,7 +32,7 @@ const MenuWithDropdown: React.FC<{
         <Menu modal={false}>
             <MenuTrigger asChild>
                 <Button disabled={disabled}>
-                    <Typography>{menuTitle}</Typography>
+                    <Typography className='text-inherit dark:text-inherit'>{menuTitle}</Typography>
                     <FontAwesomeIcon icon={faCaretDown} />
                 </Button>
             </MenuTrigger>

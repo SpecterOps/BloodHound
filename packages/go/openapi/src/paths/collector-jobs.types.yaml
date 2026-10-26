@@ -23,7 +23,7 @@ get:
   description: Returns the read-only registry of collector job wire contracts and
     execution policies.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   parameters:
     - $ref: './../parameters/query.skip.yaml'
