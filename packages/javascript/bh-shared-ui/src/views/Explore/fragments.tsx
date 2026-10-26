@@ -151,12 +151,13 @@ export const Field: React.FC<EntityField> = (entityField) => {
     const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
 
+    const formattedLabel = typeof label === 'string' ? label.replace(/:$/, '') : label;
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
         content = (
             <div className='flex flex-wrap items-baseline justify-between p-2 text-left'>
                 <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                    {typeof label === 'string' ? label.replace(/:$/, '') : label}
+                    {formattedLabel}
                 </Typography>
                 <Typography
                     component='span'
@@ -187,7 +188,7 @@ export const Field: React.FC<EntityField> = (entityField) => {
                     key={`${keyprop}-${index}`}>
                     {index === 0 ? (
                         <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                            {typeof label === 'string' ? label.replace(/:$/, '') : label}
+                            {formattedLabel}
                         </Typography>
                     ) : (
                         <span aria-hidden='true' />
