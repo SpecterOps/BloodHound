@@ -134,7 +134,7 @@ const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | und
 };
 
 export const Field: React.FC<EntityField> = (entityField) => {
-    const { label, value } = entityField;
+    const { label, value, keyprop } = entityField;
 
     try {
         if (
@@ -159,7 +159,9 @@ export const Field: React.FC<EntityField> = (entityField) => {
                         : emptyValueAccessibleLabel;
 
                 return (
-                    <div className='flex flex-wrap items-baseline justify-between p-2 text-left' key={index}>
+                    <div
+                        className='flex flex-wrap items-baseline justify-between p-2 text-left'
+                        key={`${keyprop}-${index}`}>
                         {index === 0 ? (
                             <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
                                 {typeof label === 'string' ? label.replace(/:$/, '') : label}
