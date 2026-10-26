@@ -26,7 +26,7 @@ const ToggleVariants = cva(
         'focus:outline-none focus-visible:border-secondary focus-visible:bg-secondary focus-visible:text-common-white focus-visible:focus-ring dark:focus-visible:text-common-dark',
         'active:border-primary-variant active:bg-primary-variant active:text-common-white dark:active:text-common-dark',
         'data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-common-white dark:data-[state=on]:text-common-dark',
-        'disabled:cursor-not-allowed disabled:border-btn-disabled-fill disabled:bg-btn-disabled-fill disabled:text-text-disabled dark:disabled:border-btn-disabled-fill-dark dark:disabled:bg-btn-disabled-fill-dark',
+        'disabled:cursor-not-allowed disabled:border-btn-disabled-fill disabled:bg-btn-disabled-fill disabled:text-disabled dark:disabled:border-btn-disabled-fill-dark dark:disabled:bg-btn-disabled-fill-dark',
     ],
     {
         variants: {
