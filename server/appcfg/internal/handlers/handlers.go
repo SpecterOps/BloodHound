@@ -22,15 +22,18 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
+	"github.com/teambition/rrule-go"
 )
 
 //go:generate go tool mockery
@@ -49,15 +52,27 @@ type FeatureFlagReader interface {
 	IsEnabled(ctx context.Context, key string) (bool, error)
 }
 
-type Handlers struct {
-	service  Service
-	ffReader FeatureFlagReader
+type DataPipeSideEffects interface {
+	SetNextScheduledAnalysisStartTime(ctx context.Context, time null.Time) error
 }
 
-func NewHandlers(service Service, ffReader FeatureFlagReader) *Handlers {
+type AuthTokensSideEffects interface {
+	UpdateAuthTokenExpiration(ctx context.Context) error
+}
+
+type Handlers struct {
+	service               Service
+	ffReader              FeatureFlagReader
+	dataPipeSideEffects   DataPipeSideEffects
+	authTokensSideEffects AuthTokensSideEffects
+}
+
+func NewHandlers(service Service, ffReader FeatureFlagReader, dataPipeSideEffects DataPipeSideEffects, authTokensSideEffects AuthTokensSideEffects) *Handlers {
 	return &Handlers{
-		service:  service,
-		ffReader: ffReader,
+		service:               service,
+		ffReader:              ffReader,
+		dataPipeSideEffects:   dataPipeSideEffects,
+		authTokensSideEffects: authTokensSideEffects,
 	}
 }
 
@@ -155,10 +170,47 @@ func (s *Handlers) SetApplicationConfiguration(response http.ResponseWriter, req
 		return
 	}
 
-	// execute custom key-specific side-effects (TODO BED-9765)
+	// execute custom key-specific side-effects
+	if err := s.doSideEffects(ctx, setConfigBody.Key, setConfigBody.Value); err != nil {
+		handleServiceError(ctx, response, err)
+		return
+	}
 
 	// return new data
 	responses.WriteBasic(ctx, setConfigBody, http.StatusOK, response)
+}
+
+// to preserve existing behavior, update scheduled analysis logs on error
+// and auth token expiration will return an error code
+func (s *Handlers) doSideEffects(ctx context.Context, key services.ParameterKey, value types.JSONBObject) error {
+	switch key {
+	case services.ScheduledAnalysis:
+		s.updateNextScheduledAnalysisStartTime(ctx, value)
+		return nil
+	case services.APITokenExpiration:
+		// Update the auth_tokens if the Parameter being changed/set is API Token Expiration
+		if err := s.authTokensSideEffects.UpdateAuthTokenExpiration(ctx); err != nil {
+			return fmt.Errorf("updating auth token expiration: %w", err)
+		}
+	}
+	return nil
+}
+
+func (s *Handlers) updateNextScheduledAnalysisStartTime(ctx context.Context, value types.JSONBObject) {
+	var scheduledAnalysis services.ScheduledAnalysisParameter
+	if err := value.Map(&scheduledAnalysis); err != nil {
+		slog.ErrorContext(ctx, "Error mapping scheduled analysis parameter", attr.Error(err))
+	} else if scheduledAnalysis.Enabled {
+		if rule, err := rrule.StrToRRule(scheduledAnalysis.RRule); err != nil {
+			slog.ErrorContext(ctx, "Error parsing scheduled analysis rrule", attr.Error(err))
+		} else if err := s.dataPipeSideEffects.SetNextScheduledAnalysisStartTime(ctx, null.TimeFrom(rule.After(time.Now(), true))); err != nil {
+			slog.ErrorContext(ctx, "Error setting next scheduled analysis start time", attr.Error(err))
+		}
+	} else {
+		if err := s.dataPipeSideEffects.SetNextScheduledAnalysisStartTime(ctx, null.Time{}); err != nil {
+			slog.ErrorContext(ctx, "Error clearing the next scheduled analysis start time", attr.Error(err))
+		}
+	}
 }
 
 func handleServiceError(ctx context.Context, response http.ResponseWriter, err error) {

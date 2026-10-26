@@ -89,10 +89,11 @@ func TestGetDatapipeStatus(t *testing.T) {
 		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
 			// Register the appcfg module using the new architecture
 			modules.Register(modules.Deps{
-				Router:  routerInst,
-				Pool:    db.Pool(),
-				Graph:   &graph.DatabaseSwitch{},
-				DogTags: testDogTags(),
+				Router:                  routerInst,
+				Pool:                    db.Pool(),
+				Graph:                   &graph.DatabaseSwitch{},
+				DogTags:                 testDogTags(),
+				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
 				},
@@ -266,10 +267,11 @@ func TestGetAppConfigs(t *testing.T) {
 		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
 			// Register the appcfg module using the new architecture
 			modules.Register(modules.Deps{
-				Router:  routerInst,
-				Pool:    db.Pool(),
-				Graph:   &graph.DatabaseSwitch{},
-				DogTags: testDogTags(),
+				Router:                  routerInst,
+				Pool:                    db.Pool(),
+				Graph:                   &graph.DatabaseSwitch{},
+				DogTags:                 testDogTags(),
+				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
 				},
@@ -425,10 +427,11 @@ func TestSetAppConfigs(t *testing.T) {
 		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
 			// Register the appcfg module using the new architecture
 			modules.Register(modules.Deps{
-				Router:  routerInst,
-				Pool:    db.Pool(),
-				Graph:   &graph.DatabaseSwitch{},
-				DogTags: testDogTags(),
+				Router:                  routerInst,
+				Pool:                    db.Pool(),
+				Graph:                   &graph.DatabaseSwitch{},
+				DogTags:                 testDogTags(),
+				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
 				},

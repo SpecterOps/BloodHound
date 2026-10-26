@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -134,7 +135,7 @@ func TestHandlers_GetDatapipeStatus(t *testing.T) {
 			var (
 				mockSvc      = mocks.NewMockService(t)
 				mockFFReader = mocks.NewMockFeatureFlagReader(t)
-				h            = handlers.NewHandlers(mockSvc, mockFFReader)
+				h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
 				rr           = httptest.NewRecorder()
 				req          = newRequest(t)
 			)
@@ -200,7 +201,7 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -228,7 +229,7 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -250,7 +251,7 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -289,7 +290,7 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -318,7 +319,7 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -371,7 +372,7 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
 			rr           = httptest.NewRecorder()
 			inputBody    = `{"key":"akey","value":{"subparam":"avalue"}}`
 			req          = newRequest(t, inputBody)
@@ -398,11 +399,110 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 		assert.NotEmpty(t, envelope.Errors)
 	})
 
+	t.Run("scheduled analysis update sets the next run time", func(t *testing.T) {
+		var (
+			mockSvc                      = mocks.NewMockService(t)
+			mockFFReader                 = mocks.NewMockFeatureFlagReader(t)
+			mockScheduledAnalysisUpdater = mocks.NewMockDataPipeSideEffects(t)
+			h                            = handlers.NewHandlers(mockSvc, mockFFReader, mockScheduledAnalysisUpdater, nil)
+			rr                           = httptest.NewRecorder()
+			inputBody                    = `{"key":"analysis.scheduled","value":{"enabled":true,"rrule":"DTSTART:20260101T000000Z\nRRULE:FREQ=DAILY;INTERVAL=1"}}`
+			req                          = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.ScheduledAnalysis).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.ScheduledAnalysis, mock.Anything).
+			Return(nil).
+			Once()
+		mockSvc.EXPECT().
+			UpsertApplicationConfiguration(req.Context(), services.ScheduledAnalysis, mock.Anything).
+			Return(nil).
+			Once()
+		mockScheduledAnalysisUpdater.EXPECT().
+			SetNextScheduledAnalysisStartTime(mock.Anything, mock.Anything).
+			Return(nil).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("scheduled analysis disable clears the next run time", func(t *testing.T) {
+		var (
+			mockSvc                      = mocks.NewMockService(t)
+			mockFFReader                 = mocks.NewMockFeatureFlagReader(t)
+			mockScheduledAnalysisUpdater = mocks.NewMockDataPipeSideEffects(t)
+			h                            = handlers.NewHandlers(mockSvc, mockFFReader, mockScheduledAnalysisUpdater, nil)
+			rr                           = httptest.NewRecorder()
+			inputBody                    = `{"key":"analysis.scheduled","value":{"enabled":false}}`
+			req                          = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.ScheduledAnalysis).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.ScheduledAnalysis, mock.Anything).
+			Return(nil).
+			Once()
+		mockSvc.EXPECT().
+			UpsertApplicationConfiguration(req.Context(), services.ScheduledAnalysis, mock.Anything).
+			Return(nil).
+			Once()
+		mockScheduledAnalysisUpdater.EXPECT().
+			SetNextScheduledAnalysisStartTime(mock.Anything, null.Time{}).
+			Return(nil).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("scheduled analysis error still returns 200", func(t *testing.T) {
+		var (
+			mockSvc                      = mocks.NewMockService(t)
+			mockFFReader                 = mocks.NewMockFeatureFlagReader(t)
+			mockScheduledAnalysisUpdater = mocks.NewMockDataPipeSideEffects(t)
+			h                            = handlers.NewHandlers(mockSvc, mockFFReader, mockScheduledAnalysisUpdater, nil)
+			rr                           = httptest.NewRecorder()
+			inputBody                    = `{"key":"analysis.scheduled","value":{"enabled":false}}`
+			req                          = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.ScheduledAnalysis).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.ScheduledAnalysis, mock.Anything).
+			Return(nil).
+			Once()
+		mockSvc.EXPECT().
+			UpsertApplicationConfiguration(req.Context(), services.ScheduledAnalysis, mock.Anything).
+			Return(nil).
+			Once()
+		mockScheduledAnalysisUpdater.EXPECT().
+			SetNextScheduledAnalysisStartTime(mock.Anything, mock.Anything).
+			Return(fmt.Errorf("bad stuff happened")).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
 	t.Run("Update api token expiration fails on disabled feature flag", func(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
 			rr           = httptest.NewRecorder()
 			inputBody    = `{"key":"` + string(services.APITokenExpiration) + `","value":{"subparam":"avalue"}}`
 			req          = newRequest(t, inputBody)
@@ -429,14 +529,15 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 		assert.NotEmpty(t, envelope.Errors)
 	})
 
-	t.Run("Update api token expiration succeeds on enabled feature flag", func(t *testing.T) {
+	t.Run("Update api token expiration succeeds on enabled feature flag and updates existing tokens", func(t *testing.T) {
 		var (
-			mockSvc      = mocks.NewMockService(t)
-			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader)
-			rr           = httptest.NewRecorder()
-			inputBody    = `{"key":"` + string(services.APITokenExpiration) + `","value":{"subparam":"avalue"}}`
-			req          = newRequest(t, inputBody)
+			mockSvc              = mocks.NewMockService(t)
+			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
+			mockAuthTokenUpdater = mocks.NewMockAuthTokensSideEffects(t)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, mockAuthTokenUpdater)
+			rr                   = httptest.NewRecorder()
+			inputBody            = `{"key":"` + string(services.APITokenExpiration) + `","value":{"subparam":"avalue"}}`
+			req                  = newRequest(t, inputBody)
 		)
 
 		mockSvc.EXPECT().
@@ -455,9 +556,50 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 			UpsertApplicationConfiguration(req.Context(), services.APITokenExpiration, mock.Anything).
 			Return(nil).
 			Once()
+		mockAuthTokenUpdater.EXPECT().
+			UpdateAuthTokenExpiration(mock.Anything).
+			Return(nil).
+			Once()
 
 		h.SetApplicationConfiguration(rr, req)
 
 		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("update API key expiration error returns failure", func(t *testing.T) {
+		var (
+			mockSvc              = mocks.NewMockService(t)
+			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
+			mockAuthTokenUpdater = mocks.NewMockAuthTokensSideEffects(t)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, mockAuthTokenUpdater)
+			rr                   = httptest.NewRecorder()
+			inputBody            = `{"key":"auth.api_token_expiration","value":{"enabled":true,"expiration_period":100}}`
+			req                  = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.APITokenExpiration).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.APITokenExpiration, mock.Anything).
+			Return(nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, mock.Anything).
+			Return(true, nil).
+			Once()
+		mockSvc.EXPECT().
+			UpsertApplicationConfiguration(req.Context(), services.APITokenExpiration, mock.Anything).
+			Return(nil).
+			Once()
+		mockAuthTokenUpdater.EXPECT().
+			UpdateAuthTokenExpiration(mock.Anything).
+			Return(fmt.Errorf("bad stuff happened")).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
 }
