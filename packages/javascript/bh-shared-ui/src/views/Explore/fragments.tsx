@@ -121,7 +121,7 @@ export const FieldsContainer: React.FC<PropsWithChildren<{ className?: string }>
     );
 };
 
-const getEmptyValueScreenReaderLabel = (value: EntityField['value']): string | undefined => {
+const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | undefined => {
     if (Array.isArray(value) && value.length === 0) {
         return 'Empty array, zero values';
     }
@@ -148,7 +148,7 @@ export const Field: React.FC<EntityField> = (entityField) => {
         return null;
     }
 
-    const emptyValueScreenReaderLabel = getEmptyValueScreenReaderLabel(value);
+    const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
 
     let content: React.ReactNode;
@@ -163,10 +163,10 @@ export const Field: React.FC<EntityField> = (entityField) => {
                     variant='body2'
                     className='min-w-0 max-w-full break-words'
                     title={formattedValue}>
-                    {emptyValueScreenReaderLabel ? (
+                    {emptyValueAccessibleLabel ? (
                         <>
                             <span aria-hidden='true'>{formattedValue}</span>
-                            <VisuallyHidden>{emptyValueScreenReaderLabel}</VisuallyHidden>
+                            <VisuallyHidden>{emptyValueAccessibleLabel}</VisuallyHidden>
                         </>
                     ) : (
                         formattedValue
@@ -175,11 +175,11 @@ export const Field: React.FC<EntityField> = (entityField) => {
             </div>
         );
     } else {
-        content = formattedValue.map((formattedItem, index) => {
-            const screenReaderLabel =
-                Array.isArray(value) && value.length > 0
-                    ? getEmptyValueScreenReaderLabel(value[index])
-                    : emptyValueScreenReaderLabel;
+        content = formattedValue!.map((value: string, index: number) => {
+            const listItemEmptyValueAccessibleLabel =
+                Array.isArray(entityField.value) && entityField.value.length > 0
+                    ? getEmptyValueAccessibleLabel(entityField.value[index])
+                    : emptyValueAccessibleLabel;
 
             return (
                 <div
@@ -196,14 +196,14 @@ export const Field: React.FC<EntityField> = (entityField) => {
                         component='span'
                         variant='body2'
                         className='min-w-0 max-w-full break-words'
-                        title={formattedItem}>
-                        {screenReaderLabel ? (
+                        title={value}>
+                        {listItemEmptyValueAccessibleLabel ? (
                             <>
-                                <span aria-hidden='true'>{formattedItem}</span>
-                                <VisuallyHidden>{screenReaderLabel}</VisuallyHidden>
+                                <span aria-hidden='true'>{value}</span>
+                                <VisuallyHidden>{listItemEmptyValueAccessibleLabel}</VisuallyHidden>
                             </>
                         ) : (
-                            formattedItem
+                            value
                         )}
                     </Typography>
                 </div>
