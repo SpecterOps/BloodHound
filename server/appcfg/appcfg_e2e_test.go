@@ -526,6 +526,19 @@ func TestSetAppConfigs(t *testing.T) {
 		assert.NotEmpty(t, envelope.Errors)
 	})
 
+	t.Run("returns 400 on bad json", func(t *testing.T) {
+		testBodyInvalid := `{
+			blahblah
+		}`
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBodyInvalid))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
+
 	t.Run("Fails if key doesn't exist", func(t *testing.T) {
 		testBodyNoKey := `{
 			"key":"nonexistant",
