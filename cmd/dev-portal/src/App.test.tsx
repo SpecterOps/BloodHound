@@ -14,17 +14,27 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
+import { HashRouter } from 'react-router-dom';
 import App from './App';
 
 const destinations = [
-    { title: 'Doodle UI Storybook', href: '#storybook', accent: 'blue' },
+    { title: 'Doodle UI Storybook', href: '#/storybook', accent: 'blue' },
     { title: 'Documentation', href: '#documentation', accent: 'orange' },
 ];
 
-describe('App', () => {
+const renderAt = (hash: string) => {
+    window.location.hash = hash;
+    render(
+        <HashRouter>
+            <App />
+        </HashRouter>
+    );
+};
+
+describe('Landing page', () => {
     beforeEach(() => {
-        render(<App />);
+        renderAt('#/');
     });
 
     it('renders a single page-level heading for the portal', () => {
@@ -35,11 +45,10 @@ describe('App', () => {
         expect(screen.getByRole('region', { name: /Developer Portal/ })).toContainElement(headings[0]);
     });
 
-    it('links the brand back to the top of the page', () => {
+    it('links the brand to the landing page', () => {
         const brandLink = screen.getByRole('link', { name: 'BloodHound Developer Portal home' });
 
-        expect(brandLink).toHaveAttribute('href', '#top');
-        expect(document.getElementById('top')).toBeInTheDocument();
+        expect(brandLink).toHaveAttribute('href', '#/');
     });
 
     it('renders a portal card for each destination', () => {
@@ -58,5 +67,72 @@ describe('App', () => {
 
     it.each(destinations)('links the $title card to its destination', ({ title, href }) => {
         expect(screen.getByRole('link', { name: `Open ${title}` })).toHaveAttribute('href', href);
+    });
+});
+
+describe('Storybook page', () => {
+    it('embeds the Doodle UI Storybook build', () => {
+        renderAt('#/storybook');
+
+        expect(screen.getByTitle('Doodle UI Storybook')).toHaveAttribute('src', 'doodle-ui-storybook/');
+    });
+
+    it('links the header back to the landing page', () => {
+        renderAt('#/storybook');
+        const banner = screen.getByRole('banner');
+
+        expect(within(banner).getByRole('link', { name: 'Developer Portal' })).toHaveAttribute('href', '#/');
+        expect(within(banner).getByText('Internal resources')).toBeInTheDocument();
+    });
+
+    it('opens the story named in the portal URL', () => {
+        renderAt('#/storybook?path=/story/button--primary');
+
+        expect(screen.getByTitle('Doodle UI Storybook')).toHaveAttribute(
+            'src',
+            'doodle-ui-storybook/?path=%2Fstory%2Fbutton--primary'
+        );
+    });
+
+    describe('when a different story is selected inside Storybook', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('copies the story into the portal URL', () => {
+            renderAt('#/storybook?path=/story/button--primary');
+            const iframeSearch = '?path=/story/card--default';
+            Object.defineProperty(screen.getByTitle('Doodle UI Storybook'), 'contentWindow', {
+                value: {
+                    location: { href: `http://localhost/doodle-ui-storybook/${iframeSearch}`, search: iframeSearch },
+                },
+            });
+
+            act(() => {
+                vi.advanceTimersByTime(500);
+            });
+
+            expect(window.location.hash).toBe('#/storybook?path=%2Fstory%2Fcard--default');
+            expect(screen.getByTitle('Doodle UI Storybook')).toHaveAttribute(
+                'src',
+                'doodle-ui-storybook/?path=%2Fstory%2Fbutton--primary'
+            );
+        });
+    });
+});
+
+describe('Not found page', () => {
+    beforeEach(() => {
+        renderAt('#/does-not-exist');
+    });
+
+    it('renders a not found message with a link back to the landing page', () => {
+        expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Back to the Developer Portal' })).toHaveAttribute('href', '#/');
+        expect(within(screen.getByRole('banner')).getByRole('link', { name: 'Developer Portal' })).toBeInTheDocument();
     });
 });
