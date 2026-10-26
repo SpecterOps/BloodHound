@@ -18,4 +18,3 @@ export * from './BasicObjectInfoFields';
 export * from './Field';
 export * from './FieldsContainer';
 export * from './ObjectInfoFields';
-export type { ObjectInfoFieldLayout } from './types';

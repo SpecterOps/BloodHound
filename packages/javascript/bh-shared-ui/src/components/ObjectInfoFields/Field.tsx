@@ -14,11 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Typography, VisuallyHidden } from 'doodle-ui';
 import React from 'react';
-import { EntityField, format } from '../../utils';
-import InlineField from './InlineField';
-import SpreadField from './SpreadField';
-import { FieldDisplayProps, ObjectInfoFieldLayout } from './types';
+import { EntityField, cn, format } from '../../utils';
 
 const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | undefined => {
     if (Array.isArray(value) && value.length === 0) {
@@ -34,8 +32,8 @@ const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | und
     }
 };
 
-export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> = (entityField) => {
-    const { label, value, layout = 'spread' } = entityField;
+export const Field: React.FC<EntityField & { className?: string }> = (entityField) => {
+    const { label, value, className } = entityField;
 
     try {
         if (
@@ -49,23 +47,44 @@ export const Field: React.FC<EntityField & { layout?: ObjectInfoFieldLayout }> =
 
     const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
-    const isList = Array.isArray(formattedValue);
-
     const values = typeof formattedValue === 'string' ? [formattedValue] : formattedValue;
-    const displayProps: FieldDisplayProps = {
-        label,
-        values: (values ?? []).map((formattedItem, index) => ({
-            value: formattedItem,
-            accessibleLabel:
-                Array.isArray(value) && value.length > 0
-                    ? getEmptyValueAccessibleLabel(value[index])
-                    : emptyValueAccessibleLabel,
-        })),
-    };
 
-    return layout === 'inline' ? (
-        <InlineField label={displayProps.label} values={displayProps.values} />
-    ) : (
-        <SpreadField label={displayProps.label} values={displayProps.values} isList={isList} />
+    return (
+        <>
+            {values.map((formattedItem, index) => {
+                const accessibleLabel =
+                    Array.isArray(value) && value.length > 0
+                        ? getEmptyValueAccessibleLabel(value[index])
+                        : emptyValueAccessibleLabel;
+
+                return (
+                    <div
+                        className={cn('flex flex-wrap items-baseline justify-between p-2 text-left', className)}
+                        key={index}>
+                        {index === 0 ? (
+                            <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                                {typeof label === 'string' ? label.replace(/:$/, '') : label}
+                            </Typography>
+                        ) : (
+                            <span aria-hidden='true' />
+                        )}
+                        <Typography
+                            component='span'
+                            variant='body2'
+                            className='min-w-0 max-w-full break-words'
+                            title={formattedItem}>
+                            {accessibleLabel ? (
+                                <>
+                                    <span aria-hidden='true'>{formattedItem}</span>
+                                    <VisuallyHidden>{accessibleLabel}</VisuallyHidden>
+                                </>
+                            ) : (
+                                formattedItem
+                            )}
+                        </Typography>
+                    </div>
+                );
+            })}
+        </>
     );
 };

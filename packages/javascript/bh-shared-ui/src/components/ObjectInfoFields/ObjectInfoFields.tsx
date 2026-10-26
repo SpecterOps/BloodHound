@@ -18,7 +18,6 @@ import React from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField } from '../../utils';
 import { Field } from './Field';
-import { ObjectInfoFieldLayout } from './types';
 
 export const exclusionList = [
     'gid',
@@ -47,10 +46,7 @@ export const exclusionList = [
 const filterNegatedFields = (fields: EntityField[]): EntityField[] =>
     fields.filter((field: EntityField) => !exclusionList.includes(field.keyprop || ''));
 
-export const ObjectInfoFields: React.FC<{ fields: EntityField[]; layout?: ObjectInfoFieldLayout }> = ({
-    fields,
-    layout,
-}): JSX.Element => {
+export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {
     const filteredFields = filterNegatedFields(fields);
 
     return (
@@ -63,7 +59,6 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[]; layout?: Object
                         value={field.value}
                         keyprop={`${field.keyprop}`}
                         key={`${field.keyprop}-${field.label}`}
-                        layout={layout}
                     />
                 );
             })}

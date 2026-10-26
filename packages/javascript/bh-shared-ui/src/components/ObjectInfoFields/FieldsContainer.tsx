@@ -16,19 +16,13 @@
 
 import React, { PropsWithChildren } from 'react';
 import { cn } from '../../utils';
-import { ObjectInfoFieldLayout } from './types';
 
-export const FieldsContainer: React.FC<PropsWithChildren<{ layout?: ObjectInfoFieldLayout }>> = ({
-    children,
-    layout = 'spread',
-}) => {
-    return (
-        <div
-            className={cn(
-                '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
-                layout === 'spread' && 'rounded-lg text-caption'
-            )}>
-            {children}
-        </div>
-    );
-};
+export const FieldsContainer: React.FC<PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
+    <div
+        className={cn(
+            '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
+            className
+        )}>
+        {children}
+    </div>
+);

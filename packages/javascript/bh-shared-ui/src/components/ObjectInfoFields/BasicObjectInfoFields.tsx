@@ -20,7 +20,6 @@ import { EntityKinds, KnownNodeProperties, formatPotentiallyUnknownLabel } from 
 import type { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import { Field } from './Field';
-import { ObjectInfoFieldLayout } from './types';
 
 interface BasicObjectInfoFieldsProps {
     properties: Record<string, any> & {
@@ -42,7 +41,6 @@ interface BasicObjectInfoFieldsProps {
     handleSourceNodeSelected?: (sourceNode: SearchValue) => void;
     nodeType?: string;
     zone?: string;
-    layout?: ObjectInfoFieldLayout;
 }
 
 const RelatedKindField = (
@@ -94,7 +92,6 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
     labels,
     nodeType,
     zone,
-    layout,
 }): JSX.Element => {
     const fieldValues = { ...props, labels: labels?.length ? labels.join(', ') : undefined, nodeType, zone };
     return (
@@ -103,14 +100,7 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
                 const value = fieldValues[field];
                 if (value === undefined) return null; // <Field /> doesn't support undefined values
 
-                return (
-                    <Field
-                        key={field}
-                        label={`${formatPotentiallyUnknownLabel(field) ?? field}:`}
-                        value={value}
-                        layout={layout}
-                    />
-                );
+                return <Field key={field} label={`${formatPotentiallyUnknownLabel(field) ?? field}:`} value={value} />;
             })}
             {handleSourceNodeSelected && (
                 <>
