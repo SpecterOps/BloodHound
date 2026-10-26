@@ -20,10 +20,9 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/extensions/internal/services"
 )
@@ -31,12 +30,9 @@ import (
 const URIPathVariableRelationshipKindID = "relationship_kind_id"
 
 func (s Handlers) GetRelationshipKindByID(response http.ResponseWriter, request *http.Request) {
-	var (
-		ctx = request.Context()
-		raw = mux.Vars(request)[URIPathVariableRelationshipKindID]
-	)
+	var ctx = request.Context()
 
-	if id, err := strconv.ParseInt(raw, 10, 32); err != nil {
+	if id, err := params.PathInt32(request, URIPathVariableRelationshipKindID); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "relationship kind id is malformed", response)
 		return
 	} else if relationshipKind, err := s.extensions.GetRelationshipKind(ctx, int32(id)); errors.Is(err, services.ErrRelationshipKindNotFound) {
