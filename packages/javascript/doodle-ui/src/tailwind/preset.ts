@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
-import { common, dark, palette, text } from './colors';
 
 export default {
     theme: {
@@ -32,34 +31,7 @@ export default {
             },
         },
         extend: {
-            backgroundColor: {
-                'btn-disabled-fill': 'var(--button-disabled-fill)',
-                'btn-disabled-fill-dark': palette.neutral.dark[700],
-                'input-fill-disabled': palette.neutral.light[100],
-                'input-fill-disabled-dark': palette.neutral.dark[400],
-                'select-trigger-outlined-fill': common.white,
-                'select-trigger-outlined-fill-dark': palette.neutral.dark[50],
-                'select-content-fill': common.white,
-                'select-content-fill-dark': palette.neutral.dark[400],
-                'checkbox-unchecked-fill': 'var(--surface)',
-            },
-            borderColor: {
-                'btn-disabled-fill': 'var(--button-disabled-fill)',
-                'btn-disabled-fill-dark': palette.neutral.dark[700],
-                'input-border-default-dark': palette.neutral.light[400],
-                'input-border-disabled': palette.neutral.light[900],
-                'input-border-disabled-dark': palette.neutral.dark[900],
-                'checkbox-border': 'var(--border-control)',
-            },
-            ringColor: {
-                'input-border-default': palette.grey[700],
-                'input-border-default-dark': palette.neutral.light[400],
-            },
             textColor: {
-                'input-placeholder-text': text.placeholder,
-                'input-placeholder-text-dark': dark.input.placeholder,
-                'checkbox-border': 'var(--border-control)',
-
                 main: 'var(--text-main)',
                 light: 'var(--text-light)',
                 muted: 'var(--text-light)',
@@ -167,18 +139,6 @@ export default {
                 // 'brand-secondary-highlight-light-blue': 'var(--brand-secondary-highlight-light-blue)',
                 // 'brand-secondary-highlight-green': 'var(--brand-secondary-highlight-green)',
 
-                'toggle-btn-fill': 'var(--toggle-btn-fill)',
-                'toggle-btn-border': 'var(--toggle-btn-border)',
-                'toggle-group-fill': 'var(--toggle-group-fill)',
-                'checkbox-border': 'var(--checkbox-border)',
-                'checkbox-unchecked-fill': 'var(--checkbox-unchecked-fill)',
-
-                // 'input-label': 'var(--input-label)',
-                'input-border-default': 'var(--input-border-default)',
-                // 'input-border-hover': 'var(--input-border-hover)',
-                'input-border-disabled': 'var(--input-border-disabled)',
-                'input-placeholder-text': 'var(--input-placeholder-text)',
-
                 'radio-label-focus-fill': 'var(--radio-label-focus-fill)',
                 'radio-border-default': 'var(--radio-border-default)',
                 'radio-border-hover': 'var(--radio-border-hover)',
@@ -187,21 +147,12 @@ export default {
                 'radio-indicator-fill': 'var(--radio-indicator-fill)',
 
                 // 'selector-disable-fill': 'var(--selector-disable-fill)',
-                'select-trigger-outlined-fill': 'var(--select-trigger-outlined-fill)',
-                'select-content-fill': 'var(--select-content-fill)',
                 'dropdown-trigger-border': 'var(--dropdown-trigger-border)',
                 'dropdown-popover-border': 'var(--dropdown-popover-border)',
                 'dropdown-popover-fill': 'var(--dropdown-popover-fill)',
                 'dropdown-option-hover-fill': 'var(--dropdown-option-hover-fill)',
                 'dropdown-option-disabled-fill': 'var(--dropdown-option-disabled-fill)',
                 'dropdown-tooltip-fill': 'var(--dropdown-tooltip-fill)',
-
-                'data-table-fill': 'var(--data-table-fill)',
-                'data-table-header-fill': 'var(--data-table-header-fill)',
-                'data-table-row-even-fill': 'var(--data-table-row-even-fill)',
-                'data-table-row-odd-fill': 'var(--data-table-row-odd-fill)',
-                'data-table-row-hover-fill': 'var(--data-table-row-hover-fill)',
-                'data-table-row-selected-outline': 'var(--data-table-row-selected-outline)',
 
                 // 'sidenav-bg': 'var(--sidenav-bg)',
                 // 'sidenav-bg-hover': 'var(--sidenav-bg-hover)',

@@ -25,6 +25,7 @@ import {
     checkboxCheckedIconClasses,
     checkboxIndeterminateIconClasses,
     checkboxIndicatorClasses,
+    checkboxLabelClasses,
 } from './Checkbox.styles';
 
 interface CheckboxProps
@@ -91,15 +92,7 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
         const checkboxId = id ?? generatedId;
 
         return (
-            <Label
-                htmlFor={checkboxId}
-                className={cn(
-                    'inline-flex items-center gap-2 rounded-sm',
-                    '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-[color:var(--checkbox-focus-ring)]',
-                    '[&:has(:focus-visible)]:ring-offset-2',
-                    '[&:has(:focus-visible)]:ring-offset-[color:var(--checkbox-unchecked-fill)]',
-                    fieldClassName
-                )}>
+            <Label htmlFor={checkboxId} className={cn(checkboxLabelClasses, fieldClassName)}>
                 <Checkbox
                     {...props}
                     ref={ref}

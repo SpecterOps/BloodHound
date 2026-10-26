@@ -14,7 +14,6 @@
 //
 
 // SPDX-License-Identifier: Apache-2.0
-import { cva } from 'class-variance-authority';
 import { Search } from 'lucide-react';
 import * as React from 'react';
 import { Checkbox, CheckboxWithLabel } from '../Checkbox';
@@ -24,6 +23,18 @@ import { ScrollArea } from '../ScrollArea';
 import { Skeleton } from '../Skeleton';
 import { Typography } from '../Typography';
 import { cn } from '../utils';
+import {
+    MultiSelectTriggerVariants,
+    multiSelectCheckboxStyles,
+    multiSelectContentStyles,
+    multiSelectDisabledRowStyles,
+    multiSelectIndeterminateCheckboxStyles,
+    multiSelectInteractiveRowStyles,
+    multiSelectLabelStyles,
+    multiSelectRowStyles,
+    multiSelectScrollAreaStyles,
+    multiSelectSearchInputStyles,
+} from './MultiSelect.styles';
 
 // TODO: move to doodle-ui icons system in follow-up ticket
 const CaretDown = ({ className, size = 12 }: { className?: string; size?: number }) => (
@@ -39,41 +50,6 @@ const CaretDown = ({ className, size = 12 }: { className?: string; size?: number
 );
 
 type MultiSelectVariant = 'outlined' | 'filled';
-
-const MultiSelectTriggerVariants = cva(
-    [
-        'flex h-10 w-full items-center justify-between rounded px-[14px] py-2 text-base font-normal leading-6 tracking-[0.15px]',
-        'focus:outline-none focus-visible:focus-ring',
-        'enabled:hover:bg-secondary enabled:hover:text-inverse',
-        'data-[state=open]:bg-primary data-[state=open]:text-inverse dark:data-[state=open]:text-inverse',
-        'disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled dark:disabled:border-input-border-disabled-dark disabled:bg-input-fill-disabled dark:disabled:bg-input-fill-disabled-dark disabled:text-disabled',
-        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill dark:aria-[invalid=true]:bg-select-trigger-outlined-fill-dark aria-[invalid=true]:text-input-placeholder-text dark:aria-[invalid=true]:text-input-placeholder-text-dark aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill dark:aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill-dark aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill dark:aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill-dark aria-[invalid=true]:enabled:hover:text-input-placeholder-text dark:aria-[invalid=true]:enabled:hover:text-input-placeholder-text-dark aria-[invalid=true]:data-[state=open]:text-input-placeholder-text dark:aria-[invalid=true]:data-[state=open]:text-input-placeholder-text-dark aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main',
-    ],
-    {
-        variants: {
-            variant: {
-                outlined:
-                    'ring-1 ring-input-border-default dark:ring-input-border-default-dark bg-select-trigger-outlined-fill dark:bg-select-trigger-outlined-fill-dark text-input-placeholder-text dark:text-input-placeholder-text-dark [&>svg]:text-main [&:enabled:hover>svg]:text-inverse [&[data-state=open]>svg]:text-inverse',
-                filled: 'bg-primary text-inverse',
-            },
-        },
-        defaultVariants: {
-            variant: 'filled',
-        },
-    }
-);
-
-const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p-2';
-
-const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-secondary hover:text-inverse';
-
-// Override Checkbox hover styles because the entire MultiSelect row owns the hover state.
-const multiSelectCheckboxStyles =
-    'enabled:data-[state=unchecked]:!border-current group-hover:enabled:!border-current group-hover:enabled:data-[state=checked]:!bg-transparent group-hover:enabled:data-[state=checked]:!text-inverse group-hover:enabled:data-[state=indeterminate]:!bg-transparent group-hover:enabled:data-[state=indeterminate]:!text-inverse';
-
-// Controls the default, unhovered partial-selection appearance.
-const multiSelectIndeterminateCheckboxStyles =
-    'enabled:data-[state=indeterminate]:!border-checkbox-border enabled:data-[state=indeterminate]:!bg-checkbox-unchecked-fill enabled:data-[state=indeterminate]:!text-checkbox-border';
 
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
@@ -142,11 +118,9 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
             fieldClassName={cn(
                 multiSelectRowStyles,
                 'text-base font-normal leading-4',
-                option.disabled
-                    ? 'cursor-not-allowed bg-btn-disabled-fill text-disabled'
-                    : multiSelectInteractiveRowStyles
+                option.disabled ? multiSelectDisabledRowStyles : multiSelectInteractiveRowStyles
             )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
+            labelClassName={multiSelectLabelStyles}
         />
     </div>
 );
@@ -163,7 +137,7 @@ const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOp
                 multiSelectInteractiveRowStyles,
                 'text-base font-normal leading-4'
             )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
+            labelClassName={multiSelectLabelStyles}
         />
     </div>
 );
@@ -333,9 +307,7 @@ const MultiSelect = ({
                     {triggerText}
                 </MultiSelectTrigger>
             </PopoverTrigger>
-            <PopoverContent
-                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-select-content-fill dark:bg-select-content-fill-dark p-0 text-main'
-                align='start'>
+            <PopoverContent className={multiSelectContentStyles} align='start'>
                 {isSearchable && (
                     <div className='flex items-center gap-2 p-2'>
                         <Search className='size-4 shrink-0 text-main' aria-hidden='true' />
@@ -344,15 +316,13 @@ const MultiSelect = ({
                             value={searchValue}
                             onChange={(e) => setSearchValue(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className='h-6 border-none bg-transparent px-2 text-main leading-4 placeholder:text-input-placeholder-text dark:placeholder:text-input-placeholder-text-dark focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+                            className={multiSelectSearchInputStyles}
                         />
                     </div>
                 )}
 
                 {/* TODO: Add theme-aware scrollbar color tokens to ScrollArea and remove this MultiSelect-specific override. */}
-                <ScrollArea
-                    thumbColor='var(--multiselect-scrollbar-thumb)'
-                    className='max-h-60 [--multiselect-scrollbar-thumb:var(--neutral-400)] dark:[--multiselect-scrollbar-thumb:theme(textColor.input-placeholder-text-dark)] [&_[data-radix-scroll-area-viewport]]:max-h-60'>
+                <ScrollArea thumbColor='var(--multiselect-scrollbar-thumb)' className={multiSelectScrollAreaStyles}>
                     <div
                         role='group'
                         aria-label={placeholder ?? 'Select options'}

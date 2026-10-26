@@ -25,7 +25,7 @@ export const ToggleVariants = cva(
         'data-[state=on]:border-[color:var(--toggle-selected-border)] data-[state=on]:bg-primary data-[state=on]:text-[color:var(--toggle-highlight-text)]',
         'disabled:hover:data-[state=on]:text-[color:var(--toggle-highlight-text)]',
         'disabled:hover:text-[color:var(--toggle-disabled-hover-text)]',
-        'disabled:cursor-not-allowed disabled:border-[color:var(--toggle-disabled-border)] disabled:bg-btn-disabled-fill disabled:text-disabled',
+        'disabled:cursor-not-allowed disabled:border-[color:var(--toggle-disabled-border)] disabled:bg-[color:var(--button-disabled-fill)] disabled:text-disabled',
     ],
     {
         variants: {
