@@ -33,12 +33,23 @@ export default {
         },
         extend: {
             backgroundColor: {
+                'input-fill-disabled': palette.neutral.light[100],
+                'input-fill-disabled-dark': palette.neutral.dark[400],
                 'btn-disabled-fill': palette.neutral.light[200],
                 'btn-disabled-fill-dark': palette.neutral.dark[700],
             },
             borderColor: {
                 'btn-disabled-fill': palette.neutral.light[200],
                 'btn-disabled-fill-dark': palette.neutral.dark[700],
+            },
+            textColor: {
+                main: 'var(--text-main)',
+                light: 'var(--text-light)',
+                muted: 'var(--text-light)',
+                disabled: 'var(--disabled)',
+                contrast: 'var(--contrast)',
+                inverse: 'var(--text-contrast)',
+                faint: 'var(--text-faint)',
             },
             colors: {
                 // Legacy
@@ -61,36 +72,31 @@ export default {
                 'neutral-dark-5': 'var(--neutral-dark-5)',
 
                 // New color tokens:
-                primary: 'var(--primary-main)',
-                'primary-main':
-                    'var(--primary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                primary: 'var(--primary)',
                 'primary-variant': 'var(--primary-variant)',
 
-                secondary: 'var(--secondary-main)',
-                'secondary-main':
-                    'var(--secondary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                secondary: 'var(--secondary)',
                 'secondary-variant': 'var(--secondary-variant)',
                 'secondary-variant-2': 'var(--secondary-variant-2)',
 
-                tertiary: 'var(--tertiary)', // this is a legacy token
-                'tertiary-main':
-                    'var(--tertiary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                tertiary: 'var(--tertiary)',
                 'tertiary-variant': 'var(--tertiary-variant)',
-
-                'text-main': 'var(--text-main)',
-                'text-light': 'var(--text-light)',
-                'text-muted': 'var(--text-muted)',
-                'text-disabled': 'var(--text-disabled)',
-                'text-contrast': 'var(--text-contrast)',
-                faint: 'var(--text-faint)',
 
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
 
                 disabled: 'var(--disabled)',
                 contrast: 'var(--contrast)',
+
+                // Shared control and surface tokens
+                'border-control': 'var(--border-control)',
+                'control-accent': 'var(--control-accent)',
+                surface: 'var(--surface)',
+                'surface-subtle': 'var(--surface-subtle)',
+                'surface-hover': 'var(--surface-hover)',
+
                 link: 'var(--link-main)',
-                'link-hover': '(--link-hover)',
+                'link-hover': 'var(--link-hover)',
                 error: 'var(--error)',
 
                 'common-dark': 'var(--common-dark)',
@@ -132,7 +138,6 @@ export default {
                 'bhe-main': 'var(--bhe-main)',
                 // 'sp-main': 'var(--sp-main)',
                 'bhce-main': 'var(--bhce-main)',
-                'logo-neutral': 'var(--logo-neutral)',
 
                 // 'brand-primary-dark-purple': 'var(--brand-primary-dark-purple)',
                 // 'brand-primary-deep-purple': 'var(--brand-primary-deep-purple)',
@@ -149,24 +154,13 @@ export default {
                 'toggle-btn-border': 'var(--toggle-btn-border)',
                 'toggle-group-fill': 'var(--toggle-group-fill)',
                 'checkbox-border': 'var(--checkbox-border)',
-                'checkbox-hover': 'var(--checkbox-hover)',
                 'checkbox-unchecked-fill': 'var(--checkbox-unchecked-fill)',
-                'checkbox-fill': 'var(--checkbox-fill)',
-                'checkbox-check': 'var(--checkbox-check)',
 
                 // 'input-label': 'var(--input-label)',
-                'input-fill': 'var(--input-fill)',
-                'input-fill-disabled': 'var(--input-fill-disabled)',
                 'input-border-default': 'var(--input-border-default)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 'input-border-disabled': 'var(--input-border-disabled)',
                 'input-placeholder-text': 'var(--input-placeholder-text)',
-                'input-outlined-border-default': 'var(--input-outlined-border-default)',
-                'input-outlined-border-hover': 'var(--input-outlined-border-hover)',
-
-                'textarea-fill': 'var(--textarea-fill)',
-                'textarea-border-default': 'var(--textarea-border-default)',
-                'textarea-border-hover': 'var(--textarea-border-hover)',
 
                 'radio-label-focus-fill': 'var(--radio-label-focus-fill)',
                 'radio-border-default': 'var(--radio-border-default)',
@@ -176,15 +170,8 @@ export default {
                 'radio-indicator-fill': 'var(--radio-indicator-fill)',
 
                 // 'selector-disable-fill': 'var(--selector-disable-fill)',
-                'select-trigger-fill': 'var(--select-trigger-fill)',
-                'select-trigger-placeholder-text': 'var(--select-trigger-placeholder-text)',
                 'select-trigger-outlined-fill': 'var(--select-trigger-outlined-fill)',
-                'select-border-default': 'var(--select-border-default)',
-                'select-border-focus': 'var(--select-border-focus)',
-                'select-content-border': 'var(--select-content-border)',
                 'select-content-fill': 'var(--select-content-fill)',
-                'select-item-checked-text': 'var(--select-item-checked-text)',
-                'select-separator-fill': 'var(--select-separator-fill)',
                 'dropdown-trigger-border': 'var(--dropdown-trigger-border)',
                 'dropdown-popover-border': 'var(--dropdown-popover-border)',
                 'dropdown-popover-fill': 'var(--dropdown-popover-fill)',
