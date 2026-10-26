@@ -14,32 +14,37 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// import { Route, Routes } from 'react-router-dom';
+import { Link, Route, Routes } from 'react-router-dom';
 import { DocumentationIcon, StorybookIcon } from './components/Icons';
 import { PortalCard } from './components/PortalCard';
-
-// const App = () => (
-//     <Routes>
-//         <Route path='/' element={<LandingPage />} />
-//         <Route path='*' element={<NotFoundPage />} />
-//     </Routes>
-// );
+import { NotFoundPage } from './pages/NotFoundPage';
+import { StorybookPage } from './pages/StorybookPage';
 
 export default function App() {
     return (
-        <main id='top' className='site-shell'>
+        <Routes>
+            <Route path='/' element={<LandingPage />} />
+            <Route path='/storybook' element={<StorybookPage />} />
+            <Route path='*' element={<NotFoundPage />} />
+        </Routes>
+    );
+}
+
+function LandingPage() {
+    return (
+        <main className='site-shell'>
             <div className='ambient-grid' aria-hidden='true' />
 
             <div className='content-wrap'>
                 <header className='site-header'>
-                    <a className='brand' href='#top' aria-label='BloodHound Developer Portal home'>
+                    <Link className='brand' to='/' aria-label='BloodHound Developer Portal home'>
                         <span className='brand-mark' aria-hidden='true'>
                             BH
                         </span>
                         <span>BloodHound</span>
                         <span className='brand-divider' aria-hidden='true' />
                         <span className='brand-context'>Developer Portal</span>
-                    </a>
+                    </Link>
                     <span className='header-label'>Internal resources</span>
                 </header>
 
@@ -64,7 +69,7 @@ export default function App() {
                         index='01'
                         title='Doodle UI Storybook'
                         description='Explore our shared components, patterns, and design foundations.'
-                        href='#storybook'
+                        href='#/storybook?path=%2Fdocs%2Fabout--docs'
                         icon={<StorybookIcon />}
                     />
                     <PortalCard
