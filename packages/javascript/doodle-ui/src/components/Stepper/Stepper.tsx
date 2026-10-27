@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { mergeProps, useRender } from '@base-ui/react';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -29,6 +30,20 @@ import {
 } from 'react';
 import { Typography } from '../Typography';
 import { cn } from '../utils.ts';
+
+import {
+    basicStepperClasses,
+    basicStepperPanelClasses,
+    basicStepperTextClasses,
+    stepperClasses,
+    stepperIndicatorClasses,
+    stepperIndicatorContentClasses,
+    stepperItemClasses,
+    stepperNavClasses,
+    stepperSeparatorClasses,
+    stepperTitleClasses,
+    stepperTriggerClasses,
+} from './Stepper.styles';
 import {
     type StepIndicators,
     StepItemContext,
@@ -75,7 +90,7 @@ const BasicStepper = ({
     ...props
 }: BasicStepperProps) => {
     return (
-        <Stepper {...props} indicators={indicators} className={cn('flex min-h-0 flex-col gap-8', className)}>
+        <Stepper {...props} indicators={indicators} className={cn(basicStepperClasses, className)}>
             <StepperNav className={cn('shrink-0', navClassName)}>
                 {steps.map((step, index) => (
                     <StepperItem
@@ -87,7 +102,7 @@ const BasicStepper = ({
                         <StepperTrigger data-analytics={step.dataAnalytics}>
                             <StepperIndicator>{index + 1}</StepperIndicator>
                             {step.description != null ? (
-                                <div className='flex flex-col max-sm:group-data-[orientation=horizontal]/stepper-nav:text-center'>
+                                <div className={basicStepperTextClasses}>
                                     <StepperTitle>{step.title}</StepperTitle>
                                     <StepperDescription>{step.description}</StepperDescription>
                                 </div>
@@ -101,7 +116,7 @@ const BasicStepper = ({
                 ))}
             </StepperNav>
 
-            <StepperPanel className='min-h-0 flex-1 overflow-y-auto overscroll-contain'>
+            <StepperPanel className={basicStepperPanelClasses}>
                 {panelHeader}
                 {steps.map((step, index) => (
                     <StepperContent key={index} value={index + 1} forceMount={forceMount}>
@@ -206,7 +221,7 @@ const Stepper = ({
         <StepperContext.Provider value={contextValue}>
             <div
                 data-slot='stepper'
-                className={cn('w-full font-sans text-main', className)}
+                className={cn(stepperClasses, className)}
                 data-orientation={orientation}
                 {...props}>
                 {children}
@@ -243,10 +258,7 @@ function StepperItem({
         <StepItemContext.Provider value={{ step, state, isDisabled, isLoading: isItemLoading, isCompleted }}>
             <div
                 data-slot='stepper-item'
-                className={cn(
-                    'group/step flex flex-auto items-center last:flex-none group-data-[orientation=horizontal]/stepper-nav:flex-row group-data-[orientation=vertical]/stepper-nav:flex-col',
-                    className
-                )}
+                className={cn(stepperItemClasses, className)}
                 data-state={state}
                 {...(isItemLoading ? { 'data-loading': true } : {})}
                 {...props}>
@@ -322,11 +334,7 @@ function StepperTrigger({ className, children, tabIndex, render, disabled = fals
         'data-slot': 'stepper-trigger',
         'data-state': state,
         'data-loading': isLoading,
-        className: cn(
-            'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded px-2 py-1 text-left outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary disabled:pointer-events-none disabled:opacity-60',
-            'max-sm:group-data-[orientation=horizontal]/stepper-nav:flex-col max-sm:group-data-[orientation=horizontal]/stepper-nav:text-center',
-            className
-        ),
+        className: cn(stepperTriggerClasses, className),
         onClick: () => {
             if (!isTriggerDisabled) setActiveStep(step);
         },
@@ -352,16 +360,8 @@ function StepperIndicator({ children, className, ...props }: ComponentProps<'div
             {...props}
             data-slot='stepper-indicator'
             data-state={state}
-            className={cn(
-                'group/indicator flex size-10 shrink-0 items-center justify-center rounded border border-transparent text-base font-bold leading-6 data-[state=active]:border-secondary',
-                className
-            )}>
-            <div
-                className={cn(
-                    'flex size-8 items-center justify-center rounded border border-transparent group-data-[state=inactive]/indicator:border-[#939597] dark:group-data-[state=inactive]/indicator:border-input-border-default',
-                    'group-data-[state=completed]/indicator:border-primary group-data-[state=completed]/indicator:bg-primary group-data-[state=completed]/indicator:text-inverse',
-                    'group-data-[state=active]/indicator:rounded-sm group-data-[state=active]/indicator:border-secondary group-data-[state=active]/indicator:bg-secondary group-data-[state=active]/indicator:text-inverse'
-                )}>
+            className={cn(stepperIndicatorClasses, className)}>
+            <div className={stepperIndicatorContentClasses}>
                 {(isLoading && indicators.loading) || indicators[state] || children}
             </div>
         </div>
@@ -376,11 +376,7 @@ function StepperSeparator({ className, ...props }: ComponentProps<'div'>) {
             {...props}
             data-slot='stepper-separator'
             data-state={state}
-            className={cn(
-                'max-sm:group-data-[orientation=horizontal]/stepper-nav:mt-6 max-sm:group-data-[orientation=horizontal]/stepper-nav:self-start',
-                'bg-neutral-300 group-data-[orientation=horizontal]/stepper-nav:h-px group-data-[orientation=horizontal]/stepper-nav:min-w-4 group-data-[orientation=horizontal]/stepper-nav:flex-1 group-data-[orientation=vertical]/stepper-nav:h-12 group-data-[orientation=vertical]/stepper-nav:w-px',
-                className
-            )}
+            className={cn(stepperSeparatorClasses, className)}
         />
     );
 }
@@ -394,7 +390,7 @@ function StepperTitle({ children, className, ...props }: ComponentProps<'h3'>) {
             variant='h3'
             data-slot='stepper-title'
             data-state={state}
-            className={cn('whitespace-nowrap text-base font-normal leading-4', className)}>
+            className={cn(stepperTitleClasses, className)}>
             {children}
         </Typography>
     );
@@ -427,10 +423,7 @@ function StepperNav({ children, className, ...props }: ComponentProps<'div'>) {
             data-slot='stepper-nav'
             data-state={activeStep}
             data-orientation={orientation}
-            className={cn(
-                'group/stepper-nav flex items-center overflow-x-auto data-[orientation=horizontal]:w-full data-[orientation=horizontal]:flex-row data-[orientation=vertical]:flex-col max-sm:data-[orientation=horizontal]:items-start',
-                className
-            )}>
+            className={cn(stepperNavClasses, className)}>
             {children}
         </div>
     );
