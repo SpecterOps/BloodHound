@@ -126,6 +126,17 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
+            // Components/Breadcrumbs
+            '--breadcrumb-text': 'inherit',
+            '--breadcrumb-page-text': 'var(--primary)',
+
+            // Components/Carousel
+            '--carousel-control': common.black,
+
+            // Components/DatePicker
+            '--date-picker-input-fill': 'var(--common-white)',
+            '--date-picker-content-border': 'var(--neutral-light-5)',
+
             // Components/Button
             // TODO remove
             '--toggle-btn-fill': 'var(--surface)',
@@ -409,6 +420,17 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-deep-purple': 'var(--primary)',
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
+
+            // Components/Breadcrumbs
+            '--breadcrumb-text': common.white,
+            '--breadcrumb-page-text': 'var(--secondary-variant-2)',
+
+            // Components/Carousel
+            '--carousel-control': common.white,
+
+            // Components/DatePicker
+            '--date-picker-input-fill': 'var(--common-dark)',
+            '--date-picker-content-border': 'var(--neutral-light-1)',
 
             // Components/Toggle
             '--toggle-btn-fill': 'var(--surface)',
