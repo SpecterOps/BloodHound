@@ -22,10 +22,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/chow/ingest"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -132,6 +134,42 @@ func TestConvertGenericNode(t *testing.T) {
 		require.Len(t, converted.NodeProps, 1)
 		assert.Equal(t, "TENANT-ABC", converted.NodeProps[0].PropertyMap[azure.TenantID.String()])
 	})
+}
+
+func TestConvertDMSAData(t *testing.T) {
+	dmsa := ein.DMSA{
+		IngestBase: ein.IngestBase{
+			ObjectIdentifier: "S-1-5-21-1-2-3-1000",
+			ContainedBy: ein.TypedPrincipal{
+				ObjectIdentifier: "OU-1",
+				ObjectType:       ad.OU.String(),
+			},
+		},
+		PrecededBy: ein.TypedPrincipal{
+			ObjectIdentifier: "S-1-5-21-1-2-3-1100",
+			ObjectType:       ad.User.String(),
+		},
+	}
+	converted := &ConvertedData{}
+
+	convertDMSAData(dmsa, converted, time.Now().UTC())
+
+	require.Len(t, converted.NodeProps, 1)
+	node := converted.NodeProps[0]
+	assert.Equal(t, dmsa.ObjectIdentifier, node.ObjectID)
+	assert.Equal(t, []graph.Kind{ad.DMSA}, node.Labels)
+	require.Len(t, converted.RelProps, 2)
+	assert.Contains(t, converted.RelProps, ein.NewIngestibleRelationship(
+		ein.IngestibleEndpoint{Value: dmsa.ObjectIdentifier, Kind: ad.DMSA},
+		ein.IngestibleEndpoint{Value: dmsa.PrecededBy.ObjectIdentifier, Kind: ad.User},
+		ein.IngestibleRel{RelProps: map[string]any{ad.IsACL.String(): false}, RelType: ad.DMSAPrecededBy},
+	))
+	assert.Contains(t, converted.RelProps, ein.ParseObjectContainer(dmsa.IngestBase, ad.DMSA))
+}
+
+func TestDMSADataTypeHasBasicHandler(t *testing.T) {
+	_, found := basicHandlers[ingest.DataTypeDMSA]
+	assert.True(t, found)
 }
 
 func TestConvertAzureManagedCluster_NodeResourceGroupID(t *testing.T) {

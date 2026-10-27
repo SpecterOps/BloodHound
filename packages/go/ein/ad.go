@@ -774,6 +774,27 @@ func ParseUserMiscData(user User) []IngestibleRelationship {
 	return data
 }
 
+func ParseDMSAMiscData(dmsa DMSA) []IngestibleRelationship {
+	if dmsa.PrecededBy.ObjectIdentifier == "" {
+		return nil
+	}
+
+	return []IngestibleRelationship{NewIngestibleRelationship(
+		IngestibleEndpoint{
+			Value: dmsa.ObjectIdentifier,
+			Kind:  ad.DMSA,
+		},
+		IngestibleEndpoint{
+			Value: dmsa.PrecededBy.ObjectIdentifier,
+			Kind:  dmsa.PrecededBy.Kind(),
+		},
+		IngestibleRel{
+			RelProps: map[string]any{ad.IsACL.String(): false},
+			RelType:  ad.DMSAPrecededBy,
+		},
+	)}
+}
+
 func ParseChildObjects(data []TypedPrincipal, containerId string, containerType graph.Kind) []IngestibleRelationship {
 	relationships := make([]IngestibleRelationship, 0, len(data))
 	for _, childObject := range data {
@@ -1587,14 +1608,15 @@ func ParseDCRegistryData(computer Computer) IngestibleNode {
 		propMap[ad.VulnerableNetlogonSecurityDescriptor.String()] = computer.DCRegistryData.VulnerableNetlogonSecurityDescriptor.Value
 	}
 
-	windowsBuildCollected := computer.DCRegistryData.CurrentBuildNumber.Collected && computer.DCRegistryData.CurrentBuildRevision.Collected
-	propMap[ad.WindowsBuildCollected.String()] = windowsBuildCollected
-	if windowsBuildCollected {
+	windowsBuildCollected := false
+	if computer.DCRegistryData.CurrentBuildNumber.Collected && computer.DCRegistryData.CurrentBuildRevision.Collected {
 		if buildNumber, err := strconv.Atoi(strings.TrimSpace(computer.DCRegistryData.CurrentBuildNumber.Value)); err == nil {
+			windowsBuildCollected = true
 			propMap[ad.WindowsBuildNumber.String()] = buildNumber
+			propMap[ad.WindowsBuildRevision.String()] = computer.DCRegistryData.CurrentBuildRevision.Value
 		}
-		propMap[ad.WindowsBuildRevision.String()] = computer.DCRegistryData.CurrentBuildRevision.Value
 	}
+	propMap[ad.WindowsBuildCollected.String()] = windowsBuildCollected
 
 	return IngestibleNode{
 		ObjectID:    computer.ObjectIdentifier,
