@@ -13,26 +13,19 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import * as React from 'react';
 import { Typography } from '../Typography';
 import { cn } from '../utils';
+import { cardClasses, cardContentClasses, cardFooterClasses, cardHeaderClasses } from './Card.styles';
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-    <div
-        ref={ref}
-        className={cn(
-            'rounded-lg text-main bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900',
-            className
-        )}
-        {...props}
-    />
+    <div ref={ref} className={cn(cardClasses, className)} {...props} />
 ));
 Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-    ({ className, ...props }, ref) => (
-        <div ref={ref} className={cn('flex flex-col space-y-1.5 p-3 pt-0 first:pt-3', className)} {...props} />
-    )
+    ({ className, ...props }, ref) => <div ref={ref} className={cn(cardHeaderClasses, className)} {...props} />
 );
 CardHeader.displayName = 'CardHeader';
 
@@ -49,14 +42,12 @@ const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttribu
 CardDescription.displayName = 'CardDescription';
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-    ({ className, ...props }, ref) => <div ref={ref} className={cn('p-3 pt-0 first:pt-3', className)} {...props} />
+    ({ className, ...props }, ref) => <div ref={ref} className={cn(cardContentClasses, className)} {...props} />
 );
 CardContent.displayName = 'CardContent';
 
 const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-    ({ className, ...props }, ref) => (
-        <div ref={ref} className={cn('flex items-center p-3 pt-0 first:pt-3', className)} {...props} />
-    )
+    ({ className, ...props }, ref) => <div ref={ref} className={cn(cardFooterClasses, className)} {...props} />
 );
 CardFooter.displayName = 'CardFooter';
 

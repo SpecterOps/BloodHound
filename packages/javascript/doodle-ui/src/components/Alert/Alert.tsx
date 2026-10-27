@@ -16,27 +16,17 @@
 
 import { faClose } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { type VariantProps } from 'class-variance-authority';
 import { forwardRef, HTMLAttributes, ReactNode } from 'react';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { cn } from '../utils';
-
-const alertVariants = cva('flex text-sm w-full rounded px-4 py-2 ', {
-    variants: {
-        variant: {
-            // TODO: Update in https://specterops.atlassian.net/browse/BED-8069
-            // default: 'bg-status-indeterminate-fill text-contrast',
-            default: 'bg-status-indeterminate-fill text-neutral-1',
-            error: 'bg-status-error-fill text-status-error-text [&>div>svg]:text-status-error-main',
-            info: 'bg-status-info-fill text-status-info-text [&>div>svg]:text-status-info-main',
-            success: 'bg-status-success-fill text-status-success-text [&>div>svg]:text-status-success-main',
-            warning: 'bg-status-warning-fill text-status-warning-text [&>div>svg]:text-status-warning-main',
-        },
-    },
-    defaultVariants: {
-        variant: 'default',
-    },
-});
+import {
+    alertActionClasses,
+    alertBodyClasses,
+    alertDismissClasses,
+    alertTitleClasses,
+    alertVariants,
+} from './Alert.styles';
 
 const iconMap = {
     default: <AppIcon.Info />,
@@ -59,28 +49,20 @@ const Alert = forwardRef<
     <div ref={ref} role='alert' className={cn(alertVariants({ variant }), className)} {...props}>
         <div className='my-3 mr-2'>{iconMap[variant ?? 'default']}</div>
 
-        <div className='flex flex-col justify-center flex-grow py-2 gap-1'>
-            {title && <h5 className={cn('text-base/6 font-medium tracking-tight')}>{title}</h5>}
+        <div className={alertBodyClasses}>
+            {title && <h5 className={alertTitleClasses}>{title}</h5>}
             {children}
         </div>
 
         <div className='flex mt-1'>
             {action && (
-                <button
-                    aria-label='Alert action'
-                    className='h-6 rounded-sm px-1 font-medium uppercase focus:outline-none focus-visible:focus-ring'
-                    onClick={action.onClick}
-                    type='button'>
+                <button aria-label='Alert action' className={alertActionClasses} onClick={action.onClick} type='button'>
                     {action.label}
                 </button>
             )}
 
             {onClose && (
-                <button
-                    aria-label='Dismiss alert'
-                    className='ml-2 inline-flex h-6 items-center justify-center rounded-sm px-1 focus:outline-none focus-visible:focus-ring'
-                    onClick={onClose}
-                    type='button'>
+                <button aria-label='Dismiss alert' className={alertDismissClasses} onClick={onClose} type='button'>
                     <FontAwesomeIcon icon={faClose} className='mt-1 size-4' />
                 </button>
             )}

@@ -13,19 +13,19 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import * as React from 'react';
 
 import { cn } from '../utils';
+import { accordionContentClasses, accordionHeaderClasses, accordionItemClasses } from './Accordion.styles';
 
 const Accordion = AccordionPrimitive.Root;
 
 const AccordionItem = React.forwardRef<
     React.ElementRef<typeof AccordionPrimitive.Item>,
     React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
->(({ ...props }, ref) => (
-    <AccordionPrimitive.Item ref={ref} className='bg-neutral-light-2 rounded-lg mb-4' {...props} />
-));
+>(({ ...props }, ref) => <AccordionPrimitive.Item ref={ref} className={accordionItemClasses} {...props} />);
 AccordionItem.displayName = 'AccordionItem';
 
 const AccordionHeader = React.forwardRef<
@@ -33,13 +33,7 @@ const AccordionHeader = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
     <AccordionPrimitive.Header className='flex'>
-        <AccordionPrimitive.Trigger
-            ref={ref}
-            className={cn(
-                'flex flex-1 gap-1 items-center rounded-md font-bold transition-all hover:underline focus:outline-none focus-visible:focus-ring focus-visible:underline [&[data-state=open]>svg]:rotate-180 p-4',
-                className
-            )}
-            {...props}>
+        <AccordionPrimitive.Trigger ref={ref} className={cn(accordionHeaderClasses, className)} {...props}>
             {children}
         </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
@@ -50,10 +44,7 @@ const AccordionContent = React.forwardRef<
     React.ElementRef<typeof AccordionPrimitive.Content>,
     React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
-    <AccordionPrimitive.Content
-        ref={ref}
-        className='overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down'
-        {...props}>
+    <AccordionPrimitive.Content ref={ref} className={accordionContentClasses} {...props}>
         <div className={cn('p-4', className)}>{children}</div>
     </AccordionPrimitive.Content>
 ));

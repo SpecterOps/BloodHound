@@ -126,6 +126,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
+            // Components/Accordion
+            '--accordion-fill': 'var(--neutral-light-2)',
+
+            // Components/Card
+            '--card-border': 'var(--neutral-light-4)',
+
             // Components/Button
             // TODO remove
             '--toggle-btn-fill': 'var(--surface)',
@@ -402,6 +408,12 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-deep-purple': 'var(--primary)',
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
+
+            // Components/Accordion
+            '--accordion-fill': 'var(--neutral-light-2)',
+
+            // Components/Card
+            '--card-border': 'var(--neutral-900)',
 
             // Components/Toggle
             '--toggle-btn-fill': 'var(--surface)',
