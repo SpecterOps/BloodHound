@@ -1,0 +1,33 @@
+{
+    "cards": [
+        {
+            "accent": "blue",
+            "title": "Doodle UI Storybook",
+            "description": "Explore our shared components, patterns, and design foundations.",
+            "href": "#/storybook?path=%2Fdocs%2Fabout--docs",
+            "icon": "storybook"
+        },
+        {
+            "accent": "orange",
+            "title": "Documentation",
+            "description": "Find technical guides, standards, and product knowledge.",
+            "href": "#documentation",
+            "icon": "documentation"
+        }
+    ],
+    "docs": {
+        "defaultPage": "DEVREADME.md",
+        "repositoryUrl": "https://github.com/SpecterOps/BloodHound/blob/main/",
+        "include": [
+            "**/*.md"
+        ],
+        "exclude": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/storybook-static/**",
+            "**/coverage/**",
+            ".augment/**",
+            ".github/**"
+        ]
+    }
+}
