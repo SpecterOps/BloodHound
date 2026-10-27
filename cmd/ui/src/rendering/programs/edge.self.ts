@@ -35,7 +35,7 @@ export const getControlPointsFromGroupSize = (
     invertY: boolean,
     invertX: boolean
 ) => {
-    const position = groupPosition++;
+    const position = groupPosition;
     const step = Math.PI / 2;
 
     const theta2 = step * position - Math.PI / 2;
