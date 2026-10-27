@@ -186,6 +186,7 @@ export const Field: React.FC<EntityField> = (entityField) => {
                 <div
                     className='flex flex-wrap items-baseline justify-between p-2 text-left'
                     key={`${keyprop}-${index}`}>
+                    {/* Only render the label for the first item, since it kicks the list */}
                     {index === 0 ? (
                         <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
                             {formattedLabel}

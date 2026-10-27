@@ -17,6 +17,7 @@ import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionDetails, AccordionSummary, Alert, AlertTitle } from '@mui/material';
 import React, { PropsWithChildren } from 'react';
+import { cn } from '../../utils';
 import { useCollapsibleSectionStyles } from '../../views/Explore/InfoStyles';
 import { SubHeader } from '../../views/Explore/fragments';
 
@@ -43,6 +44,7 @@ const EntityInfoCollapsibleSectionError: React.FC<{ error: any }> = ({ error }) 
 export const EntityInfoCollapsibleSection: React.FC<
     PropsWithChildren<{
         label?: string;
+        className?: string;
         count?: number;
         onChange?: (isOpen: boolean) => void;
         isLoading?: boolean;
@@ -53,6 +55,7 @@ export const EntityInfoCollapsibleSection: React.FC<
 > = ({
     children,
     label = '',
+    className,
     count,
     onChange = () => {},
     isLoading = false,
@@ -71,7 +74,7 @@ export const EntityInfoCollapsibleSection: React.FC<
             }}
             disabled={disabled}
             TransitionProps={{ unmountOnExit: true }}
-            className={styles.accordionRoot}>
+            className={cn(styles.accordionRoot, className)}>
             <AccordionSummary
                 expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
                 className={'accordion-summary'}

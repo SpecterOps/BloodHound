@@ -59,7 +59,11 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
     };
 
     return (
-        <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
+        <EntityInfoCollapsibleSection
+            onChange={handleOnChange}
+            isExpanded={isObjectInfoPanelOpen}
+            label={sectionLabel}
+            className='pt-2 [&_.MuiAccordionSummary-content]:my-2 [&_.MuiAccordionSummary-content.Mui-expanded]:my-2 [&_.MuiAccordionSummary-root]:min-h-0 [&_.MuiAccordionSummary-root.Mui-expanded]:min-h-0 [&_.typography-h6]:leading-[1.125rem] [&_.MuiAccordionDetails-root]:pt-0'>
             <FieldsContainer>
                 <BasicObjectInfoFields
                     properties={selectedNode.properties}
