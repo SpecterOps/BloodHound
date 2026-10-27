@@ -22,8 +22,7 @@
         "check-types": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-types",
         "lint": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run lint",
         "format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run format",
-        "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-format",
-        "test:lint": "node --test tools/oxc/parity.test.mjs"
+        "check-format": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-format"
     },
     "packageManager": "yarn@4.13.0",
     "devDependencies": {
