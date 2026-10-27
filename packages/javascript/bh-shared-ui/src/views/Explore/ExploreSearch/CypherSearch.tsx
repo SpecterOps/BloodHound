@@ -375,17 +375,17 @@ const CypherSearchInner = ({
                             {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
                                 <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
                             )}
-                            <Button
-                                variant='secondary'
-                                onClick={handleClickSave}
-                                aria-label='Save query'
-                                size='small'
-                                className='rounded-r-none'>
-                                <div className='flex items-center'>
-                                    <p className='ml-2 text-base'>Save </p>
-                                </div>
-                            </Button>
-                            <SaveQueryActionMenu saveAs={handleSaveAs} />
+                            <div className='flex'>
+                                <Button
+                                    variant='secondary'
+                                    onClick={handleClickSave}
+                                    aria-label='Save query'
+                                    size='small'
+                                    className='rounded-r-none px-4 text-base/none'>
+                                    Save
+                                </Button>
+                                <SaveQueryActionMenu saveAs={handleSaveAs} />
+                            </div>
 
                             {/* below is a link, rather than a Button, as it launches to a new page */}
                             <a
@@ -401,7 +401,7 @@ const CypherSearchInner = ({
                                     'group px-1.5'
                                 )}>
                                 <AccessibleIcon aria-label='Learn more about Cypher (opens in a new tab)'>
-                                    <AppIcon.Info size={24} />
+                                    <AppIcon.Info className='-my-2' size={24} />
                                 </AccessibleIcon>
                             </a>
 
@@ -413,11 +413,11 @@ const CypherSearchInner = ({
                                 className='max-w-[83px]'>
                                 <div className='flex items-center transition-all animate-in fade-in-10 '>
                                     {cypherSearchIsRunning ? (
-                                        <ProcessingIndicator title='Running' className='text-base' />
+                                        <ProcessingIndicator title='Running' className='text-base/none' />
                                     ) : (
                                         <>
-                                            <p className='text-base'>Run</p>
-                                            <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
+                                            <p className='text-base/none'>Run</p>
+                                            <FontAwesomeIcon icon={faChevronCircleRight} className='ml-2' />
                                         </>
                                     )}
                                 </div>
