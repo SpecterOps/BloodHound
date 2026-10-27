@@ -23,7 +23,7 @@
     "devDependencies": {
         "@rollup/plugin-typescript": "^11.1.6",
         "@vitest/coverage-v8": "^4.1.11",
-        "oxlint": "1.88.0",
+        "oxlint": "1.89.0",
         "prettier": "^3.2.5",
         "prettier-plugin-organize-imports": "^4.1.0",
         "rollup": "^4.59.0",

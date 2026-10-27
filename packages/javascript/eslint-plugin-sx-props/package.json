@@ -1,15 +1,15 @@
 {
-  "name": "eslint-plugin-sx-props",
-  "type": "module",
-  "main": "index.cjs",
-  "scripts": {
-    "audit": "yarn npm audit --recursive",
-    "lint": "oxlint . --report-unused-disable-directives-severity error --max-warnings 0",
-    "test": "echo \"Warning: no tests available for this package\""
-  },
-  "devDependencies": {
-    "oxlint": "1.88.0",
-    "prettier": "^3.2.5",
-    "prettier-plugin-organize-imports": "^4.1.0"
-  }
+    "name": "eslint-plugin-sx-props",
+    "type": "module",
+    "main": "index.cjs",
+    "scripts": {
+        "audit": "yarn npm audit --recursive",
+        "lint": "oxlint . --report-unused-disable-directives-severity error --max-warnings 0",
+        "test": "echo \"Warning: no tests available for this package\""
+    },
+    "devDependencies": {
+        "oxlint": "1.89.0",
+        "prettier": "^3.2.5",
+        "prettier-plugin-organize-imports": "^4.1.0"
+    }
 }

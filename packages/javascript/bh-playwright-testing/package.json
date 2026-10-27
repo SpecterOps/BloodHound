@@ -23,7 +23,7 @@
         "allure-playwright": "^3.4.3",
         "axe-core": "^4.13.0",
         "dotenv": "^17.4.2",
-        "oxlint": "1.88.0",
+        "oxlint": "1.89.0",
         "playwright-core": "^1.59.1",
         "prettier": "^3.2.5",
         "typescript": "^5.9.3"
