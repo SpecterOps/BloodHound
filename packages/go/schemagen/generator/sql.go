@@ -96,6 +96,7 @@ var nodeIcons = map[string]nodeIcon{
 		Icon:  "box",
 		Color: "#F79A78",
 	},
+	"DMSA": {},
 	// Azure Node Types
 	"AZUser": {
 		Icon:  "user",
