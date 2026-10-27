@@ -36,6 +36,7 @@ import {
     CreateUserRequest,
     CreateWebhookRequest,
     DeleteUserQueryPermissionsRequest,
+    GetCollectorJobHistoryOptions,
     GetCollectorJobSchedulesOptions,
     GetCollectorJobSecretsOptions,
     LoginRequest,
@@ -541,6 +542,12 @@ class BHEAPIClient {
     getUnifiedFindings = (options?: RequestOptions) =>
         this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);
 
+    downloadUnifiedFindings = (options?: RequestOptions) =>
+        this.baseClient.get<Blob>('/api/v2/attack-paths/findings', {
+            ...options,
+            headers: { ...options?.headers, Accept: 'text/csv' },
+            responseType: 'blob',
+        });
     /**
      * getFindingDetails returns data associated with a finding for a given environment
      */
@@ -816,8 +823,8 @@ class BHEAPIClient {
     ingestData = (options?: RequestOptions) => this.baseClient.post('/api/v2/ingest', options);
 
     /* collector job profiles */
-    getCollectorJobHistory = (profileId: number, skip = 0, limit = 25, options?: RequestOptions) =>
-        this.baseClient.get<GetCollectorJobHistoryResponse>('/api/v2/collector-job-history', {
+    getCollectorJobHistory = (profileId: string, skip = 0, limit = 25, options?: GetCollectorJobHistoryOptions) =>
+        this.baseClient.get<GetCollectorJobHistoryResponse>('/api/v2/collie-job-history', {
             ...options,
             params: {
                 ...options?.params,
@@ -829,79 +836,79 @@ class BHEAPIClient {
         });
 
     getCollectorJobTypes = (skip = 0, limit = 100, options?: RequestOptions) =>
-        this.baseClient.get<GetCollectorJobTypesResponse>('/api/v2/collector-job-types', {
+        this.baseClient.get<GetCollectorJobTypesResponse>('/api/v2/collie-job-types', {
             ...options,
             params: { ...options?.params, skip, limit },
         });
 
     getCollectorJobProfiles = (skip = 0, limit = 100, options?: RequestOptions) =>
-        this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collector-job-profiles', {
+        this.baseClient.get<GetCollectorJobProfilesResponse>('/api/v2/collie-job-profiles', {
             ...options,
             params: { ...options?.params, skip, limit },
         });
 
     getCollectorJobSchedules = (skip = 0, limit = 100, options?: GetCollectorJobSchedulesOptions) =>
-        this.baseClient.get<GetCollectorJobSchedulesResponse>('/api/v2/collector-job-schedules', {
+        this.baseClient.get<GetCollectorJobSchedulesResponse>('/api/v2/collie-job-schedules', {
             paramsSerializer: { indexes: null },
             ...options,
             params: { ...options?.params, skip, limit },
         });
 
-    getCollectorJobSchedule = (scheduleId: number, options?: RequestOptions) =>
-        this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collector-job-schedules/${scheduleId}`, options);
+    getCollectorJobSchedule = (scheduleId: string, options?: RequestOptions) =>
+        this.baseClient.get<GetCollectorJobScheduleResponse>(`/api/v2/collie-job-schedules/${scheduleId}`, options);
 
     createCollectorJobSchedule = (request: CreateCollectorJobScheduleRequest, options?: RequestOptions) =>
-        this.baseClient.post<CreateCollectorJobScheduleResponse>('/api/v2/collector-job-schedules', request, options);
+        this.baseClient.post<CreateCollectorJobScheduleResponse>('/api/v2/collie-job-schedules', request, options);
 
     updateCollectorJobSchedule = (
-        scheduleId: number,
+        scheduleId: string,
         request: UpdateCollectorJobScheduleRequest,
         options?: RequestOptions
     ) =>
         this.baseClient.patch<UpdateCollectorJobScheduleResponse>(
-            `/api/v2/collector-job-schedules/${scheduleId}`,
+            `/api/v2/collie-job-schedules/${scheduleId}`,
             request,
             options
         );
 
-    deleteCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
-        this.baseClient.delete<void>(`/api/v2/collector-job-profiles/${profileId}`, options);
+    deleteCollectorJobProfile = (profileId: string, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collie-job-profiles/${profileId}`, options);
 
-    runCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
+    runCollectorJobProfile = (profileId: string, options?: RequestOptions) =>
         this.baseClient.post<RunCollectorJobProfileResponse>(
-            '/api/v2/collector-job-queue',
+            '/api/v2/collie-job-queue',
             { job_profile_id: profileId },
             options
         );
 
     createCollectorJobProfile = (payload: CreateCollectorJobProfileRequest, options?: RequestOptions) =>
-        this.baseClient.post<CollectorJobProfileResponse>('/api/v2/collector-job-profiles', payload, options);
+        this.baseClient.post<CollectorJobProfileResponse>('/api/v2/collie-job-profiles', payload, options);
 
-    getCollectorJobProfile = (profileId: number, options?: RequestOptions) =>
-        this.baseClient.get<CollectorJobProfileResponse>(`/api/v2/collector-job-profiles/${profileId}`, options);
+    getCollectorJobProfile = (profileId: string, options?: RequestOptions) =>
+        this.baseClient.get<CollectorJobProfileResponse>(`/api/v2/collie-job-profiles/${profileId}`, options);
 
     updateCollectorJobProfile = (
-        profileId: number,
+        profileId: string,
         payload: UpdateCollectorJobProfileRequest,
         options?: RequestOptions
     ) =>
         this.baseClient.patch<CollectorJobProfileResponse>(
-            `/api/v2/collector-job-profiles/${profileId}`,
+            `/api/v2/collie-job-profiles/${profileId}`,
             payload,
             options
         );
 
     getCollectorJobSecrets = (skip = 0, limit = 100, options?: GetCollectorJobSecretsOptions) =>
-        this.baseClient.get<GetCollectorJobSecretsResponse>('/api/v2/collector-job-secrets', {
+        this.baseClient.get<GetCollectorJobSecretsResponse>('/api/v2/collie-job-secrets', {
             ...options,
             params: { ...options?.params, skip, limit },
         });
 
     getCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
-        this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collector-job-secrets/${secretId}`, options);
+        this.baseClient.get<GetCollectorJobSecretResponse>(`/api/v2/collie-job-secrets/${secretId}`, options);
 
     createCollectorJobSecret = (request: CreateCollectorJobSecretRequest, options?: RequestOptions) =>
-        this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collector-job-secrets', request, options);
+        this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collie-job-secrets', request, options);
 
     /* clients */
 

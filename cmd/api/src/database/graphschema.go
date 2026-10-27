@@ -23,11 +23,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/pgerrors"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
@@ -1366,9 +1366,9 @@ func (s *BloodhoundDB) DeletePrincipalKind(ctx context.Context, environmentId in
 	return nil
 }
 
-// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds. custom_node_kinds is the single source
-// of truth for display node kinds. Schema-backed display kinds are mirrored there on extension upsert, and schemaless kinds encountered
-// during ingest are also upserted.
+// GetPrimaryDisplayKinds - returns a map of all node kinds that are display kinds. custom_node_kinds is the source
+// of truth for display node kinds. This includes schema-backed display kinds (mirrored on extension upsert),
+// schemaless kinds encountered during ingest, and synthetic node kinds created by analysis (e.g. Zone).
 //
 // Source kinds (from the source_kinds registry, e.g. Base, AZBase, or an OpenGraph source kind like GithubBase) are also
 // included in the map and flagged with IsSourceKind. This allows PrimaryDisplayKind to generically treat any source kind as
@@ -1547,17 +1547,14 @@ func (s *BloodhoundDB) DeleteKindInfo(ctx context.Context, kindInfoID int32) err
 }
 
 func checkKindInfoError(result *gorm.DB) error {
-	var pgErr *pgconn.PgError
-
-	if errors.As(result.Error, &pgErr) {
-		switch pgErr.ConstraintName {
-		case graphSchemaKindInfoConstraintKindIDFKey:
-			return fmt.Errorf("%w: %w", model.ErrKindInfoKindNotFound, result.Error)
-		case graphSchemaKindInfoConstraintUniquePosition:
-			return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicatePosition, result.Error)
-		case graphSchemaKindInfoConstraintUniqueInfoKey:
-			return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicateInfoKey, result.Error)
-		}
+	if pgerrors.IsForeignKeyViolation(result.Error, graphSchemaKindInfoConstraintKindIDFKey) {
+		return fmt.Errorf("%w: %w", model.ErrKindInfoKindNotFound, result.Error)
+	}
+	if pgerrors.IsUniqueViolation(result.Error, graphSchemaKindInfoConstraintUniquePosition) {
+		return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicatePosition, result.Error)
+	}
+	if pgerrors.IsUniqueViolation(result.Error, graphSchemaKindInfoConstraintUniqueInfoKey) {
+		return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicateInfoKey, result.Error)
 	}
 
 	return CheckError(result)

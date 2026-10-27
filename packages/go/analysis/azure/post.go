@@ -26,14 +26,12 @@ import (
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
-	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cardinality"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
-	"github.com/specterops/dawgs/util/channels"
 )
 
 func AddMemberAllGroupsTargetRoles() []string {
@@ -179,7 +177,7 @@ func fetchReadWriteServicePrincipals(tx graph.Transaction, relationship graph.Ki
 			query.Kind(query.Start(), azure.ServicePrincipal),
 			query.Kind(query.Relationship(), relationship),
 			query.Kind(query.End(), azure.ServicePrincipal),
-			query.InIDs(query.EndID(), targetID),
+			query.Equals(query.EndID(), targetID),
 		)
 	}))
 }
@@ -646,6 +644,10 @@ func postAzureAddOwner(ctx context.Context, db graph.Database, sink *post.Filter
 	})
 }
 
+var executeCommandPostProcessedEdges = graph.Kinds{
+	azure.ExecuteCommand,
+}
+
 func ExecuteCommand(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -656,10 +658,20 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*post.AtomicPostPro
 		attr.Scope("process"),
 	)()
 
-	if tenants, err := FetchTenants(ctx, db); err != nil {
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, executeCommandPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	if executeCommandTracker, err := post.FetchTracker(ctx, db, executeCommandPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	} else if tenants, err := FetchTenants(ctx, db); err != nil {
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
-		operation := post.NewPostRelationshipOperation(ctx, db, "AZExecuteCommand Post Processing")
+		sink := post.NewFilteredRelationshipSink(ctx, "AZExecuteCommand Post Processing", db, executeCommandTracker)
+		defer sink.Done()
+
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			for _, tenant := range tenants {
 				if tenantDevices, err := EndNodes(tx, tenant, azure.Contains, azure.Device); err != nil {
@@ -670,28 +682,20 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*post.AtomicPostPro
 					return err
 				} else {
 					for _, tenantDevice := range tenantDevices {
-						innerTenantDevice := tenantDevice
+						if isWindowsDevice, err := IsWindowsDevice(tenantDevice); err != nil {
+							return err
+						} else if isWindowsDevice {
+							for _, intuneAdmin := range intuneAdmins {
+								nextJob := post.EnsureRelationshipJob{
+									FromID: intuneAdmin.ID,
+									ToID:   tenantDevice.ID,
+									Kind:   azure.ExecuteCommand,
+								}
 
-						if err := operation.Operation.SubmitReader(func(ctx context.Context, _ graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-							if isWindowsDevice, err := IsWindowsDevice(innerTenantDevice); err != nil {
-								return err
-							} else if isWindowsDevice {
-								for _, intuneAdmin := range intuneAdmins {
-									nextJob := post.EnsureRelationshipJob{
-										FromID: intuneAdmin.ID,
-										ToID:   innerTenantDevice.ID,
-										Kind:   azure.ExecuteCommand,
-									}
-
-									if !channels.Submit(ctx, outC, nextJob) {
-										return nil
-									}
+								if !sink.Submit(ctx, nextJob) {
+									return fmt.Errorf("unable to submit to channel in ExecuteCommand")
 								}
 							}
-
-							return nil
-						}); err != nil {
-							return err
 						}
 					}
 				}
@@ -699,14 +703,10 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*post.AtomicPostPro
 
 			return nil
 		}); err != nil {
-			if err := operation.Done(); err != nil {
-				slog.ErrorContext(ctx, "Error caught during azure ExecuteCommand teardown", attr.Error(err))
-			}
-
-			return &operation.Stats, err
+			return &post.AtomicPostProcessingStats{}, err
 		}
 
-		return &operation.Stats, operation.Done()
+		return sink.Stats(), nil
 	}
 }
 
@@ -974,21 +974,50 @@ func CreateAZRoleApproverEdge(
 		attr.Scope("process"),
 	)()
 
+	// Clear old post-processed edges that will not have a `firstseen` property
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, roleApproverPostProcessedEdges); err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	roleApproverTracker, err := post.FetchTracker(ctx, db, roleApproverPostProcessedEdges)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, err
+	}
+
 	// Step 0: Identify each AZTenant labeled node in the database.
-	operation := post.NewPostRelationshipOperation(ctx, db, "AZRoleApprover Post Processing")
 	tenantNodes, err := FetchTenants(ctx, db)
 	if err != nil {
-		return &operation.Stats, err
+		return &post.AtomicPostProcessingStats{}, err
 	}
+
+	var (
+		readerPool = ops.StartNewOperation[any](ops.OperationContext{
+			Parent:     ctx,
+			DB:         db,
+			NumReaders: post.MaximumDatabaseParallelWorkers,
+		})
+		sink = post.NewFilteredRelationshipSink(ctx, "AZRoleApprover Post Processing", db, roleApproverTracker)
+	)
 
 	// Process each tenant to create AZRoleApprover edges for roles requiring approval
 	for _, tenantNode := range tenantNodes {
-		if err := CreateApproverEdge(ctx, db, tenantNode, operation); err != nil {
-			return &operation.Stats, err
+		if err := CreateApproverEdge(ctx, db, tenantNode, readerPool, sink); err != nil {
+			readerPool.Done()
+			sink.Done()
+			return &post.AtomicPostProcessingStats{}, err
 		}
 	}
 
-	return &operation.Stats, operation.Done()
+	// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
+	readerErr := readerPool.Done()
+	sink.Done()
+
+	return sink.Stats(), readerErr
+}
+
+var roleApproverPostProcessedEdges = graph.Kinds{
+	azure.AZRoleApprover,
 }
 
 func FixManagementGroupNames(ctx context.Context, db graph.Database, useRawObjectIDs bool) error {
@@ -1091,12 +1120,6 @@ func Post(ctx context.Context, db graph.Database, useRawObjectIDs bool) (*post.A
 	} else {
 		aggregateStats.Merge(userRoleStats)
 		aggregateStats.Merge(appRoleAssignmentStats)
-	}
-
-	if stats, err := post.DeleteTransitEdges(ctx, db, graph.Kinds{ad.Entity, azure.Entity}, azure.PostProcessedRelationships()); err != nil {
-		return &aggregateStats, err
-	} else {
-		aggregateStats.Merge(stats)
 	}
 
 	if executeCommandStats, err := ExecuteCommand(ctx, db); err != nil {

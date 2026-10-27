@@ -20,14 +20,14 @@ parameters:
     in: path
     required: true
     schema:
-      type: integer
-      format: int64
+      type: string
+      format: uuid
 
 get:
   operationId: GetCollectorJobProfile
   summary: Get a collector job profile
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:
@@ -65,7 +65,7 @@ patch:
   description: Partially updates a profile. `job_type_id` is immutable;
     `schedule_ids`, when present, atomically replaces all schedule links.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   requestBody:
     required: true
@@ -93,8 +93,8 @@ patch:
               type: array
               uniqueItems: true
               items:
-                type: integer
-                format: int64
+                type: string
+                format: uuid
   responses:
     200:
       description: OK
@@ -144,7 +144,7 @@ delete:
   operationId: DeleteCollectorJobProfile
   summary: Delete a collector job profile
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     204:

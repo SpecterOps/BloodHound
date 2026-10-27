@@ -44,10 +44,18 @@ func seedNodeKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSet
 		INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace)
 		VALUES ('TestExtension', 'Test Extension', '1.0.0', false, 'TST')
 		RETURNING id`).Scan(&extensionID))
+	t.Cleanup(func() {
+		_, err := pool.Exec(ctx, `DELETE FROM schema_extensions WHERE id = $1`, extensionID)
+		require.NoError(t, err)
+	})
 
 	var kindID int32
 	require.NoError(t, pool.QueryRow(ctx, `
 		INSERT INTO kind (name) VALUES ('TestNodeKind') RETURNING id`).Scan(&kindID))
+	t.Cleanup(func() {
+		_, err := pool.Exec(ctx, `DELETE FROM kind WHERE id = $1`, kindID)
+		require.NoError(t, err)
+	})
 
 	var nodeKindID int32
 	require.NoError(t, pool.QueryRow(ctx, `
@@ -56,8 +64,8 @@ func seedNodeKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSet
 		RETURNING id`, extensionID, kindID).Scan(&nodeKindID))
 
 	t.Cleanup(func() {
-		_, _ = pool.Exec(ctx, `DELETE FROM schema_extensions WHERE name = 'TestExtension'`)
-		_, _ = pool.Exec(ctx, `DELETE FROM kind WHERE name = 'TestNodeKind'`)
+		_, err := pool.Exec(ctx, `DELETE FROM schema_node_kinds WHERE id = $1`, nodeKindID)
+		require.NoError(t, err)
 	})
 
 	return testSetupData{kindID: kindID, nodeKindID: nodeKindID, extensionID: extensionID}

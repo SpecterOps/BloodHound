@@ -32,14 +32,14 @@ jobs:
 
     steps:
       - name: Checkout source code for this repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # ratchet:actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7
 
       - name: Start PostgreSQL and Neo4j Containers
         run: |
           BH_POSTGRES_CONFIG=$(pwd)/.github/config/postgresql.conf docker compose -f docker-compose.testing.yml up -d
 
       - name: Install Go
-        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # ratchet:actions/setup-go@v5
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # ratchet:actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: true
@@ -76,7 +76,7 @@ jobs:
           docker compose -f docker-compose.testing.yml down
 
       - name: Upload Allure Results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # ratchet:actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # ratchet:actions/upload-artifact@v7
         with:
           name: allure-results
           path: allure-results

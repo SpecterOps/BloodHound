@@ -16,7 +16,6 @@
 
 import { Switch } from 'doodle-ui';
 import { FC, ReactNode } from 'react';
-import { cn } from '../utils';
 
 type CardWithSwitchProps = {
     title: string;
@@ -36,11 +35,7 @@ const CardWithSwitch: FC<CardWithSwitchProps> = ({
     disableSwitch = false,
 }) => {
     return (
-        <div
-            className={cn('p-4 border rounded-lg', {
-                'bg-neutral-2 border-transparent shadow-outer-1': isEnabled,
-                'bg-neutral-2/30 border-neutral-3 shadow-none': !isEnabled,
-            })}>
+        <div className='p-4 rounded-lg bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'>
             <div className='flex justify-between mb-4'>
                 <h4 className='font-bold text-lg'>{title}</h4>
                 <Switch

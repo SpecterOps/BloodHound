@@ -23,8 +23,8 @@ export default {
             spacing: {
                 'nav-width': '3.5rem',
                 'subnav-collapsed': '4rem',
-                'subnav-expanded': '18rem',
-                'nav-width-expanded': '17.5rem',
+                'subnav-expanded': '17rem',
+                'nav-width-expanded': '16.5rem',
             },
             zIndex: {
                 navToggle: '1401',

@@ -50,6 +50,22 @@ describe('IconButton', () => {
         expect((await screen.findByRole('tooltip')).textContent).toBe('Built-in extensions cannot be deleted');
     });
 
+    it('supports positioning the tooltip on the horizontal axis', async () => {
+        const user = userEvent.setup();
+        render(
+            <IconButton aria-label='More information' tooltipPosition='right'>
+                <AppIcon.Info />
+            </IconButton>
+        );
+
+        await user.hover(screen.getByRole('button', { name: 'More information' }));
+
+        // Base UI may flip the requested side when collision detection runs in JSDOM.
+        expect(['left', 'right']).toContain(
+            (await screen.findByRole('tooltip')).parentElement?.getAttribute('data-side')
+        );
+    });
+
     it('hides both the button and child AccessibleIcon tooltips when requested', async () => {
         const user = userEvent.setup();
         render(
@@ -110,7 +126,7 @@ describe('IconButton', () => {
 
         expect((button as HTMLButtonElement).disabled).toBe(true);
         expect(tooltipTrigger?.tagName).toBe('SPAN');
-        expect(tooltipTrigger?.getAttribute('data-state')).toBe('closed');
+        expect(tooltipTrigger?.hasAttribute('data-popup-open')).toBe(false);
 
         await user.hover(tooltipTrigger!);
 
@@ -191,7 +207,6 @@ describe('IconButton', () => {
         expect(button.classList.contains('hover:text-primary')).toBe(true);
         expect(button.classList.contains('active:bg-transparent')).toBe(true);
         expect(button.classList.contains('bg-primary')).toBe(false);
-        expect(button.classList.contains('bg-secondary-btn-fill')).toBe(false);
         expect(button.classList.contains('shadow-outer-1')).toBe(false);
     });
 

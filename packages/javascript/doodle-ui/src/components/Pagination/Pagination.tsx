@@ -97,7 +97,7 @@ const PaginationSelect = (props: PaginationSelectProps) => {
 
     return (
         <Select {...rest}>
-            <SelectTrigger className='w-fit'>
+            <SelectTrigger className='w-fit gap-2'>
                 <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectPortal>

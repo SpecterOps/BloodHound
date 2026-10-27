@@ -21,7 +21,7 @@ get:
   operationId: ListCollectorJobSchedules
   summary: List collector job schedules
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   parameters:
     - $ref: './../parameters/query.skip.yaml'
@@ -86,7 +86,7 @@ post:
   operationId: CreateCollectorJobSchedule
   summary: Create a collector job schedule
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   requestBody:
     required: true
@@ -115,8 +115,8 @@ post:
               type: array
               uniqueItems: true
               items:
-                type: integer
-                format: int64
+                type: string
+                format: uuid
   responses:
     201:
       description: Created

@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
+import { palette } from './colors';
 
 export default {
     theme: {
@@ -31,6 +32,25 @@ export default {
             },
         },
         extend: {
+            backgroundColor: {
+                'input-fill-disabled': palette.neutral.light[100],
+                'input-fill-disabled-dark': palette.neutral.dark[400],
+                'btn-disabled-fill': palette.neutral.light[200],
+                'btn-disabled-fill-dark': palette.neutral.dark[700],
+            },
+            borderColor: {
+                'btn-disabled-fill': palette.neutral.light[200],
+                'btn-disabled-fill-dark': palette.neutral.dark[700],
+            },
+            textColor: {
+                main: 'var(--text-main)',
+                light: 'var(--text-light)',
+                muted: 'var(--text-light)',
+                disabled: 'var(--disabled)',
+                contrast: 'var(--contrast)',
+                inverse: 'var(--text-contrast)',
+                faint: 'var(--text-faint)',
+            },
             colors: {
                 // Legacy
                 'neutral-1': 'var(--neutral-1)',
@@ -52,44 +72,36 @@ export default {
                 'neutral-dark-5': 'var(--neutral-dark-5)',
 
                 // New color tokens:
-                primary: 'var(--primary-main)',
-                'primary-main':
-                    'var(--primary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                primary: 'var(--primary)',
                 'primary-variant': 'var(--primary-variant)',
 
-                secondary: 'var(--secondary-main)',
-                'secondary-main':
-                    'var(--secondary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                secondary: 'var(--secondary)',
                 'secondary-variant': 'var(--secondary-variant)',
                 'secondary-variant-2': 'var(--secondary-variant-2)',
 
-                tertiary: 'var(--tertiary)', // this is a legacy token
-                'tertiary-main':
-                    'var(--tertiary-main)' /* failsafe for any classes possibly using the optional '-main' suffix*/,
+                tertiary: 'var(--tertiary)',
                 'tertiary-variant': 'var(--tertiary-variant)',
 
-                'text-main': 'var(--text-main)',
-                'text-light': 'var(--text-light)',
-                'text-muted': 'var(--text-muted)',
-                'text-disabled': 'var(--text-disabled)',
-                'text-contrast': 'var(--text-contrast)',
                 // 'text-primary': 'var(--text-primary)',
                 // 'text-secondary': 'var(--text-secondary)',
 
                 disabled: 'var(--disabled)',
                 contrast: 'var(--contrast)',
+
+                // Shared control and surface tokens
+                'border-control': 'var(--border-control)',
+                'control-accent': 'var(--control-accent)',
+                surface: 'var(--surface)',
+                'surface-subtle': 'var(--surface-subtle)',
+                'surface-hover': 'var(--surface-hover)',
+
                 link: 'var(--link-main)',
-                'link-hover': '(--link-hover)',
+                'link-hover': 'var(--link-hover)',
                 error: 'var(--error)',
 
                 'common-dark': 'var(--common-dark)',
                 'common-white': 'var(--common-white)',
                 // contrast: 'var(--common-dark)',
-
-                'switch-fill': 'var(--switch-fill)',
-                'switch-disabled-fill': 'var(--switch-disabled-fill)',
-                'switch-thumb-fill': 'var(--switch-thumb-fill)',
-                'switch-thumb-disabled-fill': 'var(--switch-thumb-disabled-fill)',
 
                 'neutral-50': 'var(--neutral-50)',
                 'neutral-100': 'var(--neutral-100)',
@@ -126,7 +138,6 @@ export default {
                 'bhe-main': 'var(--bhe-main)',
                 // 'sp-main': 'var(--sp-main)',
                 'bhce-main': 'var(--bhce-main)',
-                'logo-neutral': 'var(--logo-neutral)',
 
                 // 'brand-primary-dark-purple': 'var(--brand-primary-dark-purple)',
                 // 'brand-primary-deep-purple': 'var(--brand-primary-deep-purple)',
@@ -139,34 +150,17 @@ export default {
                 // 'brand-secondary-highlight-light-blue': 'var(--brand-secondary-highlight-light-blue)',
                 // 'brand-secondary-highlight-green': 'var(--brand-secondary-highlight-green)',
 
-                'secondary-btn-fill': 'var(--secondary-btn-fill)',
-                'secondary-btn-active-fill': 'var(--secondary-btn-active-fill)',
-                'tertiary-btn-border': 'var(--tertiary-btn-border)',
-                'transparent-btn-border': 'var(--transparent-btn-border)',
-                'icon-btn-fill': 'var(--icon-btn-fill)',
-                'btn-disabled-fill': 'var(--btn-disabled-fill)',
                 'toggle-btn-fill': 'var(--toggle-btn-fill)',
                 'toggle-btn-border': 'var(--toggle-btn-border)',
                 'toggle-group-fill': 'var(--toggle-group-fill)',
                 'checkbox-border': 'var(--checkbox-border)',
-                'checkbox-hover': 'var(--checkbox-hover)',
                 'checkbox-unchecked-fill': 'var(--checkbox-unchecked-fill)',
-                'checkbox-fill': 'var(--checkbox-fill)',
-                'checkbox-check': 'var(--checkbox-check)',
 
                 // 'input-label': 'var(--input-label)',
-                'input-fill': 'var(--input-fill)',
-                'input-fill-disabled': 'var(--input-fill-disabled)',
                 'input-border-default': 'var(--input-border-default)',
                 // 'input-border-hover': 'var(--input-border-hover)',
                 'input-border-disabled': 'var(--input-border-disabled)',
                 'input-placeholder-text': 'var(--input-placeholder-text)',
-                'input-outlined-border-default': 'var(--input-outlined-border-default)',
-                'input-outlined-border-hover': 'var(--input-outlined-border-hover)',
-
-                'textarea-fill': 'var(--textarea-fill)',
-                'textarea-border-default': 'var(--textarea-border-default)',
-                'textarea-border-hover': 'var(--textarea-border-hover)',
 
                 'radio-label-focus-fill': 'var(--radio-label-focus-fill)',
                 'radio-border-default': 'var(--radio-border-default)',
@@ -176,15 +170,8 @@ export default {
                 'radio-indicator-fill': 'var(--radio-indicator-fill)',
 
                 // 'selector-disable-fill': 'var(--selector-disable-fill)',
-                'select-trigger-fill': 'var(--select-trigger-fill)',
-                'select-trigger-placeholder-text': 'var(--select-trigger-placeholder-text)',
                 'select-trigger-outlined-fill': 'var(--select-trigger-outlined-fill)',
-                'select-border-default': 'var(--select-border-default)',
-                'select-border-focus': 'var(--select-border-focus)',
-                'select-content-border': 'var(--select-content-border)',
                 'select-content-fill': 'var(--select-content-fill)',
-                'select-item-checked-text': 'var(--select-item-checked-text)',
-                'select-separator-fill': 'var(--select-separator-fill)',
                 'dropdown-trigger-border': 'var(--dropdown-trigger-border)',
                 'dropdown-popover-border': 'var(--dropdown-popover-border)',
                 'dropdown-popover-fill': 'var(--dropdown-popover-fill)',
@@ -198,29 +185,6 @@ export default {
                 'data-table-row-odd-fill': 'var(--data-table-row-odd-fill)',
                 'data-table-row-hover-fill': 'var(--data-table-row-hover-fill)',
                 'data-table-row-selected-outline': 'var(--data-table-row-selected-outline)',
-
-                // 'menu-bg': 'var(--menu-bg)',
-
-                'badge-primary-fill': 'var(--badge-primary-fill)',
-                'badge-primary-outline': 'var(--badge-primary-outline)',
-
-                'badge-secondary-fill': 'var(--badge-secondary-fill)',
-                'badge-secondary-outline': 'var(--badge-secondary-outline)',
-
-                'badge-grey-fill': 'var(--badge-grey-fill)',
-                'badge-grey-outline': 'var(--badge-grey-outline)',
-
-                'badge-red-fill': 'var(--badge-red-fill)',
-                'badge-red-outline': 'var(--badge-red-outline)',
-
-                'badge-orange-fill': 'var(--badge-orange-fill)',
-                'badge-orange-outline': 'var(--badge-orange-outline)',
-
-                'badge-green-fill': 'var(--badge-green-fill)',
-                'badge-green-outline': 'var(--badge-green-outline)',
-
-                'badge-blue-fill': 'var(--badge-blue-fill)',
-                'badge-blue-outline': 'var(--badge-blue-outline)',
 
                 // 'sidenav-bg': 'var(--sidenav-bg)',
                 // 'sidenav-bg-hover': 'var(--sidenav-bg-hover)',
@@ -307,7 +271,7 @@ export default {
     safelist: [
         {
             pattern:
-                /(bg|text|border|w|ring|ring-offset)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|checkbox|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app)/,
+                /(bg|text|border|w|ring|ring-offset)-(primary|secondary|accent|contrast|link|error|tertiary|neutral|checkbox|base|headline|button|caption|eyeline|body|az|group|ou|computer|user|container|meta|domain|default|gpo|aiaca|root-ca|enterprise-ca|nt-auth-store|cert-template|issuance-policy|az-function-app|faint)/,
         },
         {
             pattern: /(w|top|left)-(0|px|[1-9][0-9]?|-[1-9][0-9]?)/, // Safelist padding values including 0, px, and positive/negative numbers

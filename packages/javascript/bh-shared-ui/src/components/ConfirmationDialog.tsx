@@ -40,6 +40,7 @@ const ConfirmationDialog: React.FC<{
     iconPosition?: 'left' | 'right';
     cancelText?: string;
     confirmText?: string;
+    confirmDataAnalytics?: string;
 }> = ({
     open,
     title,
@@ -54,6 +55,7 @@ const ConfirmationDialog: React.FC<{
     iconPosition = 'left',
     cancelText = 'Cancel',
     confirmText = 'Confirm',
+    confirmDataAnalytics,
 }) => {
     const [challengeTextReply, setChallengeTextReply] = useState<string>('');
 
@@ -109,6 +111,7 @@ const ConfirmationDialog: React.FC<{
                             {renderButtonContent(cancelText, cancelIcon)}
                         </Button>
                         <Button
+                            data-analytics={confirmDataAnalytics}
                             onClick={handleConfirm}
                             disabled={isLoading || challengeText.toLowerCase() !== challengeTextReply.toLowerCase()}
                             data-testid='confirmation-dialog_button-yes'>
