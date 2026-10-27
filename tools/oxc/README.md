@@ -1,8 +1,7 @@
-# Oxlint migration
+# Oxlint migration evidence
 
 Workspace `lint` scripts use Oxlint 1.89.0. Prettier, import organization, Vite,
-TypeScript, and Yarn retain their existing roles. The tool version clears the
-repository's three-day package-age gate as of October 20, 2026.
+TypeScript, and Yarn retain their existing roles.
 
 ## Rule policy
 
@@ -39,12 +38,7 @@ matches the existing CLI's error setting. Tests reject runtime imports of ESLint
 from the JavaScript plugins. Browser-global fixtures cover both recognized and
 unknown identifiers.
 
-Oxlint 1.89.0 fixes native `no-useless-assignment` detection for writes to function
-parameters. Fixtures cover both unused postfix increments and plain assignments
-without an Oxlint exception. CE's redundant `groupPosition++` was simplified to
-`groupPosition` so both linters pass the current source.
-
-The permanent suite also checks the active rule inventory against the resolved
+The evidence suite also checks the active rule inventory against the resolved
 ESLint policy for JavaScript, TypeScript, TSX, tests, declarations, stories, and
 Storybook configuration files, ignored output directories, and root Rollup configuration.
 It checks both lost and newly enabled rules, preserves explicit options, and
@@ -144,3 +138,25 @@ The Oxc VS Code extension is recommended; the ESLint extension is disabled for
 this workspace. Prettier remains the formatter. See the official
 [editor setup](https://oxc.rs/docs/guide/usage/linter/editors.html) and
 [JS plugin documentation](https://oxc.rs/docs/guide/usage/linter/js-plugins.html).
+
+## Evidence files
+
+The migration branch treats its Oxlint configs as the lint policy. This branch
+retains the one-time comparison tooling for reviewing that transition.
+
+| File                                                   | Purpose                                                                                   |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `fixtures.json`                                        | Source examples and original ESLint diagnostics, including explicit known differences.    |
+| `parity.mjs`, `parity.test.mjs`                        | Run the examples through Oxlint and compare rule IDs, severities, and selected locations. |
+| `config.mjs`                                           | Resolve shared configs and plugin paths for the isolated checks.                          |
+| `policy.mjs`                                           | Compare inherited rules, options, and file scopes with the captured ESLint policy.        |
+| `baseline-policy.json`                                 | Resolved original ESLint rules with Git and dependency provenance.                        |
+| `baseline-audit.mjs`                                   | Recreate the old ESLint oracle and compare fixtures or current sources.                   |
+| `baseline-packages.json`, `baseline-install-lock.json` | Pin the disposable ESLint installation outside the checkout.                              |
+| `baseline-revisions.json`                              | Identify the original config revision for workspaces added after the main baseline.       |
+| `source-audit.json`                                    | Migration-time findings and file-coverage comparison.                                     |
+| `no-eslint.cjs`                                        | Reject runtime engine/parser imports while fixture plugins run.                           |
+
+Both repositories use `bfaulkner/oxlint-parity-evidence`. Initialize the nested
+repository, install dependencies, then run `yarn test:lint` from BHE to check both
+repositories, or from BHCE for its checks alone.

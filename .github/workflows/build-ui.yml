@@ -48,6 +48,9 @@ jobs:
         run: |
           cd cmd/ui && yarn
 
+      - name: Check lint migration regressions
+        run: yarn test:lint
+
       - name: Audit Dependencies
         run: |
           yarn audit

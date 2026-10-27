@@ -14,10 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import fs from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { testLintParity } from './parity.mjs';
+import fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { testLintPolicy } from "./policy.mjs";
+import { testLintParity } from "./parity.mjs";
 
-const root = fileURLToPath(new URL('../../', import.meta.url));
-const fixtures = JSON.parse(await fs.readFile(new URL('./fixtures.json', import.meta.url), 'utf8'));
+const root = fileURLToPath(new URL("../../", import.meta.url));
+const fixtures = JSON.parse(
+  await fs.readFile(new URL("./fixtures.json", import.meta.url), "utf8"),
+);
 testLintParity(root, fixtures);
+
+const baseline = JSON.parse(
+  await fs.readFile(new URL("./baseline-policy.json", import.meta.url), "utf8"),
+);
+testLintPolicy(root, baseline);

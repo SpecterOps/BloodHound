@@ -1,0 +1,98 @@
+{
+    "date": "2026-10-27",
+    "purpose": "One-time migration evidence; rerun baseline-audit.mjs --sources to refresh against current files.",
+    "oxlintVersion": "1.89.0",
+    "visited": 1913,
+    "coverage": [
+        {
+            "workspace": "cmd/ui",
+            "eslintScope": "src",
+            "oxlintScope": "src",
+            "tracked": 184,
+            "eslintIncluded": 153,
+            "eslintIgnored": [],
+            "oxlintIncluded": 153,
+            "eslintOnly": [],
+            "oxlintOnly": [],
+            "oxlintUntracked": []
+        },
+        {
+            "workspace": "packages/javascript/bh-shared-ui",
+            "eslintScope": "src",
+            "oxlintScope": "src",
+            "tracked": 1493,
+            "eslintIncluded": 1489,
+            "eslintIgnored": [],
+            "oxlintIncluded": 1489,
+            "eslintOnly": [],
+            "oxlintOnly": [],
+            "oxlintUntracked": []
+        },
+        {
+            "workspace": "packages/javascript/js-client-library",
+            "eslintScope": "src",
+            "oxlintScope": "src",
+            "tracked": 10,
+            "eslintIncluded": 8,
+            "eslintIgnored": [],
+            "oxlintIncluded": 8,
+            "eslintOnly": [],
+            "oxlintOnly": [],
+            "oxlintUntracked": []
+        },
+        {
+            "workspace": "packages/javascript/bh-playwright-testing",
+            "eslintScope": "src",
+            "oxlintScope": "src",
+            "tracked": 20,
+            "eslintIncluded": 20,
+            "eslintIgnored": [],
+            "oxlintIncluded": 20,
+            "eslintOnly": [],
+            "oxlintOnly": [],
+            "oxlintUntracked": []
+        },
+        {
+            "workspace": "packages/javascript/doodle-ui",
+            "eslintScope": ".",
+            "oxlintScope": ".",
+            "tracked": 233,
+            "eslintIncluded": 233,
+            "eslintIgnored": [],
+            "oxlintIncluded": 233,
+            "eslintOnly": [],
+            "oxlintOnly": [],
+            "oxlintUntracked": []
+        },
+        {
+            "workspace": "cmd/dev-portal",
+            "eslintScope": "src",
+            "oxlintScope": "src",
+            "tracked": 13,
+            "eslintIncluded": 10,
+            "eslintIgnored": [],
+            "oxlintIncluded": 10,
+            "eslintOnly": [],
+            "oxlintOnly": [],
+            "oxlintUntracked": []
+        }
+    ],
+    "differences": [
+        {
+            "file": "packages/javascript/doodle-ui/src/tanstack-table.d.ts",
+            "eslintOnly": [
+                {
+                    "rule": "@typescript-eslint/no-unused-vars",
+                    "severity": 2,
+                    "line": 20
+                },
+                {
+                    "rule": "@typescript-eslint/no-unused-vars",
+                    "severity": 2,
+                    "line": 20
+                }
+            ],
+            "oxlintOnly": []
+        }
+    ]
+}

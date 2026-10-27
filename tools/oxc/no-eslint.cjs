@@ -14,11 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-const Module = require('node:module');
+const Module = require("node:module");
 const load = Module._load;
 Module._load = function (specifier, ...arguments_) {
-    if (/^eslint(?:\/|$)/.test(specifier)) {
-        throw new Error(`ESLint engine import is forbidden: ${specifier}`);
-    }
-    return load.call(this, specifier, ...arguments_);
+  if (
+    /^(?:eslint|@typescript-eslint\/(?:parser|eslint-plugin))(?:\/|$)/.test(
+      specifier,
+    ) ||
+    /[\\/]node_modules[\\/](?:eslint|@typescript-eslint[\\/](?:parser|eslint-plugin))[\\/]/.test(
+      specifier,
+    )
+  ) {
+    throw new Error(`ESLint engine import is forbidden: ${specifier}`);
+  }
+  return load.call(this, specifier, ...arguments_);
 };
