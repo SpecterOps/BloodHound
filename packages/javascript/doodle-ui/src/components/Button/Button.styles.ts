@@ -26,25 +26,25 @@ export const buttonBaseClasses = [
 const containedButtonGeometryClasses = 'rounded p-2 text-sm/none';
 
 const containedButtonStateClasses = [
-    'hover:bg-secondary hover:text-text-contrast',
-    'focus-visible:bg-secondary focus-visible:text-text-contrast',
-    'active:bg-primary-variant active:text-text-contrast',
+    'hover:bg-secondary hover:text-inverse',
+    'focus-visible:bg-secondary focus-visible:text-inverse',
+    'active:bg-primary-variant active:text-inverse',
 ];
 
 const containedPrimaryClasses = [
-    'border border-transparent bg-primary text-text-contrast',
+    'border border-transparent bg-primary text-inverse',
     ...containedButtonStateClasses,
     'disabled:bg-[color:var(--button-disabled-fill)]',
 ];
 
 const containedSecondaryClasses = [
-    'border border-[color:var(--button-secondary-border)] bg-elevation-1 text-text-main',
+    'border border-[color:var(--button-secondary-border)] bg-elevation-1 text-main',
     ...containedButtonStateClasses,
     'disabled:bg-[color:var(--button-disabled-fill)]',
 ];
 
 const containedTertiaryClasses = [
-    'border border-brand-orange bg-elevation-1 text-text-main',
+    'border border-brand-orange bg-elevation-1 text-main',
     ...containedButtonStateClasses,
     'disabled:border-[color:var(--button-disabled-fill)] disabled:bg-[color:var(--button-disabled-fill)]',
 ];

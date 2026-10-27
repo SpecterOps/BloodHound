@@ -38,9 +38,9 @@ describe('Button', () => {
     });
 
     it.each([
-        ['primary', 'border border-transparent bg-primary text-text-contrast'],
-        ['secondary', 'border-[color:var(--button-secondary-border)] bg-elevation-1 text-text-main'],
-        ['tertiary', 'border-brand-orange bg-elevation-1 text-text-main'],
+        ['primary', 'border border-transparent bg-primary text-inverse'],
+        ['secondary', 'border-[color:var(--button-secondary-border)] bg-elevation-1 text-main'],
+        ['tertiary', 'border-brand-orange bg-elevation-1 text-main'],
     ] as const)('applies the %s visual treatment', (variant, expectedClasses) => {
         render(<Button variant={variant}>{variant}</Button>);
 
@@ -49,11 +49,11 @@ describe('Button', () => {
             'p-2',
             'text-sm/none',
             'hover:bg-secondary',
-            'hover:text-text-contrast',
+            'hover:text-inverse',
             'focus-visible:bg-secondary',
-            'focus-visible:text-text-contrast',
+            'focus-visible:text-inverse',
             'active:bg-primary-variant',
-            'active:text-text-contrast',
+            'active:text-inverse',
             ...expectedClasses.split(' ')
         );
         expect(screen.getByRole('button', { name: variant })).not.toHaveClass('shadow-outer-1');
