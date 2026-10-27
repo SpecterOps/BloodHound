@@ -22362,6 +22362,15 @@
             }
           },
           {
+            "name": "principalobjectid",
+            "description": "Filter by one principal object identifier. A finding matches when the identifier is either its source (starting) principal or its target principal. The supported predicate is `eq`.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^(eq|neq):[^:]+$"
+            }
+          },
+          {
             "name": "status",
             "description": "Filter by finding status.",
             "in": "query",
