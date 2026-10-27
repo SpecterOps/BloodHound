@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/test"
@@ -1093,6 +1094,7 @@ type AZMGRoleManagementReadWriteDirectoryHarness struct {
 	Application       *graph.Node
 	Group             *graph.Node
 	Role              *graph.Node
+	SecondRole        *graph.Node
 	ServicePrincipal  *graph.Node
 	ServicePrincipalB *graph.Node
 	MicrosoftGraph    *graph.Node
@@ -1118,8 +1120,38 @@ func (s *AZMGRoleManagementReadWriteDirectoryHarness) Setup(testCtx *GraphTestCo
 	testCtx.NewRelationship(s.Tenant, s.ServicePrincipalB, azure.Contains)
 
 	testCtx.NewRelationship(s.ServicePrincipal, s.MicrosoftGraph, azure.RoleManagementReadWriteDirectory)
+}
 
-	testCtx.NewRelationship(s.ServicePrincipal, s.Role, azure.AZMGGrantRole)
+// SetupPostProcessing extends the fixture with another source and role, plus an
+// independent application permission. existingEdges also seeds valid and stale output.
+func (s *AZMGRoleManagementReadWriteDirectoryHarness) SetupPostProcessing(testCtx *GraphTestContext, existingEdges bool) {
+	var (
+		foreignTenantID   = RandomObjectID(testCtx.testCtx)
+		foreignTenant     = testCtx.NewAzureTenant(foreignTenantID)
+		foreignRole       = testCtx.NewAzureRole("Foreign role", RandomObjectID(testCtx.testCtx), RandomObjectID(testCtx.testCtx), foreignTenantID)
+		trackedProperties = graph.AsProperties(graph.PropertyMap{common.FirstSeen: time.Unix(1, 0).UTC()})
+	)
+	s.Setup(testCtx)
+	s.SecondRole = testCtx.NewAzureRole("Second role", RandomObjectID(testCtx.testCtx), RandomObjectID(testCtx.testCtx), testCtx.NodeObjectID(s.Tenant))
+	testCtx.NewRelationship(s.Tenant, s.SecondRole, azure.Contains)
+	testCtx.NewRelationship(foreignTenant, foreignRole, azure.Contains)
+	testCtx.NewRelationship(s.ServicePrincipal, s.ServicePrincipalB, azure.RoleManagementReadWriteDirectory)
+	testCtx.NewRelationship(s.ServicePrincipalB, s.MicrosoftGraph, azure.RoleManagementReadWriteDirectory)
+	testCtx.NewRelationship(s.ServicePrincipalB, s.MicrosoftGraph, azure.AppRoleAssignmentReadWriteAll)
+
+	if existingEdges {
+		testCtx.NewRelationship(s.ServicePrincipal, s.Role, azure.AZMGGrantRole, trackedProperties)
+		testCtx.NewRelationship(s.ServicePrincipalB, s.Tenant, azure.AZMGGrantAppRoles, trackedProperties)
+		testCtx.NewRelationship(s.ServicePrincipal, foreignRole, azure.AZMGGrantRole, trackedProperties)
+		testCtx.NewRelationship(s.ServicePrincipal, s.Tenant, azure.AZMGGrantAppRoles, trackedProperties)
+		testCtx.NewRelationship(s.ServicePrincipal, s.Group, azure.AZMGAddMember, trackedProperties)
+		for _, target := range []*graph.Node{s.Application, s.MicrosoftGraph, s.Group} {
+			testCtx.NewRelationship(s.ServicePrincipal, target, azure.AZMGAddOwner, trackedProperties)
+		}
+		for _, target := range []*graph.Node{s.Application, s.MicrosoftGraph} {
+			testCtx.NewRelationship(s.ServicePrincipal, target, azure.AZMGAddSecret, trackedProperties)
+		}
+	}
 }
 
 type AZMGServicePrincipalEndpointReadWriteAllHarness struct {

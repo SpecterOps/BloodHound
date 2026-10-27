@@ -22,7 +22,6 @@ import (
 	"context"
 	"slices"
 	"testing"
-	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
@@ -486,244 +485,89 @@ func TestAZMGGroupMemberReadWriteAll(t *testing.T) {
 }
 
 func TestAZMGRoleManagementReadWriteDirectory(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
-	testContext.ReadTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.AZMGRoleManagementReadWriteDirectoryHarness.Setup(testContext)
+	var (
+		testContext = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+		fixture     = &testContext.Harness.AZMGRoleManagementReadWriteDirectoryHarness
+	)
+	testContext.SetupHarness(func(harness *integration.HarnessDetails) error {
+		fixture.Setup(testContext)
 		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
+	})
+	_, err := azure.AppRoleAssignments(testContext.Context(), testContext.Graph.Database)
+	require.NoError(t, err)
 
-		if outboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
-			t.Fatal(err)
-		} else {
-			assert.True(t, outboundAbusableAppRoleAssignments.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.MicrosoftGraph))
-		}
+	testContext.Graph.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+		outboundPermissions, err := azure.FetchAbusableAppRoleAssignments(tx, fixture.ServicePrincipal, graph.DirectionOutbound, 0, 0)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []graph.ID{fixture.MicrosoftGraph.ID}, outboundPermissions.IDs())
 
-		if inboundAbusableAppRoleAssignments, err := azure.FetchAbusableAppRoleAssignments(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.MicrosoftGraph, graph.DirectionInbound, 0, 0); err != nil {
-			t.Fatal(err)
-		} else {
-			assert.True(t, inboundAbusableAppRoleAssignments.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal))
-		}
+		inboundPermissions, err := azure.FetchAbusableAppRoleAssignments(tx, fixture.MicrosoftGraph, graph.DirectionInbound, 0, 0)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []graph.ID{fixture.ServicePrincipal.ID}, inboundPermissions.IDs())
 
-		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
-			t.Fatal(err)
-		} else {
-			assert.False(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.Group))
-		}
+		transitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, fixture.ServicePrincipal, graph.DirectionOutbound, 0, 0)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []graph.ID{fixture.Role.ID}, transitNodes.IDs())
 
-		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
-			t.Fatal(err)
-		} else {
-			assert.False(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.Application))
-		}
-
-		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
-			t.Fatal(err)
-		} else {
-			assert.False(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipalB))
-		}
-
-		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
-			t.Fatal(err)
-		} else {
-			assert.True(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.Role))
-		}
-
-		if outboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound, 0, 0); err != nil {
-			t.Fatal(err)
-		} else {
-			assert.False(t, outboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.MicrosoftGraph))
-		}
-
-		if inboundAppRoleAssignmentTransitNodes, err := azure.FetchAppRoleAssignmentsTransitList(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.Group, graph.DirectionInbound, 0, 0); err != nil {
-			t.Fatal(err)
-		} else {
-			assert.False(t, inboundAppRoleAssignmentTransitNodes.Contains(harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal))
-		}
-
-		if outboundAppRoleAssignmentTransitPaths, err := azure.FetchAppRoleAssignmentsTransitPaths(tx, harness.AZMGRoleManagementReadWriteDirectoryHarness.ServicePrincipal, graph.DirectionOutbound); err != nil {
-			t.Fatal(err)
-		} else {
-			for _, path := range outboundAppRoleAssignmentTransitPaths.Paths() {
-				for _, edge := range path.Edges {
-					assert.Equal(t, graphAzure.AZMGGrantRole, edge.Kind)
-				}
-			}
-		}
-
+		transitPaths, err := azure.FetchAppRoleAssignmentsTransitPaths(tx, fixture.ServicePrincipal, graph.DirectionOutbound)
+		require.NoError(t, err)
+		assert.ElementsMatch(t, []graph.ID{fixture.ServicePrincipal.ID, fixture.Role.ID}, transitPaths.AllNodes().IDs())
+		return nil
 	})
 }
 
-func TestAppRoleAssignments_RoleManagementPermissions(t *testing.T) {
-	var testCases = []struct {
-		name             string
-		permissions      graph.Kinds
-		otherPermissions graph.Kinds
-		grantRole        bool
-		ordinaryMember   bool
-		ordinaryOwner    bool
-	}{
-		{name: "no permissions"},
-		{name: "role management only", permissions: graph.Kinds{graphAzure.RoleManagementReadWriteDirectory}, grantRole: true},
-		{name: "group membership only", permissions: graph.Kinds{graphAzure.GroupMemberReadWriteAll}, ordinaryMember: true},
-		{name: "group write only", permissions: graph.Kinds{graphAzure.GroupReadWriteAll}, ordinaryMember: true, ordinaryOwner: true},
-		{name: "directory write only", permissions: graph.Kinds{graphAzure.DirectoryReadWriteAll}, ordinaryMember: true, ordinaryOwner: true},
-		{name: "role management and group membership", permissions: graph.Kinds{graphAzure.RoleManagementReadWriteDirectory, graphAzure.GroupMemberReadWriteAll}, grantRole: true, ordinaryMember: true},
-		{name: "role management and group write", permissions: graph.Kinds{graphAzure.RoleManagementReadWriteDirectory, graphAzure.GroupReadWriteAll}, grantRole: true, ordinaryMember: true, ordinaryOwner: true},
-		{name: "role management and directory write", permissions: graph.Kinds{graphAzure.RoleManagementReadWriteDirectory, graphAzure.DirectoryReadWriteAll}, grantRole: true, ordinaryMember: true, ordinaryOwner: true},
-		{name: "permissions on different principals", permissions: graph.Kinds{graphAzure.RoleManagementReadWriteDirectory}, otherPermissions: graph.Kinds{graphAzure.GroupMemberReadWriteAll}, grantRole: true},
-		{name: "role management on another principal", permissions: graph.Kinds{graphAzure.GroupMemberReadWriteAll}, otherPermissions: graph.Kinds{graphAzure.RoleManagementReadWriteDirectory}, ordinaryMember: true},
+func TestAZMGRoleManagementReadWriteDirectoryPostProcessing(t *testing.T) {
+	type relationshipKey struct {
+		from graph.ID
+		to   graph.ID
+		kind graph.Kind
 	}
+	var testCases = []struct {
+		name          string
+		existingEdges bool
+	}{
+		{name: "fresh graph"},
+		{name: "reprocess existing graph", existingEdges: true},
+	}
+
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			var (
-				suite    = setupIntegrationTestSuite(t)
-				fixture  = newAppRoleAssignmentFixture(t, &suite)
-				expected []appRoleAssignmentEdge
+				testContext = integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
+				fixture     = &testContext.Harness.AZMGRoleManagementReadWriteDirectoryHarness
 			)
-			defer teardownIntegrationTestSuite(t, &suite)
-			for _, permission := range testCase.permissions {
-				NewRelationship(t, &suite, fixture.source, fixture.microsoftGraph, permission)
-			}
-			for _, permission := range testCase.otherPermissions {
-				NewRelationship(t, &suite, fixture.otherSource, fixture.microsoftGraph, permission)
-			}
-			if testCase.grantRole {
-				expected = append(expected, appRoleAssignmentEdge{target: fixture.role.ID, kind: graphAzure.AZMGGrantRole})
-			}
-			if testCase.ordinaryMember {
-				expected = append(expected, appRoleAssignmentEdge{target: fixture.ordinaryGroup.ID, kind: graphAzure.AZMGAddMember})
-			}
-			if testCase.ordinaryOwner {
-				expected = append(expected, appRoleAssignmentEdge{target: fixture.ordinaryGroup.ID, kind: graphAzure.AZMGAddOwner})
-			}
-			_, err := azure.AppRoleAssignments(suite.Context, suite.GraphDB)
+			testContext.SetupHarness(func(harness *integration.HarnessDetails) error {
+				fixture.SetupPostProcessing(testContext, testCase.existingEdges)
+				return nil
+			})
+
+			_, err := azure.AppRoleAssignments(testContext.Context(), testContext.Graph.Database)
 			require.NoError(t, err)
-			requireAppRoleAssignmentEdges(t, &suite, fixture.source, expected)
+
+			testContext.Graph.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+				var (
+					actual   []relationshipKey
+					expected = []relationshipKey{
+						{from: fixture.ServicePrincipal.ID, to: fixture.Role.ID, kind: graphAzure.AZMGGrantRole},
+						{from: fixture.ServicePrincipal.ID, to: fixture.SecondRole.ID, kind: graphAzure.AZMGGrantRole},
+						{from: fixture.ServicePrincipalB.ID, to: fixture.Role.ID, kind: graphAzure.AZMGGrantRole},
+						{from: fixture.ServicePrincipalB.ID, to: fixture.SecondRole.ID, kind: graphAzure.AZMGGrantRole},
+						{from: fixture.ServicePrincipalB.ID, to: fixture.Tenant.ID, kind: graphAzure.AZMGGrantAppRoles},
+					}
+				)
+				relationships, err := ops.FetchRelationships(tx.Relationships().Filter(query.KindIn(
+					query.Relationship(), graphAzure.AZMGGrantRole, graphAzure.AZMGGrantAppRoles,
+					graphAzure.AZMGAddMember, graphAzure.AZMGAddSecret, graphAzure.AZMGAddOwner,
+				)))
+				require.NoError(t, err)
+				for _, relationship := range relationships {
+					actual = append(actual, relationshipKey{from: relationship.StartID, to: relationship.EndID, kind: relationship.Kind})
+				}
+				assert.ElementsMatch(t, expected, actual)
+				return nil
+			})
 		})
 	}
-}
-
-func TestAppRoleAssignments_RoleManagementMultipleSourcesAndRoles(t *testing.T) {
-	var (
-		secondRole    *graph.Node
-		suite         = setupIntegrationTestSuite(t)
-		fixture       = newAppRoleAssignmentFixture(t, &suite)
-		tenantID, err = fixture.tenant.Properties.Get(graphAzure.TenantID.String()).String()
-	)
-	defer teardownIntegrationTestSuite(t, &suite)
-	require.NoError(t, err)
-	secondRole = NewAzureRole(t, &suite, "Second role", newAppRoleAssignmentObjectID(t), newAppRoleAssignmentObjectID(t), tenantID)
-	NewRelationship(t, &suite, fixture.tenant, secondRole, graphAzure.Contains)
-	NewRelationship(t, &suite, fixture.source, fixture.microsoftGraph, graphAzure.RoleManagementReadWriteDirectory)
-	NewRelationship(t, &suite, fixture.source, fixture.otherSource, graphAzure.RoleManagementReadWriteDirectory)
-	NewRelationship(t, &suite, fixture.otherSource, fixture.microsoftGraph, graphAzure.RoleManagementReadWriteDirectory)
-	_, err = azure.AppRoleAssignments(suite.Context, suite.GraphDB)
-	require.NoError(t, err)
-	for _, source := range []*graph.Node{fixture.source, fixture.otherSource} {
-		requireAppRoleAssignmentEdges(t, &suite, source, []appRoleAssignmentEdge{
-			{target: fixture.role.ID, kind: graphAzure.AZMGGrantRole},
-			{target: secondRole.ID, kind: graphAzure.AZMGGrantRole},
-		})
-	}
-}
-
-func TestAppRoleAssignments_RoleManagementTenantIsolation(t *testing.T) {
-	var (
-		suite        = setupIntegrationTestSuite(t)
-		firstTenant  = newAppRoleAssignmentFixture(t, &suite)
-		secondTenant = newAppRoleAssignmentFixture(t, &suite)
-	)
-	defer teardownIntegrationTestSuite(t, &suite)
-	NewRelationship(t, &suite, firstTenant.source, firstTenant.microsoftGraph, graphAzure.RoleManagementReadWriteDirectory)
-	NewRelationship(t, &suite, firstTenant.source, secondTenant.microsoftGraph, graphAzure.GroupMemberReadWriteAll)
-	_, err := azure.AppRoleAssignments(suite.Context, suite.GraphDB)
-	require.NoError(t, err)
-	requireAppRoleAssignmentEdges(t, &suite, firstTenant.source, []appRoleAssignmentEdge{
-		{target: firstTenant.role.ID, kind: graphAzure.AZMGGrantRole},
-		{target: secondTenant.ordinaryGroup.ID, kind: graphAzure.AZMGAddMember},
-	})
-}
-
-func TestAppRoleAssignments_RoleManagementReprocessing(t *testing.T) {
-	for _, independentPermissions := range []bool{false, true} {
-		name := "remove unsupported edges"
-		if independentPermissions {
-			name = "preserve independently supported edges"
-		}
-		t.Run(name, func(t *testing.T) {
-			var (
-				suite             = setupIntegrationTestSuite(t)
-				fixture           = newAppRoleAssignmentFixture(t, &suite)
-				trackedProperties = graph.AsProperties(graph.PropertyMap{common.FirstSeen: time.Unix(1, 0).UTC()})
-				expected          = []appRoleAssignmentEdge{
-					{target: fixture.role.ID, kind: graphAzure.AZMGGrantRole},
-					{target: fixture.ordinaryGroup.ID, kind: graphAzure.AZMGAddMember},
-				}
-				staleEdges = []appRoleAssignmentEdge{
-					{target: fixture.tenant.ID, kind: graphAzure.AZMGGrantAppRoles},
-					{target: fixture.application.ID, kind: graphAzure.AZMGAddSecret},
-					{target: fixture.application.ID, kind: graphAzure.AZMGAddOwner},
-					{target: fixture.otherSource.ID, kind: graphAzure.AZMGAddSecret},
-					{target: fixture.otherSource.ID, kind: graphAzure.AZMGAddOwner},
-					{target: fixture.ordinaryGroup.ID, kind: graphAzure.AZMGAddMember},
-					{target: fixture.ordinaryGroup.ID, kind: graphAzure.AZMGAddOwner},
-					{target: fixture.roleAssignableGroup.ID, kind: graphAzure.AZMGAddMember},
-					{target: fixture.roleAssignableGroup.ID, kind: graphAzure.AZMGAddOwner},
-				}
-			)
-			defer teardownIntegrationTestSuite(t, &suite)
-			NewRelationship(t, &suite, fixture.source, fixture.microsoftGraph, graphAzure.RoleManagementReadWriteDirectory)
-			NewRelationship(t, &suite, fixture.source, fixture.microsoftGraph, graphAzure.GroupMemberReadWriteAll)
-			for _, edge := range staleEdges {
-				require.NoError(t, suite.GraphDB.WriteTransaction(suite.Context, func(tx graph.Transaction) error {
-					_, err := tx.CreateRelationshipByIDs(fixture.source.ID, edge.target, edge.kind, trackedProperties)
-					return err
-				}))
-			}
-			if independentPermissions {
-				NewRelationship(t, &suite, fixture.source, fixture.microsoftGraph, graphAzure.ApplicationReadWriteAll)
-				NewRelationship(t, &suite, fixture.source, fixture.microsoftGraph, graphAzure.AppRoleAssignmentReadWriteAll)
-				expected = append(expected, appRoleAssignmentEdge{target: fixture.tenant.ID, kind: graphAzure.AZMGGrantAppRoles})
-				for _, target := range []*graph.Node{fixture.microsoftGraph, fixture.source, fixture.otherSource, fixture.application} {
-					expected = append(expected,
-						appRoleAssignmentEdge{target: target.ID, kind: graphAzure.AZMGAddSecret},
-						appRoleAssignmentEdge{target: target.ID, kind: graphAzure.AZMGAddOwner},
-					)
-				}
-			}
-			_, err := azure.AppRoleAssignments(suite.Context, suite.GraphDB)
-			require.NoError(t, err)
-			requireAppRoleAssignmentEdges(t, &suite, fixture.source, expected)
-		})
-	}
-}
-
-func TestAppRoleAssignments_RoleManagementRevocation(t *testing.T) {
-	var (
-		suite   = setupIntegrationTestSuite(t)
-		fixture = newAppRoleAssignmentFixture(t, &suite)
-	)
-	defer teardownIntegrationTestSuite(t, &suite)
-	NewRelationship(t, &suite, fixture.source, fixture.microsoftGraph, graphAzure.RoleManagementReadWriteDirectory)
-	NewRelationship(t, &suite, fixture.source, fixture.microsoftGraph, graphAzure.GroupMemberReadWriteAll)
-	_, err := azure.AppRoleAssignments(suite.Context, suite.GraphDB)
-	require.NoError(t, err)
-	requireAppRoleAssignmentEdges(t, &suite, fixture.source, []appRoleAssignmentEdge{
-		{target: fixture.role.ID, kind: graphAzure.AZMGGrantRole},
-		{target: fixture.ordinaryGroup.ID, kind: graphAzure.AZMGAddMember},
-	})
-	require.NoError(t, suite.GraphDB.WriteTransaction(suite.Context, func(tx graph.Transaction) error {
-		return tx.Relationships().Filter(query.And(
-			query.Equals(query.StartID(), fixture.source.ID),
-			query.Equals(query.EndID(), fixture.microsoftGraph.ID),
-			query.Kind(query.Relationship(), graphAzure.RoleManagementReadWriteDirectory),
-		)).Delete()
-	}))
-	_, err = azure.AppRoleAssignments(suite.Context, suite.GraphDB)
-	require.NoError(t, err)
-	requireAppRoleAssignmentEdges(t, &suite, fixture.source, []appRoleAssignmentEdge{
-		{target: fixture.ordinaryGroup.ID, kind: graphAzure.AZMGAddMember},
-	})
 }
 
 func TestAZMGServicePrincipalEndpointReadWriteAll(t *testing.T) {
