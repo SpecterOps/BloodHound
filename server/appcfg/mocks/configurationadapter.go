@@ -22,7 +22,7 @@ package mocks
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/server/appcfg"
+	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -53,68 +53,62 @@ func (_m *MockConfigurationAdapter) EXPECT() *MockConfigurationAdapter_Expecter 
 	return &MockConfigurationAdapter_Expecter{mock: &_m.Mock}
 }
 
-// GetApplicationConfiguration provides a mock function for the type MockConfigurationAdapter
-func (_mock *MockConfigurationAdapter) GetApplicationConfiguration(ctx context.Context, parameterKey appcfg.ParameterKey) (appcfg.Parameter, error) {
-	ret := _mock.Called(ctx, parameterKey)
+// GetConfigScheduledAnalysis provides a mock function for the type MockConfigurationAdapter
+func (_mock *MockConfigurationAdapter) GetConfigScheduledAnalysis(ctx context.Context) (services.ScheduledAnalysisParameter, error) {
+	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetApplicationConfiguration")
+		panic("no return value specified for GetConfigScheduledAnalysis")
 	}
 
-	var r0 appcfg.Parameter
+	var r0 services.ScheduledAnalysisParameter
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, appcfg.ParameterKey) (appcfg.Parameter, error)); ok {
-		return returnFunc(ctx, parameterKey)
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (services.ScheduledAnalysisParameter, error)); ok {
+		return returnFunc(ctx)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, appcfg.ParameterKey) appcfg.Parameter); ok {
-		r0 = returnFunc(ctx, parameterKey)
+	if returnFunc, ok := ret.Get(0).(func(context.Context) services.ScheduledAnalysisParameter); ok {
+		r0 = returnFunc(ctx)
 	} else {
-		r0 = ret.Get(0).(appcfg.Parameter)
+		r0 = ret.Get(0).(services.ScheduledAnalysisParameter)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, appcfg.ParameterKey) error); ok {
-		r1 = returnFunc(ctx, parameterKey)
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
 	return r0, r1
 }
 
-// MockConfigurationAdapter_GetApplicationConfiguration_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetApplicationConfiguration'
-type MockConfigurationAdapter_GetApplicationConfiguration_Call struct {
+// MockConfigurationAdapter_GetConfigScheduledAnalysis_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetConfigScheduledAnalysis'
+type MockConfigurationAdapter_GetConfigScheduledAnalysis_Call struct {
 	*mock.Call
 }
 
-// GetApplicationConfiguration is a helper method to define mock.On call
+// GetConfigScheduledAnalysis is a helper method to define mock.On call
 //   - ctx context.Context
-//   - parameterKey appcfg.ParameterKey
-func (_e *MockConfigurationAdapter_Expecter) GetApplicationConfiguration(ctx interface{}, parameterKey interface{}) *MockConfigurationAdapter_GetApplicationConfiguration_Call {
-	return &MockConfigurationAdapter_GetApplicationConfiguration_Call{Call: _e.mock.On("GetApplicationConfiguration", ctx, parameterKey)}
+func (_e *MockConfigurationAdapter_Expecter) GetConfigScheduledAnalysis(ctx interface{}) *MockConfigurationAdapter_GetConfigScheduledAnalysis_Call {
+	return &MockConfigurationAdapter_GetConfigScheduledAnalysis_Call{Call: _e.mock.On("GetConfigScheduledAnalysis", ctx)}
 }
 
-func (_c *MockConfigurationAdapter_GetApplicationConfiguration_Call) Run(run func(ctx context.Context, parameterKey appcfg.ParameterKey)) *MockConfigurationAdapter_GetApplicationConfiguration_Call {
+func (_c *MockConfigurationAdapter_GetConfigScheduledAnalysis_Call) Run(run func(ctx context.Context)) *MockConfigurationAdapter_GetConfigScheduledAnalysis_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 appcfg.ParameterKey
-		if args[1] != nil {
-			arg1 = args[1].(appcfg.ParameterKey)
-		}
 		run(
 			arg0,
-			arg1,
 		)
 	})
 	return _c
 }
 
-func (_c *MockConfigurationAdapter_GetApplicationConfiguration_Call) Return(v appcfg.Parameter, err error) *MockConfigurationAdapter_GetApplicationConfiguration_Call {
-	_c.Call.Return(v, err)
+func (_c *MockConfigurationAdapter_GetConfigScheduledAnalysis_Call) Return(scheduledAnalysisParameter services.ScheduledAnalysisParameter, err error) *MockConfigurationAdapter_GetConfigScheduledAnalysis_Call {
+	_c.Call.Return(scheduledAnalysisParameter, err)
 	return _c
 }
 
-func (_c *MockConfigurationAdapter_GetApplicationConfiguration_Call) RunAndReturn(run func(ctx context.Context, parameterKey appcfg.ParameterKey) (appcfg.Parameter, error)) *MockConfigurationAdapter_GetApplicationConfiguration_Call {
+func (_c *MockConfigurationAdapter_GetConfigScheduledAnalysis_Call) RunAndReturn(run func(ctx context.Context) (services.ScheduledAnalysisParameter, error)) *MockConfigurationAdapter_GetConfigScheduledAnalysis_Call {
 	_c.Call.Return(run)
 	return _c
 }
