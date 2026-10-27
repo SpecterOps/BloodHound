@@ -38,7 +38,7 @@ type ScheduledAnalysisParameter = services.ScheduledAnalysisParameter
 // ConfigurationAdapter supplies GetConfig<Type> methods for fetching typed parameter values.
 // If any problem is encountered, these methods log a warning and return both the parameter default value and an error.
 type ConfigurationAdapter interface {
-	GetConfigScheduledAnalysis(ctx context.Context) (services.ScheduledAnalysisParameter, error)
+	GetConfigScheduledAnalysis(ctx context.Context) (ScheduledAnalysisParameter, error)
 }
 
 func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
