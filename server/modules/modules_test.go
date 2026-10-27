@@ -182,6 +182,7 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 		path   string
 	}{
 		{"analysis status", http.MethodGet, "/api/v2/analysis/status"},
+		{"audit logs", http.MethodGet, "/api/v2/audit"},
 		{"datapipe status", http.MethodGet, "/api/v2/datapipe/status"},
 		{"feature flags list", http.MethodGet, "/api/v2/features"},
 		{"feature flag toggle", http.MethodPut, "/api/v2/features/1/toggle"},

@@ -27,6 +27,7 @@ import (
 	alerts "github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/appcfg"
+	"github.com/specterops/bloodhound/server/audit"
 	"github.com/specterops/bloodhound/server/extensions"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
@@ -77,6 +78,7 @@ func Register(deps Deps) {
 
 	analysis.Register(deps.Router, deps.Pool)
 	appcfg.Register(deps.Router, deps.Pool)
+	audit.Register(deps.Router, deps.Pool)
 	identity.Register(deps.Router, deps.Pool)
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
