@@ -26,10 +26,6 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_log_status') THEN
         CREATE TYPE audit_log_status AS ENUM ('intent', 'success', 'failure');
     END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_log_source') THEN
-        CREATE TYPE audit_log_source AS ENUM ('middleware', 'legacy');
-    END IF;
 END $$;
 -- +goose StatementEnd
 
@@ -58,7 +54,6 @@ BEGIN
         status              audit_log_status DEFAULT 'intent',
         commit_id           TEXT,
         fields              JSONB,
-        source              audit_log_source DEFAULT 'middleware',
         PRIMARY KEY (id, created_at)
     ) PARTITION BY RANGE (created_at);
 END $$;
@@ -128,5 +123,4 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_email ON audit_logs(actor_email)
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_source_ip_address ON audit_logs(source_ip_address);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON audit_logs(status);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_source ON audit_logs(source);
 

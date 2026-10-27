@@ -47,7 +47,6 @@ func newAuditLog(context context.Context, entry model.AuditEntry, idResolver aut
 		SourceIpAddress: bheCtx.RequestIP,
 		Status:          entry.Status,
 		CommitID:        entry.CommitID,
-		Source:          model.AuditLogSourceLegacy,
 	}
 
 	if entry.Model != nil {
@@ -83,9 +82,6 @@ func (s *BloodhoundDB) AppendAuditLog(ctx context.Context, entry model.AuditEntr
 }
 
 func (s *BloodhoundDB) CreateAuditLog(ctx context.Context, auditLog model.AuditLog) error {
-	// This is the legacy persistence path; do not rely on the schema default.
-	auditLog.Source = model.AuditLogSourceLegacy
-
 	if s.config.EnableAuditLogStdout {
 		fields, err := json.Marshal(auditLog.Fields)
 		if err != nil {
@@ -104,7 +100,6 @@ func (s *BloodhoundDB) CreateAuditLog(ctx context.Context, auditLog model.AuditL
 			slog.String("source_ip_address", auditLog.SourceIpAddress),
 			slog.String("status", string(auditLog.Status)),
 			slog.String("commit_id", auditLog.CommitID.String()),
-			slog.String("source", string(auditLog.Source)),
 			slog.String("fields", string(fields)),
 		)
 	}

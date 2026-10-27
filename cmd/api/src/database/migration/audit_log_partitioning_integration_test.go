@@ -101,8 +101,8 @@ func TestMigrator_AuditLogPartitioning(t *testing.T) {
 
 	var nextID int64
 	require.NoError(t, database.Raw(`
-		INSERT INTO audit_logs (action, status, source)
-		VALUES ('post_migration_action', 'success', 'legacy')
+		INSERT INTO audit_logs (action, status)
+		VALUES ('post_migration_action', 'success')
 		RETURNING id
 	`).Scan(&nextID).Error)
 	assert.Greater(t, nextID, sourceMaxID)

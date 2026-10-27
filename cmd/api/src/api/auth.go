@@ -181,7 +181,6 @@ func AuditLogin(requestContext context.Context, db database.Database, commitID u
 			SourceIpAddress: bhCtx.RequestIP,
 			Status:          status,
 			CommitID:        commitID,
-			Source:          model.AuditLogSourceLegacy,
 		}
 	)
 

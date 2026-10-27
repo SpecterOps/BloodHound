@@ -95,7 +95,6 @@ CREATE TABLE audit_logs (
     status              VARCHAR(15) DEFAULT 'intent' CHECK (status IN ('intent', 'success', 'failure')),
     commit_id           TEXT,
     fields              JSONB,
-    source              VARCHAR(20) DEFAULT 'middleware',  -- NEW: dual-write tagging
     PRIMARY KEY (id, created_at)  -- Partition key must be in PK
 ) PARTITION BY RANGE (created_at);
 ```
@@ -103,7 +102,6 @@ CREATE TABLE audit_logs (
 **Key changes:**
 - `created_at` is now `NOT NULL` with `DEFAULT now()`
 - Primary key is `(id, created_at)` (composite)
-- New `source` column for dual-write tagging
 - `PARTITION BY RANGE (created_at)` declaration
 
 ### Step 3: Re-point Sequence
@@ -120,7 +118,6 @@ Ensures `audit_logs_id_seq` continues to auto-assign `id` for the new table.
 CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
 CREATE INDEX idx_audit_logs_actor_id ON audit_logs(actor_id);
 CREATE INDEX idx_audit_logs_action ON audit_logs(action);
-CREATE INDEX idx_audit_logs_source ON audit_logs(source);  -- NEW
 ```
 
 On PostgreSQL 11+, these propagate to every partition automatically.
@@ -173,7 +170,7 @@ Prevents inserts from failing on missing partitions. The maintenance worker pre-
 ```sql
 INSERT INTO audit_logs (
     id, created_at, action, actor_id, actor_name, actor_email,
-    request_id, source_ip_address, status, commit_id, fields, source
+    request_id, source_ip_address, status, commit_id, fields
 )
 SELECT
     id,
@@ -186,8 +183,7 @@ SELECT
     source_ip_address,
     status,
     commit_id,
-    fields,
-    'legacy' AS source  -- Tag all legacy rows
+    fields
 FROM audit_logs_legacy;
 ```
 
@@ -232,8 +228,6 @@ CREATE TABLE audit_logs (
     fields              JSONB
 );
 ```
-
-**Note:** `source` column is dropped in the rollback. Any rows written after `Up` with `source = 'middleware'` will lose that metadata.
 
 ### Recreate Indexes
 
