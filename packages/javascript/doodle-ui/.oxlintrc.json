@@ -14,7 +14,7 @@
         "builtin": true,
         "browser": true
     },
-    "ignorePatterns": ["**/dist", "**/coverage", "**/eslint.config.cjs"],
+    "ignorePatterns": ["**/dist", "**/coverage", "**/storybook-static", "**/eslint.config.cjs"],
     "rules": {
         "constructor-super": "error",
         "for-direction": "error",

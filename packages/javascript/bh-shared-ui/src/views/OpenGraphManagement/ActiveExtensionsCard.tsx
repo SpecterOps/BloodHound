@@ -174,7 +174,7 @@ export const ActiveExtensionsCard = () => {
     }
 
     return (
-        <Card className='flex flex-col gap-4 overflow-hidden'>
+        <Card className='flex flex-col gap-4 overflow-hidden border border-solid border-neutral-light-4 bg-neutral-1 shadow-none dark:border-neutral-900'>
             <header className='flex justify-between items-center pt-6 px-6 gap-3'>
                 <CardTitle className='text-base'>Active Extensions</CardTitle>
                 <SearchInput
@@ -196,7 +196,7 @@ export const ActiveExtensionsCard = () => {
                             : `${TABLE_HEADER_HEIGHT + TABLE_CELL_HEIGHT * filteredData.length}px`,
                 }}>
                 <DataTable
-                    className='h-full'
+                    className='h-full border-0'
                     data={filteredData}
                     noResultsFallback={
                         <TableRow>

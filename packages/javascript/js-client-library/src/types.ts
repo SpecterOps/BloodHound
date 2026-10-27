@@ -1009,7 +1009,7 @@ export interface CollectorJobType {
     id: number;
     key: string;
     display_name: string;
-    params_version: string;
+    version: string;
     params_schema: Record<string, unknown>;
     backoff_strategy: 'exponential' | 'fixed';
     backoff_base: string;
@@ -1068,7 +1068,7 @@ export interface CollectorJob {
     job_profile_id: string | null;
     job_type_id: number;
     job_key: string;
-    params_version: string;
+    version: string;
     params: Record<string, unknown>;
     scope_client_id: string | null;
     secret_key_id: string | null;
@@ -1103,7 +1103,7 @@ export interface CollectorJobHistory {
     job_profile_id: string | null;
     job_type_id: number;
     job_key: string;
-    params_version: string;
+    version: string;
     priority: number;
     params: Record<string, unknown>;
     attempts: number;

@@ -54,3 +54,12 @@ export const addItemToSection = (section: SubNavSection, title: string, item: Su
 export const flattenRoutes = (sections: SubNavSection[]): SubNavItem[] => {
     return sections.reduce<SubNavItem[]>((acc, val) => acc.concat(val.items), []);
 };
+
+/** Match a navigation route or a descendant at a path segment boundary. */
+export const isRouteActive = (pathname: string, route?: string): boolean => {
+    if (!route) return false;
+
+    const routePath = route.replace(/\/?\*$/, '').replace(/\/+$/, '') || '/';
+
+    return pathname === routePath || (routePath !== '/' && pathname.startsWith(`${routePath}/`));
+};

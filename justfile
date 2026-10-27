@@ -149,6 +149,27 @@ prune-my-branches nuclear='no':
 bh-dev *ARGS='up':
   @docker compose --profile dev -f docker-compose.dev.yml {{ARGS}}
 
+# run docker compose commands for the Dev Portal, building its docs first on up (Default: up)
+dev-portal *ARGS='up':
+  #!/usr/bin/env bash
+  set -euo pipefail
+  if [[ "{{ARGS}}" == "up" || "{{ARGS}}" == "up "* ]]; then
+    doodle_ui=packages/javascript/doodle-ui
+    storybook_marker="$doodle_ui/storybook-static/index.json"
+    storybook_reason=""
+    if [[ ! -f "$storybook_marker" ]]; then
+      storybook_reason="no build found"
+    elif [[ -n "$(find "$doodle_ui" \( -name node_modules -o -name dist -o -name coverage -o -name storybook-static \) -prune -o -type f -newer "$storybook_marker" -print -quit)" ]]; then
+      storybook_reason="Doodle UI changed since the last build"
+    fi
+    if [[ -n "$storybook_reason" ]]; then
+      echo "Building Doodle UI Storybook: $storybook_reason"
+      yarn workspace doodle-ui build-storybook
+    fi
+    yarn workspace dev-portal build
+  fi
+  docker compose -f docker-compose.dev-portal.yml {{ARGS}}
+
 # run docker compose commands for the BH debug profile (Default: up)
 bh-debug *ARGS='up':
   @docker compose --profile debug-api -f docker-compose.dev.yml {{ARGS}}

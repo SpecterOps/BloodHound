@@ -80,7 +80,7 @@ const UpdateUserForm: React.FC<{
 
     if (getUserQuery.isError || getRolesQuery.isError || getSSOProvidersQuery.isError || getEnvironmentsQuery.isError) {
         return (
-            <div className='w-[600px] m-auto h-[800px] flex flex-col justify-center'>
+            <div className='w-[600px] m-auto h-[800px] flex flex-col justify-center rounded-md bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900 p-6'>
                 <div>Unable to load data required to edit this user.</div>
 
                 <DialogActions>
@@ -190,7 +190,7 @@ const UpdateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <div className='flex flex-col w-full max-w-[600px] rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 p-6'>
+                    <div className='flex flex-col w-full max-w-[600px] rounded-md bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900 p-6'>
                         {' '}
                         <DialogTitle>{'Edit User'}</DialogTitle>
                         <div className='flex flex-col mt-4 mb-8 w-full' data-testid='update-user-dialog_dialog-content'>
