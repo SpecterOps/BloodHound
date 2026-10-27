@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { Drawer as DrawerPrimitive } from '@base-ui/react/drawer';
 import { faTimes, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -20,6 +21,17 @@ import { createContext, useContext, useMemo, type ComponentProps } from 'react';
 import { IconButton } from '../IconButton';
 import { TypographyVariants } from '../Typography';
 import { cn, cnWithState } from '../utils';
+import {
+    drawerBodyClasses,
+    drawerDescriptionClasses,
+    drawerFooterClasses,
+    drawerHeaderClasses,
+    drawerInnerContentClasses,
+    drawerOverlayClasses,
+    drawerPopupClasses,
+    drawerSwipeHandleClasses,
+    drawerViewportClasses,
+} from './Drawer.styles';
 
 type DrawerContextProps = {
     hasSnapPoints: boolean;
@@ -102,10 +114,7 @@ function DrawerOverlay({ className, ...props }: DrawerPrimitive.Backdrop.Props) 
     return (
         <DrawerPrimitive.Backdrop
             data-slot='drawer-overlay'
-            className={cnWithState(
-                'cn-drawer-overlay fixed inset-0 z-[1410] min-h-dvh bg-black/40 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] transition-opacity motion-reduce:transition-none [transition-duration:450ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] select-none data-[ending-style]:pointer-events-none data-[ending-style]:opacity-0 data-[ending-style]:[transition-duration:calc(var(--drawer-swipe-strength)*400ms)] data-[snap-points]:[--drawer-overlay-min-opacity:0.5] data-[starting-style]:opacity-0 data-[swiping]:[transition-duration:0ms]',
-                className
-            )}
+            className={cnWithState(drawerOverlayClasses, className)}
             {...props}
         />
     );
@@ -116,10 +125,7 @@ function DrawerSwipeHandle({ className, ...props }: ComponentProps<'div'>) {
         <div
             data-slot='drawer-swipe-handle'
             aria-hidden='true'
-            className={cn(
-                'cn-drawer-swipe-handle relative z-10 mx-auto my-2 h-1.5 w-12 shrink-0 cursor-grab rounded-full bg-neutral-4 transition-opacity duration-200 group-data-[swipe-axis=x]/drawer-popup:mx-2 group-data-[swipe-axis=x]/drawer-popup:my-auto group-data-[swipe-axis=x]/drawer-popup:h-12 group-data-[swipe-axis=x]/drawer-popup:w-1.5 group-data-[nested-drawer-open]/drawer-popup:opacity-0 group-data-[nested-drawer-swiping]/drawer-popup:opacity-100 group-data-[swipe-direction=left]/drawer-popup:order-last group-data-[swipe-direction=up]/drawer-popup:order-last active:cursor-grabbing motion-reduce:transition-none',
-                className
-            )}
+            className={cn(drawerSwipeHandleClasses, className)}
             {...props}
         />
     );
@@ -132,50 +138,15 @@ function DrawerContent({ className, children, ...props }: DrawerPrimitive.Popup.
     return (
         <DrawerPortal data-slot='drawer-portal'>
             {modal === true && <DrawerOverlay data-snap-points={hasSnapPoints ? '' : undefined} />}
-            <DrawerPrimitive.Viewport
-                data-slot='drawer-viewport'
-                data-modal={modal}
-                className='pointer-events-none fixed inset-0 z-[1500] select-none data-[modal=true]:pointer-events-auto'>
+            <DrawerPrimitive.Viewport data-slot='drawer-viewport' data-modal={modal} className={drawerViewportClasses}>
                 <DrawerPrimitive.Popup
                     data-slot='drawer-popup'
                     data-swipe-axis={swipeAxis}
                     data-snap-points={hasSnapPoints ? '' : undefined}
-                    className={cnWithState(
-                        // Base.
-                        'cn-drawer-popup group/drawer-popup pointer-events-auto fixed z-[1500] bg-neutral-1 text-main shadow-xl m-[var(--drawer-inset,0px)] flex h-[var(--drawer-content-height)] max-h-[var(--drawer-content-max-height,none)] min-h-0 w-[var(--drawer-content-width,auto)] [transform:translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col transition-[transform,height,opacity,filter] motion-reduce:transition-none [transition-duration:450ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords]',
-                        // Nested.
-                        'data-[nested-drawer-open]:overflow-hidden data-[nested-drawer-open]:brightness-95',
-                        // Bleed.
-                        'after:pointer-events-none after:absolute after:[background-color:var(--drawer-bleed-background,var(--neutral-1))] data-[swipe-axis=x]:after:inset-y-0 data-[swipe-axis=x]:after:w-[var(--bleed)] data-[swipe-axis=y]:after:inset-x-0 data-[swipe-axis=y]:after:h-[var(--bleed)] data-[swipe-direction=down]:after:top-full data-[swipe-direction=left]:after:right-full data-[swipe-direction=right]:after:left-full data-[swipe-direction=up]:after:bottom-full',
-                        // Sizing.
-                        '[--drawer-content-height:var(--drawer-height,auto)] data-[swipe-axis=x]:[--drawer-content-width:75%] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-6rem)] data-[swipe-axis=x]:sm:[--drawer-content-width:24rem]',
-                        // Snap points.
-                        'data-[swipe-axis=y]:data-[snap-points]:[--drawer-content-height:100dvh] data-[swipe-axis=y]:data-[snap-points]:[--drawer-content-max-height:100dvh]',
-                        // Stack.
-                        '[--bleed:3rem] [--peek:1rem] [--stack-height:var(--drawer-frontmost-height,var(--drawer-height,0px))] [--stack-peek-offset:max(0px,calc((var(--nested-drawers)-var(--stack-progress))*var(--peek)))] [--stack-progress:clamp(0,var(--drawer-swipe-progress),1)] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--stack-progress))),1)] [--stack-shrink:calc(1-var(--stack-scale))] [--stack-step:0.05]',
-                        // Transitions.
-                        'data-[ending-style]:[transform:var(--closed-transform)] data-[ending-style]:opacity-[0.9999] data-[ending-style]:[transition-duration:calc(var(--drawer-swipe-strength)*400ms)] data-[nested-drawer-swiping]:[transition-duration:0ms] data-[ending-style]:data-[nested-drawer-swiping]:[transition-duration:calc(var(--drawer-swipe-strength)*400ms)] data-[starting-style]:[transform:var(--closed-transform)] data-[swiping]:[transition-duration:0ms] data-[ending-style]:data-[swiping]:[transition-duration:calc(var(--drawer-swipe-strength)*400ms)]',
-                        // Axis: y.
-                        'data-[swipe-axis=y]:inset-x-0 data-[swipe-axis=y]:data-[nested-drawer-open]:h-[var(--stack-height)]',
-                        // Axis: x.
-                        'data-[swipe-axis=x]:inset-y-0 data-[swipe-axis=x]:flex-row',
-                        // Direction: down.
-                        'data-[swipe-direction=down]:bottom-0 data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))]',
-                        // Direction: up.
-                        'data-[swipe-direction=up]:top-0 data-[swipe-direction=up]:origin-top data-[swipe-direction=up]:[--closed-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)+var(--stack-peek-offset)+(var(--stack-shrink)*var(--stack-height)))]',
-                        // Direction: left.
-                        'data-[swipe-direction=left]:left-0 data-[swipe-direction=left]:origin-left data-[swipe-direction=left]:[--closed-transform:translate3d(calc(-100%-var(--drawer-inset,0px)-2px),0,0)] data-[swipe-direction=left]:[--translate-x:calc(var(--drawer-swipe-movement-x)+var(--stack-peek-offset)+(var(--stack-shrink)*100%))]',
-                        // Direction: right.
-                        'data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]',
-                        className
-                    )}
+                    className={cnWithState(drawerPopupClasses, className)}
                     {...props}>
                     {showSwipeHandle && <DrawerSwipeHandle />}
-                    <DrawerPrimitive.Content
-                        data-slot='drawer-content'
-                        className={cn(
-                            'cn-drawer-content-base flex min-h-0 flex-1 flex-col gap-4 px-3 py-4 overflow-hidden overscroll-contain rounded-[inherit] transition-opacity duration-300 [transition-timing-function:cubic-bezier(0.45,1.005,0,1.005)] motion-reduce:transition-none select-text group-data-[nested-drawer-open]/drawer-popup:opacity-0 group-data-[nested-drawer-swiping]/drawer-popup:opacity-100 group-data-[swiping]/drawer-popup:select-none'
-                        )}>
+                    <DrawerPrimitive.Content data-slot='drawer-content' className={drawerInnerContentClasses}>
                         {children}
                     </DrawerPrimitive.Content>
                 </DrawerPrimitive.Popup>
@@ -185,23 +156,11 @@ function DrawerContent({ className, children, ...props }: DrawerPrimitive.Popup.
 }
 
 function DrawerHeader({ className, ...props }: ComponentProps<'div'>) {
-    return (
-        <div
-            data-slot='drawer-header'
-            className={cn('cn-drawer-header-base flex shrink-0 items-start justify-between gap-4', className)}
-            {...props}
-        />
-    );
+    return <div data-slot='drawer-header' className={cn(drawerHeaderClasses, className)} {...props} />;
 }
 
 function DrawerFooter({ className, ...props }: ComponentProps<'div'>) {
-    return (
-        <div
-            data-slot='drawer-footer'
-            className={cn('cn-drawer-footer-base mt-auto flex shrink-0', className)}
-            {...props}
-        />
-    );
+    return <div data-slot='drawer-footer' className={cn(drawerFooterClasses, className)} {...props} />;
 }
 
 function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
@@ -218,7 +177,7 @@ function DrawerDescription({ className, ...props }: DrawerPrimitive.Description.
     return (
         <DrawerPrimitive.Description
             data-slot='drawer-description'
-            className={cnWithState('cn-drawer-description text-balance text-muted', className)}
+            className={cnWithState(drawerDescriptionClasses, className)}
             {...props}
         />
     );
@@ -230,7 +189,7 @@ function DrawerBody({ className, ...props }: ComponentProps<'div'>) {
             data-slot='drawer-body'
             // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
             tabIndex={0} // Make the body focusable to allow keyboard scrolling
-            className={cn('min-h-0 flex-1 overflow-y-auto pr-3 -mr-3', className)}
+            className={cn(drawerBodyClasses, className)}
             {...props}
         />
     );

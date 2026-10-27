@@ -144,6 +144,22 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--checkbox-disabled-fill': palette.neutral.light[100],
             '--checkbox-focus-ring': 'var(--secondary)',
 
+            // Components/Drawer
+            '--drawer-overlay-fill': 'rgb(0 0 0 / 0.4)',
+
+            // Components/Calendar
+            '--calendar-caption-text': 'inherit',
+            '--calendar-heading-text': 'inherit',
+            '--calendar-day-hover-fill': 'var(--neutral-light-3)',
+            '--calendar-selected-day-text': 'inherit',
+            '--calendar-selected-hover-text': common.white,
+            '--calendar-selected-fill': 'var(--primary)',
+            '--calendar-selected-text': common.white,
+            '--calendar-outside-selected-fill': 'var(--neutral-light-2)',
+            '--calendar-cell-selected-fill': 'var(--neutral-light-3)',
+            '--calendar-range-fill': 'var(--neutral-light-3)',
+            '--calendar-range-text': 'var(--neutral-dark-1)',
+
             // Components/Input
             '--input-fill': common.white,
             '--input-disabled-fill': palette.neutral.light[100],
@@ -419,6 +435,22 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--checkbox-checked-fill': 'var(--primary)',
             '--checkbox-disabled-fill': palette.neutral.dark[400],
             '--checkbox-focus-ring': secondaryVariant2,
+
+            // Components/Drawer
+            '--drawer-overlay-fill': 'rgb(0 0 0 / 0.4)',
+
+            // Components/Calendar
+            '--calendar-caption-text': common.white,
+            '--calendar-heading-text': 'var(--neutral-light-1)',
+            '--calendar-day-hover-fill': 'var(--neutral-dark-5)',
+            '--calendar-selected-day-text': common.black,
+            '--calendar-selected-hover-text': common.white,
+            '--calendar-selected-fill': 'var(--neutral-light-1)',
+            '--calendar-selected-text': common.white,
+            '--calendar-outside-selected-fill': 'var(--neutral-dark-2)',
+            '--calendar-cell-selected-fill': 'var(--neutral-dark-5)',
+            '--calendar-range-fill': 'var(--neutral-dark-5)',
+            '--calendar-range-text': 'var(--neutral-light-1)',
 
             // Components/Input
             '--input-fill': palette.neutral.dark[50],

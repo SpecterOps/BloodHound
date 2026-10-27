@@ -16,6 +16,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import type { ComponentProps } from 'react';
 import { Button } from '../Button';
+import { Input } from '../Input';
 import {
     Drawer,
     DrawerBody,
@@ -165,9 +166,10 @@ export const Default: Story = {
                 <DrawerBody className='space-y-4'>
                     <div>
                         <p>Name</p>
-                        <input
+                        <Input
                             aria-label='Name'
-                            className='mt-2 block w-full rounded border p-2'
+                            variant='outlined'
+                            className='mt-2'
                             placeholder='Enter item name'
                         />
                     </div>
