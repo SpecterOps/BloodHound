@@ -66,6 +66,10 @@ func buildFilterComparison(builder *sqlbuilder.SelectBuilder, column string, fil
 			return builder.IsNotNull(column), nil
 		}
 		return builder.NotEqual(column, filter.Value), nil
+	case params.IsNull:
+		return builder.IsNull(column), nil
+	case params.IsNotNull:
+		return builder.IsNotNull(column), nil
 	case params.GreaterThan:
 		return builder.GreaterThan(column, filter.Value), nil
 	case params.GreaterThanOrEquals:

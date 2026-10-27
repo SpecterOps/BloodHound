@@ -52,6 +52,16 @@ func TestBuildFilterComparison(t *testing.T) {
 			wantSQL: "SELECT * FROM kind AS k WHERE k.name IS NOT NULL",
 		},
 		{
+			name:    "success_-_is_null",
+			args:    args{column: "k.name", filter: params.Filter{Operator: params.IsNull}},
+			wantSQL: "SELECT * FROM kind AS k WHERE k.name IS NULL",
+		},
+		{
+			name:    "success_-_is_not_null",
+			args:    args{column: "k.name", filter: params.Filter{Operator: params.IsNotNull}},
+			wantSQL: "SELECT * FROM kind AS k WHERE k.name IS NOT NULL",
+		},
+		{
 			name: "success_-_approximately_equals",
 			args: args{
 				column: "k.name",
