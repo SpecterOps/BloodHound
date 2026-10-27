@@ -17,8 +17,7 @@
 import { faEdit, faEllipsisVertical, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Menu,
-    MenuItem,
+    Paper,
     Skeleton,
     Table,
     TableBody,
@@ -28,71 +27,37 @@ import {
     TableRow,
     TableSortLabel,
 } from '@mui/material';
-import { IconButton, TextButton } from 'doodle-ui';
+import { IconButton, Menu, MenuContent, MenuItem, MenuTrigger, TextButton } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
-import { FC, MouseEventHandler, useState } from 'react';
+import { FC } from 'react';
 import { usePermissions } from '../../hooks';
+import { LEGACY_MUI_TABLE_CLASS } from '../../styles';
 import { SortOrder } from '../../types';
-import { Permission } from '../../utils';
+import { cn, Permission } from '../../utils';
 
 const SSOProviderTableActionsMenu: FC<{
     onDeleteSSOProvider: () => void;
     onUpdateSSOProvider: () => void;
 }> = ({ onDeleteSSOProvider, onUpdateSSOProvider }) => {
-    /* Hooks */
-
-    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
-    /* Event Handlers */
-
-    const handleOnOpen: MouseEventHandler<HTMLButtonElement> = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    /* Implementation */
-
-    const onClickDeleteSSOProvider = () => {
-        onDeleteSSOProvider();
-        setAnchorEl(null);
-    };
-
-    const onClickUpdateSSOProvider = () => {
-        onUpdateSSOProvider();
-        setAnchorEl(null);
-    };
-
     return (
-        <>
-            <IconButton onClick={handleOnOpen} aria-label='Open provider actions menu'>
-                <FontAwesomeIcon icon={faEllipsisVertical} />
-            </IconButton>
-            <Menu
-                anchorEl={anchorEl}
-                elevation={0}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
-                }}
-                classes={{ paper: 'border border-gray-300' }}
-                keepMounted
-                open={Boolean(anchorEl)}
-                onClose={() => {
-                    setAnchorEl(null);
-                }}>
-                <MenuItem onClick={onClickDeleteSSOProvider} className='flex gap-2'>
-                    <FontAwesomeIcon icon={faTrash} className='text-gray-500' />
-                    <span>Delete SSO Provider</span>
+        <Menu>
+            <MenuTrigger asChild>
+                <IconButton aria-label='Open provider actions menu'>
+                    <FontAwesomeIcon icon={faEllipsisVertical} />
+                </IconButton>
+            </MenuTrigger>
+            <MenuContent
+                className='max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto'
+                side='right'
+                align='start'>
+                <MenuItem onSelect={onDeleteSSOProvider} iconLeft icon={<FontAwesomeIcon icon={faTrash} />}>
+                    Delete SSO Provider
                 </MenuItem>
-                <MenuItem onClick={onClickUpdateSSOProvider} className='flex gap-2'>
-                    <FontAwesomeIcon icon={faEdit} className='text-gray-500' />
-                    <span>Edit SSO Provider</span>
+                <MenuItem onSelect={onUpdateSSOProvider} iconLeft icon={<FontAwesomeIcon icon={faEdit} />}>
+                    Edit SSO Provider
                 </MenuItem>
-            </Menu>
-        </>
+            </MenuContent>
+        </Menu>
     );
 };
 
@@ -117,7 +82,7 @@ const SSOProviderTable: FC<{
     const hasPermission = checkPermission(Permission.AUTH_MANAGE_PROVIDERS);
 
     return (
-        <TableContainer className='max-h-[777px]'>
+        <TableContainer component={Paper} elevation={0} className={cn(LEGACY_MUI_TABLE_CLASS, 'max-h-[777px]')}>
             <Table stickyHeader aria-label='sso provider table'>
                 <TableHead>
                     <TableRow className='font-bold *:bg-neutral-2'>
@@ -158,7 +123,7 @@ const SSOProviderTable: FC<{
                         </TableRow>
                     ) : (
                         ssoProviders.map((ssoProvider) => (
-                            <TableRow key={ssoProvider.id} className='odd:bg-neutral-3'>
+                            <TableRow key={ssoProvider.id}>
                                 <TableCell align='center' padding='checkbox'>
                                     <SSOProviderTableActionsMenu
                                         onDeleteSSOProvider={() => onDeleteSSOProvider(ssoProvider)}

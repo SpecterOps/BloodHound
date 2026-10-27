@@ -21,7 +21,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/huandu/go-sqlbuilder"
@@ -44,6 +43,8 @@ var (
 	validPermissionColumns = []string{"id", "authority", "name", "created_at", "updated_at"}
 	validRoleColumns       = []string{"id", "name", "description", "created_at", "updated_at"}
 )
+
+var validUserMinimalColumns = []string{"id", "email_address", "first_name", "last_name"}
 
 var validUserColumns = []string{
 	"id",
@@ -69,19 +70,19 @@ type pgxQuerier interface {
 }
 
 type permission struct {
-	Authority string    `db:"authority"`
-	Name      string    `db:"name"`
-	ID        int32     `db:"id"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	Authority sql.NullString `db:"authority"`
+	Name      sql.NullString `db:"name"`
+	ID        int32          `db:"id"`
+	CreatedAt sql.NullTime   `db:"created_at"`
+	UpdatedAt sql.NullTime   `db:"updated_at"`
 }
 
 type role struct {
-	ID          int32     `db:"id"`
-	Name        string    `db:"name"`
-	Description string    `db:"description"`
-	CreatedAt   time.Time `db:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at"`
+	ID          int32          `db:"id"`
+	Name        sql.NullString `db:"name"`
+	Description sql.NullString `db:"description"`
+	CreatedAt   sql.NullTime   `db:"created_at"`
+	UpdatedAt   sql.NullTime   `db:"updated_at"`
 }
 
 type Store struct {
@@ -94,11 +95,11 @@ func NewStore(db pgxQuerier) *Store {
 
 func toPermission(row permission) services.Permission {
 	return services.Permission{
-		Authority: row.Authority,
-		Name:      row.Name,
+		Authority: row.Authority.String,
+		Name:      row.Name.String,
 		ID:        row.ID,
-		CreatedAt: row.CreatedAt,
-		UpdatedAt: row.UpdatedAt,
+		CreatedAt: row.CreatedAt.Time,
+		UpdatedAt: row.UpdatedAt.Time,
 	}
 }
 
@@ -109,11 +110,11 @@ func toRole(row role, permissionRows []permission) services.Role {
 	}
 	return services.Role{
 		ID:          row.ID,
-		Name:        row.Name,
-		Description: row.Description,
+		Name:        row.Name.String,
+		Description: row.Description.String,
 		Permissions: permissions,
-		CreatedAt:   row.CreatedAt,
-		UpdatedAt:   row.UpdatedAt,
+		CreatedAt:   row.CreatedAt.Time,
+		UpdatedAt:   row.UpdatedAt.Time,
 	}
 }
 
@@ -232,16 +233,12 @@ var roleColumns = map[string]string{
 }
 
 // nullFilterValue is the sentinel filter value the API translates into a SQL
-// NULL comparison. It mirrors the legacy filter builder, which renders eq:null /
-// neq:null as IS NULL / IS NOT NULL rather than binding the literal string
-// "null" through =/<>.
+// NULL comparison.
 const nullFilterValue = "null"
 
-// buildFilterComparison translates a single validated filter into a SQL WHERE
-// expression on the supplied builder. Equality filters whose value is the null
-// sentinel become IS NULL / IS NOT NULL, matching the legacy contract; every
-// other operator binds the value as a parameter. The boolean is false when the
-// operator is unsupported, letting callers surface a field-specific error.
+// buildFilterComparison translates a filter into a SQL WHERE expression. A null
+// value maps eq/neq to IS NULL / IS NOT NULL, and ~eq becomes a case-insensitive
+// substring match. It returns false if the operator is unsupported.
 func buildFilterComparison(sb *sqlbuilder.SelectBuilder, column string, filter params.Filter) (string, bool) {
 	switch filter.Operator {
 	case params.Equals:
@@ -262,6 +259,11 @@ func buildFilterComparison(sb *sqlbuilder.SelectBuilder, column string, filter p
 		return sb.LessThan(column, filter.Value), true
 	case params.LessThanOrEquals:
 		return sb.LessEqualThan(column, filter.Value), true
+	case params.ApproximatelyEquals:
+		if filter.Value == nullFilterValue {
+			return sb.ILike(column, nil), true
+		}
+		return sb.ILike(column, "%"+filter.Value+"%"), true
 	default:
 		return "", false
 	}
@@ -547,13 +549,22 @@ type userRow struct {
 	FirstName       sql.NullString `db:"first_name"`
 	LastName        sql.NullString `db:"last_name"`
 	EmailAddress    sql.NullString `db:"email_address"`
-	PrincipalName   string         `db:"principal_name"`
+	PrincipalName   sql.NullString `db:"principal_name"`
 	LastLogin       sql.NullTime   `db:"last_login"`
-	IsDisabled      bool           `db:"is_disabled"`
-	AllEnvironments bool           `db:"all_environments"`
-	EULAAccepted    bool           `db:"eula_accepted"`
-	CreatedAt       time.Time      `db:"created_at"`
-	UpdatedAt       time.Time      `db:"updated_at"`
+	IsDisabled      sql.NullBool   `db:"is_disabled"`
+	AllEnvironments sql.NullBool   `db:"all_environments"`
+	EULAAccepted    sql.NullBool   `db:"eula_accepted"`
+	CreatedAt       sql.NullTime   `db:"created_at"`
+	UpdatedAt       sql.NullTime   `db:"updated_at"`
+}
+
+// userMinimalRow is the flat projection of the users table selected by
+// ListActiveUsersMinimal.
+type userMinimalRow struct {
+	ID           uuid.UUID      `db:"id"`
+	EmailAddress sql.NullString `db:"email_address"`
+	FirstName    sql.NullString `db:"first_name"`
+	LastName     sql.NullString `db:"last_name"`
 }
 
 // userRole carries the owning user id alongside a role so that a single batched
@@ -564,25 +575,27 @@ type userRole struct {
 }
 
 // etacRow is the flat projection of an environment_targeted_access_control row.
-// updated_at has no default and may be NULL for rows not written through gorm.
+// The timestamp columns are nullable and may be NULL for rows not written
+// through gorm.
 type etacRow struct {
 	ID            int64        `db:"id"`
 	UserID        uuid.UUID    `db:"user_id"`
 	EnvironmentID string       `db:"environment_id"`
-	CreatedAt     time.Time    `db:"created_at"`
+	CreatedAt     sql.NullTime `db:"created_at"`
 	UpdatedAt     sql.NullTime `db:"updated_at"`
 }
 
 // authSecretRow is the flat projection of an auth_secrets row. Secret material
-// such as the digest and TOTP secret is intentionally left unselected.
+// such as the digest and TOTP secret is intentionally left unselected. Nullable
+// columns use stdlib nullable types so pgx can scan NULLs.
 type authSecretRow struct {
-	ID            int32        `db:"id"`
-	UserID        uuid.UUID    `db:"user_id"`
-	DigestMethod  string       `db:"digest_method"`
-	ExpiresAt     sql.NullTime `db:"expires_at"`
-	TOTPActivated bool         `db:"totp_activated"`
-	CreatedAt     time.Time    `db:"created_at"`
-	UpdatedAt     time.Time    `db:"updated_at"`
+	ID            int32          `db:"id"`
+	UserID        uuid.UUID      `db:"user_id"`
+	DigestMethod  sql.NullString `db:"digest_method"`
+	ExpiresAt     sql.NullTime   `db:"expires_at"`
+	TOTPActivated sql.NullBool   `db:"totp_activated"`
+	CreatedAt     sql.NullTime   `db:"created_at"`
+	UpdatedAt     sql.NullTime   `db:"updated_at"`
 }
 
 func toEnvironmentAccessControl(row etacRow) services.EnvironmentAccessControl {
@@ -590,7 +603,7 @@ func toEnvironmentAccessControl(row etacRow) services.EnvironmentAccessControl {
 		ID:            row.ID,
 		UserID:        row.UserID.String(),
 		EnvironmentID: row.EnvironmentID,
-		CreatedAt:     row.CreatedAt,
+		CreatedAt:     row.CreatedAt.Time,
 		UpdatedAt:     row.UpdatedAt.Time,
 	}
 }
@@ -598,11 +611,11 @@ func toEnvironmentAccessControl(row etacRow) services.EnvironmentAccessControl {
 func toAuthSecret(row authSecretRow) services.AuthSecret {
 	return services.AuthSecret{
 		ID:            row.ID,
-		DigestMethod:  row.DigestMethod,
+		DigestMethod:  row.DigestMethod.String,
 		ExpiresAt:     row.ExpiresAt.Time,
-		TOTPActivated: row.TOTPActivated,
-		CreatedAt:     row.CreatedAt,
-		UpdatedAt:     row.UpdatedAt,
+		TOTPActivated: row.TOTPActivated.Bool,
+		CreatedAt:     row.CreatedAt.Time,
+		UpdatedAt:     row.UpdatedAt.Time,
 	}
 }
 
@@ -613,16 +626,25 @@ func toUser(row userRow, roles []services.Role, environmentAccessControl []servi
 		FirstName:                        row.FirstName,
 		LastName:                         row.LastName,
 		EmailAddress:                     row.EmailAddress,
-		PrincipalName:                    row.PrincipalName,
+		PrincipalName:                    row.PrincipalName.String,
 		LastLogin:                        row.LastLogin.Time,
-		IsDisabled:                       row.IsDisabled,
-		AllEnvironments:                  row.AllEnvironments,
-		EULAAccepted:                     row.EULAAccepted,
+		IsDisabled:                       row.IsDisabled.Bool,
+		AllEnvironments:                  row.AllEnvironments.Bool,
+		EULAAccepted:                     row.EULAAccepted.Bool,
 		Roles:                            roles,
 		EnvironmentTargetedAccessControl: environmentAccessControl,
 		AuthSecret:                       authSecret,
-		CreatedAt:                        row.CreatedAt,
-		UpdatedAt:                        row.UpdatedAt,
+		CreatedAt:                        row.CreatedAt.Time,
+		UpdatedAt:                        row.UpdatedAt.Time,
+	}
+}
+
+func toUserMinimal(row userMinimalRow) services.UserMinimal {
+	return services.UserMinimal{
+		ID:           row.ID,
+		EmailAddress: row.EmailAddress,
+		FirstName:    row.FirstName,
+		LastName:     row.LastName,
 	}
 }
 
@@ -889,6 +911,50 @@ func (s *Store) ListUsers(ctx context.Context, queryFilters params.Filters, sort
 	result = make([]services.User, 0, len(listedUsers))
 	for _, listedUser := range listedUsers {
 		result = append(result, toUser(listedUser, rolesByUser[listedUser.ID], etacByUser[listedUser.ID], secretByUser[listedUser.ID]))
+	}
+
+	return result, nil
+}
+
+func (s *Store) ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.UserMinimal, error) {
+	var (
+		userSB      = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		userRows    pgx.Rows
+		listedUsers []userMinimalRow
+		result      []services.UserMinimal
+		orderBy     []string
+		err         error
+	)
+
+	userSB.Select(validUserMinimalColumns...).From(tableUsers)
+	userSB.Where(userSB.Equal("support_account", false), "is_disabled IS NOT TRUE")
+
+	if err = applyUserFilters(userSB, queryFilters); err != nil {
+		return nil, err
+	}
+
+	orderBy, err = buildUserOrderBy(sortItems)
+	if err != nil {
+		return nil, err
+	}
+	if len(orderBy) > 0 {
+		userSB.OrderBy(orderBy...)
+	}
+
+	userQuery, userArgs := userSB.Build()
+
+	userRows, err = s.db.Query(ctx, userQuery, userArgs...)
+	if err != nil {
+		return nil, err
+	}
+	listedUsers, err = pgx.CollectRows(userRows, pgx.RowToStructByName[userMinimalRow])
+	if err != nil {
+		return nil, fmt.Errorf("collecting active users: %s", err)
+	}
+
+	result = make([]services.UserMinimal, 0, len(listedUsers))
+	for _, listedUser := range listedUsers {
+		result = append(result, toUserMinimal(listedUser))
 	}
 
 	return result, nil

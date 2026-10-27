@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu, MenuItem } from '@mui/material';
+import { MenuItem } from 'doodle-ui';
 import {
     AssetGroupTag,
     AssetGroupTagSelectorAutoCertifySeedsOnly,
@@ -33,6 +33,7 @@ import {
 } from '../../../hooks';
 import { AssetGroupMenuItem } from './AssetGroupMenuItemPrivilegeZonesEnabled';
 import CopyMenuItem from './CopyMenuItem';
+import GraphContextMenu from './GraphContextMenu';
 
 const ContextMenu: FC<{
     contextMenu: { mouseX: number; mouseY: number } | null;
@@ -84,17 +85,12 @@ const ContextMenu: FC<{
     };
 
     return (
-        <Menu
-            open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0, top: contextMenu?.mouseY || 0 }}
-            anchorReference='anchorPosition'
-            onClose={onClose}
-            onClick={onClose}
-            keepMounted>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+        <GraphContextMenu contextMenu={contextMenu} onClose={onClose}>
+            <MenuItem onSelect={handleSetStartingNode}>Set as starting node</MenuItem>
+            <MenuItem onSelect={handleSetEndingNode}>Set as ending node</MenuItem>
 
             <AssetGroupMenuItem
+                onClose={onClose}
                 addNodePayload={tierZeroPayload}
                 removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'zones')}
                 showConfirmationOnAdd
@@ -102,13 +98,14 @@ const ContextMenu: FC<{
             />
 
             <AssetGroupMenuItem
+                onClose={onClose}
                 addNodePayload={ownedPayload}
                 removeNodePathFn={(tag: AssetGroupTag) => tagDetailsLink(tag.id, 'labels')}
                 tagIdentifierFn={getOwnedTag}
             />
 
             <CopyMenuItem />
-        </Menu>
+        </GraphContextMenu>
     );
 };
 
