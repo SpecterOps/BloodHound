@@ -218,7 +218,7 @@ function DrawerDescription({ className, ...props }: DrawerPrimitive.Description.
     return (
         <DrawerPrimitive.Description
             data-slot='drawer-description'
-            className={cnWithState('cn-drawer-description text-balance text-text-muted', className)}
+            className={cnWithState('cn-drawer-description text-balance text-muted', className)}
             {...props}
         />
     );
