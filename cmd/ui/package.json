@@ -12,6 +12,7 @@
         "test": "TZ=America/Los_Angeles vitest",
         "playwright:install": "node scripts/playwright-install.mjs",
         "test:a11y": "node scripts/playwright-a11y.mjs",
+        "test:e2e": "playwright test -c playwright.e2e.config.ts",
         "codegen": "node scripts/playwright-codegen.mjs",
         "har:prune": "node scripts/prune-har.mjs",
         "test:codegen": "node --test scripts/playwright-codegen.test.mjs",

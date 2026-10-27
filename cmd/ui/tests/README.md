@@ -13,18 +13,34 @@ The Playwright helper commands can all run without arguments and print the defau
 ```sh
 yarn playwright:install # installs Chromium and Firefox
 yarn test:a11y          # runs the complete a11y suite and configured project matrix
-yarn codegen            # opens /ui/ with light-theme auth and creates a branch-named draft
+yarn test:e2e           # runs browser feature tests with their recorded API mocks
+yarn codegen            # logs in, records browser actions and API mocks, saves a new runnable spec
 yarn har:prune          # previews orphaned HAR directories under test-artifacts/har
 ```
 
-To draft browser actions interactively, run `yarn codegen [draft-name]` from `bhce/` or `cmd/ui/`. The launcher loads `cmd/ui/.env`, starts or reuses the UI server when `A11Y_TEST_SERVE=true`, refreshes the authentication snapshots to avoid stale sessions, loads the fresh light-theme state, opens the home page, and blocks service workers like the a11y suite. The optional argument is the draft file name; without it, the launcher creates a unique name from the current Git branch and prints the selected path:
+To record a mocked test for any feature, run `yarn codegen [test-name] [--url /ui/feature]` from the repository root or `cmd/ui/`. The launcher loads `cmd/ui/.env`, starts or reuses the UI server when `A11Y_TEST_SERVE=true`, logs in automatically, and opens Playwright's recorder. The name and URL are optional; defaults are a unique branch-based name and `/ui/`.
 
 ```sh
 yarn codegen
-yarn codegen findings-table-draft
+yarn codegen my-feature --url '/ui/explore'
 ```
 
-Drafts are written under `cmd/ui/playwright/`. Codegen generates test code; it does not run the shared Playwright fixtures or automatically manage their HAR files. The API must be available for authentication and interaction. When `A11Y_TEST_SERVE=false`, the configured target UI must already be running.
+Click through the feature and use the recorder's **Assert visibility**, **Assert text**, or **Assert value** tools to specify the expected result. Close the recording browser to save these new files automatically:
+
+```text
+cmd/ui/tests/e2e/my-feature.spec.ts
+cmd/ui/tests/e2e/my-feature.har
+```
+
+No manual file creation or mock wiring is needed. The command automatically runs the new test with API replay and reports whether it passes; failed tests remain saved for review. Existing files are never overwritten. The generated spec includes recorded actions and assertions, a fake local session, and replay of captured API responses. Review both files before committing: authorization/cookie headers and the login session token are removed from the published capture, but captured application data still needs review.
+
+Run the generated test with the command printed on completion:
+
+```sh
+yarn test:e2e tests/e2e/my-feature.spec.ts --project=chromium-light
+```
+
+Recording requires a working backend with representative data and configured credentials. Replay needs the UI server, but uses captured API responses and requires no login. The e2e suite has no live login setup dependency. API requests missing from the capture are aborted. Record the complete flow from its initial page, including assertions that wait for results. Only HTTP `/api/` requests are mocked; WebSockets, external services, random IDs in request bodies, and time-dependent flows may need adjustments. Re-record with a new name to refresh mocks. These feature tests run separately from the accessibility suite; codegen does not add an axe scan automatically. When `A11Y_TEST_SERVE=false`, the target UI must already be running.
 
 HAR updates replace files for tests with unchanged identities. Renamed or removed tests leave old artifact directories; preview and remove those from `bhce/` or `cmd/ui/` with:
 
@@ -83,8 +99,11 @@ First-time setup and a full run of the `a11y` suite. All commands are run from t
 ```text
 tests/
 ├── global.setup.ts   # Logs in once and snapshots auth storage state
-└── a11y/             # Accessibility regression suite
-    └── *.a11y.spec.ts
+├── a11y/             # Accessibility regression suite
+│   └── *.a11y.spec.ts
+└── e2e/              # Browser feature tests and adjacent API mocks
+    ├── *.spec.ts
+    └── *.har
 ```
 
 Shared Playwright building blocks (fixtures, stubs, and auth helper) live in the `bh-playwright-testing` workspace package (`packages/javascript/bh-playwright-testing`) for reusability. See the [full module map](../../../packages/javascript/bh-playwright-testing/README.md#modules) in that package's README.

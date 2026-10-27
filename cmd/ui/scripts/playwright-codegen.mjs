@@ -17,11 +17,13 @@
 import dotenv from 'dotenv';
 import { spawn, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { access } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import prettier from 'prettier';
+import { makeMockedTest, sanitizeRecording } from './playwright-mocked-codegen.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
@@ -130,25 +132,49 @@ async function ensureStorageState(playwrightCli, storageState) {
 }
 
 async function run() {
-    const requestedNames = process.argv.slice(2);
-    if (requestedNames.length > 1) throw new Error('Usage: yarn codegen [draft-name]');
+    const args = process.argv.slice(2);
+    const urlIndex = args.indexOf('--url');
+    const requestedUrl = urlIndex < 0 ? '/ui/' : args[urlIndex + 1];
+    if (urlIndex >= 0) args.splice(urlIndex, 2);
+    if (!requestedUrl || args.length > 1 || args.some((arg) => arg.startsWith('--'))) {
+        throw new Error('Usage: yarn codegen [test-name] [--url /ui/feature]');
+    }
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
 
-    const draftFileName = makeDraftFileName(requestedNames[0], currentBranch(), randomBytes(4).toString('hex'));
-    const output = path.join(uiDirectory, 'playwright', draftFileName);
+    const draftFileName = makeDraftFileName(args[0], currentBranch(), randomBytes(4).toString('hex'));
+    const name = draftFileName.replace(/(?:\.a11y\.spec)?\.ts$/, '');
+    const outputDirectory = path.join(uiDirectory, 'tests', 'e2e');
+    const output = path.join(outputDirectory, `${name}.spec.ts`);
+    const fixture = path.join(outputDirectory, `${name}.har`);
     const storageState = path.join(uiDirectory, 'playwright', '.auth', 'user-light.json');
-    const homeUrl = new URL('/ui/', process.env.A11Y_TEST_URL).toString();
+    const homeUrl = new URL(requestedUrl, process.env.A11Y_TEST_URL).toString();
+    if (new URL(homeUrl).origin !== new URL(process.env.A11Y_TEST_URL).origin) {
+        throw new Error('--url must use the configured A11Y_TEST_URL origin.');
+    }
     const require = createRequire(path.join(uiDirectory, 'package.json'));
     const playwrightCli = require.resolve('@playwright/test/cli');
 
-    if (!requestedNames[0]) {
+    for (const target of [output, fixture]) {
+        try {
+            await access(target);
+        } catch (error) {
+            if (error.code === 'ENOENT') continue;
+            throw error;
+        }
+        throw new Error(`File already exists: ${target}. Choose a new test name.`);
+    }
+    await mkdir(path.join(uiDirectory, 'playwright'), { recursive: true });
+    const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'codegen-'));
+    const rawSource = path.join(temporaryDirectory, 'recording.ts');
+    const rawHar = path.join(temporaryDirectory, 'recording.har');
+    if (!args[0]) {
         console.log(`No draft name supplied; using the current branch and a random suffix: ${draftFileName}.`);
     }
     const server = await ensureUiServer(homeUrl);
     try {
         await ensureStorageState(playwrightCli, storageState);
-        console.log(`Writing Playwright draft to ${path.relative(uiDirectory, output)}.`);
-        console.log(`Starting codegen at the default home page: ${homeUrl}.`);
+        console.log(`Recording ${homeUrl}. Click through your feature and use the recorder's assertion tools.`);
+        console.log('Close the recording browser when finished to save the test and API mocks.');
         const result = await new Promise((resolve, reject) => {
             const child = spawn(
                 process.execPath,
@@ -159,7 +185,13 @@ async function run() {
                     '--load-storage',
                     storageState,
                     '--output',
-                    output,
+                    rawSource,
+                    '--save-har',
+                    rawHar,
+                    '--save-har-glob',
+                    '**/api/**',
+                    '--viewport-size',
+                    '1280,720',
                     homeUrl,
                 ],
                 {
@@ -171,8 +203,53 @@ async function run() {
             child.on('error', reject);
             child.on('exit', (code, signal) => resolve({ code, signal }));
         });
-        if (result.signal) process.kill(process.pid, result.signal);
-        else process.exitCode = result.code ?? 1;
+        if (result.signal || result.code !== 0) {
+            throw new Error(`Recording did not finish successfully. Draft files remain in ${temporaryDirectory}.`);
+        }
+        const source = await readFile(rawSource, 'utf8');
+        const har = sanitizeRecording(
+            JSON.parse(await readFile(rawHar, 'utf8')),
+            JSON.parse(await readFile(storageState, 'utf8'))
+        );
+        if (!har.log.entries.length)
+            throw new Error('No API responses captured. Visit your feature before closing codegen.');
+        const licenseHeader = (await readFile(fileURLToPath(import.meta.url), 'utf8')).split('\n\n')[0];
+        const spec = await prettier.format(makeMockedTest(source, name, process.env.A11Y_TEST_URL, licenseHeader), {
+            ...(await prettier.resolveConfig(output)),
+            parser: 'typescript',
+        });
+        await mkdir(outputDirectory, { recursive: true });
+        await writeFile(fixture, `${JSON.stringify(har, null, 2)}\n`, { flag: 'wx' });
+        await writeFile(output, spec, { flag: 'wx' });
+        await rm(temporaryDirectory, { recursive: true });
+        if (!/\bexpect\s*\(/.test(source)) {
+            console.log(
+                'No assertions were recorded. Add an expected result before treating this as regression coverage.'
+            );
+        }
+        console.log(`Created ${path.relative(uiDirectory, output)} and ${path.relative(uiDirectory, fixture)}.`);
+        console.log('Review the assertions and captured data before committing.');
+        console.log(`Run: yarn test:e2e tests/e2e/${name}.spec.ts --project=chromium-light`);
+        console.log('Checking the new test with API replay and no live login...');
+        const replay = spawnSync(
+            process.execPath,
+            [
+                playwrightCli,
+                'test',
+                '-c',
+                'playwright.e2e.config.ts',
+                `tests/e2e/${name}.spec.ts`,
+                '--project=chromium-light',
+            ],
+            { cwd: uiDirectory, env: process.env, stdio: 'inherit' }
+        );
+        if (replay.error) throw replay.error;
+        process.exitCode = replay.status ?? 1;
+        console.log(
+            replay.status === 0
+                ? 'Mocked test passed. Review and commit the generated spec and HAR together.'
+                : 'Replay failed; the generated files are saved. Review the failure and adjust the test or re-record.'
+        );
     } finally {
         if (server) {
             console.log('Stopping the UI server started for codegen.');

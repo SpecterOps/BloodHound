@@ -15,8 +15,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import { createRequire } from 'node:module';
+import path from 'node:path';
 import test from 'node:test';
 import { makeDevServerArguments, makeDraftFileName } from './playwright-codegen.mjs';
+import { makeMockedTest, sanitizeRecording } from './playwright-mocked-codegen.mjs';
 
 test('uses the requested draft file name', () => {
     assert.equal(makeDraftFileName('findings-table.ts', 'ignored', 'ignored'), 'findings-table.ts');
@@ -55,4 +61,124 @@ test('builds the default Vite server command from the configured URL', () => {
         '--port',
         '3000',
     ]);
+});
+
+test('removes credentials without mutating the original capture', () => {
+    const capture = {
+        log: {
+            entries: [
+                {
+                    request: {
+                        headers: [{ name: 'Authorization', value: 'Bearer secret' }],
+                        cookies: [{ value: 'secret' }],
+                    },
+                    response: {
+                        headers: [{ name: 'Set-Cookie', value: 'secret' }],
+                        cookies: [],
+                        content: { text: 'secret' },
+                    },
+                },
+            ],
+        },
+    };
+    const state = {
+        origins: [
+            { localStorage: [{ name: 'persistedState', value: JSON.stringify({ auth: { sessionToken: 'secret' } }) }] },
+        ],
+    };
+    const clean = sanitizeRecording(capture, state);
+    assert.ok(!JSON.stringify(clean).includes('secret'));
+    assert.equal(capture.log.entries[0].request.headers.length, 1);
+});
+
+test('generated spec replays GET and POST APIs on a different host without login or backend', async () => {
+    const require = createRequire(import.meta.url);
+    const cli = require.resolve('@playwright/test/cli');
+    const workspace = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+    await mkdir(path.join(workspace, 'playwright'), { recursive: true });
+    const directory = await mkdtemp(path.join(workspace, 'playwright', 'codegen-test-'));
+    let liveApiRequests = 0;
+    const server = createServer((request, response) => {
+        if (request.url.startsWith('/api/')) {
+            liveApiRequests++;
+            response.writeHead(500).end('Backend must not be used');
+            return;
+        }
+        response.setHeader('Content-Type', 'text/html');
+        response.end(
+            `<button onclick="fetch('/api/v2/items', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({query:'items'}) }).then(r=>r.json()).then(d=>document.querySelector('h1').textContent=d.title)">Load</button><h1>Loading</h1><script>fetch('/api/v2/items').then(r=>r.json()).then(d=>document.querySelector('h1').textContent=d.title)</script>`
+        );
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const baseURL = `http://127.0.0.1:${server.address().port}`;
+    const entry = (method, title) => ({
+        request: {
+            method,
+            url: 'http://old-host:3000/api/v2/items',
+            headers: [],
+            cookies: [],
+            ...(method === 'POST' ? { postData: { mimeType: 'application/json', text: '{"query":"items"}' } } : {}),
+        },
+        response: {
+            status: 200,
+            headers: [{ name: 'content-type', value: 'application/json' }],
+            content: { mimeType: 'application/json', text: JSON.stringify({ title }) },
+        },
+    });
+    try {
+        await writeFile(
+            path.join(directory, 'example.har'),
+            JSON.stringify({ log: { entries: [entry('GET', 'Mocked GET'), entry('POST', 'Mocked POST')] } })
+        );
+        const source = `import { test, expect } from '@playwright/test';
+test.use({ storageState: 'private-auth.json' });
+test('test', async ({ page }) => {
+  await page.routeFromHAR('/private/temporary/recording.har', { url: '**/api/**' });
+  await page.goto('http://old-host:3000/ui/');
+  await expect(page.getByRole('heading')).toHaveText('Mocked GET');
+  await page.getByRole('button', {name:'Load'}).click();
+  await expect(page.getByRole('heading')).toHaveText('Mocked POST');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('persistedState')).auth.sessionToken)).toBe('playwright-mock-session');
+});`;
+        const generated = makeMockedTest(source, 'example', 'http://old-host:3000', '// Generated');
+        assert.ok(!generated.includes('private-auth.json'));
+        assert.ok(!generated.includes('/private/temporary/recording.har'));
+        await writeFile(path.join(directory, 'example.spec.ts'), generated);
+        // Resolve through the consuming workspace just as the BHE config does.
+        const testModule = require.resolve('@playwright/test').replace(/index\.js$/, 'index.mjs');
+        await writeFile(
+            path.join(directory, 'tsconfig.json'),
+            JSON.stringify({
+                compilerOptions: {
+                    baseUrl: directory,
+                    paths: { '@playwright/test': [testModule] },
+                },
+            })
+        );
+        await writeFile(
+            path.join(directory, 'playwright.config.mjs'),
+            `export default { testDir: '.', outputDir: './results', timeout: 15000, tsconfig: './tsconfig.json', use: {baseURL: ${JSON.stringify(baseURL)}, headless: true}, reporter: 'line' };`
+        );
+        const result = await new Promise((resolve, reject) => {
+            const child = spawn(process.execPath, [cli, 'test', '-c', path.join(directory, 'playwright.config.mjs')], {
+                cwd: workspace,
+                env: process.env,
+            });
+            let output = '';
+            child.stdout.on('data', (data) => {
+                output += data;
+            });
+            child.stderr.on('data', (data) => {
+                output += data;
+            });
+            child.on('error', reject);
+            child.on('exit', (code) => resolve({ code, output }));
+        });
+        assert.equal(result.code, 0, result.output);
+        assert.equal(liveApiRequests, 0);
+    } finally {
+        server.closeAllConnections();
+        await new Promise((resolve) => server.close(resolve));
+        await rm(directory, { recursive: true, force: true });
+    }
 });
