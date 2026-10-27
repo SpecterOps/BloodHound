@@ -18,12 +18,29 @@ import '@testing-library/jest-dom';
 import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import postcss from 'postcss';
+import tailwindcss from 'tailwindcss';
 import { expect, vi } from 'vitest';
 import { Checkbox, CheckboxWithLabel } from './Checkbox';
 
 expect.extend(matchers);
 
 describe('Checkbox Tests', () => {
+    it('generates the CSS that shows checked and indeterminate icons', async () => {
+        const { container } = render(
+            <>
+                <Checkbox aria-label='Checked checkbox' defaultChecked />
+                <Checkbox aria-label='Indeterminate checkbox' defaultChecked='indeterminate' />
+            </>
+        );
+        const { css } = await postcss([
+            tailwindcss({ content: [{ raw: container.innerHTML, extension: 'html' }] }),
+        ]).process('@tailwind utilities;', { from: undefined });
+
+        expect(css).toContain('.group[data-state="checked"]');
+        expect(css).toContain('.group[data-state="indeterminate"]');
+    });
+
     it('renders an uncontrolled indeterminate checkbox', () => {
         render(<Checkbox aria-label='Parent checkbox' defaultChecked='indeterminate' />);
 

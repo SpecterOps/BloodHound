@@ -13,10 +13,17 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { Tooltip as BaseUITooltip } from '@base-ui/react/tooltip';
 import * as React from 'react';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { cn } from '../utils';
+import {
+    tooltipContentClasses,
+    tooltipContentWidthClasses,
+    tooltipDefaultTriggerClasses,
+    tooltipTriggerClasses,
+} from './Tooltip.styles';
 
 type ProviderProps = React.ComponentPropsWithoutRef<typeof BaseUITooltip.Provider> & {
     delayDuration?: number;
@@ -66,7 +73,7 @@ const TooltipTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>((props,
     const describedBy = [ariaDescribedBy, descriptionId].filter(Boolean).join(' ') || undefined;
     const trigger = children ?? (
         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-        <span role='img' tabIndex={0} className='inline-flex items-center justify-center rounded-full'>
+        <span role='img' tabIndex={0} className={tooltipDefaultTriggerClasses}>
             <AppIcon.Info size={16} aria-hidden='true' />
         </span>
     );
@@ -76,7 +83,7 @@ const TooltipTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>((props,
             ref={ref}
             aria-describedby={describedBy}
             aria-label={ariaLabel ?? (children == null ? 'Information' : undefined)}
-            className={cn('focus:outline-none focus-visible:focus-ring', className)}
+            className={cn(tooltipTriggerClasses, className)}
             onFocusCapture={(event) => {
                 onFocusCapture?.(event);
                 if (!event.currentTarget.matches(':focus-visible')) event.preventDefault();
@@ -107,13 +114,6 @@ interface ContentProps extends Omit<PopupProps, 'className'> {
 }
 
 type TooltipPosition = Extract<NonNullable<ContentProps['side']>, 'top' | 'bottom' | 'left' | 'right'>;
-
-const contentWidthOptions: Record<NonNullable<ContentProps['contentWidth']>, string> = {
-    match_trigger: 'w-[var(--anchor-width)]',
-    lg: 'w-fit max-w-[300px]',
-    md: 'w-fit max-w-[225px]',
-    sm: 'w-fit max-w-[150px]',
-};
 
 const TooltipContent = React.forwardRef<HTMLDivElement, ContentProps>(
     (
@@ -148,15 +148,7 @@ const TooltipContent = React.forwardRef<HTMLDivElement, ContentProps>(
                 <BaseUITooltip.Popup
                     ref={ref}
                     id={id}
-                    className={cn(
-                        'TooltipContent',
-                        'text-main text-xs text-balance break-words rounded-lg border bg-neutral-light-2 border-[#939597] dark:bg-neutral-dark-5 px-3 py-1.5 text-popover-foreground shadow-outer-1',
-                        'z-[1700] overflow-hidden animate-in fade-in-0 zoom-in-95',
-                        'data-[closed]:animate-out data-[closed]:fade-out-0 data-[closed]:zoom-out-95',
-                        'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-                        contentWidthOptions[contentWidth],
-                        className
-                    )}
+                    className={cn(tooltipContentClasses, tooltipContentWidthClasses[contentWidth], className)}
                     {...props}>
                     <span id={descriptionId} role='tooltip'>
                         {children}

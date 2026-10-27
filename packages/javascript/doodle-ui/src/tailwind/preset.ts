@@ -153,8 +153,6 @@ export default {
                 'toggle-btn-fill': 'var(--toggle-btn-fill)',
                 'toggle-btn-border': 'var(--toggle-btn-border)',
                 'toggle-group-fill': 'var(--toggle-group-fill)',
-                'checkbox-border': 'var(--checkbox-border)',
-                'checkbox-unchecked-fill': 'var(--checkbox-unchecked-fill)',
 
                 // 'input-label': 'var(--input-label)',
                 'input-border-default': 'var(--input-border-default)',

@@ -165,6 +165,13 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
 
+            // Components/MultiSelect
+            '--multiselect-scrollbar-thumb': 'var(--neutral-400)',
+
+            // Components/Tooltip
+            '--tooltip-fill': 'var(--neutral-light-2)',
+            '--tooltip-border': '#939597',
+
             // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.light[200],
             '--radio-border-default': palette.neutral.light[400],
@@ -441,6 +448,13 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--textarea-fill': 'var(--surface)',
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
+
+            // Components/MultiSelect
+            '--multiselect-scrollbar-thumb': 'var(--input-placeholder-text)',
+
+            // Components/Tooltip
+            '--tooltip-fill': 'var(--neutral-dark-5)',
+            '--tooltip-border': '#939597',
 
             // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],
