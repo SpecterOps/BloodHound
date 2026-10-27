@@ -43,14 +43,12 @@ export type PortalConfig = {
 type UnknownRecord = Record<string, unknown>;
 
 /**
- * Validates a single card entry, appending any problems found to `problems`.
+ * Validates a single card entry, returning any problems found.
  */
-const checkCard = (card: unknown, location: string, problems: string[]) => {
-    if (!isRecord(card)) {
-        problems.push(`${location} must be an object`);
-        return;
-    }
-    checkKeys(card, ['accent', 'title', 'description', 'href', 'icon'], location, problems);
+const checkCard = (card: unknown, location: string): string[] => {
+    if (!isRecord(card)) return [`${location} must be an object`];
+
+    const problems = checkKeys(card, ['accent', 'title', 'description', 'href', 'icon'], location);
     ['title', 'description', 'href'].forEach((key) => {
         if (!isNonEmptyString(card[key])) problems.push(`${location}.${key} must be a non-empty string`);
     });
@@ -60,17 +58,16 @@ const checkCard = (card: unknown, location: string, problems: string[]) => {
     if (!CARD_ICONS.includes(card.icon as CardIcon)) {
         problems.push(`${location}.icon must be one of: ${CARD_ICONS.join(', ')}`);
     }
+    return problems;
 };
 
 /**
- * Validates the `docs` section, appending any problems found to `problems`.
+ * Validates the `docs` section, returning any problems found.
  */
-const checkDocs = (docs: unknown, problems: string[]) => {
-    if (!isRecord(docs)) {
-        problems.push('docs must be an object');
-        return;
-    }
-    checkKeys(docs, ['defaultPage', 'repositoryUrl', 'include', 'exclude'], 'docs', problems);
+const checkDocs = (docs: unknown): string[] => {
+    if (!isRecord(docs)) return ['docs must be an object'];
+
+    const problems = checkKeys(docs, ['defaultPage', 'repositoryUrl', 'include', 'exclude'], 'docs');
     if (!isNonEmptyString(docs.defaultPage)) problems.push('docs.defaultPage must be a non-empty string');
     if (!isNonEmptyString(docs.repositoryUrl) || !/^https?:\/\/.+\/$/.test(docs.repositoryUrl)) {
         problems.push('docs.repositoryUrl must be an http(s) URL ending in "/"');
@@ -79,16 +76,16 @@ const checkDocs = (docs: unknown, problems: string[]) => {
         problems.push('docs.include must be a non-empty list of glob patterns');
     }
     if (!isStringList(docs.exclude)) problems.push('docs.exclude must be a list of glob patterns');
+    return problems;
 };
 
 /**
- * Reports every key in `record` that is not in `allowedKeys` as a problem.
+ * Returns a problem for every key in `record` that is not in `allowedKeys`.
  */
-const checkKeys = (record: UnknownRecord, allowedKeys: string[], location: string, problems: string[]) => {
+const checkKeys = (record: UnknownRecord, allowedKeys: string[], location: string): string[] =>
     Object.keys(record)
         .filter((key) => !allowedKeys.includes(key))
-        .forEach((key) => problems.push(`${location}.${key} is not a known setting`));
-};
+        .map((key) => `${location}.${key} is not a known setting`);
 
 /**
  * Returns true when `value` is a string containing non-whitespace characters.
@@ -115,13 +112,13 @@ export const parsePortalConfig = (raw: unknown): PortalConfig => {
     if (!isRecord(raw)) {
         problems.push('the config must be a JSON object');
     } else {
-        checkKeys(raw, ['cards', 'docs'], 'config', problems);
+        problems.push(...checkKeys(raw, ['cards', 'docs'], 'config'));
         if (!Array.isArray(raw.cards)) {
             problems.push('cards must be a list');
         } else {
-            raw.cards.forEach((card, index) => checkCard(card, `cards[${index}]`, problems));
+            problems.push(...raw.cards.flatMap((card, index) => checkCard(card, `cards[${index}]`)));
         }
-        checkDocs(raw.docs, problems);
+        problems.push(...checkDocs(raw.docs));
     }
 
     if (problems.length > 0) {
