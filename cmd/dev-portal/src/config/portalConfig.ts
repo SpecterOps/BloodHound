@@ -42,19 +42,9 @@ export type PortalConfig = {
 
 type UnknownRecord = Record<string, unknown>;
 
-const isRecord = (value: unknown): value is UnknownRecord =>
-    typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';
-
-const isStringList = (value: unknown): value is string[] => Array.isArray(value) && value.every(isNonEmptyString);
-
-const checkKeys = (record: UnknownRecord, allowedKeys: string[], location: string, problems: string[]) => {
-    Object.keys(record)
-        .filter((key) => !allowedKeys.includes(key))
-        .forEach((key) => problems.push(`${location}.${key} is not a known setting`));
-};
-
+/**
+ * Validates a single card entry, appending any problems found to `problems`.
+ */
 const checkCard = (card: unknown, location: string, problems: string[]) => {
     if (!isRecord(card)) {
         problems.push(`${location} must be an object`);
@@ -72,6 +62,9 @@ const checkCard = (card: unknown, location: string, problems: string[]) => {
     }
 };
 
+/**
+ * Validates the `docs` section, appending any problems found to `problems`.
+ */
 const checkDocs = (docs: unknown, problems: string[]) => {
     if (!isRecord(docs)) {
         problems.push('docs must be an object');
@@ -88,7 +81,34 @@ const checkDocs = (docs: unknown, problems: string[]) => {
     if (!isStringList(docs.exclude)) problems.push('docs.exclude must be a list of glob patterns');
 };
 
-// Validates the parsed contents of conf.json, reporting every problem at once.
+/**
+ * Reports every key in `record` that is not in `allowedKeys` as a problem.
+ */
+const checkKeys = (record: UnknownRecord, allowedKeys: string[], location: string, problems: string[]) => {
+    Object.keys(record)
+        .filter((key) => !allowedKeys.includes(key))
+        .forEach((key) => problems.push(`${location}.${key} is not a known setting`));
+};
+
+/**
+ * Returns true when `value` is a string containing non-whitespace characters.
+ */
+const isNonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';
+
+/**
+ * Returns true when `value` is a plain object (not null or an array).
+ */
+const isRecord = (value: unknown): value is UnknownRecord =>
+    typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Returns true when `value` is an array of non-empty strings.
+ */
+const isStringList = (value: unknown): value is string[] => Array.isArray(value) && value.every(isNonEmptyString);
+
+/**
+ * Validates the parsed contents of conf.json, reporting every problem at once.
+ */
 export const parsePortalConfig = (raw: unknown): PortalConfig => {
     const problems: string[] = [];
 

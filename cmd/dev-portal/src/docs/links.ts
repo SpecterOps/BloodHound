@@ -14,19 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-const safeDecode = (value: string) => {
-    try {
-        return decodeURIComponent(value);
-    } catch {
-        return value;
-    }
-};
-
-// Resolves a doc-relative (or repo-root-relative, when it starts with "/") path to a repo path.
-// Returns null when the path climbs above the repo root.
+/**
+ * Resolves a doc-relative (or repo-root-relative, when it starts with "/") path to a repo path.
+ * Returns null when the path climbs above the repo root or contains backslashes.
+ */
 export const resolveRepoPath = (currentDocPath: string, target: string) => {
     const segments = target.startsWith('/') ? [] : currentDocPath.split('/').slice(0, -1);
     for (const segment of safeDecode(target).split('/')) {
+        if (segment.includes('\\')) return null;
         if (segment === '' || segment === '.') continue;
         if (segment === '..') {
             if (segments.length === 0) return null;
@@ -36,4 +31,15 @@ export const resolveRepoPath = (currentDocPath: string, target: string) => {
         }
     }
     return segments.join('/');
+};
+
+/**
+ * Decodes a URI component, returning the original value when it is not valid percent-encoding.
+ */
+const safeDecode = (value: string) => {
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
 };
