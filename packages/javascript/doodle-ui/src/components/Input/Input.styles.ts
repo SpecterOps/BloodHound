@@ -14,12 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { invalidControlClasses } from '../formControl.styles';
 import { cn } from '../utils';
 
 const inputBaseClasses = cn(
     'flex h-10 w-full',
     'text-base text-main placeholder:text-[color:var(--input-placeholder-text)]',
-    'disabled:cursor-not-allowed disabled:opacity-50',
+    'disabled:cursor-not-allowed disabled:opacity-50 disabled:border-[color:var(--input-border-disabled)]',
+    invalidControlClasses,
     'file:cursor-pointer file:border-0 file:bg-transparent file:pr-3 file:text-sm file:font-medium file:text-main'
 );
 
@@ -30,8 +32,7 @@ export const InputVariants = cva(inputBaseClasses, {
                 'rounded-md border border-[color:var(--input-outlined-border-default)] bg-[color:var(--input-fill)] px-3 py-2 text-sm',
                 'enabled:hover:border-[color:var(--input-outlined-border-hover)]',
                 'focus:outline-none focus:focus-ring focus:border-[color:var(--input-outlined-border-default)] enabled:hover:focus:border-[color:var(--input-outlined-hover-focus-border)]',
-                'disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
-                'aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main'
+                'disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100'
             ),
             underlined: cn(
                 'rounded-sm border-b border-b-[color:var(--input-border-default)] bg-transparent',

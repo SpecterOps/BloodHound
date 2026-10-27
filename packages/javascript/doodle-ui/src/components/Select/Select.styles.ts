@@ -14,7 +14,45 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { invalidControlClasses } from '../formControl.styles';
 import { cn } from '../utils';
+
+const outlinedSelectBaseClasses = cn(
+    'rounded-md border border-[color:var(--input-outlined-border-default)] bg-[color:var(--select-trigger-outlined-fill)] px-3 py-2 text-sm',
+    'focus:outline-none focus:focus-ring',
+    'enabled:focus:border-[color:var(--select-outlined-focus-border)] enabled:hover:focus:border-[color:var(--select-outlined-hover-focus-border)]'
+);
+
+const outlinedSelectHoverClasses = cn(
+    'enabled:hover:border-[color:var(--input-outlined-border-hover)] enabled:hover:bg-[color:var(--input-outlined-border-hover)] enabled:hover:text-[color:var(--select-highlight-text)]',
+    'enabled:data-[placeholder]:hover:text-[color:var(--select-highlight-text)]'
+);
+
+const outlinedSelectOpenClasses = cn(
+    'enabled:data-[state=open]:border-primary enabled:data-[state=open]:bg-[color:var(--select-open-fill)] enabled:data-[state=open]:text-[color:var(--select-open-text)]',
+    'enabled:data-[placeholder]:data-[state=open]:text-[color:var(--select-open-placeholder-text)]',
+    'enabled:data-[state=open]:focus:border-[color:var(--select-open-focus-border)] enabled:data-[state=open]:hover:focus:border-primary',
+    'enabled:data-[state=open]:hover:border-primary enabled:data-[state=open]:hover:bg-primary enabled:data-[state=open]:hover:text-[color:var(--select-highlight-text)]',
+    'enabled:data-[placeholder]:data-[state=open]:hover:text-[color:var(--select-highlight-text)]'
+);
+
+const outlinedSelectInvalidClasses = cn(
+    invalidControlClasses,
+    'aria-[invalid=true]:data-[placeholder]:data-[state=closed]:text-[color:var(--input-placeholder-text)]',
+    'enabled:aria-[invalid=true]:data-[placeholder]:hover:text-[color:var(--select-highlight-text)]',
+    '[&[aria-invalid=true][data-state=closed]:enabled:not([data-placeholder])>span]:text-status-error-main',
+    '[&[aria-invalid=true][data-state=closed]:not([data-placeholder]):enabled:hover>span]:text-[color:var(--select-highlight-text)]',
+    'enabled:aria-[invalid=true]:data-[placeholder]:data-[state=open]:text-[color:var(--select-invalid-placeholder-open-text)]',
+    'enabled:aria-[invalid=true]:data-[placeholder]:data-[state=open]:hover:text-[color:var(--select-highlight-text)]',
+    'enabled:aria-[invalid=true]:data-[state=open]:focus:border-status-error-main',
+    'enabled:aria-[invalid=true]:data-[state=open]:hover:focus:border-[color:var(--select-open-invalid-hover-focus-border)]'
+);
+
+const outlinedSelectDisabledClasses = cn(
+    'disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--select-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
+    'disabled:data-[state=open]:bg-[color:var(--select-open-disabled-fill)]',
+    'disabled:data-[placeholder]:text-[color:var(--select-disabled-placeholder-text)]'
+);
 
 export const SelectTriggerVariants = cva(
     cn(
@@ -29,21 +67,11 @@ export const SelectTriggerVariants = cva(
         variants: {
             variant: {
                 outlined: cn(
-                    'rounded-md border border-[color:var(--input-outlined-border-default)] bg-[color:var(--input-fill)] px-3 py-2 text-sm',
-                    'enabled:hover:border-[color:var(--input-outlined-border-hover)] enabled:hover:bg-[color:var(--input-outlined-border-hover)] enabled:hover:text-[color:var(--select-highlight-text)] data-[placeholder]:enabled:hover:text-[color:var(--select-highlight-text)]',
-                    'focus:outline-none focus:focus-ring focus:border-[color:var(--select-outlined-focus-border)] enabled:hover:focus:border-[color:var(--select-outlined-hover-focus-border)]',
-                    'disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--select-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
-                    'aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main',
-                    'aria-[invalid=true]:data-[placeholder]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:data-[placeholder]:enabled:hover:text-[color:var(--select-highlight-text)]',
-                    '[&[aria-invalid=true]:not([data-placeholder])>span]:text-status-error-main [&[aria-invalid=true]:not([data-placeholder]):enabled:hover>span]:text-[color:var(--select-highlight-text)]',
-                    'data-[state=open]:border-primary data-[state=open]:bg-[color:var(--select-open-fill)] data-[state=open]:text-[color:var(--select-highlight-text)] data-[placeholder]:data-[state=open]:text-[color:var(--select-highlight-text)]',
-                    'data-[state=open]:enabled:hover:border-primary data-[state=open]:enabled:hover:bg-primary',
-                    '[&[data-state=open]>span]:text-[color:var(--select-highlight-text)] [&[aria-invalid=true][data-state=open]:not([data-placeholder])>span]:text-[color:var(--select-highlight-text)]',
-                    'bg-[color:var(--select-trigger-outlined-fill)]',
-                    'disabled:data-[state=open]:bg-[color:var(--select-open-disabled-fill)] disabled:data-[placeholder]:text-[color:var(--select-disabled-placeholder-text)] disabled:data-[placeholder]:data-[state=open]:text-[color:var(--select-highlight-text)]',
-                    'aria-[invalid=true]:data-[placeholder]:data-[state=open]:text-[color:var(--select-invalid-placeholder-open-text)]',
-                    'data-[state=open]:focus:border-[color:var(--select-open-focus-border)] aria-[invalid=true]:data-[state=open]:focus:border-status-error-main',
-                    'aria-[invalid=true]:data-[state=open]:enabled:hover:focus:border-[color:var(--select-open-invalid-hover-focus-border)]'
+                    outlinedSelectBaseClasses,
+                    outlinedSelectHoverClasses,
+                    outlinedSelectOpenClasses,
+                    outlinedSelectInvalidClasses,
+                    outlinedSelectDisabledClasses
                 ),
                 underlined: cn(
                     'rounded-sm border-b border-b-[color:var(--select-border-default)] bg-transparent ring-none',
@@ -92,7 +120,7 @@ export const selectItemClasses = cn(
     'relative flex w-full cursor-default select-none items-center rounded-lg p-2 outline-none',
     'data-[highlighted]:bg-secondary data-[highlighted]:text-[color:var(--select-highlight-text)]',
     'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-    'data-[disabled]:pointer-events-none data-[disabled]:bg-dropdown-option-disabled-fill',
+    'data-[disabled]:pointer-events-none data-[disabled]:bg-[color:var(--select-item-disabled-fill)] data-[disabled]:data-[highlighted]:bg-[color:var(--select-disabled-highlighted-fill)]',
     'data-[disabled]:text-disabled data-[disabled]:opacity-100',
     'data-[state=checked]:font-bold data-[state=checked]:text-[color:var(--select-item-checked-text)]',
     'data-[highlighted]:data-[state=checked]:text-[color:var(--select-highlight-text)]'
