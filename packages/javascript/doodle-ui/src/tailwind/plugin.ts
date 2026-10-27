@@ -132,6 +132,18 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/Card
             '--card-border': 'var(--neutral-light-4)',
 
+            // Components/Table
+            '--table-fill': 'var(--neutral-light-2)',
+            '--table-row-border-width': '1px',
+            '--table-dragging-fill': 'var(--neutral-light-1)',
+
+            // Components/Tabs
+            '--tabs-text': 'inherit',
+            '--tabs-active-accent': 'var(--primary)',
+
+            // Components/Typography
+            '--typography-body-text': 'var(--text-light)',
+
             // Components/Button
             // TODO remove
             '--toggle-btn-fill': 'var(--surface)',
@@ -414,6 +426,18 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // Components/Card
             '--card-border': 'var(--neutral-900)',
+
+            // Components/Table
+            '--table-fill': 'var(--neutral-dark-2)',
+            '--table-row-border-width': '0px',
+            '--table-dragging-fill': 'var(--neutral-dark-1)',
+
+            // Components/Tabs
+            '--tabs-text': common.white,
+            '--tabs-active-accent': 'var(--secondary-variant-2)',
+
+            // Components/Typography
+            '--typography-body-text': 'var(--text-main)',
 
             // Components/Toggle
             '--toggle-btn-fill': 'var(--surface)',
