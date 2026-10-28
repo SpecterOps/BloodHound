@@ -26,13 +26,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/appcfg/internal/appdb"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
@@ -324,6 +327,21 @@ func TestStore_UpsertConfigurationParameter_Integration(t *testing.T) {
 		store, pool       = setupStoreAndPool(t)
 		originalCreatedAt time.Time
 	)
+
+	// Add a user to the context for audit logging
+	userID, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	ctx = bhctx.Set(ctx, &bhctx.Context{
+		RequestID: "integration-request",
+		RequestIP: "127.0.0.1",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique:        model.Unique{ID: userID},
+				PrincipalName: "integration-user",
+			},
+		},
+	})
 
 	type passwordExpirationParamType struct {
 		Duration string
