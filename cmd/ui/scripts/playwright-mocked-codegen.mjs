@@ -26,9 +26,16 @@ export function sanitizeRecording(recording, storageState) {
         })
     );
     for (const entry of document.log.entries) {
+        // HAR replay breaks ties using matching headers. Keep authenticated requests
+        // distinct from anonymous requests without retaining real credentials.
+        entry.request.headers = (entry.request.headers ?? []).map((header) =>
+            /^authorization$/i.test(header.name) ? { ...header, value: 'Bearer playwright-mock-session' } : header
+        );
         for (const message of [entry.request, entry.response]) {
             message.headers = (message.headers ?? []).filter(
-                ({ name }) => !/^(authorization|cookie|set-cookie)$/i.test(name)
+                ({ name }) =>
+                    !/^(cookie|set-cookie)$/i.test(name) &&
+                    (message === entry.request || !/^authorization$/i.test(name))
             );
             message.cookies = [];
         }
@@ -87,42 +94,9 @@ export function makeMockedTest(source, name, baseUrl, licenseHeader) {
     const actions = ts.createPrinter().printFile(transformed.transformed[0]);
     transformed.dispose();
     return `${licenseHeader}
-import { test, expect } from 'bh-playwright-testing';
-import { readFile, writeFile } from 'node:fs/promises';
+import { test, expect } from 'bh-playwright-testing/mocked';
 
-test.use({
-    installGraphDataStub: false,
-    serviceWorkers: 'block',
-    storageState: { cookies: [], origins: [] },
-});
-
-test.beforeEach(async ({ context, baseURL }, testInfo) => {
-    if (!baseURL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
-    // Rebase recorded API URLs so the fixture also works on another developer's port/host.
-    const har = JSON.parse(await readFile(new URL('./${name}.har', import.meta.url), 'utf8'));
-    for (const entry of har.log.entries) {
-        const url = new URL(entry.request.url);
-        entry.request.url = new URL(url.pathname + url.search, baseURL).href;
-    }
-    const replay = testInfo.outputPath('recording.har');
-    await writeFile(replay, JSON.stringify(har));
-    await context.routeFromHAR(replay, { url: /\\/api(?:\\/|$)/, notFound: 'abort' });
-    // A fake local session keeps replay independent of a live login or expiring credentials.
-    await context.addInitScript(() => {
-        if (!localStorage.getItem('persistedState')) {
-            localStorage.setItem('persistedState', JSON.stringify({
-                auth: { sessionToken: 'playwright-mock-session' },
-                global: { view: {
-                    darkMode: false, autoRunQueries: true, notifications: [],
-                    exploreLayout: 'sequential', isExploreTableSelected: false, isExploreLayoutSelected: false,
-                    selectedExploreTableColumns: { kind: true, label: true, objectId: true, isTierZero: true },
-                    pinnedExploreTableColumns: ['action-menu', 'kind', 'label'], timeoutSetting: false,
-                    isExploreGraphHighlight: true, isExploreGraphLabelClip: true,
-                } },
-            }));
-        }
-    });
-});
+test.use({ replayHar: new URL('./${name}.har', import.meta.url) });
 
 ${actions}`;
 }

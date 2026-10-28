@@ -17,6 +17,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolveTestArguments } from './playwright-a11y.mjs';
+import { resolveTestArguments as resolveE2eArguments } from './playwright-e2e.mjs';
 import { resolveBrowsers } from './playwright-install.mjs';
 
 test('browser installation defaults to the supported test browsers', () => {
@@ -33,4 +34,18 @@ test('accessibility tests default to the configured complete suite', () => {
         'login.a11y.spec.ts',
         '--project=chromium-light',
     ]);
+});
+
+test('end-to-end tests default to chromium-light unless projects are supplied', () => {
+    assert.deepEqual(resolveE2eArguments([]), ['test', '-c', 'playwright.e2e.config.ts', '--project=chromium-light']);
+    assert.deepEqual(resolveE2eArguments(['feature.spec.ts']), [
+        'test',
+        '-c',
+        'playwright.e2e.config.ts',
+        '--project=chromium-light',
+        'feature.spec.ts',
+    ]);
+    for (const projects of [['--project=firefox-dark'], ['--project', 'chromium-dark'], ['--project=*']]) {
+        assert.deepEqual(resolveE2eArguments(projects), ['test', '-c', 'playwright.e2e.config.ts', ...projects]);
+    }
 });

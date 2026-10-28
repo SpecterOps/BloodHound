@@ -88,7 +88,11 @@ test('removes credentials without mutating the original capture', () => {
     };
     const clean = sanitizeRecording(capture, state);
     assert.ok(!JSON.stringify(clean).includes('secret'));
+    assert.deepEqual(clean.log.entries[0].request.headers, [
+        { name: 'Authorization', value: 'Bearer playwright-mock-session' },
+    ]);
     assert.equal(capture.log.entries[0].request.headers.length, 1);
+    assert.equal(capture.log.entries[0].request.headers[0].value, 'Bearer secret');
 });
 
 test('generated spec replays GET and POST APIs on a different host without login or backend', async () => {
@@ -106,7 +110,7 @@ test('generated spec replays GET and POST APIs on a different host without login
         }
         response.setHeader('Content-Type', 'text/html');
         response.end(
-            `<button onclick="fetch('/api/v2/items', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({query:'items'}) }).then(r=>r.json()).then(d=>document.querySelector('h1').textContent=d.title)">Load</button><h1>Loading</h1><script>fetch('/api/v2/items').then(r=>r.json()).then(d=>document.querySelector('h1').textContent=d.title)</script>`
+            `<button onclick="fetch('/api/v2/items', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({query:'items'}) }).then(r=>r.json()).then(d=>document.querySelector('h1').textContent=d.title)">Load</button><h1>Loading</h1><script>fetch('/api/v2/items', {headers: {Authorization: 'Bearer ' + JSON.parse(localStorage.getItem('persistedState')).auth.sessionToken}}).then(r=>r.json()).then(d=>document.querySelector('h1').textContent=d.title)</script>`
         );
     });
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -126,10 +130,13 @@ test('generated spec replays GET and POST APIs on a different host without login
         },
     });
     try {
-        await writeFile(
-            path.join(directory, 'example.har'),
-            JSON.stringify({ log: { entries: [entry('GET', 'Mocked GET'), entry('POST', 'Mocked POST')] } })
+        const authenticatedEntry = entry('GET', 'Mocked GET');
+        authenticatedEntry.request.headers.push({ name: 'Authorization', value: 'Bearer recording-secret' });
+        const capture = sanitizeRecording(
+            { log: { entries: [entry('GET', 'Anonymous GET'), authenticatedEntry, entry('POST', 'Mocked POST')] } },
+            { origins: [] }
         );
+        await writeFile(path.join(directory, 'example.har'), JSON.stringify(capture));
         const source = `import { test, expect } from '@playwright/test';
 test.use({ storageState: 'private-auth.json' });
 test('test', async ({ page }) => {

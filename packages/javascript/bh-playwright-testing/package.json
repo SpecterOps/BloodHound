@@ -13,6 +13,7 @@
     "exports": {
         ".": "./src/index.ts",
         "./axe": "./src/axe.ts",
+        "./mocked": "./src/mocked.ts",
         "./themes": "./src/themes.ts",
         "./auth": "./src/auth.ts",
         "./stubs": "./src/stubs/index.ts"
