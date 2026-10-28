@@ -43,7 +43,7 @@ function rewritePageUrl(node, parsed, origin) {
     }
 }
 
-function rewriteTestName(node, parsed, name, visit) {
+function rewriteSpecName(node, parsed, name, visit) {
     if (
         ts.isCallExpression(node) &&
         node.expression.getText(parsed) === 'test' &&
@@ -64,7 +64,7 @@ function transformRecording(parsed, origin, name) {
                 if (removeRecorderSetup(node, parsed)) return undefined;
                 return (
                     rewritePageUrl(node, parsed, origin) ??
-                    rewriteTestName(node, parsed, name, visit) ??
+                    rewriteSpecName(node, parsed, name, visit) ??
                     ts.visitEachChild(node, visit, context)
                 );
             };
@@ -76,7 +76,7 @@ function transformRecording(parsed, origin, name) {
     return actions;
 }
 
-export function makeMockedTest(source, name, baseUrl, licenseHeader) {
+export function makeMockedSpec(source, name, baseUrl, licenseHeader) {
     const parsed = ts.createSourceFile('recording.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const actions = transformRecording(parsed, new URL(baseUrl).origin, name);
     return `${licenseHeader}

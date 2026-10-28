@@ -23,12 +23,12 @@ import { closeReplayFixture, createReplayFixture, verifyReplay, verifyUpdate } f
 import { recordedSource, secretCapture, secretState } from './make-fixtures.mjs';
 import { sanitizeRecording } from '../transform-and-write-hars/sanitize-recording.mjs';
 import { writeNewHar, writeRecordedHar, writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
-import { listRecordedTests, selectRecordedTests } from '../update-hars/select-specs.mjs';
+import { listRecordedSpecs, selectRecordedSpecs } from '../update-hars/select-specs.mjs';
 import { parseRecordingArguments, recorderArguments } from '../record/prepare-arguments.mjs';
 import { checkRecordingFiles } from '../record/manage-files.mjs';
 import { makeDevServerArguments } from '../record/ensure-server.mjs';
 
-test('codegen requires one valid test name', () => {
+test('codegen requires one valid spec name', () => {
     assert.deepEqual(parseRecordingArguments(['feature', '--url', '/ui/explore']), {
         name: 'feature',
         requestedUrl: '/ui/explore',
@@ -45,20 +45,20 @@ test('codegen requires one valid test name', () => {
     }
 });
 
-test('codegen creates a new spec and HAR; updater selects existing tests', async () => {
+test('codegen creates a new spec and HAR; updater selects existing specs', async () => {
     const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-codegen-update-'));
     const files = { spec: path.join(directory, 'feature.spec.ts'), har: path.join(directory, 'feature.har') };
     const har = { log: { entries: [{ request: { url: '/api/items' } }] } };
     try {
-        await assert.rejects(selectRecordedTests(directory, []), /Usage:.*<name>/);
-        await assert.rejects(selectRecordedTests(directory, ['feature', 'other']), /Usage:.*<name>/);
-        await assert.rejects(listRecordedTests(directory), /No recorded tests found/);
+        await assert.rejects(selectRecordedSpecs(directory, []), /Usage:.*<name>/);
+        await assert.rejects(selectRecordedSpecs(directory, ['feature', 'other']), /Usage:.*<name>/);
+        await assert.rejects(listRecordedSpecs(directory), /No recorded specs found/);
         checkRecordingFiles(files);
         await writeNewHar(files.har, har);
         await writeSpec(files.spec, 'edited spec');
         assert.throws(() => checkRecordingFiles(files), /already exists/);
-        assert.deepEqual(await selectRecordedTests(directory, ['feature']), [{ name: 'feature', ...files }]);
-        assert.deepEqual(await listRecordedTests(directory), [{ name: 'feature', ...files }]);
+        assert.deepEqual(await selectRecordedSpecs(directory, ['feature']), [{ name: 'feature', ...files }]);
+        assert.deepEqual(await listRecordedSpecs(directory), [{ name: 'feature', ...files }]);
         assert.equal(await readFile(files.spec, 'utf8'), 'edited spec');
         assert.deepEqual(JSON.parse(await readFile(files.har, 'utf8')), har);
     } finally {

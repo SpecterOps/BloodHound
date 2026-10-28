@@ -18,24 +18,24 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-function recordedTest(directory, name) {
+function recordedSpec(directory, name) {
     const spec = path.join(directory, `${name}.spec.ts`);
     const har = path.join(directory, `${name}.har`);
     if (!existsSync(spec) || !existsSync(har)) throw new Error(`Missing spec or HAR for ${name}.`);
     return { name, spec, har };
 }
 
-export async function listRecordedTests(directory) {
+export async function listRecordedSpecs(directory) {
     const names = (await readdir(directory))
         .filter((name) => name.endsWith('.spec.ts'))
         .map((name) => name.slice(0, -8));
-    if (!names.length) throw new Error('No recorded tests found.');
-    return names.map((name) => recordedTest(directory, name));
+    if (!names.length) throw new Error('No recorded specs found.');
+    return names.map((name) => recordedSpec(directory, name));
 }
 
-export async function selectRecordedTests(directory, args) {
+export async function selectRecordedSpecs(directory, args) {
     if (args.length !== 1 || !/^[a-z0-9][a-z0-9_-]*$/i.test(args[0])) {
         throw new Error('Usage: yarn test:e2e:update-mocks <name>');
     }
-    return [recordedTest(directory, args[0])];
+    return [recordedSpec(directory, args[0])];
 }

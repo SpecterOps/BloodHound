@@ -18,7 +18,7 @@ yarn test:e2e tests/e2e/findings-table.spec.ts
 yarn test:e2e:update-mocks findings-table
 ```
 
-Codegen opens a recorder. Click through the feature, add assertions, and close the browser. It creates `findings-table.spec.ts` and `findings-table.har` under `cmd/ui/tests/e2e/`, then runs the test. HARs are API mocks. `test:e2e:update-mocks` requires a test name and refreshes only that test's HAR against the live backend. Specs stay unchanged. Review captured data before committing. Delete both files together when removing a test.
+Codegen opens a recorder. Click through the feature, add assertions, and close the browser. It creates `findings-table.spec.ts` and `findings-table.har` under `cmd/ui/tests/e2e/`, then runs the spec. HARs are API mocks. `test:e2e:update-mocks` requires a spec name and refreshes only that spec's HAR against the live backend. Specs stay unchanged. Review captured data before committing. Delete both files together when removing a spec.
 
 First-time setup and a full run of the `a11y` suite. All commands are run from the root (`/`); the same script names also work from within `cmd/ui`.
 
@@ -70,7 +70,7 @@ tests/
 ├── global.setup.ts   # Logs in once and snapshots auth storage state
 ├── a11y/             # Accessibility regression suite
 │   └── *.a11y.spec.ts
-└── e2e/              # Browser feature tests and adjacent API mocks
+└── e2e/              # Browser feature specs and adjacent API mocks
     ├── *.spec.ts
     └── *.har
 ```

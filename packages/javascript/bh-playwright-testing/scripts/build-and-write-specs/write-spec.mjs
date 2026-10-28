@@ -18,7 +18,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import prettier from 'prettier';
-import { makeMockedTest } from './build-spec.mjs';
+import { makeMockedSpec } from './build-spec.mjs';
 
 export async function writeSpec(file, spec) {
     await mkdir(path.dirname(file), { recursive: true });
@@ -28,7 +28,7 @@ export async function writeSpec(file, spec) {
 export async function buildAndWriteSpec(recording, baseUrl) {
     const source = await readFile(recording.rawSource, 'utf8');
     const licenseHeader = (await readFile(fileURLToPath(import.meta.url), 'utf8')).split('\n\n')[0];
-    const spec = await prettier.format(makeMockedTest(source, recording.name, baseUrl, licenseHeader), {
+    const spec = await prettier.format(makeMockedSpec(source, recording.name, baseUrl, licenseHeader), {
         ...(await prettier.resolveConfig(recording.files.spec)),
         parser: 'typescript',
     });

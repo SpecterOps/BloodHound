@@ -17,11 +17,11 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
-import { selectFailingTests } from '../update-hars/select-failures.mjs';
+import { selectFailingSpecs } from '../update-hars/select-failures.mjs';
 
 test('selects only recorded specs with unexpected failures', () => {
     const rootDir = path.join(process.cwd(), 'tests', 'e2e');
-    const tests = ['stale', 'passing', 'nested', 'flaky'].map((name) => ({
+    const specs = ['stale', 'passing', 'nested', 'flaky'].map((name) => ({
         name,
         spec: path.join(rootDir, `${name}.spec.ts`),
     }));
@@ -38,5 +38,5 @@ test('selects only recorded specs with unexpected failures', () => {
             },
         ],
     };
-    assert.deepEqual(selectFailingTests(report, tests), [tests[0], tests[2]]);
+    assert.deepEqual(selectFailingSpecs(report, specs), [specs[0], specs[2]]);
 });

@@ -18,7 +18,7 @@ import dotenv from 'dotenv';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { buildAndWriteSpec } from '../build-and-write-specs/write-spec.mjs';
-import { replayRecordedTest } from '../run-tests/replay-spec.mjs';
+import { replayRecordedSpec } from '../run-specs/replay-spec.mjs';
 import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
 import { ensureStorageState } from './refresh-auth.mjs';
 import { captureBrowser } from './capture-browser.mjs';
@@ -38,7 +38,7 @@ async function runRecording() {
         const source = await buildAndWriteSpec(recording, process.env.A11Y_TEST_URL);
         await rm(recording.temporaryDirectory, { recursive: true });
         announceRecording(recording, source);
-        replayRecordedTest(recording);
+        replayRecordedSpec(recording);
     } finally {
         if (server) {
             console.log('Stopping the UI server started for codegen.');

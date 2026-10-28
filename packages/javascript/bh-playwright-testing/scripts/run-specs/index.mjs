@@ -19,41 +19,41 @@ import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { selectFailingTests } from '../update-hars/select-failures.mjs';
-import { listRecordedTests } from '../update-hars/select-specs.mjs';
-import { updateSelectedTests } from '../update-hars/index.mjs';
+import { selectFailingSpecs } from '../update-hars/select-failures.mjs';
+import { listRecordedSpecs } from '../update-hars/select-specs.mjs';
+import { updateSelectedSpecs } from '../update-hars/index.mjs';
 import { runSuite } from './run-suite.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
-async function readFailures(reportFile, tests) {
+async function readFailures(reportFile, specs) {
     let report;
     try {
         report = JSON.parse(await readFile(reportFile, 'utf8'));
     } catch {
-        throw new Error('E2E tests failed before Playwright could report the failing specs.');
+        throw new Error('E2E specs failed before Playwright could report the failing specs.');
     }
-    const failed = selectFailingTests(report, tests);
-    if (!failed.length) throw new Error('E2E tests failed, but no recorded spec was identified as failing.');
+    const failed = selectFailingSpecs(report, specs);
+    if (!failed.length) throw new Error('E2E specs failed, but no recorded spec was identified as failing.');
     return failed;
 }
 
 async function main() {
     if (process.argv.length !== 2) throw new Error('Usage: yarn test:e2e:update-failing-mocks');
-    const tests = await listRecordedTests(path.join(uiDirectory, 'tests', 'e2e'));
+    const specs = await listRecordedSpecs(path.join(uiDirectory, 'tests', 'e2e'));
     const playwrightCli = createRequire(path.join(uiDirectory, 'package.json')).resolve('@playwright/test/cli');
     await mkdir(path.join(uiDirectory, 'playwright'), { recursive: true });
     const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'har-failures-'));
     try {
         const reportFile = path.join(temporaryDirectory, 'results.json');
-        if (runSuite(playwrightCli, tests, reportFile) === 0) {
-            console.log('All recorded tests passed; no HARs need updating.');
+        if (runSuite(playwrightCli, specs, reportFile) === 0) {
+            console.log('All recorded specs passed; no HARs need updating.');
             return;
         }
-        const failed = await readFailures(reportFile, tests);
-        console.log(`Updating HARs for: ${failed.map((test) => test.name).join(', ')}.`);
-        await updateSelectedTests(failed);
+        const failed = await readFailures(reportFile, specs);
+        console.log(`Updating HARs for: ${failed.map((spec) => spec.name).join(', ')}.`);
+        await updateSelectedSpecs(failed);
         if (runSuite(playwrightCli, failed) !== 0) throw new Error('Updated HARs did not pass replay.');
     } finally {
         await rm(temporaryDirectory, { recursive: true, force: true });

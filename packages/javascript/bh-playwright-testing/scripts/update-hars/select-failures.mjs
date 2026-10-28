@@ -16,16 +16,16 @@
 
 import path from 'node:path';
 
-export function selectFailingTests(report, tests) {
+export function selectFailingSpecs(report, specs) {
     const failedPaths = new Set();
     function visit(suite) {
         for (const spec of suite.specs ?? []) {
-            if (spec.tests?.some((test) => test.status === 'unexpected')) {
+            if (spec.tests?.some((result) => result.status === 'unexpected')) {
                 failedPaths.add(path.resolve(report.config.rootDir, spec.file));
             }
         }
         for (const child of suite.suites ?? []) visit(child);
     }
     for (const suite of report.suites ?? []) visit(suite);
-    return tests.filter((test) => failedPaths.has(path.resolve(test.spec)));
+    return specs.filter((spec) => failedPaths.has(path.resolve(spec.spec)));
 }

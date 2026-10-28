@@ -31,14 +31,14 @@ export function runPlaywright(playwrightCli, args, env = process.env) {
     if (result.status !== 0) throw new Error(`Playwright failed (exit code ${result.status}).`);
 }
 
-function captureTest(playwrightCli, test, captures) {
+function captureSpec(playwrightCli, spec, captures) {
     runPlaywright(
         playwrightCli,
         [
             'test',
             '-c',
             fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url)),
-            path.relative(uiDirectory, test.spec),
+            path.relative(uiDirectory, spec.spec),
             '--project=chromium-light',
             '--workers=1',
         ],
@@ -50,12 +50,12 @@ function captureTest(playwrightCli, test, captures) {
     );
 }
 
-export async function captureForUpdate(playwrightCli, test) {
+export async function captureForUpdate(playwrightCli, spec) {
     const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'har-update-'));
     const captures = path.join(temporaryDirectory, 'captures');
     await mkdir(captures);
     try {
-        captureTest(playwrightCli, test, captures);
+        captureSpec(playwrightCli, spec, captures);
         return { captures, temporaryDirectory };
     } catch (error) {
         await rm(temporaryDirectory, { recursive: true, force: true });

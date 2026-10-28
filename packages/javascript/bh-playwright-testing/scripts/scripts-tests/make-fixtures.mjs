@@ -70,7 +70,7 @@ export function sampleCapture() {
 
 export const recordedSource = `import { test, expect } from '@playwright/test';
 test.use({ storageState: 'private-auth.json' });
-test('test', async ({ page }) => {
+test('example', async ({ page }) => {
   await page.routeFromHAR('/private/temporary/recording.har', { url: '**/api/**' });
   await page.goto('http://old-host:3000/ui/');
   await expect(page.getByRole('heading')).toHaveText('Mocked GET');
