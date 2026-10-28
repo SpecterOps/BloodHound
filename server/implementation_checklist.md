@@ -956,7 +956,7 @@ func TestRegister(t *testing.T) {
         require.Equal(t, http.StatusUnauthorized, rec.Code)
     })
 
-    // test POST GET /api/v2/<feature> ...
+    // test POST /api/v2/<feature> ...
 }
 ```
 
