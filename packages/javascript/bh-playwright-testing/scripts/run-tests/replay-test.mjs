@@ -20,8 +20,8 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promis
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { makeMockedTest } from './build-and-write-specs/transform.mjs';
-import { recordedSource, sampleCapture, writeAuthState, writeTestConfig } from './test-data.mjs';
+import { makeMockedTest } from '../build-and-write-specs/transform.mjs';
+import { recordedSource, sampleCapture, writeAuthState, writeTestConfig } from './make-test-data.mjs';
 
 function respond(request, response, state) {
     if (request.url.startsWith('/api/')) {
@@ -53,7 +53,7 @@ async function startTestServer() {
 export async function createReplayFixture() {
     const require = createRequire(import.meta.url);
     const cli = require.resolve('@playwright/test/cli');
-    const workspace = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+    const workspace = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../..');
     await mkdir(path.join(workspace, 'playwright'), { recursive: true });
     const directory = await mkdtemp(path.join(workspace, 'playwright', 'codegen-test-'));
     const server = await startTestServer();

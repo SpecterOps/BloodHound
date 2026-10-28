@@ -17,7 +17,7 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
-import { selectFailingTests } from './update-hars/failed-tests.mjs';
+import { selectFailingTests } from './select-failing-tests.mjs';
 
 test('selects only recorded specs with unexpected failures', () => {
     const rootDir = path.join(process.cwd(), 'tests', 'e2e');
