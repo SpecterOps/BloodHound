@@ -21,7 +21,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { selectFailingSpecs } from '../update-hars/select-failures.mjs';
 import { listRecordedSpecs } from '../update-hars/select-specs.mjs';
-import { updateSelectedSpecs } from '../update-hars/index.mjs';
+import { updateSelectedSpecs } from '../update-hars/update-selected-specs.mjs';
 import { runSuite } from './run-suite.mjs';
 
 const uiDirectory = process.cwd();
@@ -39,7 +39,7 @@ async function readFailures(reportFile, specs) {
     return failed;
 }
 
-async function main() {
+async function updateFailingSpecs() {
     if (process.argv.length !== 2) throw new Error('Usage: yarn test:e2e:update-failing-mocks');
     const specs = await listRecordedSpecs(path.join(uiDirectory, 'tests', 'e2e'));
     const playwrightCli = createRequire(path.join(uiDirectory, 'package.json')).resolve('@playwright/test/cli');
@@ -61,7 +61,7 @@ async function main() {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    main().catch((error) => {
+    updateFailingSpecs().catch((error) => {
         console.error(error.message);
         process.exitCode = 1;
     });

@@ -24,7 +24,7 @@ import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
 import { ensureStorageState } from './refresh-capture-auth.mjs';
 import { launchCodegenBrowser, prepareUiServer } from './launch-codegen-browser.mjs';
 import { announceFilesCreated, checkForDuplicateSpecName } from './manage-files.mjs';
-import { parseBrowserActionsArguments } from './prepare-arugments.mjs';
+import { parseBrowserActionsArguments } from './prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });

@@ -35,7 +35,7 @@ import {
     makeDevServerArguments,
     parseBrowserActionsArguments,
     recorderArguments,
-} from '../capture-actions-and-hars/prepare-arugments.mjs';
+} from '../capture-actions-and-hars/prepare-arguments.mjs';
 import { checkForDuplicateSpecName } from '../capture-actions-and-hars/manage-files.mjs';
 
 test('codegen requires one valid spec name', () => {

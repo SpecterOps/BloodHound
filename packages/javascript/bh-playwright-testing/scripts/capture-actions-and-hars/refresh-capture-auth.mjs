@@ -17,7 +17,7 @@
 import { spawnSync } from 'node:child_process';
 import { access } from 'node:fs/promises';
 import path from 'node:path';
-import { authSetupArguments } from './prepare-arugments.mjs';
+import { authSetupArguments } from './prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
 

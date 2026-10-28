@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { spawn } from 'node:child_process';
-import { makeDevServerArguments, recorderArguments } from './prepare-arugments.mjs';
+import { makeDevServerArguments, recorderArguments } from './prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
 

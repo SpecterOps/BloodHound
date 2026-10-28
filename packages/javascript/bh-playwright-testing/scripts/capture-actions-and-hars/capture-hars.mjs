@@ -14,22 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { harCaptureArguments } from './prepare-arugments.mjs';
+import { runPlaywright } from '../run-specs/run-playwright.mjs';
+import { harCaptureArguments } from './prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
-
-export function runPlaywright(playwrightCli, args, env = process.env) {
-    const result = spawnSync(process.execPath, [playwrightCli, ...args], {
-        cwd: uiDirectory,
-        env,
-        stdio: 'inherit',
-    });
-    if (result.error) throw result.error;
-    if (result.status !== 0) throw new Error(`Playwright failed (exit code ${result.status}).`);
-}
 
 function captureHarsByRunningSpecs(playwrightCli, spec, captures) {
     runPlaywright(playwrightCli, harCaptureArguments(spec.spec, uiDirectory), {
