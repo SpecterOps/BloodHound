@@ -21,23 +21,23 @@ import { buildAndWriteSpec } from '../build-and-write-specs/write-spec.mjs';
 import { replayRecordedSpec } from '../run-specs/replay-spec.mjs';
 import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
 import { ensureStorageState } from './refresh-auth.mjs';
-import { captureBrowser } from './capture-browser.mjs';
-import { announceBrowserActions } from './manage-files.mjs';
+import { launchCodegenBrowser } from './launch-codegen-browser.mjs';
+import { announceFilesCreated } from './manage-files.mjs';
 import { prepareBrowserActions } from './prepare-browser-actions.mjs';
-import { ensureUiServer } from './ensure-server.mjs';
+import { prepareUiServer } from './prepare-ui-server.mjs';
 
 dotenv.config({ path: path.join(process.cwd(), '.env'), quiet: true });
 
 async function runBrowserActions() {
     const browserActions = await prepareBrowserActions(process.argv.slice(2));
-    const server = await ensureUiServer(browserActions.homeUrl);
+    const server = await prepareUiServer(browserActions.homeUrl);
     try {
         await ensureStorageState(browserActions.playwrightCli, browserActions.storageState);
-        await captureBrowser(browserActions);
+        await launchCodegenBrowser(browserActions);
         await writeRecordedHar(browserActions);
         const source = await buildAndWriteSpec(browserActions, process.env.A11Y_TEST_URL);
         await rm(browserActions.temporaryDirectory, { recursive: true });
-        announceBrowserActions(browserActions, source);
+        announceFilesCreated(browserActions, source);
         replayRecordedSpec(browserActions);
     } finally {
         if (server) {

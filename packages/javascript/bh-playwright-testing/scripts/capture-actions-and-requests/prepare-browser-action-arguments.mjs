@@ -35,21 +35,3 @@ export function parseBrowserActionsArguments(args) {
     }
     return { name, requestedUrl };
 }
-
-export function recorderArguments(storageState, source, har, url) {
-    return [
-        'codegen',
-        '--block-service-workers',
-        '--load-storage',
-        storageState,
-        '--output',
-        source,
-        '--save-har',
-        har,
-        '--save-har-glob',
-        '**/api/**',
-        '--viewport-size',
-        '1280,720',
-        url,
-    ];
-}

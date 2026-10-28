@@ -31,7 +31,7 @@ export function runPlaywright(playwrightCli, args, env = process.env) {
     if (result.status !== 0) throw new Error(`Playwright failed (exit code ${result.status}).`);
 }
 
-function captureSpec(playwrightCli, spec, captures) {
+function captureHarsByRunningSpecs(playwrightCli, spec, captures) {
     runPlaywright(
         playwrightCli,
         [
@@ -55,7 +55,7 @@ export async function captureForUpdate(playwrightCli, spec) {
     const captures = path.join(temporaryDirectory, 'captures');
     await mkdir(captures);
     try {
-        captureSpec(playwrightCli, spec, captures);
+        captureHarsByRunningSpecs(playwrightCli, spec, captures);
         return { captures, temporaryDirectory };
     } catch (error) {
         await rm(temporaryDirectory, { recursive: true, force: true });

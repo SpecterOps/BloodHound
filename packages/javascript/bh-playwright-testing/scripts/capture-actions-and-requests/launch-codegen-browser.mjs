@@ -15,11 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { spawn } from 'node:child_process';
-import { recorderArguments } from './prepare-arguments.mjs';
+import { recorderArguments } from './prepare-har-capture-arguments.mjs';
 
 const uiDirectory = process.cwd();
 
-export async function captureBrowser(browserActions) {
+export async function launchCodegenBrowser(browserActions) {
     console.log(`Opening the Playwright browser at ${browserActions.homeUrl}; this may take a few seconds...`);
     console.log('Record the flow, add assertions, then close the browser to save.');
     const result = await new Promise((resolve, reject) => {

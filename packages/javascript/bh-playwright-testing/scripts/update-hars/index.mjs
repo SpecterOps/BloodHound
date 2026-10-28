@@ -19,7 +19,7 @@ import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
 import { authenticateForUpdate } from './refresh-auth.mjs';
-import { captureForUpdate } from './capture-spec.mjs';
+import { captureForUpdate } from './capture-hars.mjs';
 import { selectRecordedSpecs } from './select-specs.mjs';
 
 const uiDirectory = process.cwd();

@@ -19,7 +19,7 @@ import path from 'node:path';
 
 const uiDirectory = process.cwd();
 
-export function checkBrowserActionsFiles(files) {
+export function checkForDuplicateSpecName(files) {
     if (existsSync(files.spec) || existsSync(files.har)) {
         throw new Error(
             'A spec or HAR with this name already exists. Use yarn test:e2e:update-mocks to replace its HAR.'
@@ -27,7 +27,7 @@ export function checkBrowserActionsFiles(files) {
     }
 }
 
-export function announceBrowserActions(browserActions, source) {
+export function announceFilesCreated(browserActions, source) {
     if (!/\bexpect\s*\(/.test(source)) {
         console.log('No assertions were recorded. Add an expected result before treating this as regression coverage.');
     }

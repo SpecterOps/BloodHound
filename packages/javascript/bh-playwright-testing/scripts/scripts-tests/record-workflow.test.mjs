@@ -31,9 +31,10 @@ import {
 import { sanitizeHar } from '../transform-and-write-hars/sanitize-har.mjs';
 import { writeNewHar, writeRecordedHar, writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
 import { listRecordedSpecs, selectRecordedSpecs } from '../update-hars/select-specs.mjs';
-import { parseBrowserActionsArguments, recorderArguments } from '../capture-actions-and-requests/prepare-arguments.mjs';
-import { checkBrowserActionsFiles } from '../capture-actions-and-requests/manage-files.mjs';
-import { makeDevServerArguments } from '../capture-actions-and-requests/ensure-server.mjs';
+import { parseBrowserActionsArguments } from '../capture-actions-and-requests/prepare-browser-action-arguments.mjs';
+import { recorderArguments } from '../capture-actions-and-requests/prepare-har-capture-arguments.mjs';
+import { checkForDuplicateSpecName } from '../capture-actions-and-requests/manage-files.mjs';
+import { makeDevServerArguments } from '../capture-actions-and-requests/prepare-ui-server.mjs';
 
 test('codegen requires one valid spec name', () => {
     assert.deepEqual(parseBrowserActionsArguments(['feature', '--url', '/ui/explore']), {
@@ -60,10 +61,10 @@ test('codegen creates a new spec and HAR; updater selects existing specs', async
         await assert.rejects(selectRecordedSpecs(directory, []), /Usage:.*<name>/);
         await assert.rejects(selectRecordedSpecs(directory, ['feature', 'other']), /Usage:.*<name>/);
         await assert.rejects(listRecordedSpecs(directory), /No recorded specs found/);
-        checkBrowserActionsFiles(files);
+        checkForDuplicateSpecName(files);
         await writeNewHar(files.har, har);
         await writeSpec(files.spec, 'edited spec');
-        assert.throws(() => checkBrowserActionsFiles(files), /already exists/);
+        assert.throws(() => checkForDuplicateSpecName(files), /already exists/);
         assert.deepEqual(await selectRecordedSpecs(directory, ['feature']), [{ name: 'feature', ...files }]);
         assert.deepEqual(await listRecordedSpecs(directory), [{ name: 'feature', ...files }]);
         assert.equal(await readFile(files.spec, 'utf8'), 'edited spec');

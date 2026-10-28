@@ -53,7 +53,7 @@ function startUiServer(baseUrl) {
         : spawn('yarn', serverArguments, { cwd: uiDirectory, env: process.env, stdio: 'inherit' });
 }
 
-export async function ensureUiServer(homeUrl) {
+export async function prepareUiServer(homeUrl) {
     if (await isReachable(homeUrl)) {
         console.log(`Reusing the UI server already running at ${homeUrl}.`);
         return undefined;

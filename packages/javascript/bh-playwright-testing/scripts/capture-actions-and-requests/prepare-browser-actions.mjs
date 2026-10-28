@@ -17,8 +17,8 @@
 import { mkdir, mkdtemp } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { parseBrowserActionsArguments } from './prepare-arguments.mjs';
-import { checkBrowserActionsFiles } from './manage-files.mjs';
+import { parseBrowserActionsArguments } from './prepare-browser-action-arguments.mjs';
+import { checkForDuplicateSpecName } from './manage-files.mjs';
 
 const uiDirectory = process.cwd();
 
@@ -29,7 +29,7 @@ export async function prepareBrowserActions(args) {
         spec: path.join(uiDirectory, 'tests', 'e2e', `${name}.spec.ts`),
         har: path.join(uiDirectory, 'tests', 'e2e', `${name}.har`),
     };
-    checkBrowserActionsFiles(files);
+    checkForDuplicateSpecName(files);
     const homeUrl = new URL(requestedUrl, process.env.A11Y_TEST_URL).toString();
     if (new URL(homeUrl).origin !== new URL(process.env.A11Y_TEST_URL).origin) {
         throw new Error('--url must use the configured A11Y_TEST_URL origin.');
