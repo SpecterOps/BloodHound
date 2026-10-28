@@ -15,7 +15,7 @@ yarn playwright:install # installs Chromium and Firefox
 yarn test:a11y          # runs the complete a11y suite and configured project matrix
 yarn test:e2e           # runs browser feature tests with their recorded API mocks
 yarn codegen            # logs in, records browser actions and API mocks, saves a new runnable spec
-yarn har:prune          # previews orphaned HAR directories under test-artifacts/har
+yarn har:prune          # previews unpaired .har files under tests/e2e
 ```
 
 To record a mocked test for any feature, run `yarn codegen [test-name] [--url /ui/feature]` from the repository root or `cmd/ui/`. The launcher loads `cmd/ui/.env`, starts or reuses the UI server when `A11Y_TEST_SERVE=true`, logs in automatically, and opens Playwright's recorder. The name and URL are optional; defaults are a unique branch-based name and `/ui/`.
@@ -32,7 +32,7 @@ cmd/ui/tests/e2e/my-feature.spec.ts
 cmd/ui/tests/e2e/my-feature.har
 ```
 
-No manual file creation or mock wiring is needed. The command automatically runs the new test with API replay and reports whether it passes; failed tests remain saved for review. Existing files are never overwritten. The generated spec includes recorded actions and assertions, a fake local session, and replay of captured API responses. Review both files before committing: authorization/cookie headers and the login session token are removed from the published capture, but captured application data still needs review.
+No manual file creation or mock wiring is needed. The command automatically runs the new test with API replay and reports whether it passes; failed tests remain saved for review. Existing files are preserved; name collisions print a warning and select an incrementing suffix such as `my-feature-1` for the whole recording. The generated spec includes recorded actions and assertions, a fake local session, and replay of captured API responses. Review both files before committing: authorization/cookie headers and the login session token are removed from the published capture, but captured application data still needs review.
 
 Run the generated test with the command printed on completion:
 
@@ -40,16 +40,22 @@ Run the generated test with the command printed on completion:
 yarn test:e2e tests/e2e/my-feature.spec.ts --project=chromium-light
 ```
 
-Recording requires a working backend with representative data and configured credentials. Replay needs the UI server, but uses captured API responses and requires no login. The e2e suite has no live login setup dependency. API requests missing from the capture are aborted. Record the complete flow from its initial page, including assertions that wait for results. Only HTTP `/api/` requests are mocked; WebSockets, external services, random IDs in request bodies, and time-dependent flows may need adjustments. Re-record with a new name to refresh mocks. These feature tests run separately from the accessibility suite; codegen does not add an axe scan automatically. When `A11Y_TEST_SERVE=false`, the target UI must already be running.
+Recording requires a working backend with representative data and configured credentials. Replay needs the UI server, but uses captured API responses and requires no login. The e2e suite has no live login setup dependency. API requests missing from the capture are aborted. Record the complete flow from its initial page, including assertions that wait for results. Only HTTP `/api/` requests are mocked; WebSockets, external services, random IDs in request bodies, and time-dependent flows may need adjustments. See the refresh workflow below to refresh mocks. These feature tests run separately from the accessibility suite; codegen does not add an axe scan automatically. When `A11Y_TEST_SERVE=false`, the target UI must already be running.
 
-HAR updates replace files for tests with unchanged identities. Renamed or removed tests leave old artifact directories; preview and remove those from `bhce/` or `cmd/ui/` with:
+### Refreshing and removing recordings
+
+Each generated flow owns one adjacent pair: `<name>.spec.ts` and `<name>.har`. Renaming a test title or changing the browser project does not create another fixture. Rename both files together and update the spec's `replayHar` URL when renaming a flow.
+
+To refresh a recording, run codegen with the same name. If either file already exists, codegen prints a warning and chooses the first available integer suffix (`<name>-1`, `<name>-2`, etc.). The selected name is used for both files, the test title, the HAR reference, and the replay command. Existing files stay intact. Review and replay the new pair before replacing the old pair; when keeping the original name, update the HAR reference and test title to match. Replacing a capture requires replacing just its one `.har` file.
+
+Delete both files when removing a flow. If the spec has already been deleted, preview leftover HAR files and then remove them with:
 
 ```sh
-yarn har:prune           # list orphaned fixture directories, no deletion
-yarn har:prune --delete  # remove only the listed, tool-marked directories
+yarn har:prune           # preview unpaired .har files under tests/e2e
+yarn har:prune --delete  # delete those unpaired files
 ```
 
-The command lists the complete a11y suite, so it is safe to use after running only one spec. It leaves manually created or unmarked directories untouched. Use `--root <directory>` if `harRootDir` differs from its default `test-artifacts/har` under the test root.
+Pruning recursively checks for an adjacent `.spec.ts` with the same stem; it needs no running app, login, or Playwright test listing. Use `--root tests/e2e/subfolder` to narrow the scan (relative to `cmd/ui`). This convention is for generated pairs: keep shared or manually managed captures outside the scanned directory. Symlinks are skipped.
 
 First-time setup and a full run of the `a11y` suite. All commands are run from the root (`/`); the same script names also work from within `cmd/ui`.
 
@@ -69,7 +75,7 @@ First-time setup and a full run of the `a11y` suite. All commands are run from t
 
     With `A11Y_TEST_SERVE="true"` (the default in `.env.example`), Playwright starts the Vite dev server itself, so no separately-running UI is required.
 
-3. **Run the suite for the first time** — this clears `cmd/ui/playwright/a11y/`, preserves authentication state and codegen drafts, and runs the full browser × theme matrix:
+3. **Run the suite for the first time** — this clears `cmd/ui/playwright/a11y/`, preserves authentication state and temporary codegen recordings, and runs the full browser × theme matrix:
 
     ```sh
     # Run the full test matrix
@@ -151,7 +157,7 @@ Running in interactive UI mode
 yarn test:a11y --ui
 ```
 
-The root script delegates to the `bloodhound-ui` workspace, whose `test:a11y` script clears the accessibility results directory (`cmd/ui/playwright/a11y`) while preserving authentication state and codegen drafts, then runs the suite configured in `playwright.a11y.config.ts`. CI-mode behavior (single worker, 1 retry, `forbidOnly`) is auto-enabled when `process.env.CI` is set, so there is no separate `:ci` script. The Playwright config (`cmd/ui/playwright.a11y.config.ts`) generates a project matrix of `chromium-light`, `chromium-dark`, `firefox-light`, `firefox-dark`, each depending on the `setup` project.
+The root script delegates to the `bloodhound-ui` workspace, whose `test:a11y` script clears the accessibility results directory (`cmd/ui/playwright/a11y`) while preserving authentication state and temporary codegen recordings, then runs the suite configured in `playwright.a11y.config.ts`. CI-mode behavior (single worker, 1 retry, `forbidOnly`) is auto-enabled when `process.env.CI` is set, so there is no separate `:ci` script. The Playwright config (`cmd/ui/playwright.a11y.config.ts`) generates a project matrix of `chromium-light`, `chromium-dark`, `firefox-light`, `firefox-dark`, each depending on the `setup` project.
 
 By default, the full 2x2 matrix (browsers x themes) is run, but projects may be individually specified:
 

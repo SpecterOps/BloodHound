@@ -32,6 +32,10 @@ The package is consumed via subpath imports so each consumer pulls only what it 
 | `bh-playwright-testing/auth`   | `loginAndSnapshotThemes` — logs in once and snapshots `storageState` for both light and dark themes.                                                     |
 | `bh-playwright-testing/stubs`  | A barrel of `page.route` stubs so tests can control API responses without mutating real state.                                                           |
 
+### Recorded API replay (`mocked`)
+
+Import `test` and `expect` from `bh-playwright-testing/mocked` to replay one adjacent HAR with a fake local session. The fixture includes the accessibility helpers. See [the HAR workflow](HAR.md) for recording, refreshing, and pruning.
+
 ### Accessibility (`axe`)
 
 The shared `test` extends Playwright's `test` with an axe-core fixture and a couple of helpers that collapse the boilerplate most specs repeat:

@@ -14,17 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import dotenv from 'dotenv';
-import { spawnSync } from 'node:child_process';
-import { access, lstat, mkdtemp, readFile, readdir, realpath, rm, rmdir, unlink } from 'node:fs/promises';
-import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
+import { lstat, readdir, realpath, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-
-const uiDirectory = process.cwd();
-dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
 function parseArguments(args) {
     let deleteOrphans = false;
@@ -39,93 +32,12 @@ function parseArguments(args) {
             throw new Error('Usage: yarn har:prune [--root <directory>] [--delete]');
         }
     }
-
     return { deleteOrphans, requestedRoot };
 }
 
-async function readSuiteReport() {
-    const listingDirectory = await mkdtemp(path.join(tmpdir(), 'bh-har-list-'));
-    const listingFile = path.join(listingDirectory, 'tests.json');
-    let report;
-    try {
-        const require = createRequire(path.join(uiDirectory, 'package.json'));
-        const cli = require.resolve('@playwright/test/cli');
-        const result = spawnSync(
-            process.execPath,
-            [cli, 'test', '-c', 'playwright.a11y.config.ts', '--list', '--reporter=json'],
-            {
-                cwd: uiDirectory,
-                env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_FILE: listingFile },
-                encoding: 'utf8',
-            }
-        );
-        if (result.error || result.status !== 0) {
-            throw new Error(
-                `Unable to list the complete Playwright suite: ${result.stderr || result.stdout || result.error}`
-            );
-        }
-        report = JSON.parse(await readFile(listingFile, 'utf8'));
-    } finally {
-        await unlink(listingFile).catch(() => {});
-        await rmdir(listingDirectory);
-    }
-
-    if (!report.config?.rootDir || report.errors?.length || !report.suites?.length) {
-        throw new Error('Playwright did not return a complete suite; no HAR files were touched.');
-    }
-    return report;
-}
-
-function collectActiveTestIds(suites, activeIds = new Set()) {
-    for (const suite of suites) {
-        for (const spec of suite.specs ?? []) activeIds.add(spec.id);
-        collectActiveTestIds(suite.suites ?? [], activeIds);
-    }
-    return activeIds;
-}
-
-async function pruneHarArtifacts() {
-    const { deleteOrphans, requestedRoot } = parseArguments(process.argv.slice(2));
-    const report = await readSuiteReport();
-    const activeIds = collectActiveTestIds(report.suites);
-    const configRoot = path.resolve(report.config.rootDir);
-    const root = path.resolve(configRoot, requestedRoot ?? 'test-artifacts/har');
-    if (!requestedRoot) console.log(`No HAR root supplied; using ${root}.`);
-    console.log(
-        deleteOrphans
-            ? 'Delete mode enabled; confirmed orphaned HAR directories will be removed.'
-            : 'Preview mode enabled; no HAR directories will be deleted.'
-    );
-    if (!isInsideDirectory(root, uiDirectory)) {
-        throw new Error(`HAR root must be a directory inside ${uiDirectory}: ${root}`);
-    }
-    const orphans = await findOrphanedHarDirectories(root, configRoot, activeIds);
-    if (orphans === null) {
-        console.log(`No HAR artifact directory exists at ${root}.`);
-        return;
-    }
-    const resolvedRoot = await realpath(root);
-    if (!isInsideDirectory(resolvedRoot, uiDirectory)) {
-        throw new Error(`Resolved HAR root leaves the UI workspace: ${resolvedRoot}`);
-    }
-
-    for (const directory of orphans) {
-        console.log(`${deleteOrphans ? 'Removing' : 'Would remove'} ${path.relative(uiDirectory, directory)}`);
-        if (deleteOrphans) await rm(directory, { recursive: true });
-    }
-    console.log(
-        `${orphans.length} orphaned HAR director${orphans.length === 1 ? 'y' : 'ies'} ${deleteOrphans ? 'removed' : 'found'}.`
-    );
-    if (!deleteOrphans && orphans.length) console.log('Run yarn har:prune --delete to remove these directories.');
-}
-
-// Paths passed here have already been resolved. Requiring the separator excludes both
-// the parent itself and sibling names sharing its prefix.
-function isInsideDirectory(directory, parent) {
-    return directory.startsWith(`${parent}${path.sep}`);
-}
-
-export async function findOrphanedHarDirectories(root, configRoot, activeIds) {
+// The generated fixture belongs to the adjacent spec with the same stem.
+// Directory entries that are symlinks are never followed.
+export async function findOrphanedHarFiles(root) {
     let children;
     try {
         children = await readdir(root, { withFileTypes: true });
@@ -133,44 +45,64 @@ export async function findOrphanedHarDirectories(root, configRoot, activeIds) {
         if (error.code === 'ENOENT') return null;
         throw error;
     }
+    const candidates = await Promise.all(
+        children.map(async (child) => {
+            const file = path.join(root, child.name);
+            if (child.isDirectory()) {
+                return (await findOrphanedHarFiles(file)) ?? [];
+            }
+            if (!child.isFile() || !child.name.endsWith('.har')) return [];
+            try {
+                await lstat(file.replace(/\.har$/, '.spec.ts'));
+                return [];
+            } catch (error) {
+                if (error.code === 'ENOENT') return [file];
+                throw error;
+            }
+        })
+    );
+    return candidates.flat().sort();
+}
 
-    const resolvedRoot = await realpath(root);
-    const orphans = [];
-    for (const child of children) {
-        if (!child.isDirectory()) continue;
-        const directory = path.join(root, child.name);
-        const markerFile = path.join(directory, '.har-fixture.json');
-        let marker;
-        try {
-            marker = JSON.parse(await readFile(markerFile, 'utf8'));
-        } catch {
-            continue; // Unmarked or malformed directories are never deleted automatically.
-        }
-        const belongsToSuite = marker.rootDir === configRoot;
-        const hasTestIdentity = typeof marker.testId === 'string';
-        if (!belongsToSuite || !hasTestIdentity || activeIds.has(marker.testId)) {
-            continue;
-        }
-        try {
-            await access(path.join(directory, 'recording.har'));
-        } catch {
-            continue;
-        }
-        if (!(await lstat(directory)).isDirectory() || !isInsideDirectory(await realpath(directory), resolvedRoot)) {
-            continue;
-        }
-        orphans.push(directory);
+function isInsideDirectory(directory, parent) {
+    return directory.startsWith(`${parent}${path.sep}`);
+}
+
+async function pruneHarArtifacts() {
+    const { deleteOrphans, requestedRoot } = parseArguments(process.argv.slice(2));
+    const uiDirectory = await realpath(process.cwd());
+    const root = path.resolve(uiDirectory, requestedRoot ?? 'tests/e2e');
+    if (!isInsideDirectory(root, uiDirectory)) {
+        throw new Error(`HAR root must be a directory inside ${uiDirectory}: ${root}`);
     }
-    return orphans;
+    console.log(`Scanning ${root}.`);
+    console.log(deleteOrphans ? 'Delete mode enabled.' : 'Preview mode enabled; no HAR files will be deleted.');
+    let resolvedRoot;
+    try {
+        resolvedRoot = await realpath(root);
+    } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        console.log(`No HAR directory exists at ${root}.`);
+        return;
+    }
+    if (!isInsideDirectory(resolvedRoot, uiDirectory)) {
+        throw new Error(`Resolved HAR root leaves the UI workspace: ${resolvedRoot}`);
+    }
+    const orphans = await findOrphanedHarFiles(resolvedRoot);
+    for (const file of orphans) {
+        console.log(`${deleteOrphans ? 'Removing' : 'Would remove'} ${path.relative(uiDirectory, file)}`);
+        if (deleteOrphans) await unlink(file);
+    }
+    console.log(
+        `${orphans.length} orphaned HAR file${orphans.length === 1 ? '' : 's'} ${deleteOrphans ? 'removed' : 'found'}.`
+    );
+    if (!deleteOrphans && orphans.length)
+        console.log('Run yarn har:prune --delete with the same --root to remove these files.');
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-    pruneHarArtifacts()
-        .then(() => {
-            console.log('HAR pruning check completed.');
-        })
-        .catch((error) => {
-            console.error(error);
-            process.exitCode = 1;
-        });
+    pruneHarArtifacts().catch((error) => {
+        console.error(error);
+        process.exitCode = 1;
+    });
 }

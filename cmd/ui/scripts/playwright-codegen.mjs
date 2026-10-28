@@ -17,7 +17,7 @@
 import dotenv from 'dotenv';
 import { spawn, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, lstat, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
@@ -28,19 +28,37 @@ import { makeMockedTest, sanitizeRecording } from './playwright-mocked-codegen.m
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
-export function makeDraftFileName(requestedName, branchName, randomSuffix) {
+export function makeRecordingName(requestedName, branchName, randomSuffix) {
     if (requestedName && path.basename(requestedName) !== requestedName) {
-        throw new Error('Draft name must be a file name without a directory.');
+        throw new Error('Recording name must be a file name without a directory.');
     }
 
-    const requestedStem = requestedName?.replace(/\.ts$/, '');
-    const generatedStem = `${branchName || 'playwright-draft'}-${randomSuffix}`;
+    const requestedStem = requestedName?.replace(/(?:\.a11y\.spec|\.spec)?\.ts$|\.har$/, '');
+    const generatedStem = `${branchName || 'playwright-test'}-${randomSuffix}`;
     const stem = (requestedStem || generatedStem)
         .normalize('NFKD')
         .replace(/[^a-zA-Z0-9_-]+/g, '-')
         .replace(/^-+|-+$/g, '');
-    if (!stem) throw new Error('Draft name must contain at least one letter or number.');
-    return `${stem}.ts`;
+    if (!stem) throw new Error('Recording name must contain at least one letter or number.');
+    return stem;
+}
+
+export async function selectRecordingName(directory, requestedName) {
+    for (let suffix = 0; ; suffix++) {
+        const name = suffix === 0 ? requestedName : `${requestedName}-${suffix}`;
+        const occupied = await Promise.all(
+            ['.spec.ts', '.har'].map(async (extension) => {
+                try {
+                    await lstat(path.join(directory, `${name}${extension}`));
+                    return true;
+                } catch (error) {
+                    if (error.code === 'ENOENT') return false;
+                    throw error;
+                }
+            })
+        );
+        if (!occupied.some(Boolean)) return name;
+    }
 }
 
 function currentBranch() {
@@ -107,19 +125,7 @@ async function ensureUiServer(homeUrl) {
 }
 
 async function ensureStorageState(playwrightCli, storageState) {
-    let storageStateExists = true;
-    try {
-        await access(storageState);
-    } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
-        storageStateExists = false;
-    }
-
-    console.log(
-        storageStateExists
-            ? `Refreshing authentication state at ${path.relative(uiDirectory, storageState)} to avoid a stale session.`
-            : `No authentication state found at ${path.relative(uiDirectory, storageState)}; generating it now.`
-    );
+    console.log(`Refreshing authentication state at ${path.relative(uiDirectory, storageState)}.`);
     const result = spawnSync(
         process.execPath,
         [playwrightCli, 'test', '-c', 'playwright.a11y.config.ts', '--project=setup'],
@@ -141,9 +147,14 @@ async function run() {
     }
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
 
-    const draftFileName = makeDraftFileName(args[0], currentBranch(), randomBytes(4).toString('hex'));
-    const name = draftFileName.replace(/(?:\.a11y\.spec)?\.ts$/, '');
+    const requestedName = makeRecordingName(args[0], currentBranch(), randomBytes(4).toString('hex'));
     const outputDirectory = path.join(uiDirectory, 'tests', 'e2e');
+    const name = await selectRecordingName(outputDirectory, requestedName);
+    if (name !== requestedName) {
+        console.warn(
+            `WARNING: A spec or HAR named ${requestedName} already exists. Using ${name} for this recording; existing files are preserved.`
+        );
+    }
     const output = path.join(outputDirectory, `${name}.spec.ts`);
     const fixture = path.join(outputDirectory, `${name}.har`);
     const storageState = path.join(uiDirectory, 'playwright', '.auth', 'user-light.json');
@@ -154,21 +165,12 @@ async function run() {
     const require = createRequire(path.join(uiDirectory, 'package.json'));
     const playwrightCli = require.resolve('@playwright/test/cli');
 
-    for (const target of [output, fixture]) {
-        try {
-            await access(target);
-        } catch (error) {
-            if (error.code === 'ENOENT') continue;
-            throw error;
-        }
-        throw new Error(`File already exists: ${target}. Choose a new test name.`);
-    }
     await mkdir(path.join(uiDirectory, 'playwright'), { recursive: true });
     const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'codegen-'));
     const rawSource = path.join(temporaryDirectory, 'recording.ts');
     const rawHar = path.join(temporaryDirectory, 'recording.har');
     if (!args[0]) {
-        console.log(`No draft name supplied; using the current branch and a random suffix: ${draftFileName}.`);
+        console.log(`No recording name supplied; using the current branch and a random suffix: ${name}.`);
     }
     const server = await ensureUiServer(homeUrl);
     try {
@@ -204,7 +206,9 @@ async function run() {
             child.on('exit', (code, signal) => resolve({ code, signal }));
         });
         if (result.signal || result.code !== 0) {
-            throw new Error(`Recording did not finish successfully. Draft files remain in ${temporaryDirectory}.`);
+            throw new Error(
+                `Recording did not finish successfully. Temporary recording files remain in ${temporaryDirectory}.`
+            );
         }
         const source = await readFile(rawSource, 'utf8');
         const har = sanitizeRecording(

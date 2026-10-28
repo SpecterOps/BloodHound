@@ -16,78 +16,59 @@
 
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { findOrphanedHarDirectories } from './prune-har.mjs';
+import { findOrphanedHarFiles } from './prune-har.mjs';
 
-test('prune candidates exclude active and unmarked recordings', async () => {
-    const root = await mkdtemp(path.join(tmpdir(), 'bh-har-prune-test-'));
-    const configRoot = '/example/tests';
-    try {
-        for (const [directory, testId] of [
-            ['active', 'still-here'],
-            ['orphan', 'renamed-test'],
-            ['other-suite', 'other-suite-test'],
-        ]) {
-            await mkdir(path.join(root, directory));
-            await writeFile(
-                path.join(root, directory, '.har-fixture.json'),
-                JSON.stringify({ testId, rootDir: directory === 'other-suite' ? '/other/tests' : configRoot })
-            );
-            await writeFile(path.join(root, directory, 'recording.har'), '{}');
-        }
-        await mkdir(path.join(root, 'hand-maintained'));
-        await writeFile(path.join(root, 'hand-maintained', 'recording.har'), '{}');
+const script = fileURLToPath(new URL('./prune-har.mjs', import.meta.url));
 
-        assert.deepEqual(await findOrphanedHarDirectories(root, configRoot, new Set(['still-here'])), [
-            path.join(root, 'orphan'),
-        ]);
-    } finally {
-        await rm(root, { recursive: true, force: true });
-    }
-});
-
-test('prune returns null for a missing root and ignores incomplete or unsafe candidates', async () => {
+test('prunes only unpaired HAR files, including nested files, without following symlinks', async () => {
     const workspace = await mkdtemp(path.join(tmpdir(), 'bh-har-prune-test-'));
-    const root = path.join(workspace, 'fixtures');
-    const configRoot = '/example/tests';
+    const root = path.join(workspace, 'tests/e2e');
     try {
-        assert.equal(await findOrphanedHarDirectories(root, configRoot, new Set()), null);
-        await mkdir(root);
-        for (const name of ['invalid-json', 'missing-id', 'missing-recording']) {
-            const directory = path.join(root, name);
-            await mkdir(directory);
-            const marker = name === 'missing-id' ? { rootDir: configRoot } : { rootDir: configRoot, testId: name };
-            await writeFile(
-                path.join(directory, '.har-fixture.json'),
-                name === 'invalid-json' ? '{' : JSON.stringify(marker)
-            );
-            if (name !== 'missing-recording') await writeFile(path.join(directory, 'recording.har'), '{}');
-        }
-        const outside = path.join(workspace, 'outside');
-        await mkdir(outside);
-        await writeFile(
-            path.join(outside, '.har-fixture.json'),
-            JSON.stringify({ rootDir: configRoot, testId: 'old' })
-        );
-        await writeFile(path.join(outside, 'recording.har'), '{}');
-        await symlink(outside, path.join(root, 'linked-directory'));
-        await writeFile(path.join(root, 'ordinary-file'), '{}');
-        assert.deepEqual(await findOrphanedHarDirectories(root, configRoot, new Set()), []);
+        assert.equal(await findOrphanedHarFiles(root), null);
+        await mkdir(path.join(root, 'nested'), { recursive: true });
+        await writeFile(path.join(root, 'active.har'), '{}');
+        await writeFile(path.join(root, 'active.spec.ts'), '');
+        await writeFile(path.join(root, 'orphan.har'), '{}');
+        await writeFile(path.join(root, 'nested/recording.har'), '{}');
+        await writeFile(path.join(workspace, 'outside.har'), '{}');
+        await symlink(path.join(workspace, 'outside.har'), path.join(root, 'linked.har'));
+        await symlink(workspace, path.join(root, 'linked-directory'));
+        assert.deepEqual(await findOrphanedHarFiles(root), [
+            path.join(root, 'nested/recording.har'),
+            path.join(root, 'orphan.har'),
+        ]);
+        const preview = spawnSync(process.execPath, [script], { cwd: workspace, encoding: 'utf8' });
+        assert.equal(preview.status, 0, preview.stderr);
+        assert.match(preview.stdout, /2 orphaned HAR files found/);
+        await access(path.join(root, 'orphan.har'));
+        const deletion = spawnSync(process.execPath, [script, '--delete'], { cwd: workspace, encoding: 'utf8' });
+        assert.equal(deletion.status, 0, deletion.stderr);
+        assert.match(deletion.stdout, /2 orphaned HAR files removed/);
+        await assert.rejects(access(path.join(root, 'orphan.har')), { code: 'ENOENT' });
+        await access(path.join(root, 'active.har'));
+        await access(path.join(workspace, 'outside.har'));
+        await symlink(tmpdir(), path.join(workspace, 'outside-link'));
+        const unsafe = spawnSync(process.execPath, [script, '--root', 'outside-link', '--delete'], {
+            cwd: workspace,
+            encoding: 'utf8',
+        });
+        assert.equal(unsafe.status, 1);
+        assert.match(unsafe.stderr, /leaves the UI workspace/);
     } finally {
         await rm(workspace, { recursive: true, force: true });
     }
 });
 
-for (const args of [['--unknown'], ['--root'], ['--root', '--delete']]) {
-    test(`invalid prune arguments fail before listing tests: ${args.join(' ')}`, () => {
-        const script = fileURLToPath(new URL('./prune-har.mjs', import.meta.url));
+for (const args of [['--unknown'], ['--root'], ['--root', '--delete'], ['--root', '..']]) {
+    test(`invalid prune arguments fail: ${args.join(' ')}`, () => {
         const result = spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' });
         assert.equal(result.status, 1);
-        assert.match(result.stderr, args[0] === '--unknown' ? /Usage: yarn har:prune/ : /--root requires a directory/);
+        assert.match(result.stderr, /Usage: yarn har:prune|--root requires a directory|HAR root must be/);
     });
 }

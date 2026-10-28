@@ -21,25 +21,48 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
-import { makeDevServerArguments, makeDraftFileName } from './playwright-codegen.mjs';
+import { makeDevServerArguments, makeRecordingName, selectRecordingName } from './playwright-codegen.mjs';
 import { makeMockedTest, sanitizeRecording } from './playwright-mocked-codegen.mjs';
 
-test('uses the requested draft file name', () => {
-    assert.equal(makeDraftFileName('findings-table.ts', 'ignored', 'ignored'), 'findings-table.ts');
-    assert.equal(makeDraftFileName('findings table', 'ignored', 'ignored'), 'findings-table.ts');
+test('increments recording names when either companion file exists and uses the name throughout the spec', async () => {
+    const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-codegen-name-'));
+    try {
+        assert.equal(await selectRecordingName(directory, 'feature'), 'feature');
+        await writeFile(path.join(directory, 'feature.spec.ts'), 'original spec');
+        await writeFile(path.join(directory, 'feature-1.har'), 'original HAR');
+        const name = await selectRecordingName(directory, 'feature');
+        assert.equal(name, 'feature-2');
+        const generated = makeMockedTest(
+            "test('test', async ({ page }) => {});",
+            name,
+            'http://localhost:3000',
+            '// Generated'
+        );
+        assert.match(generated, /feature-2\.har/);
+        assert.match(generated, /test\(["']feature-2["']/);
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('uses the requested recording name', () => {
+    assert.equal(makeRecordingName('findings-table.ts', 'ignored', 'ignored'), 'findings-table');
+    assert.equal(makeRecordingName('findings table', 'ignored', 'ignored'), 'findings-table');
+    assert.equal(makeRecordingName('findings-table.spec.ts', 'ignored', 'ignored'), 'findings-table');
+    assert.equal(makeRecordingName('findings-table.har', 'ignored', 'ignored'), 'findings-table');
 });
 
 test('uses the branch and a random suffix when no name is supplied', () => {
     assert.equal(
-        makeDraftFileName(undefined, 'BED-10004/playwright-hars', 'a1b2c3d4'),
-        'BED-10004-playwright-hars-a1b2c3d4.ts'
+        makeRecordingName(undefined, 'BED-10004/playwright-hars', 'a1b2c3d4'),
+        'BED-10004-playwright-hars-a1b2c3d4'
     );
-    assert.equal(makeDraftFileName(undefined, '', 'a1b2c3d4'), 'playwright-draft-a1b2c3d4.ts');
+    assert.equal(makeRecordingName(undefined, '', 'a1b2c3d4'), 'playwright-test-a1b2c3d4');
 });
 
-test('rejects paths and empty draft names', () => {
-    assert.throws(() => makeDraftFileName('../draft.ts', 'ignored', 'ignored'), /without a directory/);
-    assert.throws(() => makeDraftFileName('...', 'ignored', 'ignored'), /letter or number/);
+test('rejects paths and empty recording names', () => {
+    assert.throws(() => makeRecordingName('../draft.ts', 'ignored', 'ignored'), /without a directory/);
+    assert.throws(() => makeRecordingName('...', 'ignored', 'ignored'), /letter or number/);
 });
 
 test('builds the default Vite server command from the configured URL', () => {

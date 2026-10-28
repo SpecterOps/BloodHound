@@ -1,130 +1,30 @@
-# HAR recording and replay
+# API replay with one HAR per flow
 
--   Run UI commands from the consuming UI's `cmd/ui` directory.
--   Configure authentication and projects using the [package README](README.md).
--   Enable `serviceWorkers: 'block'` in your Playwright config.
-
--   Import `test` from `bh-playwright-testing`; the base Playwright fixture does not recognize `harMode`.
--   `off`: default; disables HAR capture and replay.
--   `record`: captures live traffic.
--   `update`: refreshes an existing recording using live traffic.
--   `mock`: replays recorded responses; unmatched requests fail by default.
-
-## Record
-
--   Save as `tests/a11y/har-example.a11y.spec.ts`; adapt actions and assertions to your scenario.
--   Run against the live UI and API.
+Codegen creates `<name>.spec.ts` and one adjacent `<name>.har` with embedded API responses. Run `yarn codegen <name> --url /ui/feature` from a consuming repository. If either file exists, codegen warns and selects an available integer suffix for both files and the test name.
 
 ```ts
-import { expect, test } from 'bh-playwright-testing';
+import { test, expect } from 'bh-playwright-testing/mocked';
 
-test.use({ harMode: 'record' });
+test.use({ replayHar: new URL('./my-feature.har', import.meta.url) });
 
-test('graph page', async ({ page }) => {
-    await page.goto('/ui/graphview');
-    await expect(page.getByRole('main')).toBeVisible();
+test('my-feature', async ({ page }) => {
+    await page.goto('/ui/feature');
+    await expect(page.getByRole('heading', { name: 'My feature' })).toBeVisible();
 });
 ```
 
-```sh
-yarn test:a11y \
-  tests/a11y/har-example.a11y.spec.ts --project=chromium-light
-```
+The fixture rebases API request URLs to the configured `baseURL`, blocks service workers, and starts with an isolated fake session. It replays `/api/` requests and aborts requests missing from the HAR. Frontend assets load from the UI server. No backend login is needed during replay.
 
-## Replay
+The mocked fixture also exposes the shared accessibility helpers, including `checkA11y`. Regular accessibility tests can continue importing `bh-playwright-testing` without loading HAR setup.
 
--   Change only the mode; keep the filename, titles, and project unchanged.
--   Reuse saved authentication with `--no-deps`.
+## Refresh and cleanup
 
-```ts
-test.use({ harMode: 'mock' });
-```
+Record the flow again, review the new pair, and replace the old HAR with the new capture. Update the spec only when the recorded actions or assertions changed. Delete the temporary suffixed pair after copying the changes. Rename or delete the spec and HAR together; update `replayHar` when renaming.
 
-```sh
-A11Y_TEST_SERVE=false yarn test:a11y \
-  tests/a11y/har-example.a11y.spec.ts --project=chromium-light --no-deps
-```
+`yarn har:prune` previews HAR files under `cmd/ui/tests/e2e` without a matching adjacent spec. Add `--delete` to remove them. There are no per-project copies, test identity hashes, markers, or JSON summary files.
 
-## Update
+Review captured application data before committing. Codegen sanitizes authorization and cookie headers and the login session token. Dynamic request bodies, external services, WebSockets, and changing responses to identical requests may need explicit route mocks.
 
--   Run the same command against live services, then restore `mock` and verify replay.
--   Failed updates preserve the previous recording.
+## Validation
 
-```ts
-test.use({ harMode: 'update' });
-```
-
-```sh
-yarn test:a11y \
-  tests/a11y/har-example.a11y.spec.ts --project=chromium-light
-```
-
-## Options and artifacts
-
--   Set HAR options at file scope, inside `describe`, or in typed config `use`.
--   `harRootDir` defaults to `test-artifacts/har`, relative to the configured test root.
--   `harNotFound: 'fallback'` allows unmatched requests to reach live services.
--   `harUrlFilter` defaults to `/\/api(?:\/|$)/`, so HARs mock API traffic while frontend assets continue loading from the UI server.
-
-```ts
-test.use({
-    harMode: 'mock',
-    harRootDir: './test-artifacts/har',
-    harNotFound: 'abort',
-    harUrlFilter: /\/api(?:\/|$)/,
-});
-```
-
--   Each test directory contains these files.
-
-```text
-test-artifacts/har/<test-label>-<identity-hash>/
-  recording.har
-  requests.json
-  responses.json
-  .har-fixture.json
-```
-
--   JSON summaries contain captured methods, URLs, statuses, MIME types, and sizes.
--   `harArtifacts` exposes `directory`, `recording`, `requests`, and `responses` paths.
--   Files, titles, projects, and repeated tests determine directory identity; retries reuse the same directory.
--   Record separately for every project that will replay the test.
--   HARs finalize after context closure, including failed tests when closure succeeds.
--   Use the fixture's default context; manually created contexts are unmanaged.
--   Block service workers; avoid route stubs for endpoints you want HARs to serve.
--   Inspect recordings for credentials, cookies, and sensitive response data before committing.
--   Keep temporary Playwright output outside version control.
-
-```ts
-import {
-    makeHarArtifactPaths,
-    readHar,
-    readJsonArtifact,
-    writeJsonArtifact,
-    summarizeHar,
-} from 'bh-playwright-testing';
-```
-
-## Remove obsolete recordings
-
--   Renaming tests leaves old directories; updates only replace recordings for unchanged identities.
--   From either UI workspace, preview orphaned fixtures before deleting.
--   Pruning checks the complete suite and preserves unmarked directories.
-
-```sh
-yarn har:prune
-yarn har:prune --delete
-yarn har:prune --root test-artifacts/custom-har
-```
-
-## Test the HAR utilities
-
--   Run from this package directory.
--   Tests exercise record, update, and mock modes against local endpoints.
-
-```sh
-yarn test
-yarn check-types
-yarn lint
-node --test ../../../cmd/ui/scripts/prune-har.test.mjs
-```
+Run `yarn workspace bh-playwright-testing test` for the self-contained replay check. It serves a small local page, replays GET and POST responses on a different host, verifies the fake session, and confirms unrecorded API calls cannot reach the server. No application backend is needed.

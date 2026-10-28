@@ -18,8 +18,8 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
     testDir: './tests',
-    outputDir: './playwright/har-results',
+    outputDir: './playwright/test-results',
     workers: 1,
-    retries: 1,
+    retries: 0,
     use: { browserName: 'chromium', headless: true },
 });
