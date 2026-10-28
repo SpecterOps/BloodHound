@@ -14,12 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { readFile, writeFile } from 'node:fs/promises';
-import { test as base } from './axe';
+import { test as base, expect } from '@playwright/test';
 
 /** Self-contained API replay for generated tests, with an isolated fake session. */
 export const test = base.extend<{ replayHar: URL | undefined }>({
     replayHar: [undefined, { option: true }],
-    installGraphDataStub: false,
     serviceWorkers: 'block',
     storageState: { cookies: [], origins: [] },
     context: async ({ context, baseURL, replayHar }, use, testInfo) => {
@@ -39,29 +38,7 @@ export const test = base.extend<{ replayHar: URL | undefined }>({
             if (!localStorage.getItem('persistedState')) {
                 localStorage.setItem(
                     'persistedState',
-                    JSON.stringify({
-                        auth: { sessionToken: 'playwright-mock-session' },
-                        global: {
-                            view: {
-                                darkMode: false,
-                                autoRunQueries: true,
-                                notifications: [],
-                                exploreLayout: 'sequential',
-                                isExploreTableSelected: false,
-                                isExploreLayoutSelected: false,
-                                selectedExploreTableColumns: {
-                                    kind: true,
-                                    label: true,
-                                    objectId: true,
-                                    isTierZero: true,
-                                },
-                                pinnedExploreTableColumns: ['action-menu', 'kind', 'label'],
-                                timeoutSetting: false,
-                                isExploreGraphHighlight: true,
-                                isExploreGraphLabelClip: true,
-                            },
-                        },
-                    })
+                    JSON.stringify({ auth: { sessionToken: 'playwright-mock-session' } })
                 );
             }
         });
@@ -69,4 +46,4 @@ export const test = base.extend<{ replayHar: URL | undefined }>({
     },
 });
 
-export { expect } from './axe';
+export { expect };

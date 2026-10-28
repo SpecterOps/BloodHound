@@ -4,7 +4,7 @@
     "type": "module",
     "private": true,
     "scripts": {
-        "test": "playwright test",
+        "test": "echo \"No tests for bh-playwright-testing\"",
         "check-types": "tsc --noEmit --pretty",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format": "prettier --write \"src/**/*.@(ts|md|json)\"",

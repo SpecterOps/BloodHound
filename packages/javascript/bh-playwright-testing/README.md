@@ -34,7 +34,7 @@ The package is consumed via subpath imports so each consumer pulls only what it 
 
 ### Recorded API replay (`mocked`)
 
-Import `test` and `expect` from `bh-playwright-testing/mocked` to replay one adjacent HAR with a fake local session. The fixture includes the accessibility helpers. See [the HAR workflow](HAR.md) for recording, refreshing, and pruning.
+Import `test` and `expect` from `bh-playwright-testing/mocked` to replay one adjacent HAR with a fake local session. See [the HAR workflow](HAR.md) for recording and updating mocks.
 
 ### Accessibility (`axe`)
 

@@ -16,53 +16,67 @@
 
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
-import { makeDevServerArguments, makeRecordingName, selectRecordingName } from './playwright-codegen.mjs';
 import { makeMockedTest, sanitizeRecording } from './playwright-mocked-codegen.mjs';
+import {
+    checkRecordingFiles,
+    makeDevServerArguments,
+    parseRecordingArguments,
+    recorderArguments,
+    saveRecording,
+} from './playwright-recording.mjs';
 
-test('increments recording names when either companion file exists and uses the name throughout the spec', async () => {
-    const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-codegen-name-'));
+test('requires a name and updates only an existing HAR', async () => {
+    assert.deepEqual(parseRecordingArguments(['feature', '--url', '/ui/explore'], 'codegen'), {
+        name: 'feature',
+        requestedUrl: '/ui/explore',
+    });
+    assert.deepEqual(parseRecordingArguments(['feature'], 'har:update'), {
+        name: 'feature',
+        requestedUrl: '/ui/',
+    });
+    for (const args of [
+        [],
+        ['../feature'],
+        ['feature.spec.ts'],
+        ['feature', '--bogus'],
+        ['feature', '--url'],
+        ['feature', '--update'],
+    ]) {
+        assert.throws(() => parseRecordingArguments(args, 'codegen'), /Usage:/);
+    }
+    const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-codegen-update-'));
+    const files = { spec: path.join(directory, 'feature.spec.ts'), har: path.join(directory, 'feature.har') };
+    const newHar = { log: { entries: [{ request: { url: '/api/items' } }] } };
     try {
-        assert.equal(await selectRecordingName(directory, 'feature'), 'feature');
-        await writeFile(path.join(directory, 'feature.spec.ts'), 'original spec');
-        await writeFile(path.join(directory, 'feature-1.har'), 'original HAR');
-        const name = await selectRecordingName(directory, 'feature');
-        assert.equal(name, 'feature-2');
-        const generated = makeMockedTest(
-            "test('test', async ({ page }) => {});",
-            name,
-            'http://localhost:3000',
-            '// Generated'
+        assert.throws(() => checkRecordingFiles(files, true), /requires an existing spec and HAR/);
+        await saveRecording(files, newHar, path.join(directory, 'pending.har'), 'edited spec', false);
+        assert.throws(() => checkRecordingFiles(files, false), /already exists/);
+        await saveRecording(
+            files,
+            { log: { entries: [] } },
+            path.join(directory, 'pending.har'),
+            'discarded spec',
+            true
         );
-        assert.match(generated, /feature-2\.har/);
-        assert.match(generated, /test\(["']feature-2["']/);
+        assert.equal(await readFile(files.spec, 'utf8'), 'edited spec');
+        assert.deepEqual(JSON.parse(await readFile(files.har, 'utf8')), { log: { entries: [] } });
     } finally {
         await rm(directory, { recursive: true, force: true });
     }
 });
 
-test('uses the requested recording name', () => {
-    assert.equal(makeRecordingName('findings-table.ts', 'ignored', 'ignored'), 'findings-table');
-    assert.equal(makeRecordingName('findings table', 'ignored', 'ignored'), 'findings-table');
-    assert.equal(makeRecordingName('findings-table.spec.ts', 'ignored', 'ignored'), 'findings-table');
-    assert.equal(makeRecordingName('findings-table.har', 'ignored', 'ignored'), 'findings-table');
-});
-
-test('uses the branch and a random suffix when no name is supplied', () => {
-    assert.equal(
-        makeRecordingName(undefined, 'BED-10004/playwright-hars', 'a1b2c3d4'),
-        'BED-10004-playwright-hars-a1b2c3d4'
+test('HAR refresh records data without creating source code', () => {
+    const args = recorderArguments('auth.json', undefined, 'capture.har', 'http://localhost:3000/ui/');
+    assert.ok(!args.includes('--output'));
+    assert.ok(args.includes('--save-har'));
+    assert.ok(
+        recorderArguments('auth.json', 'capture.ts', 'capture.har', 'http://localhost:3000/ui/').includes('--output')
     );
-    assert.equal(makeRecordingName(undefined, '', 'a1b2c3d4'), 'playwright-test-a1b2c3d4');
-});
-
-test('rejects paths and empty recording names', () => {
-    assert.throws(() => makeRecordingName('../draft.ts', 'ignored', 'ignored'), /without a directory/);
-    assert.throws(() => makeRecordingName('...', 'ignored', 'ignored'), /letter or number/);
 });
 
 test('builds the default Vite server command from the configured URL', () => {

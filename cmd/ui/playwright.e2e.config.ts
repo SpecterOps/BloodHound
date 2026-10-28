@@ -14,25 +14,28 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { defineConfig } from '@playwright/test';
-import type { A11yTestOptions } from 'bh-playwright-testing';
-import browserConfig from './playwright.a11y.config';
+import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export default defineConfig<A11yTestOptions>({
-    ...browserConfig,
+dotenv.config({ path: path.dirname(fileURLToPath(import.meta.url)) + '/.env', quiet: true });
+const baseURL = process.env.A11Y_TEST_URL || 'http://127.0.0.1:3000';
+const { hostname, port } = new URL(baseURL);
+
+export default defineConfig({
     testDir: './tests/e2e',
-    testMatch: '**/*.spec.ts',
     outputDir: './playwright/e2e/results',
-    reporter: [
-        [process.env.CI ? 'line' : 'list'],
-        ['html', { open: 'never', outputFolder: './playwright/e2e/html-report' }],
-    ],
-    projects: browserConfig.projects
-        ?.filter((project) => project.name !== 'setup')
-        .map((project) => ({
-            ...project,
-            testMatch: '**/*.spec.ts',
-            dependencies: [],
-            use: { ...project.use, storageState: { cookies: [], origins: [] } },
-        })),
+    reporter: process.env.CI ? 'line' : 'list',
+    use: { baseURL, serviceWorkers: 'block' },
+    projects: [{ name: 'chromium-light', use: devices['Desktop Chrome'] }],
+    webServer:
+        process.env.A11Y_TEST_SERVE?.toLowerCase() === 'true'
+            ? {
+                  command: `yarn dev --mode playwright --host ${hostname} --port ${port || '3000'}`,
+                  url: baseURL,
+                  reuseExistingServer: !process.env.CI,
+                  timeout: 180_000,
+              }
+            : undefined,
 });

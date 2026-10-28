@@ -8,55 +8,17 @@ Because these suites drive a real browser against a running app, the live state 
 
 ## Quick Start
 
-The Playwright helper commands can all run without arguments and print the defaults they select:
+Run these commands from the repository root. Set credentials in `cmd/ui/.env` and start a backend with data for the feature.
 
 ```sh
-yarn playwright:install # installs Chromium and Firefox
-yarn test:a11y          # runs the complete a11y suite and configured project matrix
-yarn test:e2e           # runs browser feature tests with their recorded API mocks
-yarn test:e2e:ui        # opens browser feature tests in Playwright UI mode
-yarn codegen            # logs in, records browser actions and API mocks, saves a new runnable spec
-yarn har:prune          # previews unpaired .har files under tests/e2e
+yarn playwright:install
+yarn test:a11y
+yarn codegen findings-table --url '/ui/graphview?view=table'
+yarn test:e2e tests/e2e/findings-table.spec.ts
+yarn har:update findings-table --url '/ui/graphview?view=table'
 ```
 
-To record a mocked test for any feature, run `yarn codegen [test-name] [--url /ui/feature]` from the repository root or `cmd/ui/`. The launcher loads `cmd/ui/.env`, starts or reuses the UI server when `A11Y_TEST_SERVE=true`, logs in automatically, and opens Playwright's recorder. The name and URL are optional; defaults are a unique branch-based name and `/ui/`.
-
-```sh
-yarn codegen
-yarn codegen my-feature --url '/ui/explore'
-```
-
-Click through the feature and use the recorder's **Assert visibility**, **Assert text**, or **Assert value** tools to specify the expected result. Close the recording browser to save these new files automatically:
-
-```text
-cmd/ui/tests/e2e/my-feature.spec.ts
-cmd/ui/tests/e2e/my-feature.har
-```
-
-No manual file creation or mock wiring is needed. The command automatically runs the new test with API replay and reports whether it passes; failed tests remain saved for review. Existing files are preserved; name collisions print a warning and select an incrementing suffix such as `my-feature-1` for the whole recording. The generated spec includes recorded actions and assertions, a fake local session, and replay of captured API responses. Review both files before committing: authorization/cookie headers and the login session token are removed from the published capture, but captured application data still needs review.
-
-Run the generated test with the command printed on completion:
-
-```sh
-yarn test:e2e tests/e2e/my-feature.spec.ts --project=chromium-light
-```
-
-Recording requires a working backend with representative data and configured credentials. Replay needs the UI server, but uses captured API responses and requires no login. The e2e suite has no live login setup dependency. API requests missing from the capture are aborted. Record the complete flow from its initial page, including assertions that wait for results. Only HTTP `/api/` requests are mocked; WebSockets, external services, random IDs in request bodies, and time-dependent flows may need adjustments. See the refresh workflow below to refresh mocks. These feature tests run separately from the accessibility suite; codegen does not add an axe scan automatically. When `A11Y_TEST_SERVE=false`, the target UI must already be running.
-
-### Refreshing and removing recordings
-
-Each generated flow owns one adjacent pair: `<name>.spec.ts` and `<name>.har`. Renaming a test title or changing the browser project does not create another fixture. Rename both files together and update the spec's `replayHar` URL when renaming a flow.
-
-To refresh a recording, run codegen with the same name. If either file already exists, codegen prints a warning and chooses the first available integer suffix (`<name>-1`, `<name>-2`, etc.). The selected name is used for both files, the test title, the HAR reference, and the replay command. Existing files stay intact. Review and replay the new pair before replacing the old pair; when keeping the original name, update the HAR reference and test title to match. Replacing a capture requires replacing just its one `.har` file.
-
-Delete both files when removing a flow. If the spec has already been deleted, preview leftover HAR files and then remove them with:
-
-```sh
-yarn har:prune           # preview unpaired .har files under tests/e2e
-yarn har:prune --delete  # delete those unpaired files
-```
-
-Pruning recursively checks for an adjacent `.spec.ts` with the same stem; it needs no running app, login, or Playwright test listing. Use `--root tests/e2e/subfolder` to narrow the scan (relative to `cmd/ui`). This convention is for generated pairs: keep shared or manually managed captures outside the scanned directory. Symlinks are skipped.
+Codegen opens a recorder. Click through the feature, add assertions, and close the browser. It creates `findings-table.spec.ts` and `findings-table.har` under `cmd/ui/tests/e2e/`, then runs the test. HARs are API mocks. `har:update` records a new HAR and preserves the spec. Review captured data before committing. Delete both files together when removing a test.
 
 First-time setup and a full run of the `a11y` suite. All commands are run from the root (`/`); the same script names also work from within `cmd/ui`.
 
