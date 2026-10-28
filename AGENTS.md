@@ -11,6 +11,13 @@
 -   Use `any` instead of `interface{}`.
 -   Prefer rich variables names, for example: `databaseInterface` instead of `di` or `dbi`.
 
+## TypeScript code standards
+
+-   Prefer pure functions: a function's result should depend only on its arguments, and it should not mutate arguments or other state owned by its caller.
+    -   Do not pass in an array or object for a function to fill (an "out parameter"); return the result instead and let the caller combine it, for example: `problems.push(...checkKeys(raw, ['cards', 'docs'], 'config'))` rather than `checkKeys(raw, ['cards', 'docs'], 'config', problems)`.
+    -   Mutating a local variable inside a function is fine, as long as the mutation is not visible to the caller until the value is returned.
+    -   Keep side effects (throwing, logging, I/O) in the top-level or entry-point function rather than spreading them across helpers.
+
 ## PR instructions
 
 -   Title format: <conventional commit tag>: <Title> <Jira tag>
