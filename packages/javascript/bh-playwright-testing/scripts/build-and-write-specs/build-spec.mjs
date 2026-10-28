@@ -57,7 +57,7 @@ function rewriteSpecName(node, parsed, name, visit) {
     }
 }
 
-function transformRecording(parsed, origin, name) {
+function transformBrowserActions(parsed, origin, name) {
     const transformed = ts.transform(parsed, [
         (context) => {
             const visit = (node) => {
@@ -77,8 +77,8 @@ function transformRecording(parsed, origin, name) {
 }
 
 export function makeMockedSpec(source, name, baseUrl, licenseHeader) {
-    const parsed = ts.createSourceFile('recording.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const actions = transformRecording(parsed, new URL(baseUrl).origin, name);
+    const parsed = ts.createSourceFile('browserActions.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const actions = transformBrowserActions(parsed, new URL(baseUrl).origin, name);
     return `${licenseHeader}
 import { test, expect } from 'bh-playwright-testing/har';
 

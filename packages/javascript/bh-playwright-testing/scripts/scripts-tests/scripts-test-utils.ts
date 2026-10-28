@@ -21,7 +21,7 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { makeMockedSpec } from '../build-and-write-specs/build-spec.mjs';
-import { sanitizeRecording } from '../transform-and-write-hars/sanitize-recording.mjs';
+import { sanitizeHar } from '../transform-and-write-hars/sanitize-har.mjs';
 
 export const secretCapture = {
     log: {
@@ -66,17 +66,17 @@ function entry(method, title) {
 
 export function sampleCapture() {
     const authenticatedEntry = entry('GET', 'Mocked GET');
-    authenticatedEntry.request.headers.push({ name: 'Authorization', value: 'Bearer recording-secret' });
-    return sanitizeRecording(
+    authenticatedEntry.request.headers.push({ name: 'Authorization', value: 'Bearer browserActions-secret' });
+    return sanitizeHar(
         { log: { entries: [entry('GET', 'Anonymous GET'), authenticatedEntry, entry('POST', 'Mocked POST')] } },
         { origins: [] }
     );
 }
 
-export const recordedSource = `import { test, expect } from '@playwright/test';
+export const browserActionsSource = `import { test, expect } from '@playwright/test';
 test.use({ storageState: 'private-auth.json' });
 test('example', async ({ page }) => {
-  await page.routeFromHAR('/private/temporary/recording.har', { url: '**/api/**' });
+  await page.routeFromHAR('/private/temporary/capture.har', { url: '**/api/**' });
   await page.goto('http://old-host:3000/ui/');
   await expect(page.getByRole('heading')).toHaveText('Mocked GET');
   await page.getByRole('button', {name:'Load'}).click();
@@ -153,9 +153,9 @@ export async function createReplayFixture() {
     const server = await startTestServer();
     const capture = sampleCapture();
     await writeFile(path.join(directory, 'example.har'), JSON.stringify(capture));
-    const generated = makeMockedSpec(recordedSource, 'example', 'http://old-host:3000', '// Generated');
+    const generated = makeMockedSpec(browserActionsSource, 'example', 'http://old-host:3000', '// Generated');
     assert.ok(!generated.includes('private-auth.json'));
-    assert.ok(!generated.includes('/private/temporary/recording.har'));
+    assert.ok(!generated.includes('/private/temporary/capture.har'));
     await writeFile(path.join(directory, 'example.spec.ts'), generated);
     await writeAuthState(directory, server.baseURL);
     const testModule = require.resolve('@playwright/test').replace(/index\.js$/, 'index.mjs');

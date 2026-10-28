@@ -19,15 +19,20 @@ import { recorderArguments } from './prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
 
-export async function captureBrowser(recording) {
-    console.log(`Opening the Playwright browser at ${recording.homeUrl}; this may take a few seconds...`);
+export async function captureBrowser(browserActions) {
+    console.log(`Opening the Playwright browser at ${browserActions.homeUrl}; this may take a few seconds...`);
     console.log('Record the flow, add assertions, then close the browser to save.');
     const result = await new Promise((resolve, reject) => {
         const child = spawn(
             process.execPath,
             [
-                recording.playwrightCli,
-                ...recorderArguments(recording.storageState, recording.rawSource, recording.rawHar, recording.homeUrl),
+                browserActions.playwrightCli,
+                ...recorderArguments(
+                    browserActions.storageState,
+                    browserActions.rawSource,
+                    browserActions.rawHar,
+                    browserActions.homeUrl
+                ),
             ],
             { cwd: uiDirectory, env: process.env, stdio: 'inherit' }
         );
@@ -36,6 +41,6 @@ export async function captureBrowser(recording) {
     });
     if (result.signal || result.code !== 0)
         throw new Error(
-            `Recording did not finish successfully. Temporary files remain in ${recording.temporaryDirectory}.`
+            `Browser action capture did not finish successfully. Temporary files remain in ${browserActions.temporaryDirectory}.`
         );
 }

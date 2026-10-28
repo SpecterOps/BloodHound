@@ -16,32 +16,32 @@
 
 import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { sanitizeRecording } from './sanitize-recording.mjs';
+import { sanitizeHar } from './sanitize-har.mjs';
 
 export async function writeNewHar(file, har) {
     await mkdir(path.dirname(file), { recursive: true });
     await writeFile(file, `${JSON.stringify(har, null, 2)}\n`, { flag: 'wx' });
 }
 
-export async function writeRecordedHar(recording) {
-    const rawHar = JSON.parse(await readFile(recording.rawHar, 'utf8'));
-    const authState = JSON.parse(await readFile(recording.storageState, 'utf8'));
-    const har = sanitizeRecording(rawHar, authState);
+export async function writeRecordedHar(browserActions) {
+    const rawHar = JSON.parse(await readFile(browserActions.rawHar, 'utf8'));
+    const authState = JSON.parse(await readFile(browserActions.storageState, 'utf8'));
+    const har = sanitizeHar(rawHar, authState);
     if (!har.log.entries.length) {
         throw new Error('No API responses captured. Visit your feature before closing codegen.');
     }
-    await writeNewHar(recording.files.har, har);
+    await writeNewHar(browserActions.files.har, har);
 }
 
 export async function writeUpdatedHar(captures, authState, spec) {
     const files = (await readdir(captures)).filter((name) => name.endsWith('.har'));
     if (!files.length) throw new Error(`No HAR files captured for ${spec.name}.`);
-    const recordings = await Promise.all(
+    const hars = await Promise.all(
         files.map(async (name) => JSON.parse(await readFile(path.join(captures, name), 'utf8')))
     );
-    const combined = recordings[0];
-    combined.log.entries = recordings.flatMap((recording) => recording.log.entries);
-    const har = sanitizeRecording(combined, authState);
+    const combined = hars[0];
+    combined.log.entries = hars.flatMap((har) => har.log.entries);
+    const har = sanitizeHar(combined, authState);
     if (!har.log.entries.length) throw new Error(`No API responses captured for ${spec.name}.`);
     const temporaryFile = path.join(path.dirname(captures), 'sanitized.har');
     await writeFile(temporaryFile, `${JSON.stringify(har, null, 2)}\n`);

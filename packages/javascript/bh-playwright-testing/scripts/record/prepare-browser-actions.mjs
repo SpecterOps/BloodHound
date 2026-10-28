@@ -17,19 +17,19 @@
 import { mkdir, mkdtemp } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { parseRecordingArguments } from './prepare-arguments.mjs';
-import { checkRecordingFiles } from './manage-files.mjs';
+import { parseBrowserActionsArguments } from './prepare-arguments.mjs';
+import { checkBrowserActionsFiles } from './manage-files.mjs';
 
 const uiDirectory = process.cwd();
 
-export async function prepareRecording(args) {
-    const { name, requestedUrl } = parseRecordingArguments(args);
+export async function prepareBrowserActions(args) {
+    const { name, requestedUrl } = parseBrowserActionsArguments(args);
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
     const files = {
         spec: path.join(uiDirectory, 'tests', 'e2e', `${name}.spec.ts`),
         har: path.join(uiDirectory, 'tests', 'e2e', `${name}.har`),
     };
-    checkRecordingFiles(files);
+    checkBrowserActionsFiles(files);
     const homeUrl = new URL(requestedUrl, process.env.A11Y_TEST_URL).toString();
     if (new URL(homeUrl).origin !== new URL(process.env.A11Y_TEST_URL).origin) {
         throw new Error('--url must use the configured A11Y_TEST_URL origin.');
@@ -44,7 +44,7 @@ export async function prepareRecording(args) {
         playwrightCli,
         temporaryDirectory,
         storageState: path.join(uiDirectory, 'playwright', '.auth', 'user-light.json'),
-        rawSource: path.join(temporaryDirectory, 'recording.ts'),
-        rawHar: path.join(temporaryDirectory, 'recording.har'),
+        rawSource: path.join(temporaryDirectory, 'browserActions.ts'),
+        rawHar: path.join(temporaryDirectory, 'capture.har'),
     };
 }

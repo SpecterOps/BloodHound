@@ -22,21 +22,21 @@ import { buildAndWriteSpec, writeSpec } from '../build-and-write-specs/write-spe
 import {
     closeReplayFixture,
     createReplayFixture,
-    recordedSource,
+    browserActionsSource,
     secretCapture,
     secretState,
     verifyReplay,
     verifyUpdate,
 } from './scripts-test-utils.ts';
-import { sanitizeRecording } from '../transform-and-write-hars/sanitize-recording.mjs';
+import { sanitizeHar } from '../transform-and-write-hars/sanitize-har.mjs';
 import { writeNewHar, writeRecordedHar, writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
 import { listRecordedSpecs, selectRecordedSpecs } from '../update-hars/select-specs.mjs';
-import { parseRecordingArguments, recorderArguments } from '../record/prepare-arguments.mjs';
-import { checkRecordingFiles } from '../record/manage-files.mjs';
+import { parseBrowserActionsArguments, recorderArguments } from '../record/prepare-arguments.mjs';
+import { checkBrowserActionsFiles } from '../record/manage-files.mjs';
 import { makeDevServerArguments } from '../record/ensure-server.mjs';
 
 test('codegen requires one valid spec name', () => {
-    assert.deepEqual(parseRecordingArguments(['feature', '--url', '/ui/explore']), {
+    assert.deepEqual(parseBrowserActionsArguments(['feature', '--url', '/ui/explore']), {
         name: 'feature',
         requestedUrl: '/ui/explore',
     });
@@ -48,7 +48,7 @@ test('codegen requires one valid spec name', () => {
         ['feature', '--url'],
         ['feature', '--update'],
     ]) {
-        assert.throws(() => parseRecordingArguments(args), /Usage:/);
+        assert.throws(() => parseBrowserActionsArguments(args), /Usage:/);
     }
 });
 
@@ -60,10 +60,10 @@ test('codegen creates a new spec and HAR; updater selects existing specs', async
         await assert.rejects(selectRecordedSpecs(directory, []), /Usage:.*<name>/);
         await assert.rejects(selectRecordedSpecs(directory, ['feature', 'other']), /Usage:.*<name>/);
         await assert.rejects(listRecordedSpecs(directory), /No recorded specs found/);
-        checkRecordingFiles(files);
+        checkBrowserActionsFiles(files);
         await writeNewHar(files.har, har);
         await writeSpec(files.spec, 'edited spec');
-        assert.throws(() => checkRecordingFiles(files), /already exists/);
+        assert.throws(() => checkBrowserActionsFiles(files), /already exists/);
         assert.deepEqual(await selectRecordedSpecs(directory, ['feature']), [{ name: 'feature', ...files }]);
         assert.deepEqual(await listRecordedSpecs(directory), [{ name: 'feature', ...files }]);
         assert.equal(await readFile(files.spec, 'utf8'), 'edited spec');
@@ -79,9 +79,9 @@ test('codegen records source alongside HAR data', () => {
     assert.ok(args.includes('--save-har'));
 });
 
-test('recording writers save a sanitized HAR and generated spec', async () => {
-    const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-recording-writers-'));
-    const recording = {
+test('browserActions writers save a sanitized HAR and generated spec', async () => {
+    const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-browserActions-writers-'));
+    const browserActions = {
         name: 'feature',
         rawHar: path.join(directory, 'raw.har'),
         rawSource: path.join(directory, 'raw.ts'),
@@ -89,13 +89,13 @@ test('recording writers save a sanitized HAR and generated spec', async () => {
         files: { har: path.join(directory, 'feature.har'), spec: path.join(directory, 'feature.spec.ts') },
     };
     try {
-        await writeFile(recording.rawHar, JSON.stringify(secretCapture));
-        await writeFile(recording.rawSource, recordedSource);
-        await writeFile(recording.storageState, JSON.stringify(secretState));
-        await writeRecordedHar(recording);
-        await buildAndWriteSpec(recording, 'http://old-host:3000');
-        assert.ok(!(await readFile(recording.files.har, 'utf8')).includes('secret'));
-        const spec = await readFile(recording.files.spec, 'utf8');
+        await writeFile(browserActions.rawHar, JSON.stringify(secretCapture));
+        await writeFile(browserActions.rawSource, browserActionsSource);
+        await writeFile(browserActions.storageState, JSON.stringify(secretState));
+        await writeRecordedHar(browserActions);
+        await buildAndWriteSpec(browserActions, 'http://old-host:3000');
+        assert.ok(!(await readFile(browserActions.files.har, 'utf8')).includes('secret'));
+        const spec = await readFile(browserActions.files.spec, 'utf8');
         assert.ok(spec.includes('feature.har'));
         assert.ok(spec.includes('replayHar'));
         assert.ok(!spec.includes('private-auth.json'));
@@ -143,7 +143,7 @@ test('builds the default Vite server command from the configured URL', () => {
 });
 
 test('removes credentials without mutating the original capture', () => {
-    const clean = sanitizeRecording(secretCapture, secretState);
+    const clean = sanitizeHar(secretCapture, secretState);
     assert.ok(!JSON.stringify(clean).includes('secret'));
     assert.deepEqual(clean.log.entries[0].request.headers, [
         { name: 'Authorization', value: 'Bearer playwright-mock-session' },

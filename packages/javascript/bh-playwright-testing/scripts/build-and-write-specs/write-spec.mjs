@@ -25,13 +25,13 @@ export async function writeSpec(file, spec) {
     await writeFile(file, spec, { flag: 'wx' });
 }
 
-export async function buildAndWriteSpec(recording, baseUrl) {
-    const source = await readFile(recording.rawSource, 'utf8');
+export async function buildAndWriteSpec(browserActions, baseUrl) {
+    const source = await readFile(browserActions.rawSource, 'utf8');
     const licenseHeader = (await readFile(fileURLToPath(import.meta.url), 'utf8')).split('\n\n')[0];
-    const spec = await prettier.format(makeMockedSpec(source, recording.name, baseUrl, licenseHeader), {
-        ...(await prettier.resolveConfig(recording.files.spec)),
+    const spec = await prettier.format(makeMockedSpec(source, browserActions.name, baseUrl, licenseHeader), {
+        ...(await prettier.resolveConfig(browserActions.files.spec)),
         parser: 'typescript',
     });
-    await writeSpec(recording.files.spec, spec);
+    await writeSpec(browserActions.files.spec, spec);
     return source;
 }

@@ -37,8 +37,8 @@ function stripCredentials(entry) {
     }
 }
 
-export function sanitizeRecording(recording, storageState) {
-    const document = structuredClone(recording);
+export function sanitizeHar(har, storageState) {
+    const document = structuredClone(har);
     for (const entry of document.log.entries) stripCredentials(entry);
     let json = JSON.stringify(document);
     for (const secret of sessionTokens(storageState)) json = json.replaceAll(secret, 'playwright-mock-session');

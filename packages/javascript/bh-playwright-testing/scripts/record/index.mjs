@@ -22,23 +22,23 @@ import { replayRecordedSpec } from '../run-specs/replay-spec.mjs';
 import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
 import { ensureStorageState } from './refresh-auth.mjs';
 import { captureBrowser } from './capture-browser.mjs';
-import { announceRecording } from './manage-files.mjs';
-import { prepareRecording } from './prepare-recording.mjs';
+import { announceBrowserActions } from './manage-files.mjs';
+import { prepareBrowserActions } from './prepare-browser-actions.mjs';
 import { ensureUiServer } from './ensure-server.mjs';
 
 dotenv.config({ path: path.join(process.cwd(), '.env'), quiet: true });
 
-async function runRecording() {
-    const recording = await prepareRecording(process.argv.slice(2));
-    const server = await ensureUiServer(recording.homeUrl);
+async function runBrowserActions() {
+    const browserActions = await prepareBrowserActions(process.argv.slice(2));
+    const server = await ensureUiServer(browserActions.homeUrl);
     try {
-        await ensureStorageState(recording.playwrightCli, recording.storageState);
-        await captureBrowser(recording);
-        await writeRecordedHar(recording);
-        const source = await buildAndWriteSpec(recording, process.env.A11Y_TEST_URL);
-        await rm(recording.temporaryDirectory, { recursive: true });
-        announceRecording(recording, source);
-        replayRecordedSpec(recording);
+        await ensureStorageState(browserActions.playwrightCli, browserActions.storageState);
+        await captureBrowser(browserActions);
+        await writeRecordedHar(browserActions);
+        const source = await buildAndWriteSpec(browserActions, process.env.A11Y_TEST_URL);
+        await rm(browserActions.temporaryDirectory, { recursive: true });
+        announceBrowserActions(browserActions, source);
+        replayRecordedSpec(browserActions);
     } finally {
         if (server) {
             console.log('Stopping the UI server started for codegen.');
@@ -47,7 +47,7 @@ async function runRecording() {
     }
 }
 
-runRecording().catch((error) => {
+runBrowserActions().catch((error) => {
     console.error(error.message);
     process.exitCode = 1;
 });

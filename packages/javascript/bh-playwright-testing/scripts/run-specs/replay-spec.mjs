@@ -19,17 +19,17 @@ import { fileURLToPath } from 'node:url';
 
 const uiDirectory = process.cwd();
 
-export function replayRecordedSpec(recording) {
+export function replayRecordedSpec(browserActions) {
     console.log('Checking the new spec with API replay and no live login...');
     const config = fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url));
     const result = spawnSync(
         process.execPath,
         [
-            recording.playwrightCli,
+            browserActions.playwrightCli,
             'test',
             '-c',
             config,
-            `tests/e2e/${recording.name}.spec.ts`,
+            `tests/e2e/${browserActions.name}.spec.ts`,
             '--project=chromium-light',
         ],
         { cwd: uiDirectory, env: process.env, stdio: 'inherit' }

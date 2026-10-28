@@ -16,7 +16,7 @@
 
 import { parseArgs } from 'node:util';
 
-export function parseRecordingArguments(args) {
+export function parseBrowserActionsArguments(args) {
     const usage = 'Usage: yarn codegen <name> [--url /ui/feature]';
     let parsed;
     try {
