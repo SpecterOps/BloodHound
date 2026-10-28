@@ -15,18 +15,46 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import dotenv from 'dotenv';
-import { rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { buildAndWriteSpec } from '../build-and-write-specs/write-spec.mjs';
 import { replayRecordedSpec } from '../run-specs/replay-spec.mjs';
 import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
 import { ensureStorageState } from './refresh-capture-auth.mjs';
-import { launchCodegenBrowser } from './launch-codegen-browser.mjs';
-import { announceFilesCreated } from './manage-files.mjs';
-import { prepareBrowserActions } from './prepare-browser-actions.mjs';
-import { prepareUiServer } from './prepare-ui-server.mjs';
+import { launchCodegenBrowser, prepareUiServer } from './launch-codegen-browser.mjs';
+import { announceFilesCreated, checkForDuplicateSpecName } from './manage-files.mjs';
+import { parseBrowserActionsArguments } from './prepare-browser-action-arguments.mjs';
 
-dotenv.config({ path: path.join(process.cwd(), '.env'), quiet: true });
+const uiDirectory = process.cwd();
+dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
+
+async function prepareBrowserActions(args) {
+    const { name, requestedUrl } = parseBrowserActionsArguments(args);
+    if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
+    const files = {
+        spec: path.join(uiDirectory, 'tests', 'e2e', `${name}.spec.ts`),
+        har: path.join(uiDirectory, 'tests', 'e2e', `${name}.har`),
+    };
+    checkForDuplicateSpecName(files);
+    const homeUrl = new URL(requestedUrl, process.env.A11Y_TEST_URL).toString();
+    if (new URL(homeUrl).origin !== new URL(process.env.A11Y_TEST_URL).origin) {
+        throw new Error('--url must use the configured A11Y_TEST_URL origin.');
+    }
+    const playwrightCli = createRequire(path.join(uiDirectory, 'package.json')).resolve('@playwright/test/cli');
+    await mkdir(path.join(uiDirectory, 'playwright'), { recursive: true });
+    const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'codegen-'));
+    return {
+        name,
+        files,
+        homeUrl,
+        playwrightCli,
+        temporaryDirectory,
+        storageState: path.join(uiDirectory, 'playwright', '.auth', 'user-light.json'),
+        rawSource: path.join(temporaryDirectory, 'browserActions.ts'),
+        rawHar: path.join(temporaryDirectory, 'capture.har'),
+    };
+}
 
 async function runBrowserActions() {
     const browserActions = await prepareBrowserActions(process.argv.slice(2));

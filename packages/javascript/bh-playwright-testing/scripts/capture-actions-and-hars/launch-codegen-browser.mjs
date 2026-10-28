@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { spawn } from 'node:child_process';
-import { recorderArguments } from './prepare-har-capture-arguments.mjs';
+import { recorderArguments } from './prepare-browser-action-arguments.mjs';
 
 const uiDirectory = process.cwd();
 
@@ -43,4 +43,60 @@ export async function launchCodegenBrowser(browserActions) {
         throw new Error(
             `Browser action capture did not finish successfully. Temporary files remain in ${browserActions.temporaryDirectory}.`
         );
+}
+
+export function makeDevServerArguments(baseUrl) {
+    const { hostname, port } = new URL(baseUrl);
+    return ['dev', '--mode', 'playwright', '--host', hostname, '--port', port || '3000'];
+}
+
+async function isReachable(url) {
+    try {
+        const response = await fetch(url, { signal: AbortSignal.timeout(2_000) });
+        await response.body?.cancel();
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function waitForServer(url, server) {
+    const deadline = Date.now() + 180_000;
+    while (Date.now() < deadline) {
+        if (await isReachable(url)) return;
+        if (server.exitCode !== null)
+            throw new Error(`The Playwright UI server exited before ${url} became available.`);
+        await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    throw new Error(`Timed out waiting for the Playwright UI server at ${url}.`);
+}
+
+function startUiServer(baseUrl) {
+    const serverArguments = makeDevServerArguments(baseUrl);
+    console.log(`No UI server detected; starting the configured default: yarn ${serverArguments.join(' ')}.`);
+    const yarnPath = process.env.npm_execpath;
+    return yarnPath
+        ? spawn(yarnPath, serverArguments, { cwd: uiDirectory, env: process.env, stdio: 'inherit' })
+        : spawn('yarn', serverArguments, { cwd: uiDirectory, env: process.env, stdio: 'inherit' });
+}
+
+export async function prepareUiServer(homeUrl) {
+    if (await isReachable(homeUrl)) {
+        console.log(`Reusing the UI server already running at ${homeUrl}.`);
+        return undefined;
+    }
+    if (process.env.A11Y_TEST_SERVE?.toLowerCase() !== 'true') {
+        throw new Error(
+            `Cannot reach ${homeUrl}. Start the UI or set A11Y_TEST_SERVE=true in cmd/ui/.env so codegen can start it.`
+        );
+    }
+    const server = startUiServer(process.env.A11Y_TEST_URL);
+    try {
+        await waitForServer(homeUrl, server);
+    } catch (error) {
+        server.kill();
+        throw error;
+    }
+    console.log(`The UI server is ready at ${homeUrl}.`);
+    return server;
 }
