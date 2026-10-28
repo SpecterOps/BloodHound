@@ -144,7 +144,7 @@ func (s *Handlers) SetApplicationConfiguration(response http.ResponseWriter, req
 	var setConfigBody UpdateParameterView
 	err := json.NewDecoder(request.Body).Decode(&setConfigBody)
 	if err != nil {
-		responses.WriteError(ctx, http.StatusBadRequest, "error unmarshalling JSON payload", response)
+		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, response)
 		return
 	}
 

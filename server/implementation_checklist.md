@@ -753,7 +753,7 @@ func (s Handlers) CreateMyRecord(response http.ResponseWriter, request *http.Req
 	var myRecordBody MyRecordInputView
 	err := json.NewDecoder(request.Body).Decode(&myRecordBody)
 	if err != nil {
-		responses.WriteError(ctx, http.StatusBadRequest, "error unmarshalling JSON payload", response)
+		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, response)
 		return
 	}
 
