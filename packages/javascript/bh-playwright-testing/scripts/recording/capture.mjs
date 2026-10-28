@@ -18,7 +18,8 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import prettier from 'prettier';
-import { makeMockedTest, sanitizeRecording } from '../mocked-codegen/index.mjs';
+import { makeMockedTest } from '../mocked-codegen/transform.mjs';
+import { sanitizeRecording } from '../mocked-codegen/sanitize.mjs';
 import { recorderArguments } from './arguments.mjs';
 
 const uiDirectory = process.cwd();

@@ -14,13 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { sanitizeRecording } from '../mocked-codegen/index.mjs';
-import { runPlaywright } from './run-playwright.mjs';
+import { sanitizeRecording } from '../mocked-codegen/sanitize.mjs';
 
 const uiDirectory = process.cwd();
+
+export function runPlaywright(playwrightCli, args, env = process.env) {
+    const result = spawnSync(process.execPath, [playwrightCli, ...args], {
+        cwd: uiDirectory,
+        env,
+        stdio: 'inherit',
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) throw new Error(`Playwright failed (exit code ${result.status}).`);
+}
 
 async function readCapturedHar(captures, authState, testName) {
     const captureFiles = (await readdir(captures)).filter((name) => name.endsWith('.har'));

@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { runReplay } from './replay-process.mjs';
+import { fileURLToPath } from 'node:url';
 
 const uiDirectory = process.cwd();
 
@@ -32,7 +33,21 @@ export function announceRecording(recording, source) {
 
 export function replayRecordedTest(recording) {
     console.log('Checking the new test with API replay and no live login...');
-    const exitCode = runReplay(recording.playwrightCli, recording.name);
+    const config = fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url));
+    const result = spawnSync(
+        process.execPath,
+        [
+            recording.playwrightCli,
+            'test',
+            '-c',
+            config,
+            `tests/e2e/${recording.name}.spec.ts`,
+            '--project=chromium-light',
+        ],
+        { cwd: uiDirectory, env: process.env, stdio: 'inherit' }
+    );
+    if (result.error) throw result.error;
+    const exitCode = result.status ?? 1;
     process.exitCode = exitCode;
     console.log(
         exitCode === 0

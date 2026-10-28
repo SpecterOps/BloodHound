@@ -18,15 +18,11 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
-import { selectRecordedTests } from '../e2e-update-mocks/index.mjs';
-import { sanitizeRecording } from '../mocked-codegen/index.mjs';
-import {
-    checkRecordingFiles,
-    makeDevServerArguments,
-    parseRecordingArguments,
-    recorderArguments,
-    saveRecording,
-} from '../recording/index.mjs';
+import { selectRecordedTests } from '../e2e-update-mocks/select-tests.mjs';
+import { sanitizeRecording } from '../mocked-codegen/sanitize.mjs';
+import { parseRecordingArguments, recorderArguments } from '../recording/arguments.mjs';
+import { checkRecordingFiles, saveRecording } from '../recording/files.mjs';
+import { makeDevServerArguments } from '../recording/server.mjs';
 import { closeReplayFixture, createReplayFixture, verifyReplay, verifyUpdate } from './replay-test.mjs';
 import { secretCapture, secretState } from './test-data.mjs';
 

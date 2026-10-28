@@ -22,13 +22,8 @@ import { parseRecordingArguments } from './arguments.mjs';
 import { ensureStorageState } from './auth.mjs';
 import { buildRecordedTest, captureBrowser } from './capture.mjs';
 import { checkRecordingFiles, saveRecording } from './files.mjs';
-import { recordingFiles, temporaryRecordingPaths } from './paths.mjs';
 import { announceRecording, replayRecordedTest } from './replay.mjs';
 import { ensureUiServer } from './server.mjs';
-
-export { parseRecordingArguments, recorderArguments } from './arguments.mjs';
-export { checkRecordingFiles, saveRecording } from './files.mjs';
-export { makeDevServerArguments } from './server.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
@@ -36,7 +31,10 @@ dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 async function prepareRecording(args) {
     const { name, requestedUrl } = parseRecordingArguments(args);
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
-    const files = recordingFiles(uiDirectory, name);
+    const files = {
+        spec: path.join(uiDirectory, 'tests', 'e2e', `${name}.spec.ts`),
+        har: path.join(uiDirectory, 'tests', 'e2e', `${name}.har`),
+    };
     checkRecordingFiles(files);
     const homeUrl = new URL(requestedUrl, process.env.A11Y_TEST_URL).toString();
     if (new URL(homeUrl).origin !== new URL(process.env.A11Y_TEST_URL).origin) {
@@ -50,7 +48,10 @@ async function prepareRecording(args) {
         files,
         homeUrl,
         playwrightCli,
-        ...temporaryRecordingPaths(uiDirectory, temporaryDirectory),
+        temporaryDirectory,
+        storageState: path.join(uiDirectory, 'playwright', '.auth', 'user-light.json'),
+        rawSource: path.join(temporaryDirectory, 'recording.ts'),
+        rawHar: path.join(temporaryDirectory, 'recording.har'),
     };
 }
 

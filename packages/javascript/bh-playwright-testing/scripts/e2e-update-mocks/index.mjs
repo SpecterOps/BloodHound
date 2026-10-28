@@ -18,11 +18,8 @@ import dotenv from 'dotenv';
 import { access, mkdir, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { runPlaywright } from './run-playwright.mjs';
 import { selectRecordedTests } from './select-tests.mjs';
-import { updateOneTest } from './update-one.mjs';
-
-export { selectRecordedTests } from './select-tests.mjs';
+import { runPlaywright, updateOneTest } from './update-one.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
