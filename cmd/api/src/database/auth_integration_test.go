@@ -44,8 +44,6 @@ const (
 	user3Principal = "first3.last3@example.com"
 	user4Principal = "first4.last4@example.com"
 	user5Principal = "dev.support@example.com"
-
-	roleToDelete = auth.RoleReadOnly
 )
 
 func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
@@ -61,42 +59,33 @@ func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
 }
 
 func createUser(t *testing.T, dbInst database.Database, principalName string) model.User {
-	if roles, err := dbInst.GetAllRoles(context.Background(), "", model.SQLFilter{}); err != nil {
-		t.Fatalf("Error fetching roles: %v", err)
-	} else if newUser, err := dbInst.CreateUser(context.Background(), model.User{
-		Roles:         roles,
+	t.Helper()
+	var (
+		ctx                      = context.Background()
+		roles, err               = dbInst.GetAllRoles(ctx, "", model.SQLFilter{})
+		administratorRole, found = roles.FindByName(auth.RoleAdministrator)
+		newUser                  model.User
+	)
+	require.NoError(t, err)
+	require.True(t, found, "Administrator role must exist")
+
+	newUser, err = dbInst.CreateUser(ctx, model.User{
+		Roles:         model.Roles{administratorRole},
 		FirstName:     null.StringFrom("First"),
 		LastName:      null.StringFrom("Last"),
 		EmailAddress:  null.StringFrom(principalName),
 		PrincipalName: principalName,
-	}); err != nil {
-		t.Fatalf("Error creating user: %v", err)
-	} else {
-		return newUser
-	}
-
-	return model.User{}
+	})
+	require.NoError(t, err)
+	return newUser
 }
 
 func initAndCreateUser(t *testing.T) (database.Database, model.User) {
+	t.Helper()
 	var (
-		dbInst, roles = initAndGetRoles(t)
-		user          = model.User{
-			Roles:         roles,
-			FirstName:     null.StringFrom("First"),
-			LastName:      null.StringFrom("Last"),
-			EmailAddress:  null.StringFrom(userPrincipal),
-			PrincipalName: userPrincipal,
-		}
+		databaseInterface = integration.SetupDB(t)
 	)
-
-	if newUser, err := dbInst.CreateUser(context.Background(), user); err != nil {
-		t.Fatalf("Error creating user: %v", err)
-	} else {
-		return dbInst, newUser
-	}
-
-	return nil, model.User{}
+	return databaseInterface, createUser(t, databaseInterface, userPrincipal)
 }
 
 func createAuthContext(user model.User) context.Context {
@@ -146,20 +135,22 @@ func TestDatabase_InitializeRoles(t *testing.T) {
 
 func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 	var (
-		ctx           = context.Background()
-		dbInst, roles = initAndGetRoles(t)
+		ctx                                   = context.Background()
+		dbInst, roles                         = initAndGetRoles(t)
+		administratorRole, administratorFound = roles.FindByName(auth.RoleAdministrator)
+		replacementRole, replacementFound     = roles.FindByName(auth.RoleUser)
 
 		users = model.Users{
 
 			{
-				Roles:         roles,
+				Roles:         model.Roles{administratorRole},
 				FirstName:     null.StringFrom("First"),
 				LastName:      null.StringFrom("Last"),
 				EmailAddress:  null.StringFrom(userPrincipal),
 				PrincipalName: userPrincipal,
 			},
 			{
-				Roles:         roles,
+				Roles:         model.Roles{administratorRole},
 				FirstName:     null.StringFrom("First2"),
 				LastName:      null.StringFrom("Last2"),
 				EmailAddress:  null.StringFrom(user2Principal),
@@ -167,7 +158,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 			},
 			// Support account
 			{
-				Roles:          roles,
+				Roles:          model.Roles{administratorRole},
 				FirstName:      null.StringFrom("Dev"),
 				LastName:       null.StringFrom("Support"),
 				EmailAddress:   null.StringFrom(user5Principal),
@@ -178,6 +169,8 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 
 		createdUsers []model.User
 	)
+	require.True(t, administratorFound, "Administrator role must exist")
+	require.True(t, replacementFound, "User role must exist")
 
 	for _, user := range users {
 		if _, err := dbInst.CreateUser(ctx, user); err != nil {
@@ -187,23 +180,10 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateUser, "principal_name", newUser.PrincipalName); err != nil {
 			t.Fatalf("Failed to validate CreateUser audit logs:\n%v", err)
 		} else {
-			for _, role := range roles {
-				found := false
-
-				for _, userRole := range newUser.Roles {
-					if userRole.Name == role.Name {
-						found = true
-						break
-					}
-				}
-
-				if !found {
-					t.Fatalf("Missing role %s", role.Name)
-				}
-			}
+			require.Equal(t, user.Roles.IDs(), newUser.Roles.IDs())
 			createdUsers = append(createdUsers, newUser)
 
-			newUser.Roles = newUser.Roles.RemoveByName(roleToDelete)
+			newUser.Roles = model.Roles{replacementRole}
 
 			if err := dbInst.UpdateUser(ctx, newUser); err != nil {
 				t.Fatalf("Failed to update user: %v", err)
@@ -211,8 +191,8 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 				t.Fatalf("Failed to validate UpdateUser audit logs:\n%v", err)
 			} else if updatedUser, err := dbInst.LookupUser(ctx, user.PrincipalName); err != nil {
 				t.Fatalf("Failed looking up user by principal %s: %v", user.PrincipalName, err)
-			} else if _, found := updatedUser.Roles.FindByName(roleToDelete); found {
-				t.Fatalf("Found role %s on user %s but expected it to be removed", roleToDelete, user.PrincipalName)
+			} else {
+				require.Equal(t, []int32{replacementRole.ID}, updatedUser.Roles.IDs())
 			}
 		}
 	}
