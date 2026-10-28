@@ -19,14 +19,14 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { buildAndWriteSpec, writeSpec } from '../build-and-write-specs/write-spec.mjs';
-import { closeReplayFixture, createReplayFixture, verifyReplay, verifyUpdate } from '../run-tests/verify-replay.mjs';
-import { recordedSource, secretCapture, secretState } from '../run-tests/make-fixtures.mjs';
+import { closeReplayFixture, createReplayFixture, verifyReplay, verifyUpdate } from './verify-replay.mjs';
+import { recordedSource, secretCapture, secretState } from './make-fixtures.mjs';
 import { sanitizeRecording } from '../transform-and-write-hars/sanitize-recording.mjs';
 import { writeNewHar, writeRecordedHar, writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
-import { listRecordedTests, selectRecordedTests } from '../update-hars/select-tests.mjs';
-import { parseRecordingArguments, recorderArguments } from './prepare-arguments.mjs';
-import { checkRecordingFiles } from './manage-files.mjs';
-import { makeDevServerArguments } from './ensure-server.mjs';
+import { listRecordedTests, selectRecordedTests } from '../update-hars/select-specs.mjs';
+import { parseRecordingArguments, recorderArguments } from '../record/prepare-arguments.mjs';
+import { checkRecordingFiles } from '../record/manage-files.mjs';
+import { makeDevServerArguments } from '../record/ensure-server.mjs';
 
 test('codegen requires one valid test name', () => {
     assert.deepEqual(parseRecordingArguments(['feature', '--url', '/ui/explore']), {

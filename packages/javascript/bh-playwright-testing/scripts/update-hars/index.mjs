@@ -19,8 +19,8 @@ import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
 import { authenticateForUpdate } from './refresh-auth.mjs';
-import { captureForUpdate } from './capture-test.mjs';
-import { selectRecordedTests } from './select-tests.mjs';
+import { captureForUpdate } from './capture-spec.mjs';
+import { selectRecordedTests } from './select-specs.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });

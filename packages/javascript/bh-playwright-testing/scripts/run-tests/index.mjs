@@ -20,7 +20,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { selectFailingTests } from '../update-hars/select-failures.mjs';
-import { listRecordedTests } from '../update-hars/select-tests.mjs';
+import { listRecordedTests } from '../update-hars/select-specs.mjs';
 import { updateSelectedTests } from '../update-hars/index.mjs';
 import { runSuite } from './run-suite.mjs';
 

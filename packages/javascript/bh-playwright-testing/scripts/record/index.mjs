@@ -18,7 +18,7 @@ import dotenv from 'dotenv';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { buildAndWriteSpec } from '../build-and-write-specs/write-spec.mjs';
-import { replayRecordedTest } from '../run-tests/replay-test.mjs';
+import { replayRecordedTest } from '../run-tests/replay-spec.mjs';
 import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
 import { ensureStorageState } from './refresh-auth.mjs';
 import { captureBrowser } from './capture-browser.mjs';
