@@ -21,8 +21,8 @@ type ProgressBarProps = Omit<
     ProgressPrimitive.Root.Props,
     'value' | 'min' | 'max' | 'children' | 'render' | 'role' | 'aria-valuenow' | 'aria-valuemin' | 'aria-valuemax'
 > & {
-    /** The completion percentage, from 0 to 100. */
-    value: number;
+    /** The completion percentage, from 0 to 100, or null when progress is unknown. */
+    value: number | null;
     /** A human-readable name for the process being tracked. */
     'aria-label': string;
 };
@@ -36,8 +36,8 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(({ classN
         min={0}
         max={100}
         className={cnWithState('w-full', className)}>
-        <ProgressPrimitive.Track className='relative h-2 w-full overflow-hidden rounded-full bg-neutral-200'>
-            <ProgressPrimitive.Indicator className='h-full bg-primary motion-safe:transition-[width]' />
+        <ProgressPrimitive.Track className='relative h-2 w-full overflow-hidden rounded-full bg-gray-700'>
+            <ProgressPrimitive.Indicator className='h-full bg-primary motion-safe:transition-[width] data-[indeterminate]:w-1/3 motion-safe:data-[indeterminate]:animate-progress-indeterminate' />
         </ProgressPrimitive.Track>
     </ProgressPrimitive.Root>
 ));
