@@ -17,8 +17,8 @@
 import { mkdir, mkdtemp } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { parseRecordingArguments } from './arguments.mjs';
-import { checkRecordingFiles } from './files.mjs';
+import { parseRecordingArguments } from './prepare-arguments.mjs';
+import { checkRecordingFiles } from './manage-files.mjs';
 
 const uiDirectory = process.cwd();
 

@@ -17,7 +17,7 @@
 import { access, mkdir, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { runPlaywright } from './capture.mjs';
+import { runPlaywright } from './capture-test.mjs';
 
 const uiDirectory = process.cwd();
 

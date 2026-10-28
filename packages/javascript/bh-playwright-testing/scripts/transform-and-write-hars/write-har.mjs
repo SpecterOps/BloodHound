@@ -16,7 +16,7 @@
 
 import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { sanitizeRecording } from './sanitize.mjs';
+import { sanitizeRecording } from './sanitize-recording.mjs';
 
 export async function writeNewHar(file, har) {
     await mkdir(path.dirname(file), { recursive: true });

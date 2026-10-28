@@ -17,14 +17,14 @@
 import dotenv from 'dotenv';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
-import { buildAndWriteSpec } from '../build-and-write-specs/write.mjs';
-import { replayRecordedTest } from '../run-tests/replay.mjs';
-import { writeRecordedHar } from '../transform-and-write-hars/write.mjs';
-import { ensureStorageState } from './auth.mjs';
-import { captureBrowser } from './capture.mjs';
-import { announceRecording } from './files.mjs';
-import { prepareRecording } from './prepare.mjs';
-import { ensureUiServer } from './server.mjs';
+import { buildAndWriteSpec } from '../build-and-write-specs/write-spec.mjs';
+import { replayRecordedTest } from '../run-tests/replay-test.mjs';
+import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
+import { ensureStorageState } from './refresh-auth.mjs';
+import { captureBrowser } from './capture-browser.mjs';
+import { announceRecording } from './manage-files.mjs';
+import { prepareRecording } from './prepare-recording.mjs';
+import { ensureUiServer } from './ensure-server.mjs';
 
 dotenv.config({ path: path.join(process.cwd(), '.env'), quiet: true });
 

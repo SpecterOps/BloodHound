@@ -18,7 +18,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import prettier from 'prettier';
-import { makeMockedTest } from './transform.mjs';
+import { makeMockedTest } from './build-spec.mjs';
 
 export async function writeSpec(file, spec) {
     await mkdir(path.dirname(file), { recursive: true });
