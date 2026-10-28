@@ -51,7 +51,9 @@ export function parseRecordingArguments(args) {
 
 export function checkRecordingFiles(files) {
     if (existsSync(files.spec) || existsSync(files.har)) {
-        throw new Error('A spec or HAR with this name already exists. Use yarn test:e2e:update-mocks to replace its HAR.');
+        throw new Error(
+            'A spec or HAR with this name already exists. Use yarn test:e2e:update-mocks to replace its HAR.'
+        );
     }
 }
 

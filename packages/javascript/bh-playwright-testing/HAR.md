@@ -28,7 +28,7 @@ A11Y_TEST_SERVE=true yarn test:e2e tests/e2e/my-feature.spec.ts
 -   To edit the generated test, keep its HAR reference:
 
 ```ts
-import { test, expect } from 'bh-playwright-testing/mocked';
+import { test, expect } from 'bh-playwright-testing/har';
 
 test.use({ replayHar: new URL('./my-feature.har', import.meta.url) });
 

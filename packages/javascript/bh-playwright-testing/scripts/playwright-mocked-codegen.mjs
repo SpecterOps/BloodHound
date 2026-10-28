@@ -94,7 +94,7 @@ export function makeMockedTest(source, name, baseUrl, licenseHeader) {
     const actions = ts.createPrinter().printFile(transformed.transformed[0]);
     transformed.dispose();
     return `${licenseHeader}
-import { test, expect } from 'bh-playwright-testing/mocked';
+import { test, expect } from 'bh-playwright-testing/har';
 
 test.use({ replayHar: new URL('./${name}.har', import.meta.url) });
 

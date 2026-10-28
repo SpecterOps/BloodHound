@@ -5,6 +5,7 @@
     "private": true,
     "scripts": {
         "test": "echo \"No tests for bh-playwright-testing\"",
+        "test:codegen": "node --test scripts/playwright-codegen.test.mjs",
         "check-types": "tsc --noEmit --pretty",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format": "prettier --write \"src/**/*.@(ts|md|json)\"",
@@ -13,7 +14,8 @@
     "exports": {
         ".": "./src/index.ts",
         "./axe": "./src/axe.ts",
-        "./mocked": "./src/mocked.ts",
+        "./har": "./src/har-test-core.ts",
+        "./mocked": "./src/har-test-core.ts",
         "./themes": "./src/themes.ts",
         "./auth": "./src/auth.ts",
         "./stubs": "./src/stubs/index.ts"
