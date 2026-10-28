@@ -1,6 +1,31 @@
-# API replay with one HAR per flow
+# Create a test with HAR mocks
 
-Codegen creates `<name>.spec.ts` and one adjacent `<name>.har` with embedded API responses. Run `yarn codegen <name> --url /ui/feature` from a consuming repository. If either file exists, codegen warns and selects an available integer suffix for both files and the test name.
+- Run commands from your application repository root.
+- Start a backend with data for your feature.
+- Set `A11Y_TEST_USERNAME` and `A11Y_TEST_PASSWORD` in `cmd/ui/.env`.
+- Record your test:
+
+```sh
+A11Y_TEST_SERVE=true yarn codegen my-feature --url '/ui/your-feature'
+```
+
+- Click through the feature and add assertions using the recorder's **Assert visibility**, **Assert text**, or **Assert value** tools.
+- Close the browser. Codegen creates your test and mocks called HARs:
+
+```text
+cmd/ui/tests/e2e/my-feature.spec.ts
+cmd/ui/tests/e2e/my-feature.har
+```
+
+- Codegen runs the test automatically. Review the assertions and captured data.
+- Run it again:
+
+```sh
+A11Y_TEST_SERVE=true yarn test:e2e tests/e2e/my-feature.spec.ts
+```
+
+- Replay needs a UI server; it does not need a backend or login.
+- To edit the generated test, keep its HAR reference:
 
 ```ts
 import { test, expect } from 'bh-playwright-testing/mocked';
@@ -8,23 +33,20 @@ import { test, expect } from 'bh-playwright-testing/mocked';
 test.use({ replayHar: new URL('./my-feature.har', import.meta.url) });
 
 test('my-feature', async ({ page }) => {
-    await page.goto('/ui/feature');
+    await page.goto('/ui/your-feature');
     await expect(page.getByRole('heading', { name: 'My feature' })).toBeVisible();
 });
 ```
 
-The fixture rebases API request URLs to the configured `baseURL`, blocks service workers, and starts with an isolated fake session. It replays `/api/` requests and aborts requests missing from the HAR. Frontend assets load from the UI server. No backend login is needed during replay.
+## Update or remove
 
-The mocked fixture also exposes the shared accessibility helpers, including `checkA11y`. Regular accessibility tests can continue importing `bh-playwright-testing` without loading HAR setup.
+- Record again with the same name. Existing files are preserved; new files get a suffix such as `my-feature-1`.
+- Review the new pair. Replace the original HAR and copy any changed actions or assertions into the original spec.
+- Keep the original spec's `./my-feature.har` reference. Delete the temporary pair and rerun the original test.
+- Delete or rename a spec and its HAR together; update the HAR reference when renaming.
+- Preview or delete HARs without matching specs:
 
-## Refresh and cleanup
-
-Record the flow again, review the new pair, and replace the old HAR with the new capture. Update the spec only when the recorded actions or assertions changed. Delete the temporary suffixed pair after copying the changes. Rename or delete the spec and HAR together; update `replayHar` when renaming.
-
-`yarn har:prune` previews HAR files under `cmd/ui/tests/e2e` without a matching adjacent spec. Add `--delete` to remove them. There are no per-project copies, test identity hashes, markers, or JSON summary files.
-
-Review captured application data before committing. Codegen sanitizes authorization and cookie headers and the login session token. Dynamic request bodies, external services, WebSockets, and changing responses to identical requests may need explicit route mocks.
-
-## Validation
-
-Run `yarn workspace bh-playwright-testing test` for the self-contained replay check. It serves a small local page, replays GET and POST responses on a different host, verifies the fake session, and confirms unrecorded API calls cannot reach the server. No application backend is needed.
+```sh
+yarn har:prune
+yarn har:prune --delete
+```

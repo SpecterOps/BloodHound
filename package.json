@@ -19,6 +19,7 @@
         "playwright:install": "yarn workspace bloodhound-ui playwright:install",
         "test:a11y": "yarn workspace bloodhound-ui test:a11y",
         "test:e2e": "yarn workspace bloodhound-ui test:e2e",
+        "test:e2e:ui": "yarn workspace bloodhound-ui test:e2e:ui",
         "codegen": "yarn workspace bloodhound-ui codegen",
         "har:prune": "yarn workspace bloodhound-ui har:prune",
         "report:a11y": "allure serve cmd/ui/playwright/a11y/allure-results",

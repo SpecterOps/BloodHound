@@ -14,6 +14,7 @@ The Playwright helper commands can all run without arguments and print the defau
 yarn playwright:install # installs Chromium and Firefox
 yarn test:a11y          # runs the complete a11y suite and configured project matrix
 yarn test:e2e           # runs browser feature tests with their recorded API mocks
+yarn test:e2e:ui        # opens browser feature tests in Playwright UI mode
 yarn codegen            # logs in, records browser actions and API mocks, saves a new runnable spec
 yarn har:prune          # previews unpaired .har files under tests/e2e
 ```
