@@ -177,8 +177,8 @@ export async function runRecording() {
     const server = await ensureUiServer(homeUrl);
     try {
         await ensureStorageState(playwrightCli, storageState);
-        console.log(`Recording ${homeUrl}. Add assertions in the recorder.`);
-        console.log('Close the recording browser to save.');
+        console.log(`Opening the Playwright browser at ${homeUrl}; this may take a few seconds...`);
+        console.log('Record the flow, add assertions, then close the browser to save.');
         const result = await new Promise((resolve, reject) => {
             const child = spawn(
                 process.execPath,
