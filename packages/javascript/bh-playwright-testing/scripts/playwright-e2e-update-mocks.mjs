@@ -21,6 +21,7 @@ import { access, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { sanitizeRecording } from './playwright-mocked-codegen.mjs';
 
 const uiDirectory = process.cwd();
@@ -62,7 +63,7 @@ async function updateOneTest(playwrightCli, test, authState) {
             [
                 'test',
                 '-c',
-                'playwright.e2e.config.ts',
+                fileURLToPath(new URL('../playwright.e2e.config.mjs', import.meta.url)),
                 path.relative(uiDirectory, test.spec),
                 '--project=chromium-light',
                 '--workers=1',

@@ -14,28 +14,32 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-dotenv.config({ path: path.dirname(fileURLToPath(import.meta.url)) + '/.env', quiet: true });
+const uiDirectory = process.cwd();
+dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
+
 const baseURL = process.env.A11Y_TEST_URL || 'http://127.0.0.1:3000';
 const { hostname, port } = new URL(baseURL);
+const tsconfig = path.join(uiDirectory, 'tsconfig.playwright.json');
 
-export default defineConfig({
-    testDir: './tests/e2e',
-    outputDir: './playwright/e2e/results',
+export default {
+    testDir: path.join(uiDirectory, 'tests', 'e2e'),
+    outputDir: path.join(uiDirectory, 'playwright', 'e2e', 'results'),
+    ...(existsSync(tsconfig) ? { tsconfig } : {}),
     reporter: process.env.CI ? 'line' : 'list',
-    use: { baseURL, serviceWorkers: 'block' },
-    projects: [{ name: 'chromium-light', use: devices['Desktop Chrome'] }],
+    use: { baseURL, serviceWorkers: 'block', storageState: { cookies: [], origins: [] } },
+    projects: [{ name: 'chromium-light', use: { browserName: 'chromium', viewport: { width: 1280, height: 720 } } }],
     webServer:
         process.env.A11Y_TEST_SERVE?.toLowerCase() === 'true'
             ? {
                   command: `yarn dev --mode playwright --host ${hostname} --port ${port || '3000'}`,
+                  cwd: uiDirectory,
                   url: baseURL,
                   reuseExistingServer: !process.env.CI,
                   timeout: 180_000,
               }
             : undefined,
-});
+};

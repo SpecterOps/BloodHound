@@ -226,7 +226,7 @@ export async function runRecording() {
                 playwrightCli,
                 'test',
                 '-c',
-                'playwright.e2e.config.ts',
+                fileURLToPath(new URL('../playwright.e2e.config.mjs', import.meta.url)),
                 `tests/e2e/${name}.spec.ts`,
                 '--project=chromium-light',
             ],
