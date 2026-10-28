@@ -14,37 +14,40 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { mkdir, mkdtemp } from 'node:fs/promises';
-import { createRequire } from 'node:module';
+import dotenv from 'dotenv';
+import { rm } from 'node:fs/promises';
 import path from 'node:path';
-import { parseRecordingArguments } from './arguments.mjs';
-import { checkRecordingFiles } from './files.mjs';
+import { buildAndWriteSpec } from '../build-and-write-specs/write.mjs';
+import { replayRecordedTest } from '../run-tests/replay.mjs';
+import { writeRecordedHar } from '../transform-and-write-hars/write.mjs';
+import { ensureStorageState } from './auth.mjs';
+import { captureBrowser } from './capture.mjs';
+import { announceRecording } from './files.mjs';
+import { prepareRecording } from './prepare.mjs';
+import { ensureUiServer } from './server.mjs';
 
-const uiDirectory = process.cwd();
+dotenv.config({ path: path.join(process.cwd(), '.env'), quiet: true });
 
-export async function prepareRecording(args) {
-    const { name, requestedUrl } = parseRecordingArguments(args);
-    if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
-    const files = {
-        spec: path.join(uiDirectory, 'tests', 'e2e', `${name}.spec.ts`),
-        har: path.join(uiDirectory, 'tests', 'e2e', `${name}.har`),
-    };
-    checkRecordingFiles(files);
-    const homeUrl = new URL(requestedUrl, process.env.A11Y_TEST_URL).toString();
-    if (new URL(homeUrl).origin !== new URL(process.env.A11Y_TEST_URL).origin) {
-        throw new Error('--url must use the configured A11Y_TEST_URL origin.');
+async function runRecording() {
+    const recording = await prepareRecording(process.argv.slice(2));
+    const server = await ensureUiServer(recording.homeUrl);
+    try {
+        await ensureStorageState(recording.playwrightCli, recording.storageState);
+        await captureBrowser(recording);
+        await writeRecordedHar(recording);
+        const source = await buildAndWriteSpec(recording, process.env.A11Y_TEST_URL);
+        await rm(recording.temporaryDirectory, { recursive: true });
+        announceRecording(recording, source);
+        replayRecordedTest(recording);
+    } finally {
+        if (server) {
+            console.log('Stopping the UI server started for codegen.');
+            server.kill();
+        }
     }
-    const playwrightCli = createRequire(path.join(uiDirectory, 'package.json')).resolve('@playwright/test/cli');
-    await mkdir(path.join(uiDirectory, 'playwright'), { recursive: true });
-    const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'codegen-'));
-    return {
-        name,
-        files,
-        homeUrl,
-        playwrightCli,
-        temporaryDirectory,
-        storageState: path.join(uiDirectory, 'playwright', '.auth', 'user-light.json'),
-        rawSource: path.join(temporaryDirectory, 'recording.ts'),
-        rawHar: path.join(temporaryDirectory, 'recording.har'),
-    };
 }
+
+runRecording().catch((error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+});

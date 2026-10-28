@@ -17,10 +17,10 @@
 import dotenv from 'dotenv';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
-import { writeUpdatedHar } from './transform-and-write-hars/write.mjs';
-import { authenticateForUpdate } from './update-hars/auth.mjs';
-import { captureForUpdate } from './update-hars/capture.mjs';
-import { selectRecordedTests } from './update-hars/select-tests.mjs';
+import { writeUpdatedHar } from '../transform-and-write-hars/write.mjs';
+import { authenticateForUpdate } from './auth.mjs';
+import { captureForUpdate } from './capture.mjs';
+import { selectRecordedTests } from './select-tests.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });

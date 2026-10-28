@@ -19,10 +19,10 @@ import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runSuite } from './run-tests/suite.mjs';
-import { selectFailingTests } from './update-hars/failed-tests.mjs';
-import { listRecordedTests } from './update-hars/select-tests.mjs';
-import { updateSelectedTests } from './update-hars.mjs';
+import { selectFailingTests } from '../update-hars/failed-tests.mjs';
+import { listRecordedTests } from '../update-hars/select-tests.mjs';
+import { updateSelectedTests } from '../update-hars/index.mjs';
+import { runSuite } from './suite.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
