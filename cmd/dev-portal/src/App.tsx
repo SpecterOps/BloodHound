@@ -14,6 +14,81 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-const App = () => <div>Bloodhound Dev Portal</div>;
+import type { ReactNode } from 'react';
+import { Link, Route, Routes } from 'react-router-dom';
+import { cards } from 'virtual:dev-portal';
+import { DocumentationIcon, StorybookIcon } from './components/Icons';
+import { PortalCard } from './components/PortalCard';
+import type { CardIcon } from './config/portalConfig';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { StorybookPage } from './pages/StorybookPage';
 
-export default App;
+const CARD_ICONS: Record<CardIcon, ReactNode> = {
+    documentation: <DocumentationIcon />,
+    storybook: <StorybookIcon />,
+};
+
+export default function App() {
+    return (
+        <Routes>
+            <Route path='/' element={<LandingPage />} />
+            <Route path='/storybook' element={<StorybookPage />} />
+            <Route path='*' element={<NotFoundPage />} />
+        </Routes>
+    );
+}
+
+function LandingPage() {
+    return (
+        <main className='site-shell'>
+            <div className='ambient-grid' aria-hidden='true' />
+
+            <div className='content-wrap'>
+                <header className='site-header'>
+                    <Link className='brand' to='/' aria-label='BloodHound Developer Portal home'>
+                        <span className='brand-mark' aria-hidden='true'>
+                            BH
+                        </span>
+                        <span>BloodHound</span>
+                        <span className='brand-divider' aria-hidden='true' />
+                        <span className='brand-context'>Developer Portal</span>
+                    </Link>
+                    <span className='header-label'>Internal resources</span>
+                </header>
+
+                <section className='hero' aria-labelledby='portal-title'>
+                    <div className='eyebrow'>
+                        <span className='eyebrow-dot' />
+                        Engineering enablement
+                    </div>
+                    <div className='hero-title' id='portal-title' role='heading' aria-level={1}>
+                        BloodHound
+                        <br />
+                        Developer Portal
+                    </div>
+                    <p className='hero-copy'>
+                        A central home for the tools, standards, and knowledge that help us build better software.
+                    </p>
+                </section>
+
+                <section className='portal-grid' aria-label='Developer portal destinations'>
+                    {cards.map((card, position) => (
+                        <PortalCard
+                            key={card.title}
+                            accent={card.accent}
+                            index={String(position + 1).padStart(2, '0')}
+                            title={card.title}
+                            description={card.description}
+                            href={card.href}
+                            icon={CARD_ICONS[card.icon]}
+                        />
+                    ))}
+                </section>
+
+                <footer>
+                    <span>© 2026 Specter Ops, Inc.</span>
+                </footer>
+            </div>
+        </main>
+    );
+}

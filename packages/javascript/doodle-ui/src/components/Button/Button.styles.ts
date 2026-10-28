@@ -13,28 +13,98 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { cva } from 'class-variance-authority';
+import { cn } from '../utils';
 
 export const buttonBaseClasses = [
     'inline-flex items-center justify-center whitespace-nowrap rounded-3xl transition-colors',
     'focus:outline-none focus-visible:focus-ring',
-    'disabled:text-[#616161] dark:disabled:text-[#A6A6A6] disabled:pointer-events-none disabled:opacity-50',
+    'disabled:text-[color:var(--button-disabled-text)] disabled:pointer-events-none disabled:opacity-50',
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 
 export const primaryClasses = [
-    'bg-primary text-common-white shadow-outer-1 dark:text-common-dark',
+    'bg-primary text-[color:var(--button-primary-text)] shadow-outer-1',
     'hover:bg-secondary',
     'focus-visible:bg-secondary',
-    'active:bg-[#0D0A30] dark:active:bg-[#8D8BF8]',
-    // Implement text-common when token experiment is ready - #0D0A30 matches light.primary.variant, #8D8BF8 matches dark.primary.variant.
-    'disabled:shadow-none disabled:bg-[#E3E7EA] dark:disabled:bg-[#2E2E2E]',
-    // disabled is neutral.light[200], text -> common.disabled // disabled:bg -> neutral.dark[700] or common.disabled.dark (token experiment)
+    'active:bg-[color:var(--button-primary-active-fill)]',
+    'disabled:shadow-none disabled:bg-[color:var(--button-disabled-fill)]',
 ];
 
 export const secondaryClasses = [
-    'bg-secondary-btn-fill text-common-dark shadow-outer-1 dark:text-common-white',
-    'hover:bg-secondary hover:text-common-white dark:hover:text-common-dark',
-    'focus-visible:bg-secondary focus-visible:text-common-white dark:focus-visible:text-common-dark',
-    'active:bg-secondary-btn-active-fill active:text-common-dark dark:active:text-common-white',
-    'disabled:bg-btn-disabled-fill disabled:shadow-none',
+    'bg-[color:var(--button-secondary-fill)] text-[color:var(--button-secondary-text)] shadow-outer-1',
+    'hover:bg-secondary hover:text-[color:var(--button-highlight-text)]',
+    'focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
+    'active:bg-[color:var(--button-secondary-active-fill)] active:text-[color:var(--button-secondary-text)]',
+    'disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none',
 ];
+
+export const ButtonVariants = cva(buttonBaseClasses, {
+    variants: {
+        variant: {
+            primary: primaryClasses,
+            secondary: secondaryClasses,
+            // TODO - remove in BED-7642
+            // used in DropdownTriggerContents & EnvironmentSelectorTrigger
+            /**
+             * @deprecated Use TextButton instead.
+             */
+            transparent: [
+                'border border-[color:var(--button-transparent-border)] bg-transparent text-main',
+                'hover:border-secondary hover:bg-secondary hover:text-[color:var(--button-highlight-text)] hover:no-underline',
+                'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
+            ],
+            // TODO - legacy, remove in BED-7635
+            /**
+             * @deprecated Use IconButton instead.
+             */
+            icon: [
+                'rounded-full bg-[color:var(--button-icon-fill)] text-common-dark shadow-outer-1 has-[svg]:p-2',
+                'hover:border-2 hover:border-primary',
+                'active:border-none',
+            ],
+        },
+        // TODO - remove as the only usage of this is with variant="text"
+        /**
+         * @deprecated Use TextButton instead.
+         */
+        fontColor: {
+            primary: 'text-primary',
+        },
+        /**
+         * @deprecated .
+         */
+        size: {
+            // TODO remove small variant in BED-7635
+            small: 'h-9 px-4 py-1 text-xs',
+            medium: 'h-10 px-6 py-2 text-sm/5',
+            // TODO remove large variant in BED-7635
+            large: 'h-11 px-8 py-3 text-base',
+        },
+    },
+
+    defaultVariants: {
+        variant: 'primary',
+        size: 'medium',
+    },
+});
+
+export const TextButtonBaseClasses = cn(
+    ...buttonBaseClasses,
+    'px-2 py-1 has-[svg]:px-1',
+    'active:text-[color:var(--button-text-active)]',
+    'hover:text-secondary',
+    'focus-visible:ring-0 focus-visible:ring-transparent focus-visible:text-secondary'
+);
+
+export const TextButtonVariants = cva(TextButtonBaseClasses, {
+    variants: {
+        fontColor: {
+            default: 'text-main',
+            primary: 'text-primary',
+        },
+    },
+    defaultVariants: {
+        fontColor: 'default',
+    },
+});
