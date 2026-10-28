@@ -17,11 +17,11 @@
 import { access, mkdir, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { runPlaywright, updateOneTest } from './update-one.mjs';
+import { runPlaywright } from './capture.mjs';
 
 const uiDirectory = process.cwd();
 
-export async function updateSelectedTests(tests) {
+export async function authenticateForUpdate() {
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
     const playwrightCli = createRequire(path.join(uiDirectory, 'package.json')).resolve('@playwright/test/cli');
     const storageState = path.join(uiDirectory, 'playwright', '.auth', 'user-light.json');
@@ -29,5 +29,5 @@ export async function updateSelectedTests(tests) {
     runPlaywright(playwrightCli, ['test', '-c', 'playwright.a11y.config.ts', '--project=setup']);
     await access(storageState);
     const authState = JSON.parse(await readFile(storageState, 'utf8'));
-    for (const test of tests) await updateOneTest(playwrightCli, test, authState);
+    return { playwrightCli, authState };
 }

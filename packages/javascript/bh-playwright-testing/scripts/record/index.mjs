@@ -14,21 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import dotenv from 'dotenv';
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { parseRecordingArguments } from './arguments.mjs';
-import { ensureStorageState } from './auth.mjs';
-import { buildRecordedTest, captureBrowser } from './capture.mjs';
-import { checkRecordingFiles, saveRecording } from './files.mjs';
-import { announceRecording, replayRecordedTest } from './replay.mjs';
-import { ensureUiServer } from './server.mjs';
+import { checkRecordingFiles } from './files.mjs';
 
 const uiDirectory = process.cwd();
-dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
-async function prepareRecording(args) {
+export async function prepareRecording(args) {
     const { name, requestedUrl } = parseRecordingArguments(args);
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
     const files = {
@@ -53,23 +47,4 @@ async function prepareRecording(args) {
         rawSource: path.join(temporaryDirectory, 'recording.ts'),
         rawHar: path.join(temporaryDirectory, 'recording.har'),
     };
-}
-
-export async function runRecording() {
-    const recording = await prepareRecording(process.argv.slice(2));
-    const server = await ensureUiServer(recording.homeUrl);
-    try {
-        await ensureStorageState(recording.playwrightCli, recording.storageState);
-        await captureBrowser(recording);
-        const { source, har, spec } = await buildRecordedTest(recording);
-        await saveRecording(recording.files, har, spec);
-        await rm(recording.temporaryDirectory, { recursive: true });
-        announceRecording(recording, source);
-        replayRecordedTest(recording);
-    } finally {
-        if (server) {
-            console.log('Stopping the UI server started for codegen.');
-            server.kill();
-        }
-    }
 }

@@ -15,30 +15,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import dotenv from 'dotenv';
-import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { selectFailingTests } from './failed-tests.mjs';
-import { listRecordedTests } from './select-tests.mjs';
-import { updateSelectedTests } from './update-selected.mjs';
+import { runSuite } from './run-tests/suite.mjs';
+import { selectFailingTests } from './update-hars/failed-tests.mjs';
+import { listRecordedTests } from './update-hars/select-tests.mjs';
+import { updateSelectedTests } from './update-hars.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
-
-function runSuite(playwrightCli, tests, reportFile) {
-    const config = fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url));
-    const args = ['test', '-c', config, ...tests.map((test) => path.relative(uiDirectory, test.spec))];
-    if (reportFile) args.push('--reporter=list,json', '--retries=0');
-    const result = spawnSync(process.execPath, [playwrightCli, ...args], {
-        cwd: uiDirectory,
-        env: { ...process.env, ...(reportFile ? { PLAYWRIGHT_JSON_OUTPUT_FILE: reportFile } : {}) },
-        stdio: 'inherit',
-    });
-    if (result.error) throw result.error;
-    return result.status ?? 1;
-}
 
 async function readFailures(reportFile, tests) {
     let report;

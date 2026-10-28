@@ -15,16 +15,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
-import { listRecordedTests, selectRecordedTests } from '../e2e-update-mocks/select-tests.mjs';
-import { sanitizeRecording } from '../mocked-codegen/sanitize.mjs';
-import { parseRecordingArguments, recorderArguments } from '../recording/arguments.mjs';
-import { checkRecordingFiles, saveRecording } from '../recording/files.mjs';
-import { makeDevServerArguments } from '../recording/server.mjs';
+import { buildAndWriteSpec, writeSpec } from './build-and-write-specs/write.mjs';
+import { parseRecordingArguments, recorderArguments } from './record/arguments.mjs';
+import { checkRecordingFiles } from './record/files.mjs';
+import { makeDevServerArguments } from './record/server.mjs';
 import { closeReplayFixture, createReplayFixture, verifyReplay, verifyUpdate } from './replay-test.mjs';
-import { secretCapture, secretState } from './test-data.mjs';
+import { recordedSource, secretCapture, secretState } from './test-data.mjs';
+import { sanitizeRecording } from './transform-and-write-hars/sanitize.mjs';
+import { writeNewHar, writeRecordedHar, writeUpdatedHar } from './transform-and-write-hars/write.mjs';
+import { listRecordedTests, selectRecordedTests } from './update-hars/select-tests.mjs';
 
 test('codegen requires one valid test name', () => {
     assert.deepEqual(parseRecordingArguments(['feature', '--url', '/ui/explore']), {
@@ -51,7 +53,9 @@ test('codegen creates a new spec and HAR; updater selects existing tests', async
         await assert.rejects(selectRecordedTests(directory, []), /Usage:.*<name>/);
         await assert.rejects(selectRecordedTests(directory, ['feature', 'other']), /Usage:.*<name>/);
         await assert.rejects(listRecordedTests(directory), /No recorded tests found/);
-        await saveRecording(files, har, 'edited spec');
+        checkRecordingFiles(files);
+        await writeNewHar(files.har, har);
+        await writeSpec(files.spec, 'edited spec');
         assert.throws(() => checkRecordingFiles(files), /already exists/);
         assert.deepEqual(await selectRecordedTests(directory, ['feature']), [{ name: 'feature', ...files }]);
         assert.deepEqual(await listRecordedTests(directory), [{ name: 'feature', ...files }]);
@@ -66,6 +70,48 @@ test('codegen records source alongside HAR data', () => {
     const args = recorderArguments('auth.json', 'capture.ts', 'capture.har', 'http://localhost:3000/ui/');
     assert.ok(args.includes('--output'));
     assert.ok(args.includes('--save-har'));
+});
+
+test('recording writers save a sanitized HAR and generated spec', async () => {
+    const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-recording-writers-'));
+    const recording = {
+        name: 'feature',
+        rawHar: path.join(directory, 'raw.har'),
+        rawSource: path.join(directory, 'raw.ts'),
+        storageState: path.join(directory, 'auth.json'),
+        files: { har: path.join(directory, 'feature.har'), spec: path.join(directory, 'feature.spec.ts') },
+    };
+    try {
+        await writeFile(recording.rawHar, JSON.stringify(secretCapture));
+        await writeFile(recording.rawSource, recordedSource);
+        await writeFile(recording.storageState, JSON.stringify(secretState));
+        await writeRecordedHar(recording);
+        await buildAndWriteSpec(recording, 'http://old-host:3000');
+        assert.ok(!(await readFile(recording.files.har, 'utf8')).includes('secret'));
+        const spec = await readFile(recording.files.spec, 'utf8');
+        assert.ok(spec.includes('feature.har'));
+        assert.ok(spec.includes('replayHar'));
+        assert.ok(!spec.includes('private-auth.json'));
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
+});
+
+test('HAR updater replaces captured data after sanitizing it', async () => {
+    const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-update-writer-'));
+    const captures = path.join(directory, 'captures');
+    const selected = { name: 'feature', har: path.join(directory, 'feature.har') };
+    try {
+        await mkdir(captures);
+        await writeFile(selected.har, 'old HAR');
+        await writeFile(path.join(captures, 'capture.har'), JSON.stringify(secretCapture));
+        await writeUpdatedHar(captures, secretState, selected);
+        const updated = await readFile(selected.har, 'utf8');
+        assert.ok(!updated.includes('secret'));
+        assert.equal(JSON.parse(updated).log.entries.length, 1);
+    } finally {
+        await rm(directory, { recursive: true, force: true });
+    }
 });
 
 test('builds the default Vite server command from the configured URL', () => {

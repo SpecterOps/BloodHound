@@ -5,7 +5,7 @@
     "private": true,
     "scripts": {
         "test": "echo \"No tests for bh-playwright-testing\"",
-        "test:codegen": "node --test scripts/codegen/codegen.test.mjs scripts/e2e-update-mocks/failed-tests.test.mjs",
+        "test:codegen": "node --test scripts/codegen.test.mjs scripts/failed-tests.test.mjs",
         "check-types": "tsc --noEmit --pretty",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "format": "prettier --write \"src/**/*.@(ts|md|json)\"",

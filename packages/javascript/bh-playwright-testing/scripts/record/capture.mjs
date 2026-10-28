@@ -15,11 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import prettier from 'prettier';
-import { makeMockedTest } from '../mocked-codegen/transform.mjs';
-import { sanitizeRecording } from '../mocked-codegen/sanitize.mjs';
 import { recorderArguments } from './arguments.mjs';
 
 const uiDirectory = process.cwd();
@@ -43,23 +38,4 @@ export async function captureBrowser(recording) {
         throw new Error(
             `Recording did not finish successfully. Temporary files remain in ${recording.temporaryDirectory}.`
         );
-}
-
-export async function buildRecordedTest(recording) {
-    const source = await readFile(recording.rawSource, 'utf8');
-    const har = sanitizeRecording(
-        JSON.parse(await readFile(recording.rawHar, 'utf8')),
-        JSON.parse(await readFile(recording.storageState, 'utf8'))
-    );
-    if (!har.log.entries.length)
-        throw new Error('No API responses captured. Visit your feature before closing codegen.');
-    const licenseHeader = (await readFile(fileURLToPath(import.meta.url), 'utf8')).split('\n\n')[0];
-    const spec = await prettier.format(
-        makeMockedTest(source, recording.name, process.env.A11Y_TEST_URL, licenseHeader),
-        {
-            ...(await prettier.resolveConfig(recording.files.spec)),
-            parser: 'typescript',
-        }
-    );
-    return { source, har, spec };
 }

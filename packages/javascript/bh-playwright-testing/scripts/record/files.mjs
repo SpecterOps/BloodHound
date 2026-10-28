@@ -14,11 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const uiDirectory = process.cwd();
+
+export function checkRecordingFiles(files) {
+    if (existsSync(files.spec) || existsSync(files.har)) {
+        throw new Error(
+            'A spec or HAR with this name already exists. Use yarn test:e2e:update-mocks to replace its HAR.'
+        );
+    }
+}
 
 export function announceRecording(recording, source) {
     if (!/\bexpect\s*\(/.test(source)) {
@@ -29,29 +36,4 @@ export function announceRecording(recording, source) {
     );
     console.log('Review the assertions and captured data before committing.');
     console.log(`Run: yarn test:e2e tests/e2e/${recording.name}.spec.ts`);
-}
-
-export function replayRecordedTest(recording) {
-    console.log('Checking the new test with API replay and no live login...');
-    const config = fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url));
-    const result = spawnSync(
-        process.execPath,
-        [
-            recording.playwrightCli,
-            'test',
-            '-c',
-            config,
-            `tests/e2e/${recording.name}.spec.ts`,
-            '--project=chromium-light',
-        ],
-        { cwd: uiDirectory, env: process.env, stdio: 'inherit' }
-    );
-    if (result.error) throw result.error;
-    const exitCode = result.status ?? 1;
-    process.exitCode = exitCode;
-    console.log(
-        exitCode === 0
-            ? 'Mocked test passed. Review the spec and HAR before committing.'
-            : 'Replay failed; the files are saved. Review the failure and record again if needed.'
-    );
 }

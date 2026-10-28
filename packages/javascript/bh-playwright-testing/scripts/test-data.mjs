@@ -16,7 +16,7 @@
 
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { sanitizeRecording } from '../mocked-codegen/sanitize.mjs';
+import { sanitizeRecording } from './transform-and-write-hars/sanitize.mjs';
 
 export const secretCapture = {
     log: {

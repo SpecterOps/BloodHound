@@ -15,12 +15,28 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import dotenv from 'dotenv';
+import { rm } from 'node:fs/promises';
 import path from 'node:path';
-import { selectRecordedTests } from './select-tests.mjs';
-import { updateSelectedTests } from './update-selected.mjs';
+import { writeUpdatedHar } from './transform-and-write-hars/write.mjs';
+import { authenticateForUpdate } from './update-hars/auth.mjs';
+import { captureForUpdate } from './update-hars/capture.mjs';
+import { selectRecordedTests } from './update-hars/select-tests.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
+
+export async function updateSelectedTests(tests) {
+    const { playwrightCli, authState } = await authenticateForUpdate();
+    for (const test of tests) {
+        const { captures, temporaryDirectory } = await captureForUpdate(playwrightCli, test);
+        try {
+            await writeUpdatedHar(captures, authState, test);
+            console.log(`Updated ${path.relative(uiDirectory, test.har)}.`);
+        } finally {
+            await rm(temporaryDirectory, { recursive: true, force: true });
+        }
+    }
+}
 
 async function main() {
     const tests = await selectRecordedTests(path.join(uiDirectory, 'tests', 'e2e'), process.argv.slice(2));
