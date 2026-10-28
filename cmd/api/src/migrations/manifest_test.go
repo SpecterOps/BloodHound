@@ -55,9 +55,6 @@ func newMigrationDataNode(migrationVersion version.Version) *graph.Node {
 }
 
 func TestRequiresMigration(t *testing.T) {
-	// Unit tests are built without version ldflags and therefore run as the development version
-	require.True(t, version.GetVersion().IsDevelopment())
-
 	t.Run("no migration data requires migration", func(t *testing.T) {
 		var (
 			mockCtrl    = gomock.NewController(t)
@@ -71,16 +68,16 @@ func TestRequiresMigration(t *testing.T) {
 		require.True(t, requiresMigration)
 	})
 
-	t.Run("development version always requires migration", func(t *testing.T) {
+	t.Run("migration data at current version does not require migration", func(t *testing.T) {
 		var (
 			mockCtrl    = gomock.NewController(t)
 			mockGraphDB = graphMocks.NewMockDatabase(mockCtrl)
 		)
 
-		expectMigrationDataLookup(mockCtrl, mockGraphDB, newMigrationDataNode(version.DevelopmentVersion), nil)
+		expectMigrationDataLookup(mockCtrl, mockGraphDB, newMigrationDataNode(version.GetVersion()), nil)
 
 		requiresMigration, err := migrations.RequiresMigration(context.Background(), mockGraphDB)
 		require.NoError(t, err)
-		require.True(t, requiresMigration)
+		require.False(t, requiresMigration)
 	})
 }
