@@ -197,6 +197,11 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 					"/api/v2/login": 1,
 				})
 			},
+
+			// Appcfg onion code has side effects executing a
+			// legacy method on the database. Until we can move this functionality
+			// into onion, we make do with injecting the appropriate method here
+			ConfigUpdateSideEffects: connections.RDMS,
 		})
 
 		// Set neo4j batch and flush sizes

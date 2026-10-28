@@ -100,3 +100,12 @@ func (s ParameterListView) ValidFilters() map[string]params.FilterableField {
 		"parameter": {Operators: []params.FilterOperator{params.Equals}, IsStringData: true},
 	}
 }
+
+type UpdateParameterView struct {
+	Key   services.ParameterKey `json:"key"`
+	Value types.JSONBObject     `json:"value"`
+}
+
+func (s UpdateParameterView) JSONView() ([]byte, error) {
+	return json.Marshal(&s)
+}

@@ -47,7 +47,7 @@ const (
 	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
 	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
 
-	// The below keys are not intended to be user updatable, so should not be added to IsValidKey
+	// The below keys are not intended to be user updatable
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
 	FedEULACustomTextKey                ParameterKey = "eula.custom_text"
 	TierManagementParameterKey          ParameterKey = "analysis.tiering"
@@ -94,30 +94,7 @@ func (s *Parameter) Map(value any) error {
 	return s.Value.Map(value)
 }
 
-// IMPORTANT: keep this in sync with bhce/server/appcfg/internal/services/param_types.go
-// paramDefinitions which is used by GET /config
-func (s *Parameter) IsValidKey(parameterKey ParameterKey) bool {
-	switch parameterKey {
-	case PasswordExpirationWindow, Neo4jConfigs, PruneTTL, CitrixRDPSupportKey, ReconciliationKey, ScheduledAnalysis, ClientMetricsKey, APITokenExpiration:
-		return true
-	default:
-		return false
-	}
-}
-
-// IsProtectedKey These keys should not be updatable by users
-// IMPORTANT: keep this in sync with bhce/server/appcfg/internal/services/param_types.go
-// paramDefinitions which is used by GET /config
-func (s *Parameter) IsProtectedKey(parameterKey ParameterKey) bool {
-	switch parameterKey {
-	case TrustedProxiesConfig, FedEULACustomTextKey, TierManagementParameterKey, SessionTTLHours, StaleClientUpdatedLogicKey, RetainIngestedFilesKey, AGTParameterKey, TimeoutLimit, APITokens, EnvironmentTargetedAccessControlKey, SupportAccountProvisioningKey, GraphStorageOptimizationKey, CustomSubClaimKey:
-		return true
-	default:
-		return false
-	}
-}
-
-// Validate WARNING - This will not protect the protected keys, use IsValidKey for that, this validates the json payload matches the intended parameter values
+// Validate just validates the json payload matches the intended parameter values
 func (s *Parameter) Validate() utils.Errors {
 	// validate the base parameter
 	var (
