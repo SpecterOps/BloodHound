@@ -18,13 +18,7 @@
 
 package services
 
-import (
-	"encoding/json"
-	"fmt"
-	"time"
-
-	iso8601 "github.com/channelmeter/iso8601duration"
-)
+import "github.com/specterops/bloodhound/packages/go/duration"
 
 // # Param keys
 
@@ -60,31 +54,10 @@ func (s *Parameter) Map(value any) error {
 
 // # Param types
 
-// ISODuration wraps time.Duration for json unmarshalling from ISO duration values.
-// Note durations from the ISO duration format are inexact.
-type ISODuration time.Duration
-
-func (s *ISODuration) UnmarshalJSON(b []byte) error {
-	var durationString string
-	if err := json.Unmarshal(b, &durationString); err != nil {
-		return err
-	}
-
-	// Parse the ISO 8601 duration string (e.g., "PT1H30M")
-	parsed, err := iso8601.FromString(durationString)
-	if err != nil {
-		return fmt.Errorf("invalid ISO 8601 duration: %w", err)
-	}
-
-	// Convert the parsed struct into a standard time.Duration
-	*s = ISODuration(parsed.ToDuration())
-	return nil
-}
-
 // ## Param types list
 
 type PasswordExpirationParameter struct {
-	Duration ISODuration `json:"duration"`
+	Duration duration.ISODuration `json:"duration"`
 }
 
 type Neo4jParameter struct {
@@ -97,8 +70,8 @@ type CitrixRDPSupportParameter struct {
 }
 
 type PruneTTLParameter struct {
-	BaseTTL           ISODuration `json:"base_ttl,omitempty" validate:"duration,min=P4D,max=P30D"`
-	HasSessionEdgeTTL ISODuration `json:"has_session_edge_ttl,omitempty" validate:"duration,min=P2D,max=P7D"`
+	BaseTTL           duration.ISODuration `json:"base_ttl,omitempty" validate:"duration,min=P4D,max=P30D"`
+	HasSessionEdgeTTL duration.ISODuration `json:"has_session_edge_ttl,omitempty" validate:"duration,min=P2D,max=P7D"`
 }
 
 type ReconciliationParameter struct {
@@ -156,8 +129,8 @@ type EnvironmentTargetedAccessControlParameter struct {
 
 type SupportAccountProvisioningParameter struct {
 	// Setting disabled as false means that you are explicitly opting into the feature
-	Enabled    bool        `json:"enabled,omitempty"`
-	SessionTTL ISODuration `json:"session_ttl,omitempty"`
+	Enabled    bool                 `json:"enabled,omitempty"`
+	SessionTTL duration.ISODuration `json:"session_ttl,omitempty"`
 }
 
 type ClientMetricsParameter struct {

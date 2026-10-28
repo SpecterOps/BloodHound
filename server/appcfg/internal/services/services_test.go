@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/duration"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -140,6 +141,19 @@ func TestService_ValidateValue(t *testing.T) {
 			expectError:  false,
 		},
 		{
+			name:         "happy: duration validation passes",
+			parameterKey: services.PruneTTL,
+			input:        `{"base_ttl": "P14D","has_session_edge_ttl": "P3D"}`,
+			expectError:  false,
+		},
+		{
+			name:            "sad: duration validation fails",
+			parameterKey:    services.PruneTTL,
+			input:           `{"base_ttl": "P14D","has_session_edge_ttl": "P100D"}`,
+			expectError:     true,
+			expectErrorLike: "HasSessionEdgeTTL: must be <= P7D",
+		},
+		{
 			name:            "sad: too few fields",
 			parameterKey:    services.APITokenExpiration,
 			input:           `{"expiration_period":200}`,
@@ -197,7 +211,7 @@ func TestService_GetConfig(t *testing.T) {
 
 	type fixtureParam2 struct {
 		Enabled    bool                 `json:"enabled,omitempty"`
-		SessionTTL services.ISODuration `json:"session_ttl,omitempty"`
+		SessionTTL duration.ISODuration `json:"session_ttl,omitempty"`
 	}
 
 	originalDefinitions := services.ParamTypeDefinitions
@@ -223,7 +237,7 @@ func TestService_GetConfig(t *testing.T) {
 			HydrationRules: services.ParamTypeHydrationRules[fixtureParam2]{
 				Default: fixtureParam2{
 					Enabled:    true,
-					SessionTTL: services.ISODuration(time.Hour * 2),
+					SessionTTL: duration.ISODuration(time.Hour * 2),
 				},
 			},
 		},
