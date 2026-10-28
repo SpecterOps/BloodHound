@@ -18,18 +18,24 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-export async function selectRecordedTests(directory, args) {
-    if (args.length > 1 || (args[0] && !/^[a-z0-9][a-z0-9_-]*$/i.test(args[0]))) {
-        throw new Error('Usage: yarn test:e2e:update-mocks [name]');
-    }
-    const names = args[0]
-        ? [args[0]]
-        : (await readdir(directory)).filter((name) => name.endsWith('.spec.ts')).map((name) => name.slice(0, -8));
+function recordedTest(directory, name) {
+    const spec = path.join(directory, `${name}.spec.ts`);
+    const har = path.join(directory, `${name}.har`);
+    if (!existsSync(spec) || !existsSync(har)) throw new Error(`Missing spec or HAR for ${name}.`);
+    return { name, spec, har };
+}
+
+export async function listRecordedTests(directory) {
+    const names = (await readdir(directory))
+        .filter((name) => name.endsWith('.spec.ts'))
+        .map((name) => name.slice(0, -8));
     if (!names.length) throw new Error('No recorded tests found.');
-    return names.map((name) => {
-        const spec = path.join(directory, `${name}.spec.ts`);
-        const har = path.join(directory, `${name}.har`);
-        if (!existsSync(spec) || !existsSync(har)) throw new Error(`Missing spec or HAR for ${name}.`);
-        return { name, spec, har };
-    });
+    return names.map((name) => recordedTest(directory, name));
+}
+
+export async function selectRecordedTests(directory, args) {
+    if (args.length !== 1 || !/^[a-z0-9][a-z0-9_-]*$/i.test(args[0])) {
+        throw new Error('Usage: yarn test:e2e:update-mocks <name>');
+    }
+    return [recordedTest(directory, args[0])];
 }

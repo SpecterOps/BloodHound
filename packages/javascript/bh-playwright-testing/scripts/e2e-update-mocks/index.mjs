@@ -15,25 +15,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import dotenv from 'dotenv';
-import { access, mkdir, readFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import { selectRecordedTests } from './select-tests.mjs';
-import { runPlaywright, updateOneTest } from './update-one.mjs';
+import { updateSelectedTests } from './update-selected.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
 async function main() {
     const tests = await selectRecordedTests(path.join(uiDirectory, 'tests', 'e2e'), process.argv.slice(2));
-    if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
-    const playwrightCli = createRequire(path.join(uiDirectory, 'package.json')).resolve('@playwright/test/cli');
-    const storageState = path.join(uiDirectory, 'playwright', '.auth', 'user-light.json');
-    await mkdir(path.dirname(storageState), { recursive: true });
-    runPlaywright(playwrightCli, ['test', '-c', 'playwright.a11y.config.ts', '--project=setup']);
-    await access(storageState);
-    const authState = JSON.parse(await readFile(storageState, 'utf8'));
-    for (const test of tests) await updateOneTest(playwrightCli, test, authState);
+    await updateSelectedTests(tests);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === new URL(import.meta.url).pathname) {

@@ -18,7 +18,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
-import { selectRecordedTests } from '../e2e-update-mocks/select-tests.mjs';
+import { listRecordedTests, selectRecordedTests } from '../e2e-update-mocks/select-tests.mjs';
 import { sanitizeRecording } from '../mocked-codegen/sanitize.mjs';
 import { parseRecordingArguments, recorderArguments } from '../recording/arguments.mjs';
 import { checkRecordingFiles, saveRecording } from '../recording/files.mjs';
@@ -48,10 +48,13 @@ test('codegen creates a new spec and HAR; updater selects existing tests', async
     const files = { spec: path.join(directory, 'feature.spec.ts'), har: path.join(directory, 'feature.har') };
     const har = { log: { entries: [{ request: { url: '/api/items' } }] } };
     try {
-        await assert.rejects(selectRecordedTests(directory, []), /No recorded tests found/);
+        await assert.rejects(selectRecordedTests(directory, []), /Usage:.*<name>/);
+        await assert.rejects(selectRecordedTests(directory, ['feature', 'other']), /Usage:.*<name>/);
+        await assert.rejects(listRecordedTests(directory), /No recorded tests found/);
         await saveRecording(files, har, 'edited spec');
         assert.throws(() => checkRecordingFiles(files), /already exists/);
-        assert.deepEqual(await selectRecordedTests(directory, []), [{ name: 'feature', ...files }]);
+        assert.deepEqual(await selectRecordedTests(directory, ['feature']), [{ name: 'feature', ...files }]);
+        assert.deepEqual(await listRecordedTests(directory), [{ name: 'feature', ...files }]);
         assert.equal(await readFile(files.spec, 'utf8'), 'edited spec');
         assert.deepEqual(JSON.parse(await readFile(files.har, 'utf8')), har);
     } finally {

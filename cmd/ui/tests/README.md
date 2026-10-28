@@ -15,10 +15,10 @@ yarn playwright:install
 yarn test:a11y
 yarn codegen findings-table --url '/ui/graphview?view=table'
 yarn test:e2e tests/e2e/findings-table.spec.ts
-yarn test:e2e:update-mocks
+yarn test:e2e:update-mocks findings-table
 ```
 
-Codegen opens a recorder. Click through the feature, add assertions, and close the browser. It creates `findings-table.spec.ts` and `findings-table.har` under `cmd/ui/tests/e2e/`, then runs the test. HARs are API mocks. `test:e2e:update-mocks` runs the recorded tests against the live backend and refreshes their HARs. Pass a name to update one test. Specs stay unchanged. Review captured data before committing. Delete both files together when removing a test.
+Codegen opens a recorder. Click through the feature, add assertions, and close the browser. It creates `findings-table.spec.ts` and `findings-table.har` under `cmd/ui/tests/e2e/`, then runs the test. HARs are API mocks. `test:e2e:update-mocks` requires a test name and refreshes only that test's HAR against the live backend. Specs stay unchanged. Review captured data before committing. Delete both files together when removing a test.
 
 First-time setup and a full run of the `a11y` suite. All commands are run from the root (`/`); the same script names also work from within `cmd/ui`.
 

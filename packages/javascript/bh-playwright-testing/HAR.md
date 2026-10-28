@@ -40,16 +40,16 @@ test('my-feature', async ({ page }) => {
 
 ## Update HARs
 
--   Start the backend and run all recorded tests:
-
-```sh
-A11Y_TEST_SERVE=true yarn test:e2e:update-mocks
-```
-
--   Or update one test:
+-   Start the backend and update one test's HAR:
 
 ```sh
 A11Y_TEST_SERVE=true yarn test:e2e:update-mocks my-feature
+```
+
+-   To run the suite and update HARs only for failing specs:
+
+```sh
+yarn test:e2e:update-failing-mocks
 ```
 
 -   The command logs in, runs existing specs against the live backend, and replaces their HARs after passing tests. It never runs codegen or changes specs.
