@@ -14,9 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { runRecording } from './recording.mjs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-runRecording().catch((error) => {
-    console.error(error.message);
-    process.exitCode = 1;
-});
+export function runReplay(playwrightCli, name) {
+    const config = fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url));
+    const result = spawnSync(
+        process.execPath,
+        [playwrightCli, 'test', '-c', config, `tests/e2e/${name}.spec.ts`, '--project=chromium-light'],
+        { cwd: process.cwd(), env: process.env, stdio: 'inherit' }
+    );
+    if (result.error) throw result.error;
+    return result.status ?? 1;
+}
