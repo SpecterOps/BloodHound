@@ -22,7 +22,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { sanitizeRecording } from './playwright-mocked-codegen.mjs';
+import { sanitizeRecording } from './mocked-codegen.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });

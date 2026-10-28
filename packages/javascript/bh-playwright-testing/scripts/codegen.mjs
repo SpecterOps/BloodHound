@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { runRecording } from './playwright-recording.mjs';
+import { runRecording } from './recording.mjs';
 
 runRecording().catch((error) => {
     console.error(error.message);

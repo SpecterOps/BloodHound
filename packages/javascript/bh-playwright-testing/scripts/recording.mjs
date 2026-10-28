@@ -24,7 +24,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import prettier from 'prettier';
-import { makeMockedTest, sanitizeRecording } from './playwright-mocked-codegen.mjs';
+import { makeMockedTest, sanitizeRecording } from './mocked-codegen.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });

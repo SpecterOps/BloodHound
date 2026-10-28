@@ -21,15 +21,15 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
-import { selectRecordedTests } from './playwright-e2e-update-mocks.mjs';
-import { makeMockedTest, sanitizeRecording } from './playwright-mocked-codegen.mjs';
+import { selectRecordedTests } from './e2e-update-mocks.mjs';
+import { makeMockedTest, sanitizeRecording } from './mocked-codegen.mjs';
 import {
     checkRecordingFiles,
     makeDevServerArguments,
     parseRecordingArguments,
     recorderArguments,
     saveRecording,
-} from './playwright-recording.mjs';
+} from './recording.mjs';
 
 test('codegen creates a new spec and HAR; updater selects existing tests', async () => {
     assert.deepEqual(parseRecordingArguments(['feature', '--url', '/ui/explore']), {
