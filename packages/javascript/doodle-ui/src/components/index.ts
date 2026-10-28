@@ -38,6 +38,7 @@ export * from './Menu';
 export * from './MultiSelect';
 export * from './Pagination';
 export * from './Popover';
+export * from './ProgressBar';
 export * from './RadialGauge';
 export * from './RadioGroup';
 export * from './RiskBadge';
