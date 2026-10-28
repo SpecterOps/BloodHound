@@ -19,8 +19,15 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { buildAndWriteSpec, writeSpec } from '../build-and-write-specs/write-spec.mjs';
-import { closeReplayFixture, createReplayFixture, verifyReplay, verifyUpdate } from './verify-replay.mjs';
-import { recordedSource, secretCapture, secretState } from './make-fixtures.mjs';
+import {
+    closeReplayFixture,
+    createReplayFixture,
+    recordedSource,
+    secretCapture,
+    secretState,
+    verifyReplay,
+    verifyUpdate,
+} from './scripts-test-utils.ts';
 import { sanitizeRecording } from '../transform-and-write-hars/sanitize-recording.mjs';
 import { writeNewHar, writeRecordedHar, writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
 import { listRecordedSpecs, selectRecordedSpecs } from '../update-hars/select-specs.mjs';

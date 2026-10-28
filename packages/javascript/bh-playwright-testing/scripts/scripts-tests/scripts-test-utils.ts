@@ -21,7 +21,101 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { makeMockedSpec } from '../build-and-write-specs/build-spec.mjs';
-import { recordedSource, sampleCapture, writeAuthState, writeTestConfig } from './make-fixtures.mjs';
+import { sanitizeRecording } from '../transform-and-write-hars/sanitize-recording.mjs';
+
+export const secretCapture = {
+    log: {
+        entries: [
+            {
+                request: {
+                    headers: [{ name: 'Authorization', value: 'Bearer secret' }],
+                    cookies: [{ value: 'secret' }],
+                },
+                response: {
+                    headers: [{ name: 'Set-Cookie', value: 'secret' }],
+                    cookies: [],
+                    content: { text: 'secret' },
+                },
+            },
+        ],
+    },
+};
+
+export const secretState = {
+    origins: [
+        { localStorage: [{ name: 'persistedState', value: JSON.stringify({ auth: { sessionToken: 'secret' } }) }] },
+    ],
+};
+
+function entry(method, title) {
+    return {
+        request: {
+            method,
+            url: 'http://old-host:3000/api/v2/items',
+            headers: [],
+            cookies: [],
+            ...(method === 'POST' ? { postData: { mimeType: 'application/json', text: '{"query":"items"}' } } : {}),
+        },
+        response: {
+            status: 200,
+            headers: [{ name: 'content-type', value: 'application/json' }],
+            content: { mimeType: 'application/json', text: JSON.stringify({ title }) },
+        },
+    };
+}
+
+export function sampleCapture() {
+    const authenticatedEntry = entry('GET', 'Mocked GET');
+    authenticatedEntry.request.headers.push({ name: 'Authorization', value: 'Bearer recording-secret' });
+    return sanitizeRecording(
+        { log: { entries: [entry('GET', 'Anonymous GET'), authenticatedEntry, entry('POST', 'Mocked POST')] } },
+        { origins: [] }
+    );
+}
+
+export const recordedSource = `import { test, expect } from '@playwright/test';
+test.use({ storageState: 'private-auth.json' });
+test('example', async ({ page }) => {
+  await page.routeFromHAR('/private/temporary/recording.har', { url: '**/api/**' });
+  await page.goto('http://old-host:3000/ui/');
+  await expect(page.getByRole('heading')).toHaveText('Mocked GET');
+  await page.getByRole('button', {name:'Load'}).click();
+  await expect(page.getByRole('heading')).toHaveText('Mocked POST');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('persistedState')).auth.sessionToken)).toBe('playwright-mock-session');
+});`;
+
+export async function writeAuthState(directory, baseURL) {
+    await writeFile(
+        path.join(directory, 'auth.json'),
+        JSON.stringify({
+            cookies: [],
+            origins: [
+                {
+                    origin: baseURL,
+                    localStorage: [
+                        {
+                            name: 'persistedState',
+                            value: JSON.stringify({ auth: { sessionToken: 'playwright-mock-session' } }),
+                        },
+                    ],
+                },
+            ],
+        })
+    );
+}
+
+export async function writeTestConfig(directory, baseURL, testModule) {
+    await writeFile(
+        path.join(directory, 'tsconfig.json'),
+        JSON.stringify({
+            compilerOptions: { baseUrl: directory, paths: { '@playwright/test': [testModule] } },
+        })
+    );
+    await writeFile(
+        path.join(directory, 'playwright.config.mjs'),
+        `export default { testDir: '.', outputDir: './results', timeout: 15000, tsconfig: './tsconfig.json', use: {baseURL: ${JSON.stringify(baseURL)}, headless: true, storageState: {cookies: [], origins: []}}, reporter: 'line' };`
+    );
+}
 
 function respond(request, response, state) {
     if (request.url.startsWith('/api/')) {
