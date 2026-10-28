@@ -17,7 +17,7 @@
 import dotenv from 'dotenv';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { access, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
@@ -29,8 +29,8 @@ import { makeMockedTest, sanitizeRecording } from './playwright-mocked-codegen.m
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
-export function parseRecordingArguments(args, command) {
-    const usage = `Usage: yarn ${command} <name> [--url /ui/feature]`;
+export function parseRecordingArguments(args) {
+    const usage = 'Usage: yarn codegen <name> [--url /ui/feature]';
     let parsed;
     try {
         parsed = parseArgs({
@@ -49,28 +49,17 @@ export function parseRecordingArguments(args, command) {
     return { name, requestedUrl };
 }
 
-export function checkRecordingFiles(files, update) {
-    const specExists = existsSync(files.spec);
-    const harExists = existsSync(files.har);
-    if (update && (!specExists || !harExists)) {
-        throw new Error('HAR refresh requires an existing spec and HAR with the same name.');
-    }
-    if (!update && (specExists || harExists)) {
-        throw new Error('A spec or HAR with this name already exists. Use yarn har:update to replace its HAR.');
+export function checkRecordingFiles(files) {
+    if (existsSync(files.spec) || existsSync(files.har)) {
+        throw new Error('A spec or HAR with this name already exists. Use yarn test:e2e:update-mocks to replace its HAR.');
     }
 }
 
-export async function saveRecording(files, har, temporaryHar, spec, update) {
-    checkRecordingFiles(files, update);
+export async function saveRecording(files, har, spec) {
+    checkRecordingFiles(files);
     await mkdir(path.dirname(files.har), { recursive: true });
-    const contents = `${JSON.stringify(har, null, 2)}\n`;
-    if (update) {
-        await writeFile(temporaryHar, contents);
-        await rename(temporaryHar, files.har);
-    } else {
-        await writeFile(files.har, contents, { flag: 'wx' });
-        await writeFile(files.spec, spec, { flag: 'wx' });
-    }
+    await writeFile(files.har, `${JSON.stringify(har, null, 2)}\n`, { flag: 'wx' });
+    await writeFile(files.spec, spec, { flag: 'wx' });
 }
 
 export function makeDevServerArguments(baseUrl) {
@@ -84,7 +73,8 @@ export function recorderArguments(storageState, source, har, url) {
         '--block-service-workers',
         '--load-storage',
         storageState,
-        ...(source ? ['--output', source] : []),
+        '--output',
+        source,
         '--save-har',
         har,
         '--save-har-glob',
@@ -161,16 +151,15 @@ async function ensureStorageState(playwrightCli, storageState) {
     console.log(`Using fresh authentication state at ${path.relative(uiDirectory, storageState)}.`);
 }
 
-export async function runRecording(command) {
-    const update = command === 'har:update';
-    const { name, requestedUrl } = parseRecordingArguments(process.argv.slice(2), command);
+export async function runRecording() {
+    const { name, requestedUrl } = parseRecordingArguments(process.argv.slice(2));
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
     const outputDirectory = path.join(uiDirectory, 'tests', 'e2e');
     const files = {
         spec: path.join(outputDirectory, `${name}.spec.ts`),
         har: path.join(outputDirectory, `${name}.har`),
     };
-    checkRecordingFiles(files, update);
+    checkRecordingFiles(files);
     const storageState = path.join(uiDirectory, 'playwright', '.auth', 'user-light.json');
     const homeUrl = new URL(requestedUrl, process.env.A11Y_TEST_URL).toString();
     if (new URL(homeUrl).origin !== new URL(process.env.A11Y_TEST_URL).origin) {
@@ -181,16 +170,12 @@ export async function runRecording(command) {
 
     await mkdir(path.join(uiDirectory, 'playwright'), { recursive: true });
     const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'codegen-'));
-    const rawSource = update ? undefined : path.join(temporaryDirectory, 'recording.ts');
+    const rawSource = path.join(temporaryDirectory, 'recording.ts');
     const rawHar = path.join(temporaryDirectory, 'recording.har');
     const server = await ensureUiServer(homeUrl);
     try {
         await ensureStorageState(playwrightCli, storageState);
-        console.log(
-            update
-                ? `Recording fresh HAR data from ${homeUrl}.`
-                : `Recording ${homeUrl}. Add assertions in the recorder.`
-        );
+        console.log(`Recording ${homeUrl}. Add assertions in the recorder.`);
         console.log('Close the recording browser to save.');
         const result = await new Promise((resolve, reject) => {
             const child = spawn(
@@ -210,34 +195,26 @@ export async function runRecording(command) {
                 `Recording did not finish successfully. Temporary recording files remain in ${temporaryDirectory}.`
             );
         }
-        const source = update ? undefined : await readFile(rawSource, 'utf8');
+        const source = await readFile(rawSource, 'utf8');
         const har = sanitizeRecording(
             JSON.parse(await readFile(rawHar, 'utf8')),
             JSON.parse(await readFile(storageState, 'utf8'))
         );
         if (!har.log.entries.length)
             throw new Error('No API responses captured. Visit your feature before closing codegen.');
-        const licenseHeader = update
-            ? undefined
-            : (await readFile(fileURLToPath(import.meta.url), 'utf8')).split('\n\n')[0];
-        const spec = update
-            ? undefined
-            : await prettier.format(makeMockedTest(source, name, process.env.A11Y_TEST_URL, licenseHeader), {
-                  ...(await prettier.resolveConfig(files.spec)),
-                  parser: 'typescript',
-              });
-        await saveRecording(files, har, rawHar, spec, update);
+        const licenseHeader = (await readFile(fileURLToPath(import.meta.url), 'utf8')).split('\n\n')[0];
+        const spec = await prettier.format(makeMockedTest(source, name, process.env.A11Y_TEST_URL, licenseHeader), {
+            ...(await prettier.resolveConfig(files.spec)),
+            parser: 'typescript',
+        });
+        await saveRecording(files, har, spec);
         await rm(temporaryDirectory, { recursive: true });
-        if (!update && !/\bexpect\s*\(/.test(source)) {
+        if (!/\bexpect\s*\(/.test(source)) {
             console.log(
                 'No assertions were recorded. Add an expected result before treating this as regression coverage.'
             );
         }
-        console.log(
-            update
-                ? `Updated ${path.relative(uiDirectory, files.har)}.`
-                : `Created ${path.relative(uiDirectory, files.spec)} and ${path.relative(uiDirectory, files.har)}.`
-        );
+        console.log(`Created ${path.relative(uiDirectory, files.spec)} and ${path.relative(uiDirectory, files.har)}.`);
         console.log('Review the assertions and captured data before committing.');
         console.log(`Run: yarn test:e2e tests/e2e/${name}.spec.ts`);
         console.log('Checking the new test with API replay and no live login...');
@@ -257,7 +234,7 @@ export async function runRecording(command) {
         process.exitCode = replay.status ?? 1;
         console.log(
             replay.status === 0
-                ? 'Mocked test passed. Review the HAR before committing.'
+                ? 'Mocked test passed. Review the spec and HAR before committing.'
                 : 'Replay failed; the files are saved. Review the failure and record again if needed.'
         );
     } finally {

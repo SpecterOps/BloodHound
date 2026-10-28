@@ -15,7 +15,7 @@
         "test:e2e": "playwright test -c playwright.e2e.config.ts",
         "test:e2e:ui": "yarn test:e2e --ui",
         "codegen": "node scripts/playwright-codegen.mjs",
-        "har:update": "node scripts/playwright-har-update.mjs",
+        "test:e2e:update-mocks": "node scripts/playwright-e2e-update-mocks.mjs",
         "test:codegen": "node --test scripts/playwright-codegen.test.mjs",
         "report:a11y": "allure serve playwright/a11y/allure-results",
         "report:a11y:build": "allure generate playwright/a11y/allure-results --output playwright/a11y/allure-report --clean && allure open playwright/a11y/allure-report",

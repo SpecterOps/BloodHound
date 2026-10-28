@@ -16,11 +16,12 @@
 
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
+import { selectRecordedTests } from './playwright-e2e-update-mocks.mjs';
 import { makeMockedTest, sanitizeRecording } from './playwright-mocked-codegen.mjs';
 import {
     checkRecordingFiles,
@@ -30,14 +31,10 @@ import {
     saveRecording,
 } from './playwright-recording.mjs';
 
-test('requires a name and updates only an existing HAR', async () => {
-    assert.deepEqual(parseRecordingArguments(['feature', '--url', '/ui/explore'], 'codegen'), {
+test('codegen creates a new spec and HAR; updater selects existing tests', async () => {
+    assert.deepEqual(parseRecordingArguments(['feature', '--url', '/ui/explore']), {
         name: 'feature',
         requestedUrl: '/ui/explore',
-    });
-    assert.deepEqual(parseRecordingArguments(['feature'], 'har:update'), {
-        name: 'feature',
-        requestedUrl: '/ui/',
     });
     for (const args of [
         [],
@@ -47,36 +44,27 @@ test('requires a name and updates only an existing HAR', async () => {
         ['feature', '--url'],
         ['feature', '--update'],
     ]) {
-        assert.throws(() => parseRecordingArguments(args, 'codegen'), /Usage:/);
+        assert.throws(() => parseRecordingArguments(args), /Usage:/);
     }
     const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-codegen-update-'));
     const files = { spec: path.join(directory, 'feature.spec.ts'), har: path.join(directory, 'feature.har') };
     const newHar = { log: { entries: [{ request: { url: '/api/items' } }] } };
     try {
-        assert.throws(() => checkRecordingFiles(files, true), /requires an existing spec and HAR/);
-        await saveRecording(files, newHar, path.join(directory, 'pending.har'), 'edited spec', false);
-        assert.throws(() => checkRecordingFiles(files, false), /already exists/);
-        await saveRecording(
-            files,
-            { log: { entries: [] } },
-            path.join(directory, 'pending.har'),
-            'discarded spec',
-            true
-        );
+        await assert.rejects(selectRecordedTests(directory, []), /No recorded tests found/);
+        await saveRecording(files, newHar, 'edited spec');
+        assert.throws(() => checkRecordingFiles(files), /already exists/);
+        assert.deepEqual(await selectRecordedTests(directory, []), [{ name: 'feature', ...files }]);
         assert.equal(await readFile(files.spec, 'utf8'), 'edited spec');
-        assert.deepEqual(JSON.parse(await readFile(files.har, 'utf8')), { log: { entries: [] } });
+        assert.deepEqual(JSON.parse(await readFile(files.har, 'utf8')), newHar);
     } finally {
         await rm(directory, { recursive: true, force: true });
     }
 });
 
-test('HAR refresh records data without creating source code', () => {
-    const args = recorderArguments('auth.json', undefined, 'capture.har', 'http://localhost:3000/ui/');
-    assert.ok(!args.includes('--output'));
+test('codegen records source alongside HAR data', () => {
+    const args = recorderArguments('auth.json', 'capture.ts', 'capture.har', 'http://localhost:3000/ui/');
+    assert.ok(args.includes('--output'));
     assert.ok(args.includes('--save-har'));
-    assert.ok(
-        recorderArguments('auth.json', 'capture.ts', 'capture.har', 'http://localhost:3000/ui/').includes('--output')
-    );
 });
 
 test('builds the default Vite server command from the configured URL', () => {
@@ -139,10 +127,16 @@ test('generated spec replays GET and POST APIs on a different host without login
     await mkdir(path.join(workspace, 'playwright'), { recursive: true });
     const directory = await mkdtemp(path.join(workspace, 'playwright', 'codegen-test-'));
     let liveApiRequests = 0;
+    let recordApiResponses = false;
     const server = createServer((request, response) => {
         if (request.url.startsWith('/api/')) {
             liveApiRequests++;
-            response.writeHead(500).end('Backend must not be used');
+            if (!recordApiResponses) {
+                response.writeHead(500).end('Backend must not be used');
+            } else {
+                response.setHeader('Content-Type', 'application/json');
+                response.end(JSON.stringify({ title: request.method === 'POST' ? 'Mocked POST' : 'Mocked GET' }));
+            }
             return;
         }
         response.setHeader('Content-Type', 'text/html');
@@ -188,6 +182,23 @@ test('test', async ({ page }) => {
         assert.ok(!generated.includes('private-auth.json'));
         assert.ok(!generated.includes('/private/temporary/recording.har'));
         await writeFile(path.join(directory, 'example.spec.ts'), generated);
+        await writeFile(
+            path.join(directory, 'auth.json'),
+            JSON.stringify({
+                cookies: [],
+                origins: [
+                    {
+                        origin: baseURL,
+                        localStorage: [
+                            {
+                                name: 'persistedState',
+                                value: JSON.stringify({ auth: { sessionToken: 'playwright-mock-session' } }),
+                            },
+                        ],
+                    },
+                ],
+            })
+        );
         // Resolve through the consuming workspace just as the BHE config does.
         const testModule = require.resolve('@playwright/test').replace(/index\.js$/, 'index.mjs');
         await writeFile(
@@ -201,25 +212,45 @@ test('test', async ({ page }) => {
         );
         await writeFile(
             path.join(directory, 'playwright.config.mjs'),
-            `export default { testDir: '.', outputDir: './results', timeout: 15000, tsconfig: './tsconfig.json', use: {baseURL: ${JSON.stringify(baseURL)}, headless: true}, reporter: 'line' };`
+            `export default { testDir: '.', outputDir: './results', timeout: 15000, tsconfig: './tsconfig.json', use: {baseURL: ${JSON.stringify(baseURL)}, headless: true, storageState: {cookies: [], origins: []}}, reporter: 'line' };`
         );
-        const result = await new Promise((resolve, reject) => {
-            const child = spawn(process.execPath, [cli, 'test', '-c', path.join(directory, 'playwright.config.mjs')], {
-                cwd: workspace,
-                env: process.env,
+        const runBrowserTest = (env) =>
+            new Promise((resolve, reject) => {
+                const child = spawn(
+                    process.execPath,
+                    [cli, 'test', '-c', path.join(directory, 'playwright.config.mjs')],
+                    {
+                        cwd: workspace,
+                        env,
+                    }
+                );
+                let output = '';
+                child.stdout.on('data', (data) => {
+                    output += data;
+                });
+                child.stderr.on('data', (data) => {
+                    output += data;
+                });
+                child.on('error', reject);
+                child.on('exit', (code) => resolve({ code, output }));
             });
-            let output = '';
-            child.stdout.on('data', (data) => {
-                output += data;
-            });
-            child.stderr.on('data', (data) => {
-                output += data;
-            });
-            child.on('error', reject);
-            child.on('exit', (code) => resolve({ code, output }));
-        });
+        const result = await runBrowserTest(process.env);
         assert.equal(result.code, 0, result.output);
         assert.equal(liveApiRequests, 0);
+        recordApiResponses = true;
+        const captures = path.join(directory, 'captures');
+        await mkdir(captures);
+        const update = await runBrowserTest({
+            ...process.env,
+            HAR_UPDATE_CAPTURE: captures,
+            HAR_UPDATE_STORAGE_STATE: path.join(directory, 'auth.json'),
+        });
+        assert.equal(update.code, 0, `${update.output}\nLive API requests: ${liveApiRequests}`);
+        assert.ok(liveApiRequests > 0);
+        const captureFiles = await readdir(captures);
+        assert.equal(captureFiles.length, 1);
+        assert.ok(JSON.parse(await readFile(path.join(captures, captureFiles[0]), 'utf8')).log.entries.length > 0);
+        assert.deepEqual(JSON.parse(await readFile(path.join(directory, 'example.har'), 'utf8')), capture);
     } finally {
         server.closeAllConnections();
         await new Promise((resolve) => server.close(resolve));

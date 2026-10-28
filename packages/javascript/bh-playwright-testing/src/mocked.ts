@@ -14,16 +14,36 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import { test as base, expect } from '@playwright/test';
 
 /** Self-contained API replay for generated tests, with an isolated fake session. */
 export const test = base.extend<{ replayHar: URL | undefined }>({
     replayHar: [undefined, { option: true }],
     serviceWorkers: 'block',
-    storageState: { cookies: [], origins: [] },
+    storageState: async ({ browserName }, use) => {
+        void browserName;
+        if (process.env.HAR_UPDATE_CAPTURE) {
+            if (!process.env.HAR_UPDATE_STORAGE_STATE) throw new Error('HAR update requires authentication state.');
+            await use(process.env.HAR_UPDATE_STORAGE_STATE);
+        } else {
+            await use({ cookies: [], origins: [] });
+        }
+    },
     context: async ({ context, baseURL, replayHar }, use, testInfo) => {
         if (!replayHar) throw new Error('Set replayHar to the recorded HAR URL with test.use().');
         if (!baseURL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
+        if (process.env.HAR_UPDATE_CAPTURE) {
+            const capture = path.join(process.env.HAR_UPDATE_CAPTURE, `${encodeURIComponent(testInfo.testId)}.har`);
+            await context.routeFromHAR(capture, {
+                url: /\/api(?:\/|$)/,
+                update: true,
+                updateContent: 'embed',
+                updateMode: 'full',
+            });
+            await use(context);
+            return;
+        }
         // Rebase recorded API URLs so the fixture also works on another developer's port/host.
         const har = JSON.parse(await readFile(replayHar, 'utf8'));
         for (const entry of har.log.entries) {

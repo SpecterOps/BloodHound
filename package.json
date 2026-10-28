@@ -21,7 +21,7 @@
         "test:e2e": "yarn workspace bloodhound-ui test:e2e",
         "test:e2e:ui": "yarn workspace bloodhound-ui test:e2e:ui",
         "codegen": "yarn workspace bloodhound-ui codegen",
-        "har:update": "yarn workspace bloodhound-ui har:update",
+        "test:e2e:update-mocks": "yarn workspace bloodhound-ui test:e2e:update-mocks",
         "report:a11y": "allure serve cmd/ui/playwright/a11y/allure-results",
         "report:a11y:build": "allure generate cmd/ui/playwright/a11y/allure-results --output cmd/ui/playwright/a11y/allure-report --clean && allure open cmd/ui/playwright/a11y/allure-report",
         "check-types": "yarn workspaces foreach --exclude eslint-plugin-sx-props -Apt run check-types",

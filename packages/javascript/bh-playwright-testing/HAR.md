@@ -38,14 +38,19 @@ test('my-feature', async ({ page }) => {
 });
 ```
 
-## Update a HAR
+## Update HARs
 
--   Start the backend and run:
+-   Start the backend and run all recorded tests:
 
 ```sh
-A11Y_TEST_SERVE=true yarn har:update my-feature --url '/ui/your-feature'
+A11Y_TEST_SERVE=true yarn test:e2e:update-mocks
 ```
 
--   Repeat the flow and close the browser. This replaces `my-feature.har` and keeps `my-feature.spec.ts`.
--   Review captured data and rerun the test.
--   Delete the spec and HAR together when removing a flow.
+-   Or update one test:
+
+```sh
+A11Y_TEST_SERVE=true yarn test:e2e:update-mocks my-feature
+```
+
+-   The command logs in, runs existing specs against the live backend, and replaces their HARs after passing tests. It never runs codegen or changes specs.
+-   Review captured data before committing. Delete a spec and its HAR together when removing a flow.

@@ -16,7 +16,7 @@
 
 import { runRecording } from './playwright-recording.mjs';
 
-runRecording('codegen').catch((error) => {
+runRecording().catch((error) => {
     console.error(error.message);
     process.exitCode = 1;
 });
