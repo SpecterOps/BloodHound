@@ -18,8 +18,8 @@ import dotenv from 'dotenv';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
-import { authenticateForUpdate } from './refresh-auth.mjs';
-import { captureForUpdate } from './capture-hars.mjs';
+import { authenticateForUpdate } from './refresh-update-auth.mjs';
+import { captureForUpdate } from '../capture-actions-and-hars/capture-hars.mjs';
 import { selectRecordedSpecs } from './select-specs.mjs';
 
 const uiDirectory = process.cwd();

@@ -14,7 +14,7 @@
         "test:a11y": "node -e \"require('fs').rmSync('playwright/a11y', { recursive: true, force: true })\" && playwright test -c playwright.a11y.config.ts",
         "test:e2e": "A11Y_TEST_SERVE=true playwright test -c ../../packages/javascript/bh-playwright-testing/playwright.e2e.config.mjs",
         "test:e2e:ui": "yarn test:e2e --ui",
-        "codegen": "node ../../packages/javascript/bh-playwright-testing/scripts/capture-actions-and-requests/index.mjs",
+        "codegen": "node ../../packages/javascript/bh-playwright-testing/scripts/capture-actions-and-hars/index.mjs",
         "test:e2e:update-mocks": "node ../../packages/javascript/bh-playwright-testing/scripts/update-hars/index.mjs",
         "test:e2e:update-failing-mocks": "A11Y_TEST_SERVE=true node ../../packages/javascript/bh-playwright-testing/scripts/run-specs/index.mjs",
         "report:a11y": "allure serve playwright/a11y/allure-results",

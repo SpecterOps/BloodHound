@@ -20,7 +20,7 @@ import path from 'node:path';
 import { buildAndWriteSpec } from '../build-and-write-specs/write-spec.mjs';
 import { replayRecordedSpec } from '../run-specs/replay-spec.mjs';
 import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
-import { ensureStorageState } from './refresh-auth.mjs';
+import { ensureStorageState } from './refresh-capture-auth.mjs';
 import { launchCodegenBrowser } from './launch-codegen-browser.mjs';
 import { announceFilesCreated } from './manage-files.mjs';
 import { prepareBrowserActions } from './prepare-browser-actions.mjs';
