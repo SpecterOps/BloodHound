@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import {
@@ -29,9 +29,11 @@ import {
     SelectContent,
     SelectItem,
     SelectTrigger,
+    SelectTriggerVariants,
     SelectValue,
 } from 'doodle-ui';
 import { useState } from 'react';
+import { twMerge } from 'tailwind-merge';
 import { AppIcon } from '../../../../components';
 import { useSavedQueriesContext } from '../../providers';
 import ImportQueryDialog from './ImportQueryDialog';
@@ -141,13 +143,15 @@ const QuerySearchFilter = (props: QuerySearchProps) => {
                         <Label htmlFor='category-filter'>Categories</Label>
                         <Menu>
                             <MenuTrigger asChild>
-                                <Button id='category-filter' variant='secondary' className='w-full justify-between'>
+                                {/* This is a temporary patch. We will replace this menu with a multiselect. Jira: BED-10327 */}
+                                <button id='category-filter' type='button' className={twMerge(SelectTriggerVariants())}>
                                     <span
-                                        className='truncate'
+                                        className='min-w-0 truncate text-left'
                                         title={categoryFilter.length ? categoryFilter.join(', ') : 'All Categories'}>
                                         {categoryFilter.length ? categoryFilter.join(', ') : 'All Categories'}
                                     </span>
-                                </Button>
+                                    <FontAwesomeIcon icon={faChevronDown} className='h-3 w-3 shrink-0' />
+                                </button>
                             </MenuTrigger>
                             <MenuContent
                                 className='max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto'
