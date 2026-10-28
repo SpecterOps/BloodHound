@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { parseArgs } from 'node:util';
-import { requestCaptureArguments } from '../capture-requests/prepare-arguments.mjs';
 
 export function parseBrowserActionsArguments(args) {
     const usage = 'Usage: yarn codegen <name> [--url /ui/feature]';
@@ -40,11 +39,15 @@ export function parseBrowserActionsArguments(args) {
 export function recorderArguments(storageState, source, har, url) {
     return [
         'codegen',
+        '--block-service-workers',
         '--load-storage',
         storageState,
         '--output',
         source,
-        ...requestCaptureArguments(har),
+        '--save-har',
+        har,
+        '--save-har-glob',
+        '**/api/**',
         '--viewport-size',
         '1280,720',
         url,

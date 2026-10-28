@@ -31,9 +31,9 @@ import {
 import { sanitizeHar } from '../transform-and-write-hars/sanitize-har.mjs';
 import { writeNewHar, writeRecordedHar, writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
 import { listRecordedSpecs, selectRecordedSpecs } from '../update-hars/select-specs.mjs';
-import { parseBrowserActionsArguments, recorderArguments } from '../capture-browser-actions/prepare-arguments.mjs';
-import { checkBrowserActionsFiles } from '../capture-browser-actions/manage-files.mjs';
-import { makeDevServerArguments } from '../capture-browser-actions/ensure-server.mjs';
+import { parseBrowserActionsArguments, recorderArguments } from '../capture-actions-and-requests/prepare-arguments.mjs';
+import { checkBrowserActionsFiles } from '../capture-actions-and-requests/manage-files.mjs';
+import { makeDevServerArguments } from '../capture-actions-and-requests/ensure-server.mjs';
 
 test('codegen requires one valid spec name', () => {
     assert.deepEqual(parseBrowserActionsArguments(['feature', '--url', '/ui/explore']), {
