@@ -14,32 +14,45 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// import { Route, Routes } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { Link, Route, Routes } from 'react-router-dom';
+import { cards } from 'virtual:dev-portal';
 import { DocumentationIcon, StorybookIcon } from './components/Icons';
 import { PortalCard } from './components/PortalCard';
+import type { CardIcon } from './config/portalConfig';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { StorybookPage } from './pages/StorybookPage';
 
-// const App = () => (
-//     <Routes>
-//         <Route path='/' element={<LandingPage />} />
-//         <Route path='*' element={<NotFoundPage />} />
-//     </Routes>
-// );
+const CARD_ICONS: Record<CardIcon, ReactNode> = {
+    documentation: <DocumentationIcon />,
+    storybook: <StorybookIcon />,
+};
 
 export default function App() {
     return (
-        <main id='top' className='site-shell'>
+        <Routes>
+            <Route path='/' element={<LandingPage />} />
+            <Route path='/storybook' element={<StorybookPage />} />
+            <Route path='*' element={<NotFoundPage />} />
+        </Routes>
+    );
+}
+
+function LandingPage() {
+    return (
+        <main className='site-shell'>
             <div className='ambient-grid' aria-hidden='true' />
 
             <div className='content-wrap'>
                 <header className='site-header'>
-                    <a className='brand' href='#top' aria-label='BloodHound Developer Portal home'>
+                    <Link className='brand' to='/' aria-label='BloodHound Developer Portal home'>
                         <span className='brand-mark' aria-hidden='true'>
                             BH
                         </span>
                         <span>BloodHound</span>
                         <span className='brand-divider' aria-hidden='true' />
                         <span className='brand-context'>Developer Portal</span>
-                    </a>
+                    </Link>
                     <span className='header-label'>Internal resources</span>
                 </header>
 
@@ -59,22 +72,17 @@ export default function App() {
                 </section>
 
                 <section className='portal-grid' aria-label='Developer portal destinations'>
-                    <PortalCard
-                        accent='blue'
-                        index='01'
-                        title='Doodle UI Storybook'
-                        description='Explore our shared components, patterns, and design foundations.'
-                        href='#storybook'
-                        icon={<StorybookIcon />}
-                    />
-                    <PortalCard
-                        accent='orange'
-                        index='02'
-                        title='Documentation'
-                        description='Find technical guides, standards, and product knowledge.'
-                        href='#documentation'
-                        icon={<DocumentationIcon />}
-                    />
+                    {cards.map((card, position) => (
+                        <PortalCard
+                            key={card.title}
+                            accent={card.accent}
+                            index={String(position + 1).padStart(2, '0')}
+                            title={card.title}
+                            description={card.description}
+                            href={card.href}
+                            icon={CARD_ICONS[card.icon]}
+                        />
+                    ))}
                 </section>
 
                 <footer>

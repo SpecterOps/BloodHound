@@ -24,11 +24,13 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/server/appcfg/internal/adapter"
 	"github.com/specterops/bloodhound/server/appcfg/internal/appdb"
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 	"github.com/specterops/bloodhound/server/appcfg/internal/routes"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
+	"github.com/specterops/bloodhound/server/featureflags"
 )
 
 type ParameterKey = services.ParameterKey
@@ -51,14 +53,22 @@ func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
 	return adapter.NewConfigurationAdapter(store, service)
 }
 
+// ConfigUpdateSideEffecter provides legacy database methods called as a side effects
+// to updating a configuration
+type ConfigUpdateSideEffecter interface {
+	SetNextScheduledAnalysisStartTime(ctx context.Context, scheduledTime null.Time) error
+	UpdateAuthTokenExpiration(ctx context.Context) error
+}
+
 // Register builds the appcfg store -> service -> handler chain and attaches
 // the appcfg routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
-func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter) {
 	var (
+		ffReader   = featureflags.NewFeatureFlagRequestAdapter(pool)
 		store      = appdb.NewStore(pool)
 		service    = services.NewService(store)
-		handlerSet = handlers.NewHandlers(service)
+		handlerSet = handlers.NewHandlers(service, ffReader, configUpdateSideEffecter, configUpdateSideEffecter)
 	)
 
 	routes.Register(routerInst, handlerSet)
