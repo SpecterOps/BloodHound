@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
 export function parseBrowserActionsArguments(args) {
@@ -52,4 +54,24 @@ export function recorderArguments(storageState, source, har, url) {
         '1280,720',
         url,
     ];
+}
+
+export function makeDevServerArguments(baseUrl) {
+    const { hostname, port } = new URL(baseUrl);
+    return ['dev', '--mode', 'playwright', '--host', hostname, '--port', port || '3000'];
+}
+
+export function harCaptureArguments(specFile, uiDirectory) {
+    return [
+        'test',
+        '-c',
+        fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url)),
+        path.relative(uiDirectory, specFile),
+        '--project=chromium-light',
+        '--workers=1',
+    ];
+}
+
+export function authSetupArguments() {
+    return ['test', '-c', 'playwright.a11y.config.ts', '--project=setup'];
 }

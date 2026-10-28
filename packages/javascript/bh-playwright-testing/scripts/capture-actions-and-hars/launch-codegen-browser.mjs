@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { spawn } from 'node:child_process';
-import { recorderArguments } from './prepare-browser-action-arguments.mjs';
+import { makeDevServerArguments, recorderArguments } from './prepare-arugments.mjs';
 
 const uiDirectory = process.cwd();
 
@@ -43,11 +43,6 @@ export async function launchCodegenBrowser(browserActions) {
         throw new Error(
             `Browser action capture did not finish successfully. Temporary files remain in ${browserActions.temporaryDirectory}.`
         );
-}
-
-export function makeDevServerArguments(baseUrl) {
-    const { hostname, port } = new URL(baseUrl);
-    return ['dev', '--mode', 'playwright', '--host', hostname, '--port', port || '3000'];
 }
 
 async function isReachable(url) {

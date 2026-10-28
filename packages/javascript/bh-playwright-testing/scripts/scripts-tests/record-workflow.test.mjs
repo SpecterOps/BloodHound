@@ -32,11 +32,11 @@ import { sanitizeHar } from '../transform-and-write-hars/sanitize-har.mjs';
 import { writeNewHar, writeRecordedHar, writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
 import { listRecordedSpecs, selectRecordedSpecs } from '../update-hars/select-specs.mjs';
 import {
+    makeDevServerArguments,
     parseBrowserActionsArguments,
     recorderArguments,
-} from '../capture-actions-and-hars/prepare-browser-action-arguments.mjs';
+} from '../capture-actions-and-hars/prepare-arugments.mjs';
 import { checkForDuplicateSpecName } from '../capture-actions-and-hars/manage-files.mjs';
-import { makeDevServerArguments } from '../capture-actions-and-hars/launch-codegen-browser.mjs';
 
 test('codegen requires one valid spec name', () => {
     assert.deepEqual(parseBrowserActionsArguments(['feature', '--url', '/ui/explore']), {

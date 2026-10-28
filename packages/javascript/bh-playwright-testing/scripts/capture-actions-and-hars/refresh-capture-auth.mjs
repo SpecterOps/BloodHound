@@ -17,16 +17,17 @@
 import { spawnSync } from 'node:child_process';
 import { access } from 'node:fs/promises';
 import path from 'node:path';
+import { authSetupArguments } from './prepare-arugments.mjs';
 
 const uiDirectory = process.cwd();
 
 export async function ensureStorageState(playwrightCli, storageState) {
     console.log(`Refreshing authentication state at ${path.relative(uiDirectory, storageState)}.`);
-    const result = spawnSync(
-        process.execPath,
-        [playwrightCli, 'test', '-c', 'playwright.a11y.config.ts', '--project=setup'],
-        { cwd: uiDirectory, env: process.env, stdio: 'inherit' }
-    );
+    const result = spawnSync(process.execPath, [playwrightCli, ...authSetupArguments()], {
+        cwd: uiDirectory,
+        env: process.env,
+        stdio: 'inherit',
+    });
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error(`Unable to generate authentication state (exit code ${result.status}).`);
     await access(storageState);

@@ -17,7 +17,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { harCaptureArguments } from './prepare-arugments.mjs';
 
 const uiDirectory = process.cwd();
 
@@ -32,22 +32,11 @@ export function runPlaywright(playwrightCli, args, env = process.env) {
 }
 
 function captureHarsByRunningSpecs(playwrightCli, spec, captures) {
-    runPlaywright(
-        playwrightCli,
-        [
-            'test',
-            '-c',
-            fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url)),
-            path.relative(uiDirectory, spec.spec),
-            '--project=chromium-light',
-            '--workers=1',
-        ],
-        {
-            ...process.env,
-            HAR_UPDATE_CAPTURE: captures,
-            HAR_UPDATE_STORAGE_STATE: path.join(uiDirectory, 'playwright', '.auth', 'user-light.json'),
-        }
-    );
+    runPlaywright(playwrightCli, harCaptureArguments(spec.spec, uiDirectory), {
+        ...process.env,
+        HAR_UPDATE_CAPTURE: captures,
+        HAR_UPDATE_STORAGE_STATE: path.join(uiDirectory, 'playwright', '.auth', 'user-light.json'),
+    });
 }
 
 export async function captureForUpdate(playwrightCli, spec) {
