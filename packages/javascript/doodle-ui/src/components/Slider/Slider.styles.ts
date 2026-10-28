@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { cn } from '../utils';
-
 import { cva } from 'class-variance-authority';
 
 export const sliderRootStyles =
@@ -42,11 +40,11 @@ export const sliderIndicatorStyles = cva(
 );
 
 export const sliderThumbStyles = cva(
-    cn(
+    [
         'group/thumb relative size-4 rounded-full border border-[color:var(--slider-thumb-border)] shadow-outer-1',
         'has-[:focus-visible]:bg-[color:var(--slider-thumb-focus-fill)]',
         'data-[disabled]:bg-disabled'
-    ),
+    ],
     {
         variants: {
             active: {
@@ -61,11 +59,11 @@ export const sliderThumbStyles = cva(
 );
 
 export const sliderThumbDotStyles = cva(
-    cn(
+    [
         'pointer-events-none absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full',
         'group-has-[:focus-visible]/thumb:block group-has-[:focus-visible]/thumb:bg-secondary',
         'group-data-[disabled]/thumb:hidden'
-    ),
+    ],
     {
         variants: {
             active: {

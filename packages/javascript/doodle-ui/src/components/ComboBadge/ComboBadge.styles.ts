@@ -21,7 +21,7 @@ export const ComboBadgeVariants = cva('relative leading-[1] z-10 h-8 text-nowrap
         type: {
             slideLeft: 'clip-right-rounded flex flex-row-reverse',
             slideRight: 'clip-left-rounded',
-            inlineSlideLeft: 'clip-right-rounded flex items-center flex-row flex-row-reverse',
+            inlineSlideLeft: 'clip-right-rounded flex items-center flex-row-reverse',
             inlineSlideRight: 'clip-left-rounded flex items-center flex-row',
         },
     },
