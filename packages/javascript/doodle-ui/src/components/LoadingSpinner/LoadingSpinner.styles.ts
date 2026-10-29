@@ -14,13 +14,38 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const loadingSpinnerRootClasses = 'LoadingSpinner inline-flex';
+import { cva } from 'class-variance-authority';
 
-export const loadingSpinnerClasses = [
-    'size-10 animate-loading-spinner text-primary motion-reduce:animate-none',
-    // Cut a thin ring out of the Font Awesome disc.
-    '[--spinner-ring:radial-gradient(farthest-side,transparent_calc(84%_-_0.5px),#000_84%,#000_calc(100%_-_0.5px),transparent_100%)]',
-    // Reveal an animated arc of that ring.
-    '[--spinner-arc:conic-gradient(from_calc(90deg_+_var(--doodle-spinner-start,0deg)),#000_var(--doodle-spinner-sweep,225deg),transparent_0)]',
-    '[mask-image:var(--spinner-ring),var(--spinner-arc)] [mask-composite:intersect]',
-];
+export const LoadingSpinnerVariants = cva('LoadingSpinner inline-flex text-primary', {
+    variants: {
+        variant: {
+            inline: 'size-10',
+            overlay: 'absolute inset-0 z-[1000] items-center justify-center bg-black/20',
+        },
+    },
+    defaultVariants: {
+        variant: 'inline',
+    },
+});
+
+export const LoadingSpinnerIconVariants = cva(
+    [
+        'block animate-loading-spinner motion-reduce:animate-none',
+        // Cut a thin ring out of the Font Awesome disc.
+        '[--spinner-ring:radial-gradient(farthest-side,transparent_calc(84%_-_0.5px),#000_84%,#000_calc(100%_-_0.5px),transparent_100%)]',
+        // Reveal an animated arc of that ring.
+        '[--spinner-arc:conic-gradient(from_calc(90deg_+_var(--doodle-spinner-start,0deg)),#000_var(--doodle-spinner-sweep,225deg),transparent_0)]',
+        '[mask-image:var(--spinner-ring),var(--spinner-arc)] [mask-composite:intersect]',
+    ],
+    {
+        variants: {
+            variant: {
+                inline: 'size-full',
+                overlay: 'size-10',
+            },
+        },
+        defaultVariants: {
+            variant: 'inline',
+        },
+    }
+);

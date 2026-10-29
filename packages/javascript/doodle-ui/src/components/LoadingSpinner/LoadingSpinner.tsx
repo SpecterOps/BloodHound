@@ -15,14 +15,32 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { faCircle } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon, type FontAwesomeIconProps } from '@fortawesome/react-fontawesome';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { ComponentPropsWithoutRef } from 'react';
 import { cn } from '../utils';
-import { loadingSpinnerClasses, loadingSpinnerRootClasses } from './LoadingSpinner.styles';
+import { LoadingSpinnerIconVariants, LoadingSpinnerVariants } from './LoadingSpinner.styles';
 
-function LoadingSpinner({ className, ...props }: Omit<FontAwesomeIconProps, 'ref' | 'icon'>) {
+type LoadingSpinnerProps = Omit<ComponentPropsWithoutRef<'span'>, 'children'> &
+    (
+        | { variant?: 'inline'; spinnerClassName?: never }
+        | {
+              variant: 'overlay';
+              /** Style the overlay's icon without changing its backdrop. For inline spinners, use className. */
+              spinnerClassName?: string;
+          }
+    );
+
+function LoadingSpinner({ variant = 'inline', className, spinnerClassName, ...props }: LoadingSpinnerProps) {
     return (
-        <span role='progressbar' aria-label={props['aria-label'] ?? 'Loading'} className={loadingSpinnerRootClasses}>
-            <FontAwesomeIcon icon={faCircle} className={cn(loadingSpinnerClasses, className)} {...props} />
+        <span
+            role='progressbar'
+            aria-label='Loading'
+            className={cn(LoadingSpinnerVariants({ variant }), className)}
+            {...props}>
+            <FontAwesomeIcon
+                icon={faCircle}
+                className={cn(LoadingSpinnerIconVariants({ variant }), variant === 'overlay' && spinnerClassName)}
+            />
         </span>
     );
 }
