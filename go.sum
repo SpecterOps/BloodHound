@@ -4595,8 +4595,8 @@ github.com/sony/gobreaker v0.4.1/go.mod h1:ZKptC7FHNvhBz7dN2LGjPVBz2sZJmc0/PkyDJ
 github.com/sourcegraph/go-diff v0.9.0 h1:7xcVsayWHhvxZGrqt1o89vvBApCa4nyCgO7tNxDHJ+Q=
 github.com/sourcegraph/go-diff v0.9.0/go.mod h1:hWlcO7Al+UZStZAP8rBumHpCK5ZHQ5BXsMls8p4+F5E=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
-github.com/specterops/dawgs v0.9.3 h1:pdlqM7qmskqBXltTZ1vbMC5pyaJxqBVkBGMNjxHVrqg=
-github.com/specterops/dawgs v0.9.3/go.mod h1:4oA2R2hrQLHzMFTJAFM4SGM3L9e1lIFCls/WjwXZ074=
+github.com/specterops/dawgs v0.10.0 h1:sOQVfPiDpAeR6EqGxEhXeZqkPdB7DjAldCrqC5MTk6Y=
+github.com/specterops/dawgs v0.10.0/go.mod h1:UBO8P4+fR8KqmlWYqPcbqvyBdCrmI98XnRtZfauX5/Q=
 github.com/spf13/afero v1.3.3/go.mod h1:5KUK8ByomD5Ti5Artl0RtHeI5pTF7MIDuXL3yY520V4=
 github.com/spf13/afero v1.6.0/go.mod h1:Ai8FlHk4v/PARR026UzYexafAt9roJ7LcLMAmO6Z93I=
 github.com/spf13/afero v1.9.2/go.mod h1:iUV7ddyEEZPO5gA3zD4fJt6iStLlL+Lg4m2cihcDf8Y=
