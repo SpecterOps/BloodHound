@@ -22,8 +22,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
 // Database describes the persistence capabilities the opengraphschema Service requires.
