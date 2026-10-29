@@ -253,11 +253,11 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 <GraphMenu label='Export' icon={faDownload}>
                     {additionalExportActions.map((action, index) => (
                         <Fragment key={action.id}>
+                            {index > 0 && action.group !== additionalExportActions[index - 1]?.group && (
+                                <MenuSeparator />
+                            )}
                             {action.group && action.group !== additionalExportActions[index - 1]?.group && (
-                                <>
-                                    {index > 0 && <MenuSeparator />}
-                                    <MenuLabel>{action.group}</MenuLabel>
-                                </>
+                                <MenuLabel>{action.group}</MenuLabel>
                             )}
                             <MenuItem
                                 aria-label={action.group ? `${action.label} ${action.group}` : undefined}

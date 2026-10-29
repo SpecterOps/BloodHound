@@ -533,6 +533,21 @@ describe('GraphControls', () => {
             }
         });
 
+        it('separates an ungrouped action from the preceding group', async () => {
+            const mixedExportActions: readonly GraphExportAction[] = [
+                { id: 'png-view', label: 'PNG', group: 'Current View', onSelect: vi.fn() },
+                { id: 'other-export', label: 'Other export', onSelect: vi.fn() },
+            ];
+            const { user } = setup({ additionalExportActions: mixedExportActions });
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            const menu = await screen.findByRole('menu');
+            expect(within(menu).getByText('Current View')).toBeInTheDocument();
+            expect(within(menu).getByRole('menuitem', { name: 'Other export' })).toBeInTheDocument();
+            expect(within(menu).getAllByRole('separator')).toHaveLength(2);
+        });
+
         it('invokes the selected action, closes the menu, and restores focus', async () => {
             const { user } = setup({ additionalExportActions });
             const exportMenu = screen.getByRole('button', { name: 'Export' });
