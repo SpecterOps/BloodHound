@@ -29,7 +29,12 @@ export default {
     testDir: path.join(uiDirectory, 'tests', 'e2e'),
     outputDir: path.join(uiDirectory, 'playwright', 'e2e', 'results'),
     ...(existsSync(tsconfig) ? { tsconfig } : {}),
-    reporter: process.env.CI ? 'line' : 'list',
+    reporter:
+        process.env.PLAYWRIGHT_HTML_OPEN === 'always'
+            ? [['html', { open: 'always' }]]
+            : process.env.CI
+              ? 'line'
+              : 'list',
     use: { baseURL, serviceWorkers: 'block', storageState: { cookies: [], origins: [] } },
     projects: [{ name: 'chromium-light', use: { browserName: 'chromium', viewport: { width: 1280, height: 720 } } }],
     webServer:

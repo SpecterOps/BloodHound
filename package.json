@@ -20,6 +20,7 @@
         "test:a11y": "yarn workspace bloodhound-ui test:a11y",
         "test:e2e": "yarn workspace bloodhound-ui test:e2e",
         "test:e2e:ui": "yarn workspace bloodhound-ui test:e2e:ui",
+        "test:e2e:report": "yarn workspace bloodhound-ui test:e2e:report",
         "codegen": "yarn workspace bloodhound-ui codegen",
         "test:e2e:update-mocks": "yarn workspace bloodhound-ui test:e2e:update-mocks",
         "test:e2e:update-failing-mocks": "yarn workspace bloodhound-ui test:e2e:update-failing-mocks",
