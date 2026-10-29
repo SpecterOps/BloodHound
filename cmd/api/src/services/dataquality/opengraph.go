@@ -28,6 +28,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
@@ -46,10 +49,6 @@ func openGraphStats(ctx context.Context, db database.Database, graphDB graph.Dat
 		aggregations = make(model.DataQualityAggregations, 0)
 		runID        string
 		stats        = make(model.DataQualityStats, 0)
-
-		// We only are concerned with non-builtin types since AD and AZ have their own stat collection
-		// When we move AD and AZ stat collection to this common table, this will need to be changed
-		builtInFilter = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "false"}}}
 	)
 
 	if newUUID, err := uuid.NewV4(); err != nil {
@@ -58,7 +57,7 @@ func openGraphStats(ctx context.Context, db database.Database, graphDB graph.Dat
 		runID = newUUID.String()
 	}
 
-	extensions, _, err := db.GetGraphSchemaExtensions(ctx, builtInFilter, model.Sort{}, 0, 0)
+	extensions, _, err := db.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{}, 0, 0)
 	if err != nil {
 		return stats, aggregations, fmt.Errorf("could not get graph schema extensions: %w", err)
 	}
@@ -159,21 +158,22 @@ func countOpenGraphMetricsByEnvironment(ctx context.Context, graphDB graph.Datab
 			relationshipKindCountsByEnvironmentID: kindCountsByEnvironment{},
 			countedKindNames:                      make([]string, 0),
 		}
-		seenCountedKindNames = map[string]struct{}{}
+		seenCountedKindNames                      = map[string]struct{}{}
+		environmentIDProperty, membershipProperty = dataQualityEnvironmentProperties(environmentKind)
 	)
 
 	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		environmentIDs, err := getOpenGraphEnvironmentIDs(ctx, tx, environmentKind)
+		environmentIDs, err := getOpenGraphEnvironmentIDs(ctx, tx, environmentKind, environmentIDProperty)
 		if err != nil {
 			return err
 		}
 
 		for _, environmentID := range environmentIDs {
-			if err := countOpenGraphNodeMetricsForEnvironment(tx, &countResults, sourceKind, environmentID, seenCountedKindNames); err != nil {
+			if err := countOpenGraphNodeMetricsForEnvironment(tx, &countResults, sourceKind, environmentID, membershipProperty, seenCountedKindNames); err != nil {
 				return err
 			}
 
-			if err := countOpenGraphRelationshipMetricsForEnvironment(tx, &countResults, sourceKind, relationshipKinds, environmentID, seenCountedKindNames); err != nil {
+			if err := countOpenGraphRelationshipMetricsForEnvironment(tx, &countResults, sourceKind, relationshipKinds, environmentID, membershipProperty, seenCountedKindNames); err != nil {
 				return err
 			}
 		}
@@ -184,13 +184,13 @@ func countOpenGraphMetricsByEnvironment(ctx context.Context, graphDB graph.Datab
 	return countResults, err
 }
 
-func countOpenGraphNodeMetricsForEnvironment(tx graph.Transaction, countResults *openGraphCountResults, sourceKind graph.Kind, environmentID string, seenCountedKindNames map[string]struct{}) error {
+func countOpenGraphNodeMetricsForEnvironment(tx graph.Transaction, countResults *openGraphCountResults, sourceKind graph.Kind, environmentID string, membershipProperty string, seenCountedKindNames map[string]struct{}) error {
 	nodeKindCounts := map[string]int{}
 
 	if err := tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Node(), sourceKind),
-			query.Equals(query.NodeProperty(graphschema.EnvironmentIDKey), environmentID),
+			query.Equals(query.NodeProperty(membershipProperty), environmentID),
 		)
 	}).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
 		for result := range cursor.Chan() {
@@ -209,7 +209,7 @@ func countOpenGraphNodeMetricsForEnvironment(tx graph.Transaction, countResults 
 	return nil
 }
 
-func countOpenGraphRelationshipMetricsForEnvironment(tx graph.Transaction, countResults *openGraphCountResults, sourceKind graph.Kind, relationshipKinds graph.Kinds, environmentID string, seenCountedKindNames map[string]struct{}) error {
+func countOpenGraphRelationshipMetricsForEnvironment(tx graph.Transaction, countResults *openGraphCountResults, sourceKind graph.Kind, relationshipKinds graph.Kinds, environmentID string, membershipProperty string, seenCountedKindNames map[string]struct{}) error {
 	if len(relationshipKinds) == 0 {
 		return nil
 	}
@@ -219,7 +219,7 @@ func countOpenGraphRelationshipMetricsForEnvironment(tx graph.Transaction, count
 	if err := tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Start(), sourceKind),
-			query.Equals(query.StartProperty(graphschema.EnvironmentIDKey), environmentID),
+			query.Equals(query.StartProperty(membershipProperty), environmentID),
 			query.KindIn(query.Relationship(), relationshipKinds...),
 		)
 	}).FetchKinds(func(cursor graph.Cursor[graph.RelationshipKindsResult]) error {
@@ -262,7 +262,20 @@ func countOpenGraphKind(kindName string, kindCounts map[string]int, countedKindN
 	return countedKindNames
 }
 
-func getOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, environmentKind graph.Kind) ([]string, error) {
+// AD and Azure identify environment nodes by objectid, but group their members
+// by domainsid and tenantid. Custom environments use environmentid for both.
+func dataQualityEnvironmentProperties(environmentKind graph.Kind) (string, string) {
+	switch environmentKind {
+	case ad.Domain:
+		return common.ObjectID.String(), ad.DomainSID.String()
+	case azure.Tenant:
+		return common.ObjectID.String(), azure.TenantID.String()
+	default:
+		return graphschema.EnvironmentIDKey, graphschema.EnvironmentIDKey
+	}
+}
+
+func getOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, environmentKind graph.Kind, environmentIDProperty string) ([]string, error) {
 	var environmentIDs []string
 
 	environments, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
@@ -273,15 +286,12 @@ func getOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, envir
 	}
 
 	for _, environment := range environments {
-		environmentID, err := environment.Properties.Get(graphschema.EnvironmentIDKey).String()
+		environmentID, err := environment.Properties.Get(environmentIDProperty).String()
 		if err != nil {
-			slog.WarnContext(
-				ctx,
-				"OpenGraph environment node does not have a valid environment ID property",
+			slog.WarnContext(ctx, "Environment node does not have a valid ID property",
 				slog.Uint64("node_id", uint64(environment.ID)),
 				slog.String("environment_kind", environmentKind.String()),
-				attr.Error(err),
-			)
+				slog.String("id_property", environmentIDProperty), attr.Error(err))
 			continue
 		}
 

@@ -36,17 +36,17 @@ import (
 
 func TestSaveDataQuality(t *testing.T) {
 	var (
-		ctx                    = context.Background()
-		environmentKind        = graph.StringKind("dogpark_LargeDogArea")
-		sourceKind             = graph.StringKind("dogpark_Entity")
-		dogKind                = graph.StringKind("dogpark_Dog")
-		patronKind             = graph.StringKind("dogpark_Patron")
-		relationshipKind       = graph.StringKind("dogpark_WalksWith")
-		schemaExtension        = model.GraphSchemaExtension{Serial: model.Serial{ID: 44}}
-		schemaEnvironment      = model.SchemaEnvironment{Serial: model.Serial{ID: 88}, SchemaExtensionId: 44, EnvironmentKindId: 22, EnvironmentKindName: environmentKind.String(), SourceKindId: 11}
-		expectedKindIDs        = map[string]null.Int32{"dogpark_Dog": null.Int32From(101), "dogpark_Patron": null.Int32From(102), "dogpark_WalksWith": null.Int32From(103)}
-		builtInExtensionFilter = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "false"}}}
-		expectedError          = errors.New("expected error")
+		ctx               = context.Background()
+		environmentKind   = graph.StringKind("dogpark_LargeDogArea")
+		sourceKind        = graph.StringKind("dogpark_Entity")
+		dogKind           = graph.StringKind("dogpark_Dog")
+		patronKind        = graph.StringKind("dogpark_Patron")
+		relationshipKind  = graph.StringKind("dogpark_WalksWith")
+		schemaExtension   = model.GraphSchemaExtension{Serial: model.Serial{ID: 44}}
+		schemaEnvironment = model.SchemaEnvironment{Serial: model.Serial{ID: 88}, SchemaExtensionId: 44, EnvironmentKindId: 22, EnvironmentKindName: environmentKind.String(), SourceKindId: 11}
+		expectedKindIDs   = map[string]null.Int32{"dogpark_Dog": null.Int32From(101), "dogpark_Patron": null.Int32From(102), "dogpark_WalksWith": null.Int32From(103)}
+		extensionFilter   = model.Filters{}
+		expectedError     = errors.New("expected error")
 	)
 
 	tests := []struct {
@@ -62,7 +62,7 @@ func TestSaveDataQuality(t *testing.T) {
 				expectOpenGraphStatsRead(t, mockGraph, environmentKind, sourceKind, dogKind, patronKind, relationshipKind)
 
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
 				mockDB.EXPECT().
 					GetEnvironmentsByExtensionId(gomock.Any(), schemaExtension.ID).
@@ -119,12 +119,12 @@ func TestSaveDataQuality(t *testing.T) {
 			},
 		},
 		{
-			name: "skips opengraph inserts when there are no custom extensions",
+			name: "skips opengraph inserts when there are no extensions",
 			setupMocks: func(t *testing.T, mockDB *mocks.MockDatabase, mockGraph *graphmocks.MockDatabase) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
 				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{}, 0, nil)
 			},
 		},
@@ -156,7 +156,7 @@ func TestSaveDataQuality(t *testing.T) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
 				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{}, 0, expectedError)
 			},
 			expectedError: "could not get graph schema extensions",
@@ -175,7 +175,7 @@ func TestSaveDataQuality(t *testing.T) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
 				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
 				mockDB.EXPECT().
 					GetEnvironmentsByExtensionId(gomock.Any(), schemaExtension.ID).
@@ -189,7 +189,7 @@ func TestSaveDataQuality(t *testing.T) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
 				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
 				mockDB.EXPECT().
 					GetEnvironmentsByExtensionId(gomock.Any(), schemaExtension.ID).
@@ -207,7 +207,7 @@ func TestSaveDataQuality(t *testing.T) {
 				expectEmptyADAndAzureStatsReads(t, mockGraph)
 				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
 				mockDB.EXPECT().
 					GetEnvironmentsByExtensionId(gomock.Any(), schemaExtension.ID).
@@ -227,7 +227,7 @@ func TestSaveDataQuality(t *testing.T) {
 				expectOpenGraphDataQualityFlag(mockDB, true, nil)
 
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
 				mockDB.EXPECT().
 					GetEnvironmentsByExtensionId(gomock.Any(), schemaExtension.ID).
@@ -250,7 +250,7 @@ func TestSaveDataQuality(t *testing.T) {
 				expectOpenGraphStatsRead(t, mockGraph, environmentKind, sourceKind, dogKind, patronKind, relationshipKind)
 
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
 				mockDB.EXPECT().
 					GetEnvironmentsByExtensionId(gomock.Any(), schemaExtension.ID).
@@ -273,7 +273,7 @@ func TestSaveDataQuality(t *testing.T) {
 				expectOpenGraphStatsRead(t, mockGraph, environmentKind, sourceKind, dogKind, patronKind, relationshipKind)
 
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
 				mockDB.EXPECT().
 					GetEnvironmentsByExtensionId(gomock.Any(), schemaExtension.ID).
@@ -299,7 +299,7 @@ func TestSaveDataQuality(t *testing.T) {
 				expectOpenGraphStatsRead(t, mockGraph, environmentKind, sourceKind, dogKind, patronKind, relationshipKind)
 
 				mockDB.EXPECT().
-					GetGraphSchemaExtensions(gomock.Any(), builtInExtensionFilter, model.Sort{}, 0, 0).
+					GetGraphSchemaExtensions(gomock.Any(), extensionFilter, model.Sort{}, 0, 0).
 					Return(model.GraphSchemaExtensions{schemaExtension}, 1, nil)
 				mockDB.EXPECT().
 					GetEnvironmentsByExtensionId(gomock.Any(), schemaExtension.ID).
