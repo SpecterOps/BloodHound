@@ -14,15 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
 import { expect } from 'vitest';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { IconButton } from '../IconButton';
 import { Button, ButtonVariants, TextButton } from './Button';
-
-expect.extend(matchers);
 
 describe('Button', () => {
     it('defaults to type button', () => {
