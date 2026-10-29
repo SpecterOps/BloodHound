@@ -216,7 +216,7 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 			var (
 				operator             pgsql.Operator
 				filterValue          = filter.Value
-				isNullValue          = filterValue == NullString
+				isNullValue          = filterValue == NullString && !filter.TreatNullAsLiteral
 				isFilterColumnString = filter.IsStringData
 			)
 
@@ -425,10 +425,11 @@ func NewQueryParameterFilterParser() QueryParameterFilterParser {
 }
 
 type Filter struct {
-	Operator     FilterOperator
-	Value        string
-	SetOperator  FilterSetOperator
-	IsStringData bool
+	Operator           FilterOperator
+	Value              string
+	SetOperator        FilterSetOperator
+	IsStringData       bool
+	TreatNullAsLiteral bool
 }
 
 type (
