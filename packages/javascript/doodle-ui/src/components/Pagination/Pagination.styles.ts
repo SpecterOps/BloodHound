@@ -16,7 +16,7 @@
 
 export const paginationNavClasses = 'mx-auto flex w-full justify-center';
 
-export const paginationContentClasses = 'flex flex-row items-center gap-2 text-[color:var(--pagination-text)]';
+export const paginationContentClasses = 'flex flex-row items-center gap-2 dark:text-white';
 
 export const paginationLinkClasses =
     'inline-flex min-h-9 min-w-9 items-center justify-center rounded-md focus:outline-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50';
@@ -27,4 +27,4 @@ export const paginationPageSizeClasses = 'flex justify-center items-center gap-2
 
 export const paginationControlsClasses = 'px-1 py-2 mx-2';
 
-export const paginationDisabledControlClasses = 'disabled:text-[color:var(--pagination-disabled-text)] px-1 py-2 mx-2';
+export const paginationDisabledControlClasses = 'disabled:text-gray-400 px-1 py-2 mx-2';

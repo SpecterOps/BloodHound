@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
+import { palette } from './colors';
 
 export default {
     theme: {
@@ -31,6 +32,16 @@ export default {
             },
         },
         extend: {
+            backgroundColor: {
+                'input-fill-disabled': palette.neutral.light[100],
+                'input-fill-disabled-dark': palette.neutral.dark[400],
+                'btn-disabled-fill': palette.neutral.light[200],
+                'btn-disabled-fill-dark': palette.neutral.dark[700],
+            },
+            borderColor: {
+                'btn-disabled-fill': palette.neutral.light[200],
+                'btn-disabled-fill-dark': palette.neutral.dark[700],
+            },
             textColor: {
                 main: 'var(--text-main)',
                 light: 'var(--text-light)',
@@ -142,8 +153,25 @@ export default {
                 'toggle-btn-fill': 'var(--toggle-btn-fill)',
                 'toggle-btn-border': 'var(--toggle-btn-border)',
                 'toggle-group-fill': 'var(--toggle-group-fill)',
-                // 'input-border-hover': 'var(--input-border-hover)',
+                'checkbox-border': 'var(--checkbox-border)',
+                'checkbox-unchecked-fill': 'var(--checkbox-unchecked-fill)',
 
+                // 'input-label': 'var(--input-label)',
+                'input-border-default': 'var(--input-border-default)',
+                // 'input-border-hover': 'var(--input-border-hover)',
+                'input-border-disabled': 'var(--input-border-disabled)',
+                'input-placeholder-text': 'var(--input-placeholder-text)',
+
+                'radio-label-focus-fill': 'var(--radio-label-focus-fill)',
+                'radio-border-default': 'var(--radio-border-default)',
+                'radio-border-hover': 'var(--radio-border-hover)',
+                'radio-disabled-border': 'var(--radio-disabled-border)',
+                'radio-disabled-fill': 'var(--radio-disabled-fill)',
+                'radio-indicator-fill': 'var(--radio-indicator-fill)',
+
+                // 'selector-disable-fill': 'var(--selector-disable-fill)',
+                'select-trigger-outlined-fill': 'var(--select-trigger-outlined-fill)',
+                'select-content-fill': 'var(--select-content-fill)',
                 'dropdown-trigger-border': 'var(--dropdown-trigger-border)',
                 'dropdown-popover-border': 'var(--dropdown-popover-border)',
                 'dropdown-popover-fill': 'var(--dropdown-popover-fill)',
@@ -157,6 +185,7 @@ export default {
                 'data-table-row-odd-fill': 'var(--data-table-row-odd-fill)',
                 'data-table-row-hover-fill': 'var(--data-table-row-hover-fill)',
                 'data-table-row-selected-outline': 'var(--data-table-row-selected-outline)',
+
                 // 'sidenav-bg': 'var(--sidenav-bg)',
                 // 'sidenav-bg-hover': 'var(--sidenav-bg-hover)',
                 // 'sidenav-bg-active': 'var(--sidenav-bg-active)',

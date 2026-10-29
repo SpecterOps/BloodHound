@@ -24,14 +24,14 @@ export const MultiSelectTriggerVariants = cva(
         'focus:outline-none focus-visible:focus-ring',
         'enabled:hover:bg-secondary enabled:hover:text-inverse',
         'data-[state=open]:bg-primary data-[state=open]:text-inverse',
-        'disabled:cursor-not-allowed disabled:border disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled',
-        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:data-[state=open]:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:enabled:hover:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:data-[state=open]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main'
+        'disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled dark:disabled:bg-input-fill-disabled-dark disabled:text-disabled',
+        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill aria-[invalid=true]:enabled:hover:text-input-placeholder-text aria-[invalid=true]:data-[state=open]:text-input-placeholder-text aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main'
     ),
     {
         variants: {
             variant: {
                 outlined: cn(
-                    'ring-1 ring-[color:var(--input-border-default)] bg-[color:var(--select-trigger-outlined-fill)] text-[color:var(--input-placeholder-text)]',
+                    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-input-placeholder-text',
                     '[&>svg]:text-main',
                     '[&:enabled:hover>svg]:text-inverse',
                     '[&[data-state=open]>svg]:text-inverse'
@@ -55,7 +55,7 @@ export const multiSelectCheckboxStyles = cn(
 );
 
 export const multiSelectIndeterminateCheckboxStyles =
-    'enabled:data-[state=indeterminate]:!border-[color:var(--checkbox-border)] enabled:data-[state=indeterminate]:!bg-[color:var(--checkbox-unchecked-fill)] enabled:data-[state=indeterminate]:!text-[color:var(--checkbox-border)]';
+    'enabled:data-[state=indeterminate]:!border-checkbox-border enabled:data-[state=indeterminate]:!bg-checkbox-unchecked-fill enabled:data-[state=indeterminate]:!text-checkbox-border';
 
 export const multiSelectCaretClasses = 'ml-2 shrink-0 transition-transform duration-200';
 
@@ -64,7 +64,7 @@ export const multiSelectLoadingRowsClasses = 'flex items-center gap-2 mx-1 p-2 p
 export const multiSelectStateRowClasses = 'px-3 py-2 text-center text-main';
 
 export const multiSelectContentClasses =
-    'w-[var(--radix-popover-trigger-width)] rounded-lg bg-[color:var(--select-content-fill)] p-0 text-main';
+    'w-[var(--radix-popover-trigger-width)] rounded-lg bg-select-content-fill p-0 text-main';
 
 export const multiSelectSearchRowClasses = 'flex items-center gap-2 p-2';
 
@@ -72,8 +72,9 @@ export const multiSelectSearchIconClasses = 'size-4 shrink-0 text-main';
 
 export const multiSelectSearchInputClasses = cn(
     'h-6 border-none bg-transparent px-2 text-main leading-4',
-    'placeholder:text-[color:var(--input-placeholder-text)]',
+    'placeholder:text-input-placeholder-text',
     'focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
 );
 
-export const multiSelectScrollAreaClasses = 'max-h-60 [&_[data-radix-scroll-area-viewport]]:max-h-60';
+export const multiSelectScrollAreaClasses =
+    'max-h-60 [--multiselect-scrollbar-thumb:var(--neutral-400)] dark:[--multiselect-scrollbar-thumb:var(--input-placeholder-text)] [&_[data-radix-scroll-area-viewport]]:max-h-60';

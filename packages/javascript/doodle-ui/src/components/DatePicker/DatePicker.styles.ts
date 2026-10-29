@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const datePickerInputClasses = 'bg-[color:var(--date-picker-input-fill)] peer';
+export const datePickerInputClasses = 'bg-common-white dark:bg-common-dark peer';
 
 export const datePickerTriggerClasses =
     'h-6 p-0 opacity-50 hover:opacity-100 peer-hover:opacity-100 focus-visible:opacity-100';
 
-export const datePickerContentClasses = 'w-auto p-3 border border-[color:var(--date-picker-content-border)] z-[1500]';
+export const datePickerContentClasses = 'w-auto p-3 border border-neutral-light-5 dark:border-neutral-light-1 z-[1500]';

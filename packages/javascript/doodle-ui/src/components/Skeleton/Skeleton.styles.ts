@@ -14,4 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const skeletonClasses = 'animate-pulse bg-[color:var(--skeleton-fill)] rounded-md';
+export const skeletonClasses = 'animate-pulse bg-neutral-light-5 dark:bg-neutral-dark-5 rounded-md';

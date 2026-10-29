@@ -126,24 +126,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // Components/Breadcrumbs
-            '--breadcrumb-text': 'inherit',
-            '--breadcrumb-page-text': 'var(--primary)',
-
-            // Components/Carousel
-            '--carousel-control': common.black,
-
-            // Components/DatePicker
-            '--date-picker-input-fill': 'var(--common-white)',
-            '--date-picker-content-border': 'var(--neutral-light-5)',
-
-            // Components/Pagination
-            '--pagination-text': 'inherit',
-            '--pagination-disabled-text': tailwindColors.gray[400],
-
-            // Components/Skeleton
-            '--skeleton-fill': 'var(--neutral-light-5)',
-
             // Components/Button
             // TODO remove
             '--toggle-btn-fill': 'var(--surface)',
@@ -165,7 +147,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/Input
             '--input-fill': common.white,
             '--input-disabled-fill': palette.neutral.light[100],
-            '--input-disabled-invalid-border': 'var(--status-error-main)',
             '--input-outlined-hover-focus-border': 'var(--input-outlined-border-hover)',
             // '--input-label': 'var(--text-main)',
             '--input-border-default': palette.grey[700],
@@ -184,13 +165,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
 
-            // Components/MultiSelect
-            '--multiselect-scrollbar-thumb': 'var(--neutral-400)',
-
-            // Components/Tooltip
-            '--tooltip-fill': 'var(--neutral-light-2)',
-            '--tooltip-border': '#939597',
-
             // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.light[200],
             '--radio-border-default': palette.neutral.light[400],
@@ -202,13 +176,9 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
             '--select-open-fill': 'var(--primary)',
-            '--select-open-text': 'var(--common-white)',
-            '--select-open-placeholder-text': 'var(--common-white)',
-            '--select-item-disabled-fill': palette.neutral.light[300],
-            '--select-disabled-highlighted-fill': 'var(--secondary)',
             '--select-open-disabled-fill': 'var(--primary)',
             '--select-disabled-placeholder-text': 'var(--disabled)',
-            '--select-invalid-placeholder-open-text': 'var(--select-open-placeholder-text)',
+            '--select-invalid-placeholder-open-text': 'var(--input-placeholder-text)',
             '--select-open-focus-border': 'var(--primary)',
             '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
             '--select-highlight-text': 'var(--common-white)',
@@ -433,24 +403,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // Components/Breadcrumbs
-            '--breadcrumb-text': common.white,
-            '--breadcrumb-page-text': 'var(--secondary-variant-2)',
-
-            // Components/Carousel
-            '--carousel-control': common.white,
-
-            // Components/DatePicker
-            '--date-picker-input-fill': 'var(--common-dark)',
-            '--date-picker-content-border': 'var(--neutral-light-1)',
-
-            // Components/Pagination
-            '--pagination-text': common.white,
-            '--pagination-disabled-text': tailwindColors.gray[400],
-
-            // Components/Skeleton
-            '--skeleton-fill': 'var(--neutral-dark-5)',
-
             // Components/Toggle
             '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.dark[600],
@@ -471,7 +423,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/Input
             '--input-fill': palette.neutral.dark[50],
             '--input-disabled-fill': palette.neutral.dark[400],
-            '--input-disabled-invalid-border': 'var(--input-border-disabled)',
             '--input-outlined-hover-focus-border': 'var(--input-outlined-border-default)',
             // '--input-label': 'var(--text-main)',
             '--input-border-default': palette.neutral.light[400],
@@ -491,13 +442,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
 
-            // Components/MultiSelect
-            '--multiselect-scrollbar-thumb': 'var(--input-placeholder-text)',
-
-            // Components/Tooltip
-            '--tooltip-fill': 'var(--neutral-dark-5)',
-            '--tooltip-border': '#939597',
-
             // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],
             '--radio-border-default': palette.neutral.light[400],
@@ -509,14 +453,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
             '--select-open-fill': 'var(--input-fill)',
-            '--select-open-text': 'var(--text-main)',
-            '--select-open-placeholder-text': 'var(--input-placeholder-text)',
-            '--select-item-disabled-fill': palette.neutral.dark[700],
-            '--select-disabled-highlighted-fill': 'var(--select-item-disabled-fill)',
             '--select-open-disabled-fill': 'var(--select-disabled-fill)',
             '--select-disabled-placeholder-text': 'var(--select-trigger-placeholder-text)',
-            '--select-invalid-placeholder-open-text': 'var(--select-open-placeholder-text)',
-            '--select-open-focus-border': 'var(--input-outlined-border-default)',
+            '--select-invalid-placeholder-open-text': 'var(--select-highlight-text)',
+            // '--select-open-focus-border': 'var(--input-outlined-border-default)',
             '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
             '--select-highlight-text': 'var(--common-dark)',
             '--select-placeholder-text': 'var(--select-trigger-placeholder-text)',
@@ -632,7 +572,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             ///////////// Legacy below //////////
             // same as common.white
-            '--contrast': common.white,
+            '--contrast': '#ffffff',
             '--neutral-1': 'var(--neutral-dark-1)',
             '--neutral-2': 'var(--neutral-dark-2)',
             '--neutral-3': 'var(--neutral-dark-3)',

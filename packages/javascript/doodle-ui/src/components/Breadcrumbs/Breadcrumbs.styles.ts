@@ -15,13 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export const breadcrumbListClasses =
-    'flex flex-wrap items-center gap-1.5 break-words text-xs sm:gap-2.5 text-[color:var(--breadcrumb-text)]';
+    'flex flex-wrap items-center gap-1.5 break-words text-xs sm:gap-2.5 dark:text-white';
 
 export const breadcrumbItemClasses = 'inline-flex items-center gap-1.5';
 
 export const breadcrumbLinkClasses =
     'rounded-sm transition-colors hover:underline focus:outline-none focus-visible:focus-ring focus-visible:underline';
 
-export const breadcrumbPageClasses = 'font-bold text-[color:var(--breadcrumb-page-text)]';
+export const breadcrumbPageClasses = 'font-bold text-primary dark:text-secondary-variant-2';
 
 export const breadcrumbEllipsisClasses = 'flex h-9 w-9 items-center justify-center';
