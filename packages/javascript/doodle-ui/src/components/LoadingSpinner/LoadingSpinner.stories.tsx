@@ -35,12 +35,16 @@ const meta = {
             control: 'text',
             if: { arg: 'variant', eq: 'overlay' },
             description:
-                'Only available with variant="overlay". Styles the centered icon without changing the backdrop, for example `size-6 text-secondary`. For inline spinners, use className instead.',
+                'Only available with `variant="overlay"`. ' +
+                'Styles the centered icon without changing the backdrop, for example `size-6 text-secondary`. ' +
+                'For inline spinners, use `className` instead.',
         },
         className: {
             control: 'text',
             description:
-                'Styles the root span. For inline spinners, use this for size, color, and layout (for example `size-6 text-secondary`). For overlays, use it for the backdrop and positioning; use spinnerClassName for the icon.',
+                'Styles the root span. ' +
+                'For inline spinners, use this for size, color, and layout (for example `size-6 text-secondary`). ' +
+                'For overlays, use it for the backdrop and positioning; use `spinnerClassName` for the icon.',
         },
     },
 } satisfies Meta<typeof LoadingSpinner>;
