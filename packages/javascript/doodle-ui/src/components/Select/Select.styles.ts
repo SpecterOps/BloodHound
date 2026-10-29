@@ -29,8 +29,8 @@ const outlinedSelectHoverClasses = cn(
 );
 
 const outlinedSelectOpenClasses = cn(
-    'enabled:data-[state=open]:border-primary enabled:data-[state=open]:bg-[color:var(--select-open-fill)] enabled:data-[state=open]:text-[color:var(--select-open-text)]',
-    'enabled:data-[placeholder]:data-[state=open]:text-[color:var(--select-open-placeholder-text)]',
+    'enabled:data-[state=open]:border-primary enabled:data-[state=open]:bg-[color:var(--select-open-fill)] enabled:data-[state=open]:text-[color:var(--select-highlight-text)]',
+    'enabled:data-[placeholder]:data-[state=open]:text-[color:var(--select-highlight-text)]',
     'enabled:data-[state=open]:focus:border-[color:var(--select-open-focus-border)] enabled:data-[state=open]:hover:focus:border-primary',
     'enabled:data-[state=open]:hover:border-primary enabled:data-[state=open]:hover:bg-primary enabled:data-[state=open]:hover:text-[color:var(--select-highlight-text)]',
     'enabled:data-[placeholder]:data-[state=open]:hover:text-[color:var(--select-highlight-text)]'
@@ -120,7 +120,7 @@ export const selectItemClasses = cn(
     'relative flex w-full cursor-default select-none items-center rounded-lg p-2 outline-none',
     'data-[highlighted]:bg-secondary data-[highlighted]:text-[color:var(--select-highlight-text)]',
     'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
-    'data-[disabled]:pointer-events-none data-[disabled]:bg-[color:var(--select-item-disabled-fill)] data-[disabled]:data-[highlighted]:bg-[color:var(--select-disabled-highlighted-fill)]',
+    'data-[disabled]:pointer-events-none data-[disabled]:bg-dropdown-option-disabled-fill',
     'data-[disabled]:text-disabled data-[disabled]:opacity-100',
     'data-[state=checked]:font-bold data-[state=checked]:text-[color:var(--select-item-checked-text)]',
     'data-[highlighted]:data-[state=checked]:text-[color:var(--select-highlight-text)]'

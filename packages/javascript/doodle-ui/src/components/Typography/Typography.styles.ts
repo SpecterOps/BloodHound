@@ -26,12 +26,11 @@ export const TypographyVariants = cva('break-words', {
             h4: 'font-heading text-xl font-semibold leading-[1.375rem] tracking-normal text-main',
             h5: 'font-heading text-lg font-bold leading-5 tracking-[.25px] text-main',
             h6: 'font-heading text-base font-semibold leading-[1.125rem] tracking-[.25px] text-main',
-            body1: 'font-sans text-base font-normal leading-6 tracking-normal text-[color:var(--typography-body-text)]',
-            body2: 'font-sans text-sm font-normal leading-[1.375rem] tracking-normal text-[color:var(--typography-body-text)]',
+            body1: 'font-sans text-base font-normal leading-6 tracking-normal text-muted dark:text-main',
+            body2: 'font-sans text-sm font-normal leading-[1.375rem] tracking-normal text-muted dark:text-main',
             subtitle1: 'font-sans text-[.9375rem] font-medium leading-6 tracking-[.25px] text-main',
             subtitle2: 'font-sans text-[.8125rem] font-medium leading-[1.375rem] tracking-[.25px] text-main',
-            caption:
-                'font-sans text-xs font-normal leading-5 tracking-[.25px] text-[color:var(--typography-body-text)]',
+            caption: 'font-sans text-xs font-normal leading-5 tracking-[.25px] text-muted dark:text-main',
         },
     },
     defaultVariants: {

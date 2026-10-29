@@ -16,14 +16,14 @@
 
 export const tableClasses = 'w-full caption-bottom text-sm';
 
-export const tableHeaderClasses = '[&_tr]:border-b bg-[color:var(--table-fill)]';
+export const tableHeaderClasses = '[&_tr]:border-b bg-neutral-light-2 dark:bg-neutral-dark-2';
 
-export const tableBodyClasses = '[&_tr:last-child]:border-0 bg-[color:var(--table-fill)]';
+export const tableBodyClasses = '[&_tr:last-child]:border-0 bg-neutral-light-2 dark:bg-neutral-dark-2';
 
 export const tableFooterClasses = 'border-t bg-muted/50 font-medium [&>tr]:last:border-b-0';
 
 export const tableRowClasses =
-    'border-b-[length:var(--table-row-border-width)] transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted';
+    'border-b dark:border-b-0 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted';
 
 export const tableHeadClasses =
     'h-12 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0';
@@ -32,4 +32,4 @@ export const tableCellClasses = 'p-4 pl-0 align-middle [&:has([role=checkbox])]:
 
 export const tableCaptionClasses = 'mt-4 text-sm text-muted-foreground';
 
-export const tableDraggingCellClasses = '!bg-[color:var(--table-dragging-fill)]';
+export const tableDraggingCellClasses = '!bg-neutral-light-1 dark:!bg-neutral-dark-1';

@@ -16,7 +16,7 @@
 
 import { cn } from '../utils';
 
-export const accordionItemClasses = 'bg-[color:var(--accordion-fill)] rounded-lg mb-4';
+export const accordionItemClasses = 'bg-neutral-light-2 rounded-lg mb-4';
 
 export const accordionHeaderClasses = cn(
     'flex flex-1 gap-1 items-center rounded-md font-bold transition-all',

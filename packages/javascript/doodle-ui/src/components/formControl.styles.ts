@@ -14,4 +14,4 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 export const invalidControlClasses =
-    'enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:hover:border-status-error-main enabled:aria-[invalid=true]:focus:border-status-error-main enabled:aria-[invalid=true]:hover:focus:border-status-error-main disabled:aria-[invalid=true]:border-[color:var(--input-disabled-invalid-border)]';
+    'enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:hover:border-status-error-main enabled:aria-[invalid=true]:focus:border-status-error-main enabled:aria-[invalid=true]:hover:focus:border-status-error-main disabled:aria-[invalid=true]:border-status-error-main';

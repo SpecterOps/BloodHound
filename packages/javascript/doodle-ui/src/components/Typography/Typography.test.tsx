@@ -32,7 +32,8 @@ describe('Typography', () => {
             'font-normal',
             'leading-6',
             'tracking-normal',
-            'text-[color:var(--typography-body-text)]',
+            'text-muted',
+            'dark:text-main',
         ],
         body2: [
             'font-sans',
@@ -40,7 +41,8 @@ describe('Typography', () => {
             'font-normal',
             'leading-[1.375rem]',
             'tracking-normal',
-            'text-[color:var(--typography-body-text)]',
+            'text-muted',
+            'dark:text-main',
         ],
         subtitle1: ['font-sans', 'text-[.9375rem]', 'font-medium', 'leading-6', 'tracking-[.25px]', 'text-main'],
         subtitle2: [
@@ -57,7 +59,8 @@ describe('Typography', () => {
             'font-normal',
             'leading-5',
             'tracking-[.25px]',
-            'text-[color:var(--typography-body-text)]',
+            'text-muted',
+            'dark:text-main',
         ],
     } as const;
 
@@ -91,12 +94,12 @@ describe('Typography', () => {
         );
 
         it.each(['body1', 'body2', 'caption'] as const)(
-            'variant "%s" uses the theme-aware body text token',
+            'variant "%s" uses muted text only in light mode',
             (variant) => {
                 const classes = TypographyVariants({ variant }).split(' ');
 
-                expect(classes).toContain('text-[color:var(--typography-body-text)]');
-                expect(classes).not.toContain('dark:text-main');
+                expect(classes).toContain('text-muted');
+                expect(classes).toContain('dark:text-main');
                 expect(classes).not.toContain('text-[#505050]');
             }
         );

@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const cardClasses = 'rounded-lg text-main bg-neutral-1 border border-solid border-[color:var(--card-border)]';
+export const cardClasses =
+    'rounded-lg text-main bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900';
 
 export const cardHeaderClasses = 'flex flex-col space-y-1.5 p-3 pt-0 first:pt-3';
 

@@ -19,9 +19,9 @@ import { buttonBaseClasses, primaryClasses, secondaryClasses } from '../Button/B
 import { cn } from '../utils';
 
 export const defaultIconButtonClasses = cn(
-    'hover:text-primary',
-    'active:bg-transparent active:text-secondary',
-    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary'
+    'hover:text-primary dark:hover:text-primary',
+    'active:bg-transparent active:text-secondary dark:active:text-secondary',
+    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary dark:focus-visible:text-primary'
 );
 
 export const IconButtonVariants = cva(
