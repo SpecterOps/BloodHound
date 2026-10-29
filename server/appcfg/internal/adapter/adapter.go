@@ -38,6 +38,6 @@ func NewConfigurationAdapter(store *appdb.Store, service *services.Service) *Con
 	return &ConfigurationAdapter{db: store, service: service}
 }
 
-func (s *ConfigurationAdapter) GetApplicationConfiguration(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error) {
-	return s.service.GetApplicationConfiguration(ctx, parameterKey)
+func (s *ConfigurationAdapter) GetConfigScheduledAnalysis(ctx context.Context) (services.ScheduledAnalysisParameter, error) {
+	return s.service.GetConfig[services.ScheduledAnalysisParameter](ctx, services.ScheduledAnalysis)
 }
