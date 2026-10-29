@@ -150,9 +150,6 @@ export default {
                 // 'brand-secondary-highlight-light-blue': 'var(--brand-secondary-highlight-light-blue)',
                 // 'brand-secondary-highlight-green': 'var(--brand-secondary-highlight-green)',
 
-                'toggle-btn-fill': 'var(--toggle-btn-fill)',
-                'toggle-btn-border': 'var(--toggle-btn-border)',
-                'toggle-group-fill': 'var(--toggle-group-fill)',
                 'checkbox-border': 'var(--checkbox-border)',
                 'checkbox-unchecked-fill': 'var(--checkbox-unchecked-fill)',
 
@@ -178,13 +175,6 @@ export default {
                 'dropdown-option-hover-fill': 'var(--dropdown-option-hover-fill)',
                 'dropdown-option-disabled-fill': 'var(--dropdown-option-disabled-fill)',
                 'dropdown-tooltip-fill': 'var(--dropdown-tooltip-fill)',
-
-                'data-table-fill': 'var(--data-table-fill)',
-                'data-table-header-fill': 'var(--data-table-header-fill)',
-                'data-table-row-even-fill': 'var(--data-table-row-even-fill)',
-                'data-table-row-odd-fill': 'var(--data-table-row-odd-fill)',
-                'data-table-row-hover-fill': 'var(--data-table-row-hover-fill)',
-                'data-table-row-selected-outline': 'var(--data-table-row-selected-outline)',
 
                 // 'sidenav-bg': 'var(--sidenav-bg)',
                 // 'sidenav-bg-hover': 'var(--sidenav-bg-hover)',

@@ -28,7 +28,7 @@ const ComboBadgeVariants = cva('relative leading-[1] z-10 h-8 text-nowrap', {
 });
 
 const AdornmentVariants = cva(
-    'bg-primary text-neutral-light-1 rounded px-4 py-2 z-10 transition-[transform] duration-300',
+    'bg-primary text-[color:var(--combo-badge-adornment-text)] rounded px-4 py-2 z-10 transition-[transform] duration-300',
     {
         variants: {
             type: {
@@ -84,7 +84,7 @@ const ComboBadge = (props: ComboBadgeProps) => {
         <div role='status' aria-label={ariaLabel} className={cn(ComboBadgeVariants({ type }), className)} {...rest}>
             <div
                 className={cn(
-                    'bg-neutral-light-5 text-primary dark:bg-neutral-dark-5 dark:text-neutral-light-1 rounded inline-block px-4 py-2 relative z-20',
+                    'bg-[color:var(--combo-badge-fill)] text-[color:var(--combo-badge-text)] rounded inline-block px-4 py-2 relative z-20',
                     { peer: !disableAdornment }
                 )}>
                 {label}
