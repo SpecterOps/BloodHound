@@ -19,8 +19,8 @@ import { cn } from '../utils';
 export const popoverTriggerClasses = 'focus:outline-none focus-visible:focus-ring';
 
 export const popoverContentClasses = cn(
-    'z-50 w-72 rounded bg-[color:var(--popover-fill)] p-4 text-[color:var(--popover-text)] shadow outline-none',
-    'focus-visible:focus-ring',
+    'z-50 w-72 rounded bg-neutral-light-2 p-4 text-neutral-dark-1 shadow outline-none',
+    'focus-visible:focus-ring dark:bg-neutral-dark-2 dark:text-white',
     'data-[state=open]:animate-in',
     'data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
     'data-[state=open]:fade-in-0',

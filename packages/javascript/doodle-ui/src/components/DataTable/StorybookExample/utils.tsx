@@ -100,7 +100,9 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
                             onClick={() => handleSort?.('tierZeroPrincipal')}
                             className='rounded-sm p-2 focus:outline-none focus-visible:focus-ring'
                             aria-label='Sort by Tier Zero Principal'>
-                            <FontAwesomeIcon icon={sortOrder === 'asc' ? faCaretUp : faCaretDown} />
+                            {!sortOrder && <FontAwesomeIcon icon={faCaretDown} color='black' />}
+                            {sortOrder === 'asc' && <FontAwesomeIcon icon={faCaretUp} color='dodgerblue' />}
+                            {sortOrder === 'desc' && <FontAwesomeIcon icon={faCaretDown} color='dodgerblue' />}
                         </button>
                     ) : null}
                 </div>

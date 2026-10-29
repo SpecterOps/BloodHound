@@ -126,41 +126,11 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // Components/ComboBadge
-            '--combo-badge-fill': 'var(--neutral-light-5)',
-            '--combo-badge-text': 'var(--primary)',
-            '--combo-badge-adornment-text': 'var(--neutral-light-1)',
-
-            // Components/Dialog
-            '--dialog-overlay-fill': 'rgb(0 0 0 / 0.4)',
-            '--dialog-fill': 'var(--neutral-light-2)',
-            '--dialog-text': 'inherit',
-
-            // Components/Popover
-            '--popover-fill': 'var(--neutral-light-2)',
-            '--popover-text': 'var(--neutral-dark-1)',
-
-            // Components/Slider
-            '--slider-track-fill': 'var(--neutral-200)',
-            '--slider-thumb-fill': 'var(--neutral-100)',
-            '--slider-thumb-border': 'var(--neutral-300)',
-            '--slider-thumb-focus-fill': 'var(--neutral-100)',
-            '--slider-thumb-active-fill': 'var(--neutral-100)',
-
-            // Components/Stepper
-            '--stepper-inactive-border': '#939597',
-
-            // Components/Toggle
+            // Components/Button
+            // TODO remove
             '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.light[500],
             '--toggle-group-fill': 'var(--surface-subtle)',
-
-            '--toggle-hover-border': 'var(--secondary)',
-            '--toggle-active-border': 'var(--primary-variant)',
-            '--toggle-selected-border': 'var(--primary)',
-            '--toggle-disabled-border': 'var(--button-disabled-fill)',
-            '--toggle-disabled-hover-text': 'var(--disabled)',
-            '--toggle-highlight-text': 'var(--common-white)',
 
             // Components/Checkbox
             '--checkbox-checked-active-border': 'var(--primary)',
@@ -239,9 +209,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-odd-fill': 'var(--surface-subtle)',
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': light.primary.main,
-            '--data-table-wrapper-border': 'var(--neutral-light-4)',
-            '--data-table-resize-fill': 'var(--neutral-5)',
-            '--data-table-resize-active-fill': 'var(--primary)',
 
             // Components/Switch
             '--switch-fill': palette.neutral.dark[700],
@@ -436,41 +403,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // Components/ComboBadge
-            '--combo-badge-fill': 'var(--neutral-dark-5)',
-            '--combo-badge-text': 'var(--neutral-light-1)',
-            '--combo-badge-adornment-text': 'var(--neutral-light-1)',
-
-            // Components/Dialog
-            '--dialog-overlay-fill': 'rgb(0 0 0 / 0.4)',
-            '--dialog-fill': 'var(--neutral-dark-2)',
-            '--dialog-text': 'var(--neutral-light-1)',
-
-            // Components/Popover
-            '--popover-fill': 'var(--neutral-dark-2)',
-            '--popover-text': common.white,
-
-            // Components/Slider
-            '--slider-track-fill': 'var(--neutral-200)',
-            '--slider-thumb-fill': 'var(--neutral-100)',
-            '--slider-thumb-border': 'var(--neutral-300)',
-            '--slider-thumb-focus-fill': 'var(--neutral-400)',
-            '--slider-thumb-active-fill': 'var(--common-white)',
-
-            // Components/Stepper
-            '--stepper-inactive-border': 'var(--input-border-default)',
-
             // Components/Toggle
             '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.dark[600],
             '--toggle-group-fill': 'var(--surface-subtle)',
-
-            '--toggle-hover-border': 'var(--toggle-btn-border)',
-            '--toggle-active-border': 'var(--toggle-btn-border)',
-            '--toggle-selected-border': 'var(--toggle-btn-border)',
-            '--toggle-disabled-border': 'var(--toggle-btn-border)',
-            '--toggle-disabled-hover-text': 'var(--toggle-highlight-text)',
-            '--toggle-highlight-text': 'var(--common-dark)',
 
             // Components/Checkbox
             '--checkbox-checked-active-border': 'var(--primary-variant)',
@@ -550,9 +486,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-odd-fill': 'var(--surface-subtle)',
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
-            '--data-table-wrapper-border': 'var(--neutral-900)',
-            '--data-table-resize-fill': 'var(--neutral-light-5)',
-            '--data-table-resize-active-fill': 'var(--secondary)',
 
             // Components/Switch
             '--switch-fill': common.white,

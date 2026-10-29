@@ -22,7 +22,7 @@ export const sliderRootStyles =
 export const sliderControlStyles = 'group/slider relative flex w-full grow items-center py-3';
 
 export const sliderTrackStyles =
-    'relative h-1 w-full grow overflow-hidden rounded-full bg-[color:var(--slider-track-fill)] data-[disabled]:bg-disabled';
+    'relative h-1 w-full grow overflow-hidden rounded-full bg-neutral-200 data-[disabled]:bg-disabled';
 
 export const sliderIndicatorStyles = cva(
     'h-full rounded-full group-has-[:focus-visible]/slider:bg-secondary data-[disabled]:bg-disabled',
@@ -30,7 +30,7 @@ export const sliderIndicatorStyles = cva(
         variants: {
             active: {
                 true: 'bg-primary',
-                false: 'bg-[color:var(--slider-track-fill)]',
+                false: 'bg-neutral-200',
             },
         },
         defaultVariants: {
@@ -41,15 +41,15 @@ export const sliderIndicatorStyles = cva(
 
 export const sliderThumbStyles = cva(
     [
-        'group/thumb relative size-4 rounded-full border border-[color:var(--slider-thumb-border)] shadow-outer-1',
-        'has-[:focus-visible]:bg-[color:var(--slider-thumb-focus-fill)]',
-        'data-[disabled]:bg-disabled'
+        'group/thumb relative size-4 rounded-full border border-neutral-300 bg-neutral-100 shadow-outer-1',
+        'dark:has-[:focus-visible]:bg-neutral-400',
+        'data-[disabled]:bg-disabled',
     ],
     {
         variants: {
             active: {
-                true: 'bg-[color:var(--slider-thumb-active-fill)]',
-                false: 'bg-[color:var(--slider-thumb-fill)]',
+                true: 'dark:bg-common-white',
+                false: '',
             },
         },
         defaultVariants: {
@@ -62,7 +62,7 @@ export const sliderThumbDotStyles = cva(
     [
         'pointer-events-none absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full',
         'group-has-[:focus-visible]/thumb:block group-has-[:focus-visible]/thumb:bg-secondary',
-        'group-data-[disabled]/thumb:hidden'
+        'group-data-[disabled]/thumb:hidden',
     ],
     {
         variants: {
