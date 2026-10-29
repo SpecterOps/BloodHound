@@ -14,13 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
 import { expect } from 'vitest';
 import { ToggleGroup, ToggleGroupItem } from './ToggleGroup';
-
-expect.extend(matchers);
 
 describe('ToggleGroup', () => {
     it('uses the four-pixel corner radius shared with toggle items', () => {

@@ -15,13 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ColumnDef } from '@tanstack/react-table';
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { DataTable } from './DataTable';
-
-expect.extend(matchers);
 
 vi.mock('@tanstack/react-virtual', () => ({
     useVirtualizer: () => ({

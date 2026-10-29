@@ -13,14 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, vi } from 'vitest';
 import { Select, SelectTrigger, SelectValue } from './Select';
 
-expect.extend(matchers);
 afterEach(cleanup);
 
 describe('SelectTrigger', () => {

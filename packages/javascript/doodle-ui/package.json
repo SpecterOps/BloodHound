@@ -90,6 +90,7 @@
         "@storybook/react-vite": "^8.6.19",
         "@storybook/test": "^8.6.19",
         "@storybook/theming": "^8.6.19",
+        "@testing-library/jest-dom": "6.5.0",
         "@types/luxon": "^3.7.1",
         "@types/node": "^20.12.7",
         "@types/react": "^18.2.66",
