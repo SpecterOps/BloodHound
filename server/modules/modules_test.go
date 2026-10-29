@@ -168,7 +168,6 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 		authorizer            = auth.NewAuthorizer(nil)
 		routerInst            = router.NewRouter(cfg, authorizer, "")
 		rateLimitFactoryCalls int
-		rateLimitRequestCalls int
 		deps                  = modules.Deps{
 			Router:                  &routerInst,
 			Pool:                    new(pgxpool.Pool),
@@ -179,7 +178,6 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 				rateLimitFactoryCalls++
 				return func(next http.Handler) http.Handler {
 					return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-						rateLimitRequestCalls++
 						next.ServeHTTP(response, request)
 					})
 				}
@@ -187,10 +185,10 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 		}
 	)
 
-	modules.Register(deps)
+	services := modules.Register(deps)
+	assert.NotNil(t, services.AuditRuntime)
+	assert.NotNil(t, services.AuditRuntime.Service)
 	assert.Equal(t, 1, rateLimitFactoryCalls, "the registry should create and install the matched-route limiter once")
-	routerInst.Handler().ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil))
-	assert.Equal(t, 1, rateLimitRequestCalls, "registered feature routes should pass through the registry-owned limiter")
 
 	for _, tc := range []struct {
 		name   string

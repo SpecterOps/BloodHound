@@ -37,6 +37,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/changelog"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe"
 	"github.com/specterops/bloodhound/cmd/api/src/daemons/gc"
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -187,7 +188,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 
-		modules.Register(modules.Deps{
+		moduleServices := modules.Register(modules.Deps{
 			Router:  &routerInst,
 			Pool:    connections.RDMS.Pool(),
 			Graph:   connections.Graph,
@@ -223,7 +224,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		return []daemons.Daemon{
 			bhapi.NewDaemon(cfg, routerInst.Handler()),
-			gc.NewDataPruningDaemon(connections.RDMS),
+			gc.NewDataPruningDaemon(connections.RDMS, moduleServices.AuditRuntime, ha.NewDummyHA()),
 			cl,
 			datapipeDaemon,
 		}, nil

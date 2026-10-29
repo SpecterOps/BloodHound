@@ -1,5 +1,10 @@
 # Audit Middleware Reference Implementation
 
+> **Superseded:** This RFC-era example is retained for history. Follow
+> [BHADR-0017](../../../../../docs/adrs/BHADR-0017_Audit_Log_Middleware.md),
+> [BHADR-0032](../../../../../docs/adrs/BHADR-0032_Audit_Log_Migration_and_Partitioning.md),
+> and the production tests instead.
+
 **Related RFC:** [bh-rfc-7.md](../../../../rfc/bh-rfc-7.md)
 **Status:** Reference Implementation
 **Last Updated:** 2026-06-16
