@@ -66,7 +66,7 @@ const SearchResultItem: FC<{
                                         'z-[1400] max-w-80 break-words dark:bg-neutral-dark-5 dark:text-white border-0',
                                 }}>
                                 <div className='truncate'>
-                                    <HighlightedText text={item.label || item.objectId} search={keyword} />
+                                    <HighlightedText text={item.label || item.objectId} search={keyword} inheritColor />
                                 </div>
                             </Tooltip>
                             {showDistinguishedName && item.distinguishedName && (

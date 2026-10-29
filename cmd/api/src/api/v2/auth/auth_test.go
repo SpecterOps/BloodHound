@@ -167,7 +167,7 @@ func TestManagementResource_PutUserAuthSecret(t *testing.T) {
 		Require().
 		ResponseJSONBody(
 			api.ErrorWrapper{
-				HTTPStatus: http.StatusUnauthorized,
+				HTTPStatus: http.StatusForbidden,
 				Errors:     []api.ErrorDetails{{Message: "Invalid current password"}},
 			},
 		)
