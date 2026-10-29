@@ -22,24 +22,17 @@ import (
 	"testing"
 
 	"github.com/pashagolub/pgxmock/v4"
-	"github.com/specterops/bloodhound/server/opengraphschema/internal/appdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func newEnvironmentTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
-	t.Helper()
-
-	pool, err := pgxmock.NewPool()
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		require.NoError(t, pool.ExpectationsWereMet())
-		pool.Close()
-	})
-
-	return appdb.NewStore(pool), pool
-}
+const expectedGetEnvironmentsSQL = `SELECT
+ se.id, se.schema_extension_id, ext.display_name AS schema_extension_display_name,
+ se.environment_kind_id, k.name AS environment_kind_name, se.source_kind_id,
+ se.created_at, se.updated_at, se.deleted_at
+ FROM schema_environments se
+ INNER JOIN kind k ON se.environment_kind_id = k.id
+ INNER JOIN schema_extensions ext ON se.schema_extension_id = ext.id`
 
 func TestStore_GetEnvironmentsFiltered(t *testing.T) {
 	t.Parallel()
@@ -63,7 +56,7 @@ func TestStore_GetEnvironmentsFiltered(t *testing.T) {
 			name:        "Success: returns all environments when not builtin only",
 			onlyBuiltin: false,
 			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(`INNER JOIN schema_extensions ext ON se\.schema_extension_id = ext\.id\s+ORDER BY se\.id`).
+				pool.ExpectQuery(expectedGetEnvironmentsSQL + " ORDER BY se.id").
 					WillReturnRows(pool.NewRows(columns).
 						AddRow(int32(1), int32(10), "Ext A", int32(100), "AZBase", int32(200), nil, nil, nil).
 						AddRow(int32(2), int32(11), "Ext B", int32(101), "Base", int32(201), nil, nil, nil))
@@ -74,7 +67,7 @@ func TestStore_GetEnvironmentsFiltered(t *testing.T) {
 			name:        "Success: applies builtin filter",
 			onlyBuiltin: true,
 			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(`WHERE ext\.is_builtin = true`).
+				pool.ExpectQuery(expectedGetEnvironmentsSQL + " WHERE ext.is_builtin = true ORDER BY se.id").
 					WillReturnRows(pool.NewRows(columns).
 						AddRow(int32(1), int32(10), "Ext A", int32(100), "AZBase", int32(200), nil, nil, nil))
 			},
@@ -84,7 +77,7 @@ func TestStore_GetEnvironmentsFiltered(t *testing.T) {
 			name:        "Error: propagates query error",
 			onlyBuiltin: false,
 			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectQuery(`FROM schema_environments`).
+				pool.ExpectQuery(expectedGetEnvironmentsSQL + " ORDER BY se.id").
 					WillReturnError(unexpectedErr)
 			},
 			wantErr: unexpectedErr,
@@ -94,10 +87,11 @@ func TestStore_GetEnvironmentsFiltered(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			store, pool := newEnvironmentTestStore(t)
+			store, pool := newTestStore(t)
 			test.setupMock(pool)
 
 			environments, err := store.GetEnvironmentsFiltered(context.Background(), test.onlyBuiltin)
+			require.NoError(t, pool.ExpectationsWereMet())
 			if test.wantErr != nil {
 				assert.ErrorIs(t, err, test.wantErr)
 				return
