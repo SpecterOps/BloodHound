@@ -1,0 +1,942 @@
+import { Meta } from '@storybook/blocks';
+import { useState } from 'react';
+import { common, dark, light, palette, text } from '../tailwind/colors';
+
+<Meta title='Styleguide/Component colors' />
+
+export const tokenRows = [
+    {
+        token: '--accordion-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[400],
+        lightReference: 'var(--neutral-light-2)',
+        darkReference: 'var(--neutral-dark-2)',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['Accordion'],
+    },
+    {
+        token: '--breadcrumb-page-text',
+        light: light.primary.main,
+        dark: '#99a3ff',
+        lightReference: 'var(--primary)',
+        darkReference: 'var(--secondary-variant-2)',
+        lightPalette: 'light.primary.main',
+        darkPalette: '',
+        components: ['Breadcrumb'],
+    },
+    {
+        token: '--button-disabled-fill',
+        light: palette.neutral.light[200],
+        dark: palette.neutral.dark[700],
+        lightReference: '#E3E7EA',
+        darkReference: '#2E2E2E',
+        lightPalette: 'palette.neutral.light[200]',
+        darkPalette: 'palette.neutral.dark[700]',
+        components: ['MultiSelect'],
+    },
+    {
+        token: '--button-disabled-text',
+        light: palette.grey[700],
+        dark: common.disabled,
+        lightReference: '#616161',
+        darkReference: '#A6A6A6',
+        lightPalette: 'palette.grey[700]',
+        darkPalette: 'common.disabled',
+        components: ['IconButton'],
+    },
+    {
+        token: '--card-border',
+        light: palette.neutral.light[300],
+        dark: palette.neutral.dark[900],
+        lightReference: 'var(--neutral-light-4)',
+        darkReference: 'var(--neutral-900)',
+        lightPalette: 'palette.neutral.light[300]',
+        darkPalette: 'palette.neutral.dark[900]',
+        components: ['Card'],
+    },
+    {
+        token: '--combo-badge-fill',
+        light: palette.neutral.light[400],
+        dark: palette.neutral.dark[700],
+        lightReference: 'var(--neutral-light-5)',
+        darkReference: 'var(--neutral-dark-5)',
+        lightPalette: 'palette.neutral.light[400]',
+        darkPalette: 'palette.neutral.dark[700]',
+        components: ['ComboBadge'],
+    },
+    {
+        token: '--combo-badge-text',
+        light: light.primary.main,
+        dark: common.white,
+        lightReference: 'var(--primary)',
+        darkReference: 'var(--neutral-light-1)',
+        lightPalette: 'light.primary.main',
+        darkPalette: 'common.white',
+        components: ['ComboBadge'],
+    },
+    {
+        token: '--data-table-resize-active-fill',
+        light: light.primary.main,
+        dark: dark.secondary.main,
+        lightReference: 'var(--primary)',
+        darkReference: 'var(--secondary)',
+        lightPalette: 'light.primary.main',
+        darkPalette: 'dark.secondary.main',
+        components: ['DataTable'],
+    },
+    {
+        token: '--data-table-resize-fill',
+        light: palette.neutral.light[400],
+        dark: palette.neutral.light[400],
+        lightReference: 'var(--neutral-5)',
+        darkReference: 'var(--neutral-light-5)',
+        lightPalette: 'palette.neutral.light[400]',
+        darkPalette: 'palette.neutral.light[400]',
+        components: ['DataTable'],
+    },
+    {
+        token: '--data-table-row-hover-fill',
+        light: palette.neutral.light[300],
+        dark: palette.neutral.dark[600],
+        lightReference: 'var(--surface-hover)',
+        darkReference: 'var(--surface-hover)',
+        lightPalette: 'palette.neutral.light[300]',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['DataTable'],
+    },
+    {
+        token: '--data-table-row-selected-outline',
+        light: light.primary.main,
+        dark: '#4A42B5',
+        lightReference: '#2C2677',
+        darkReference: '#4A42B5',
+        lightPalette: 'light.primary.main',
+        darkPalette: '',
+        components: ['DataTable'],
+    },
+    {
+        token: '--data-table-wrapper-border',
+        light: palette.neutral.light[300],
+        dark: palette.neutral.dark[900],
+        lightReference: 'var(--neutral-light-4)',
+        darkReference: 'var(--neutral-900)',
+        lightPalette: 'palette.neutral.light[300]',
+        darkPalette: 'palette.neutral.dark[900]',
+        components: ['DataTable'],
+    },
+    {
+        token: '--date-picker-content-border',
+        light: palette.neutral.light[400],
+        dark: common.white,
+        lightReference: 'var(--neutral-light-5)',
+        darkReference: 'var(--neutral-light-1)',
+        lightPalette: 'palette.neutral.light[400]',
+        darkPalette: 'common.white',
+        components: ['DatePicker'],
+    },
+    {
+        token: '--date-picker-input-fill',
+        light: common.white,
+        dark: common.dark,
+        lightReference: 'var(--common-white)',
+        darkReference: 'var(--common-dark)',
+        lightPalette: 'common.white',
+        darkPalette: 'common.dark',
+        components: ['DatePicker'],
+    },
+    {
+        token: '--dialog-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[400],
+        lightReference: 'var(--neutral-light-2)',
+        darkReference: 'var(--neutral-dark-2)',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['Dialog'],
+    },
+    {
+        token: '--dialog-overlay-fill',
+        light: '#00000066',
+        dark: '#00000066',
+        lightReference: 'rgb(0 0 0 / 0.4)',
+        darkReference: 'rgb(0 0 0 / 0.4)',
+        lightPalette: '',
+        darkPalette: '',
+        components: ['Dialog'],
+    },
+    {
+        token: '--dialog-text',
+        light: 'inherit',
+        dark: common.white,
+        lightReference: 'inherit',
+        darkReference: 'var(--neutral-light-1)',
+        lightPalette: '',
+        darkPalette: 'common.white',
+        components: ['Dialog'],
+    },
+    {
+        token: '--input-border-disabled',
+        light: palette.neutral.light[900],
+        dark: palette.neutral.dark[900],
+        lightReference: '#848C91',
+        darkReference: '#363636',
+        lightPalette: 'palette.neutral.light[900]',
+        darkPalette: 'palette.neutral.dark[900]',
+        components: ['Input'],
+    },
+    {
+        token: '--input-disabled-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[400],
+        lightReference: '#F4F4F4',
+        darkReference: '#222222',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['MultiSelect'],
+    },
+    {
+        token: '--input-disabled-invalid-border',
+        light: light.status.error.main,
+        dark: palette.neutral.dark[900],
+        lightReference: 'var(--status-error-main)',
+        darkReference: 'var(--input-border-disabled)',
+        lightPalette: 'light.status.error.main',
+        darkPalette: 'palette.neutral.dark[900]',
+        components: ['Input', 'Select', 'Textarea'],
+    },
+    {
+        token: '--input-fill',
+        light: common.white,
+        dark: palette.neutral.dark[50],
+        lightReference: '#FFFFFF',
+        darkReference: '#121212',
+        lightPalette: 'common.white',
+        darkPalette: 'palette.neutral.dark[50]',
+        components: ['Input'],
+    },
+    {
+        token: '--input-placeholder-text',
+        light: text.placeholder,
+        dark: dark.input.placeholder,
+        lightReference: '#6D6D6D',
+        darkReference: '#868686',
+        lightPalette: 'text.placeholder',
+        darkPalette: 'dark.input.placeholder',
+        components: ['Input', 'MultiSelect'],
+    },
+    {
+        token: '--menu-content-border',
+        light: palette.neutral.light[300],
+        dark: palette.neutral.dark[600],
+        lightReference: '#DADEE1',
+        darkReference: '#2C2C2C',
+        lightPalette: 'palette.neutral.light[300]',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['Menu'],
+    },
+    {
+        token: '--menu-content-fill',
+        light: common.white,
+        dark: palette.neutral.dark[400],
+        lightReference: '#FFFFFF',
+        darkReference: '#222222',
+        lightPalette: 'common.white',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['Menu'],
+    },
+    {
+        token: '--menu-item-disabled-text',
+        light: palette.grey[700],
+        dark: common.disabled,
+        lightReference: '#616161',
+        darkReference: '#A6A6A6',
+        lightPalette: 'palette.grey[700]',
+        darkPalette: 'common.disabled',
+        components: ['Menu'],
+    },
+    {
+        token: '--menu-item-highlight-fill',
+        light: light.secondary.main,
+        dark: dark.secondary.main,
+        lightReference: '#4A3BD7',
+        darkReference: '#66A3FF',
+        lightPalette: 'light.secondary.main',
+        darkPalette: 'dark.secondary.main',
+        components: ['Menu'],
+    },
+    {
+        token: '--menu-item-highlight-text',
+        light: common.white,
+        dark: common.black,
+        lightReference: '#FFFFFF',
+        darkReference: '#000000',
+        lightPalette: 'common.white',
+        darkPalette: 'common.black',
+        components: ['Menu'],
+    },
+    {
+        token: '--menu-sub-content-border',
+        light: palette.neutral.light[200],
+        dark: palette.neutral.dark[600],
+        lightReference: '#E3E7EA',
+        darkReference: '#2C2C2C',
+        lightPalette: 'palette.neutral.light[200]',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['Menu'],
+    },
+    {
+        token: '--multiselect-scrollbar-thumb',
+        light: palette.neutral.light[400],
+        dark: dark.input.placeholder,
+        lightReference: 'var(--neutral-400)',
+        darkReference: 'var(--input-placeholder-text)',
+        lightPalette: 'palette.neutral.light[400]',
+        darkPalette: 'dark.input.placeholder',
+        components: ['MultiSelect'],
+    },
+    {
+        token: '--neutral-light-1',
+        light: common.white,
+        dark: common.white,
+        lightReference: '#FFFFFF',
+        darkReference: '#FFFFFF',
+        lightPalette: 'common.white',
+        darkPalette: 'common.white',
+        components: ['ComboBadge'],
+    },
+    {
+        token: '--pagination-disabled-text',
+        light: palette.neutral.light[800],
+        dark: palette.neutral.light[800],
+        lightReference: '#979FA4',
+        darkReference: '#979FA4',
+        lightPalette: 'palette.neutral.light[800]',
+        darkPalette: 'palette.neutral.light[800]',
+        components: ['Pagination'],
+    },
+    {
+        token: '--pagination-text',
+        light: 'inherit',
+        dark: common.white,
+        lightReference: 'inherit',
+        darkReference: '#FFFFFF',
+        lightPalette: '',
+        darkPalette: 'common.white',
+        components: ['Pagination'],
+    },
+    {
+        token: '--popover-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[400],
+        lightReference: 'var(--neutral-light-2)',
+        darkReference: 'var(--neutral-dark-2)',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['Popover'],
+    },
+    {
+        token: '--popover-text',
+        light: palette.neutral.dark[50],
+        dark: common.white,
+        lightReference: 'var(--neutral-dark-1)',
+        darkReference: '#FFFFFF',
+        lightPalette: 'palette.neutral.dark[50]',
+        darkPalette: 'common.white',
+        components: ['Popover'],
+    },
+    {
+        token: '--primary',
+        light: light.primary.main,
+        dark: dark.primary.main,
+        lightReference: '#2C2677',
+        darkReference: '#A1A0FF',
+        lightPalette: 'light.primary.main',
+        darkPalette: 'dark.primary.main',
+        components: ['ComboBadge', 'IconButton', 'Stepper'],
+    },
+    {
+        token: '--radio-border-default',
+        light: palette.neutral.light[400],
+        dark: palette.neutral.light[400],
+        lightReference: '#CACFD3',
+        darkReference: '#CACFD3',
+        lightPalette: 'palette.neutral.light[400]',
+        darkPalette: 'palette.neutral.light[400]',
+        components: ['RadioGroup'],
+    },
+    {
+        token: '--radio-border-hover',
+        light: light.secondary.main,
+        dark: '#99a3ff',
+        lightReference: 'var(--control-accent)',
+        darkReference: 'var(--control-accent)',
+        lightPalette: 'light.secondary.main',
+        darkPalette: '',
+        components: ['RadioGroup'],
+    },
+    {
+        token: '--radio-disabled-border',
+        light: palette.neutral.light[300],
+        dark: palette.neutral.dark[600],
+        lightReference: '#DADEE1',
+        darkReference: '#2C2C2C',
+        lightPalette: 'palette.neutral.light[300]',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['RadioGroup'],
+    },
+    {
+        token: '--radio-disabled-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[400],
+        lightReference: '#F4F4F4',
+        darkReference: '#222222',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['RadioGroup'],
+    },
+    {
+        token: '--radio-indicator-fill',
+        light: light.primary.main,
+        dark: '#99a3ff',
+        lightReference: '#2C2677',
+        darkReference: '#99a3ff',
+        lightPalette: 'light.primary.main',
+        darkPalette: '',
+        components: ['RadioGroup'],
+    },
+    {
+        token: '--radio-label-focus-fill',
+        light: palette.neutral.light[200],
+        dark: palette.neutral.dark[600],
+        lightReference: '#E3E7EA',
+        darkReference: '#2C2C2C',
+        lightPalette: 'palette.neutral.light[200]',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['RadioGroup'],
+    },
+    {
+        token: '--secondary',
+        light: light.secondary.main,
+        dark: dark.secondary.main,
+        lightReference: '#4A3BD7',
+        darkReference: '#66A3FF',
+        lightPalette: 'light.secondary.main',
+        darkPalette: 'dark.secondary.main',
+        components: ['IconButton', 'Stepper'],
+    },
+    {
+        token: '--select-disabled-highlighted-fill',
+        light: light.secondary.main,
+        dark: palette.neutral.dark[700],
+        lightReference: 'var(--secondary)',
+        darkReference: 'var(--select-item-disabled-fill)',
+        lightPalette: 'light.secondary.main',
+        darkPalette: 'palette.neutral.dark[700]',
+        components: ['Select'],
+    },
+    {
+        token: '--select-disabled-placeholder-text',
+        light: light.disabled,
+        dark: dark.input.placeholder,
+        lightReference: 'var(--disabled)',
+        darkReference: 'var(--select-trigger-placeholder-text)',
+        lightPalette: 'light.disabled',
+        darkPalette: 'dark.input.placeholder',
+        components: ['Select'],
+    },
+    {
+        token: '--select-item-disabled-fill',
+        light: palette.neutral.light[300],
+        dark: palette.neutral.dark[700],
+        lightReference: '#DADEE1',
+        darkReference: '#2E2E2E',
+        lightPalette: 'palette.neutral.light[300]',
+        darkPalette: 'palette.neutral.dark[700]',
+        components: ['Select'],
+    },
+    {
+        token: '--select-open-placeholder-text',
+        light: common.white,
+        dark: dark.input.placeholder,
+        lightReference: 'var(--common-white)',
+        darkReference: 'var(--input-placeholder-text)',
+        lightPalette: 'common.white',
+        darkPalette: 'dark.input.placeholder',
+        components: ['Select'],
+    },
+    {
+        token: '--select-open-text',
+        light: common.white,
+        dark: common.white,
+        lightReference: 'var(--common-white)',
+        darkReference: 'var(--text-main)',
+        lightPalette: 'common.white',
+        darkPalette: 'common.white',
+        components: ['Select'],
+    },
+    {
+        token: '--select-trigger-outlined-fill',
+        light: common.white,
+        dark: palette.neutral.dark[50],
+        lightReference: '#FFFFFF',
+        darkReference: '#121212',
+        lightPalette: 'common.white',
+        darkPalette: 'palette.neutral.dark[50]',
+        components: ['MultiSelect'],
+    },
+    {
+        token: '--skeleton-fill',
+        light: palette.neutral.light[400],
+        dark: palette.neutral.dark[700],
+        lightReference: 'var(--neutral-light-5)',
+        darkReference: 'var(--neutral-dark-5)',
+        lightPalette: 'palette.neutral.light[400]',
+        darkPalette: 'palette.neutral.dark[700]',
+        components: ['Skeleton'],
+    },
+    {
+        token: '--slider-thumb-active-fill',
+        light: palette.neutral.light[100],
+        dark: common.white,
+        lightReference: 'var(--neutral-100)',
+        darkReference: 'var(--common-white)',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'common.white',
+        components: ['Slider'],
+    },
+    {
+        token: '--slider-thumb-border',
+        light: palette.neutral.light[300],
+        dark: palette.neutral.dark[300],
+        lightReference: 'var(--neutral-300)',
+        darkReference: 'var(--neutral-300)',
+        lightPalette: 'palette.neutral.light[300]',
+        darkPalette: 'palette.neutral.dark[300]',
+        components: ['Slider'],
+    },
+    {
+        token: '--slider-thumb-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[100],
+        lightReference: 'var(--neutral-100)',
+        darkReference: 'var(--neutral-100)',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[100]',
+        components: ['Slider'],
+    },
+    {
+        token: '--slider-thumb-focus-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[400],
+        lightReference: 'var(--neutral-100)',
+        darkReference: 'var(--neutral-400)',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['Slider'],
+    },
+    {
+        token: '--slider-track-fill',
+        light: palette.neutral.light[200],
+        dark: palette.neutral.dark[200],
+        lightReference: 'var(--neutral-200)',
+        darkReference: 'var(--neutral-200)',
+        lightPalette: 'palette.neutral.light[200]',
+        darkPalette: 'palette.neutral.dark[200]',
+        components: ['Slider'],
+    },
+    {
+        token: '--stepper-inactive-border',
+        light: '#939597',
+        dark: palette.neutral.light[400],
+        lightReference: '#939597',
+        darkReference: 'var(--input-border-default)',
+        lightPalette: '',
+        darkPalette: 'palette.neutral.light[400]',
+        components: ['Stepper'],
+    },
+    {
+        token: '--table-dragging-fill',
+        light: common.white,
+        dark: palette.neutral.dark[50],
+        lightReference: 'var(--neutral-light-1)',
+        darkReference: 'var(--neutral-dark-1)',
+        lightPalette: 'common.white',
+        darkPalette: 'palette.neutral.dark[50]',
+        components: ['Table'],
+    },
+    {
+        token: '--table-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[400],
+        lightReference: 'var(--neutral-light-2)',
+        darkReference: 'var(--neutral-dark-2)',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['Table'],
+    },
+    {
+        token: '--table-row-border-width',
+        light: '1px',
+        dark: '0px',
+        lightReference: '1px',
+        darkReference: '0px',
+        lightPalette: '',
+        darkPalette: '',
+        components: ['Table'],
+    },
+    {
+        token: '--tabs-active-accent',
+        light: light.primary.main,
+        dark: '#99a3ff',
+        lightReference: 'var(--primary)',
+        darkReference: 'var(--secondary-variant-2)',
+        lightPalette: 'light.primary.main',
+        darkPalette: '',
+        components: ['Tabs'],
+    },
+    {
+        token: '--tabs-text',
+        light: 'inherit',
+        dark: common.white,
+        lightReference: 'inherit',
+        darkReference: '#FFFFFF',
+        lightPalette: '',
+        darkPalette: 'common.white',
+        components: ['Tabs'],
+    },
+    {
+        token: '--text-contrast',
+        light: common.white,
+        dark: common.dark,
+        lightReference: '#FFFFFF',
+        darkReference: '#121212',
+        lightPalette: 'common.white',
+        darkPalette: 'common.dark',
+        components: ['Stepper'],
+    },
+    {
+        token: '--text-main',
+        light: common.dark,
+        dark: common.white,
+        lightReference: '#121212',
+        darkReference: '#FFFFFF',
+        lightPalette: 'common.dark',
+        darkPalette: 'common.white',
+        components: [
+            'Accordion',
+            'Breadcrumb',
+            'Card',
+            'Carousel',
+            'DataTable',
+            'IconButton',
+            'RiskBadge',
+            'Tooltip',
+            'Typography',
+        ],
+    },
+    {
+        token: '--textarea-border-default',
+        light: palette.grey[700],
+        dark: dark.input.border,
+        lightReference: 'var(--border-control)',
+        darkReference: 'var(--border-control)',
+        lightPalette: 'palette.grey[700]',
+        darkPalette: 'dark.input.border',
+        components: ['Textarea'],
+    },
+    {
+        token: '--textarea-border-hover',
+        light: light.secondary.main,
+        dark: dark.secondary.main,
+        lightReference: 'var(--secondary)',
+        darkReference: 'var(--secondary)',
+        lightPalette: 'light.secondary.main',
+        darkPalette: 'dark.secondary.main',
+        components: ['Textarea'],
+    },
+    {
+        token: '--textarea-disabled-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[400],
+        lightReference: '#F4F4F4',
+        darkReference: '#222222',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['Textarea'],
+    },
+    {
+        token: '--textarea-fill',
+        light: common.white,
+        dark: common.dark,
+        lightReference: 'var(--surface)',
+        darkReference: 'var(--surface)',
+        lightPalette: 'common.white',
+        darkPalette: 'common.dark',
+        components: ['Textarea'],
+    },
+    {
+        token: '--toggle-active-border',
+        light: light.primary.variant,
+        dark: palette.neutral.dark[600],
+        lightReference: 'var(--primary-variant)',
+        darkReference: 'var(--toggle-btn-border)',
+        lightPalette: 'light.primary.variant',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['Toggle'],
+    },
+    {
+        token: '--toggle-btn-border',
+        light: palette.neutral.light[500],
+        dark: palette.neutral.dark[600],
+        lightReference: '#C0C6CB',
+        darkReference: '#2C2C2C',
+        lightPalette: 'palette.neutral.light[500]',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['Toggle'],
+    },
+    {
+        token: '--toggle-btn-fill',
+        light: common.white,
+        dark: common.dark,
+        lightReference: 'var(--surface)',
+        darkReference: 'var(--surface)',
+        lightPalette: 'common.white',
+        darkPalette: 'common.dark',
+        components: ['Toggle'],
+    },
+    {
+        token: '--toggle-disabled-border',
+        light: palette.neutral.light[200],
+        dark: palette.neutral.dark[600],
+        lightReference: 'var(--button-disabled-fill)',
+        darkReference: 'var(--toggle-btn-border)',
+        lightPalette: 'palette.neutral.light[200]',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['Toggle'],
+    },
+    {
+        token: '--toggle-disabled-hover-text',
+        light: light.disabled,
+        dark: common.dark,
+        lightReference: 'var(--disabled)',
+        darkReference: 'var(--toggle-highlight-text)',
+        lightPalette: 'light.disabled',
+        darkPalette: 'common.dark',
+        components: ['Toggle'],
+    },
+    {
+        token: '--toggle-group-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[400],
+        lightReference: 'var(--surface-subtle)',
+        darkReference: 'var(--surface-subtle)',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[400]',
+        components: ['ToggleGroup'],
+    },
+    {
+        token: '--toggle-highlight-text',
+        light: common.white,
+        dark: common.dark,
+        lightReference: 'var(--common-white)',
+        darkReference: 'var(--common-dark)',
+        lightPalette: 'common.white',
+        darkPalette: 'common.dark',
+        components: ['Toggle', 'ToggleGroup'],
+    },
+    {
+        token: '--toggle-hover-border',
+        light: light.secondary.main,
+        dark: palette.neutral.dark[600],
+        lightReference: 'var(--secondary)',
+        darkReference: 'var(--toggle-btn-border)',
+        lightPalette: 'light.secondary.main',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['Toggle'],
+    },
+    {
+        token: '--toggle-selected-border',
+        light: light.primary.main,
+        dark: palette.neutral.dark[600],
+        lightReference: 'var(--primary)',
+        darkReference: 'var(--toggle-btn-border)',
+        lightPalette: 'light.primary.main',
+        darkPalette: 'palette.neutral.dark[600]',
+        components: ['Toggle', 'ToggleGroup'],
+    },
+    {
+        token: '--tooltip-border',
+        light: palette.grey[500],
+        dark: palette.grey[500],
+        lightReference: '#9E9E9E',
+        darkReference: '#9E9E9E',
+        lightPalette: 'palette.grey[500]',
+        darkPalette: 'palette.grey[500]',
+        components: ['Tooltip'],
+    },
+    {
+        token: '--tooltip-fill',
+        light: palette.neutral.light[100],
+        dark: palette.neutral.dark[700],
+        lightReference: 'var(--neutral-light-2)',
+        darkReference: 'var(--neutral-dark-5)',
+        lightPalette: 'palette.neutral.light[100]',
+        darkPalette: 'palette.neutral.dark[700]',
+        components: ['Tooltip'],
+    },
+    {
+        token: '--typography-body-text',
+        light: text.light,
+        dark: common.white,
+        lightReference: 'var(--text-light)',
+        darkReference: 'var(--text-main)',
+        lightPalette: 'text.light',
+        darkPalette: 'common.white',
+        components: ['Typography'],
+    },
+];
+
+export const tableCellStyle = {
+    textAlign: 'left',
+    verticalAlign: 'top',
+    padding: '0.75rem 1rem',
+};
+
+export const ColorValue = ({ value, reference, paletteSource }) => (
+    <div
+        style={{ display: 'grid', gridTemplateColumns: '1.75rem minmax(0, 1fr)', alignItems: 'start', gap: '0.65rem' }}>
+        {value.startsWith('#') && (
+            <span
+                aria-hidden='true'
+                style={{
+                    gridColumn: 1,
+                    gridRow: 1,
+                    display: 'inline-flex',
+                    width: '1.75rem',
+                    height: '1.75rem',
+                    overflow: 'hidden',
+                    borderRadius: '0.25rem',
+                    border: '1px solid ' + palette.grey[500],
+                    backgroundColor: common.white,
+                    backgroundImage:
+                        'conic-gradient(' +
+                        palette.neutral.light[300] +
+                        ' 25%, transparent 0 50%, ' +
+                        palette.neutral.light[300] +
+                        ' 0 75%, transparent 0)',
+                    backgroundSize: '0.75rem 0.75rem',
+                }}>
+                <span style={{ display: 'block', width: '100%', height: '100%', backgroundColor: value }} />
+            </span>
+        )}
+        <span style={{ gridColumn: 2, gridRow: 1, minWidth: 0, textAlign: 'left' }}>
+            <code style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{paletteSource || value}</code>
+            {reference.startsWith('var(') && (
+                <small style={{ display: 'block', marginTop: '0.2rem', overflowWrap: 'anywhere' }}>{reference}</small>
+            )}
+            {value === 'inherit' && <small style={{ display: 'block' }}>Uses the surrounding foreground</small>}
+        </span>
+    </div>
+);
+
+export const TokenReference = () => {
+    const [query, setQuery] = useState('');
+    const search = query.trim().toLowerCase();
+    const filtered = tokenRows.filter((row) =>
+        [
+            row.token,
+            ...row.components,
+            row.light,
+            row.dark,
+            row.lightReference,
+            row.darkReference,
+            row.lightPalette,
+            row.darkPalette,
+        ].some((value) => value.toLowerCase().includes(search))
+    );
+    return (
+        <div>
+            <label style={{ display: 'grid', gap: '0.4rem', maxWidth: '28rem', marginBottom: '1rem' }}>
+                Find a component, token, variable, palette path, or HEX color
+                <input
+                    type='search'
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder='For example: neutral.light[500], text-main, or #979FA4'
+                    style={{ padding: '0.6rem', border: '1px solid ' + palette.grey[500], borderRadius: '0.25rem' }}
+                />
+            </label>
+            <p role='status' aria-live='polite'>
+                {filtered.length} of {tokenRows.length} tokens
+            </p>
+            <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                    <colgroup>
+                        <col style={{ width: '34%' }} />
+                        <col style={{ width: '33%' }} />
+                        <col style={{ width: '33%' }} />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th scope='col' style={tableCellStyle}>
+                                Token and components
+                            </th>
+                            <th scope='col' style={tableCellStyle}>
+                                Light
+                            </th>
+                            <th scope='col' style={tableCellStyle}>
+                                Dark
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filtered.map((row) => (
+                            <tr key={row.token}>
+                                <th scope='row' style={tableCellStyle}>
+                                    <code style={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{row.token}</code>
+                                    <small style={{ display: 'block', fontWeight: 'normal', marginTop: '0.25rem' }}>
+                                        {row.components.join(', ')}
+                                    </small>
+                                </th>
+                                <td style={tableCellStyle}>
+                                    <ColorValue
+                                        value={row.light}
+                                        reference={row.lightReference}
+                                        paletteSource={row.lightPalette}
+                                    />
+                                </td>
+                                <td style={tableCellStyle}>
+                                    <ColorValue
+                                        value={row.dark}
+                                        reference={row.darkReference}
+                                        paletteSource={row.darkPalette}
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {filtered.length === 0 && (
+                    <p>No matching tokens. Try a component, variable name, or HEX color, or clear the search.</p>
+                )}
+            </div>
+        </div>
+    );
+};
+
+# Component colors
+
+## Where values live
+
+-   `src/tailwind/colors.ts` defines the shared palette.
+-   `src/tailwind/plugin.ts` defines the default component tokens in `:root` and `.dark`.
+-   `src/tailwind/preset.ts` exposes shared utilities such as `text-main`, `text-secondary`, and `text-disabled`.
+
+## Color reference
+
+Search by component, token name, referenced variable (for example, `neutral-dark-2` or `text-main`), `colors.ts` path (for example, `palette.neutral.light[500]`), or HEX color. Variable searches match the light and dark references; the `--` prefix is optional.
+
+Each swatch is labeled with its exact `colors.ts` reference. CSS-variable aliases are followed to their source, and matching colors read their values directly from that export. HEX appears only when no export has exactly that color; nearest-color approximations are never used. Inherited values and dimensions remain literal.
+
+<TokenReference />
