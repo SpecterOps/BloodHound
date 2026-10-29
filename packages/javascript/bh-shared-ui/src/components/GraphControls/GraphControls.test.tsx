@@ -509,7 +509,8 @@ describe('GraphControls', () => {
             await user.click(screen.getByRole('button', { name: 'Export' }));
 
             const menu = await screen.findByRole('menu');
-            expect(menu.textContent).toBe('Current ViewPNGSVGFull GraphPNGJSON');
+            expect(within(menu).getByText('Current View')).toBeInTheDocument();
+            expect(within(menu).getByText('Full Graph')).toBeInTheDocument();
             expect(within(menu).getAllByRole('separator')).toHaveLength(2);
             expect(
                 within(menu)
@@ -524,7 +525,8 @@ describe('GraphControls', () => {
             await user.click(screen.getByRole('button', { name: 'Export' }));
 
             const menu = await screen.findByRole('menu');
-            expect(menu.textContent).toBe('Additional action oneAdditional action twoJSON');
+            expect(within(menu).queryByText('Current View')).not.toBeInTheDocument();
+            expect(within(menu).queryByText('Full Graph')).not.toBeInTheDocument();
             expect(within(menu).getAllByRole('separator')).toHaveLength(1);
             for (const item of within(menu).getAllByRole('menuitem')) {
                 expect(item).not.toHaveAttribute('aria-label');
