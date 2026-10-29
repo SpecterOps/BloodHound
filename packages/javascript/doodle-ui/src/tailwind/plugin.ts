@@ -486,7 +486,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
             // Components/Accordion
-            '--accordion-fill': 'var(--neutral-light-2)',
+            '--accordion-fill': 'var(--neutral-dark-2)',
 
             // Components/Card
             '--card-border': 'var(--neutral-900)',
