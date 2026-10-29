@@ -334,6 +334,25 @@ func TestStore_GetGraphSchemaNodeKinds_Integration(t *testing.T) {
 					assert.Zero(t, count)
 				},
 			},
+			{
+				name: "success_-_returns_all_node_kinds_without_filters_or_pagination",
+				setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					// Built-in extensions add node kinds, so remove them to isolate this test.
+					_, err := pool.Exec(ctx, "DELETE FROM schema_extensions WHERE is_builtin = true")
+					require.NoError(t, err)
+					seeded := seedNodeKind(t, ctx, pool)
+					return testSetupData{wantNodeKind: services.NodeKind{ID: seeded.nodeKindID, Name: "TestNodeKind"}, wantCount: 1}
+				},
+				assert: func(t *testing.T, data testSetupData, nodeKinds []services.NodeKind, count int, err error) {
+					t.Helper()
+					assert.NoError(t, err)
+					require.Len(t, nodeKinds, data.wantCount)
+					assert.Equal(t, data.wantCount, count)
+					assert.Equal(t, data.wantNodeKind.ID, nodeKinds[0].ID)
+					assert.Equal(t, data.wantNodeKind.Name, nodeKinds[0].Name)
+				},
+			},
 		}
 	)
 

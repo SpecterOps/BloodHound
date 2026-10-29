@@ -42,7 +42,7 @@ type pgxQuerier interface {
 	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 }
 
-// Store reads OpenGraph extension schema data from PostgreSQL. Callers receive
+// Store reads and writes OpenGraph extension schema data to/from PostgreSQL. Callers receive
 // services-layer sentinels rather than raw driver errors.
 type Store struct {
 	db pgxQuerier
@@ -85,7 +85,8 @@ func buildFilterComparison(builder *sqlbuilder.SelectBuilder, column string, fil
 	}
 }
 
-// applyFilters combines filters keyed by validated, qualified SQL columns.
+// applyFilters combines each column's filters using their set operators,
+// then ANDs the column groups. Sorting columns keeps SQL and argument order deterministic.
 func applyFilters(builder *sqlbuilder.SelectBuilder, filters params.Filters) error {
 	for _, column := range slices.Sorted(maps.Keys(filters)) {
 		var expression string

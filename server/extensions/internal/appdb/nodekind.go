@@ -118,6 +118,8 @@ func (s *Store) CreateGraphSchemaNodeKind(ctx context.Context, extensionID int32
 		selectBuilder       = sqlbuilder.PostgreSQL.NewSelectBuilder()
 	)
 
+	// The CTEs register the kind and insert its schema row atomically, then join
+	// their results to include the kind name.
 	kindSelectBuilder.Select("id", "name")
 	kindSelectBuilder.From("upsert_kind(" + kindSelectBuilder.Var(nodeKind.Name) + ")")
 
@@ -154,6 +156,8 @@ func (s *Store) CreateGraphSchemaNodeKind(ctx context.Context, extensionID int32
 
 	sqlQuery, args := selectBuilder.Build()
 
+	// pgx can defer statement errors until rows are consumed, so both query
+	// and collection errors need translation.
 	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
 		return services.NodeKind{}, checkNodeKindError(fmt.Errorf("creating node kind: %w", err), nodeKind.Name)
 	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[nodeKindRow]); err != nil {
@@ -258,6 +262,8 @@ func (s *Store) GetGraphSchemaNodeKinds(ctx context.Context, filters params.Filt
 		return nil, 0, fmt.Errorf("error reading rows: %w", err)
 	}
 
+	// LIMIT/OFFSET applies only to the returned nodes. The total must count every
+	// node matching the filters, so paginated requests need a separate COUNT query.
 	totalRowCount = len(nodeKindRows)
 	if limit > 0 || skip > 0 {
 		countQuery, countArgs := countBuilder.Build()
@@ -321,6 +327,8 @@ func (s *Store) UpdateGraphSchemaNodeKind(ctx context.Context, nodeKind services
 
 	sqlQuery, args := updateBuilder.Build()
 
+	// pgx can defer statement errors until rows are consumed, so both query
+	// and collection errors need translation.
 	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
 		return services.NodeKind{}, checkNodeKindError(fmt.Errorf("updating node kind: %w", err), nodeKind.Name)
 	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[nodeKindRow]); errors.Is(err, pgx.ErrNoRows) {
