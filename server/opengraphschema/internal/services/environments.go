@@ -18,6 +18,7 @@ package services
 
 import (
 	"context"
+
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
 )
