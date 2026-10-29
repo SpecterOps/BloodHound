@@ -143,7 +143,7 @@ func buildAuditEntry(request *http.Request, routeTemplate string) audittypes.Ent
 			Action:          request.Method + routeTemplate,
 			RequestID:       requestContext.RequestID,
 			SourceIPAddress: requestContext.RequestIP,
-			Fields:          map[string]any{},
+			Fields:          routeParametersAsFields(request),
 		}
 	)
 
@@ -154,4 +154,17 @@ func buildAuditEntry(request *http.Request, routeTemplate string) audittypes.Ent
 	}
 
 	return entry
+}
+
+func routeParametersAsFields(request *http.Request) map[string]any {
+	var (
+		routeParameters = mux.Vars(request)
+		fields          = make(map[string]any, len(routeParameters))
+	)
+
+	for name, value := range routeParameters {
+		fields[name] = value
+	}
+
+	return fields
 }

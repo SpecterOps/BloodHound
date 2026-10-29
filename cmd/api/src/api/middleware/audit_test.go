@@ -97,7 +97,7 @@ func (s *flushResponseRecorder) Flush() {
 }
 
 func newAuditTestRequest(ctx context.Context, method string) *http.Request {
-	request := httptest.NewRequest(method, "/api/v2/things/abc", nil)
+	request := httptest.NewRequest(method, "/api/v2/things/abc?include=details", nil)
 	requestContext := &bhctx.Context{
 		RequestID: testAuditRequestID,
 		RequestIP: testAuditRequestIP,
@@ -191,6 +191,7 @@ func TestAuditMiddleware_Outcomes(t *testing.T) {
 			require.Equal(t, testAuditActorMail, entry.ActorEmail)
 			require.Equal(t, testAuditRequestID, entry.RequestID)
 			require.Equal(t, testAuditRequestIP, entry.SourceIPAddress)
+			require.Equal(t, map[string]any{"thing_id": "abc"}, entry.Fields)
 		})
 	}
 }
