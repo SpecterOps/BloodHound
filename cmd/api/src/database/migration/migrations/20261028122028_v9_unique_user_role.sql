@@ -15,9 +15,6 @@
 -- SPDX-License-Identifier: Apache-2.0
 
 -- +goose Up
-LOCK TABLE roles IN SHARE MODE;
-LOCK TABLE users_roles IN ACCESS EXCLUSIVE MODE;
-
 -- +goose StatementBegin
 DO $$
 DECLARE

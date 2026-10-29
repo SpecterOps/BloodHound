@@ -24,27 +24,22 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCreateAndGetAllIngestJobs(t *testing.T) {
 	var (
-		testCtx         = context.Background()
-		dbInst, roles   = initAndGetRoles(t)
-		userRole, found = roles.FindByName(auth.RoleUser)
-		seedUsers       = []model.User{
+		testCtx   = context.Background()
+		dbInst    = integration.SetupDB(t)
+		seedUsers = []model.User{
 			{
-				Roles:         model.Roles{userRole},
 				FirstName:     null.StringFrom("First"),
 				LastName:      null.StringFrom("Last"),
 				EmailAddress:  null.StringFrom(userPrincipal),
 				PrincipalName: userPrincipal,
 			}, {
-				Roles:         model.Roles{userRole},
 				FirstName:     null.StringFrom("First2"),
 				LastName:      null.StringFrom("Last2"),
 				EmailAddress:  null.StringFrom(user2Principal),
@@ -52,7 +47,6 @@ func TestCreateAndGetAllIngestJobs(t *testing.T) {
 			}}
 		createdUsers []model.User
 	)
-	require.True(t, found, "User role must exist")
 
 	for _, user := range seedUsers {
 		if newUser, err := dbInst.CreateUser(testCtx, user); err != nil {
