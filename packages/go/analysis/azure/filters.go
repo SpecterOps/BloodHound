@@ -84,7 +84,12 @@ func FilterRoleAssignableGroupMembersUsers() graph.Criteria {
 	return query.And(
 		query.Kind(query.Relationship(), azure.MemberOf),
 		query.Kind(query.Start(), azure.User),
-		query.Equals(query.EndProperty(azure.IsAssignableToRole.String()), "true"),
+		// Current ingestion writes a boolean. Match legacy string "true" as well so
+		// both representations populate the membership set used to exclude targets.
+		query.Or(
+			query.Equals(query.EndProperty(azure.IsAssignableToRole.String()), true),
+			query.Equals(query.EndProperty(azure.IsAssignableToRole.String()), "true"),
+		),
 	)
 }
 
