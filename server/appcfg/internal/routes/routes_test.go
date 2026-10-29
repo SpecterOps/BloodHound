@@ -33,11 +33,12 @@ import (
 
 func TestRegister(t *testing.T) {
 	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-		mock       = mocks.NewMockService(t)
-		handlerSet = handlers.NewHandlers(mock)
+		cfg          = config.Configuration{}
+		authorizer   = auth.NewAuthorizer(nil)
+		routerInst   = router.NewRouter(cfg, authorizer, "")
+		mockService  = mocks.NewMockService(t)
+		mockFFReader = mocks.NewMockFeatureFlagReader(t)
+		handlerSet   = handlers.NewHandlers(mockService, mockFFReader, nil, nil)
 	)
 
 	routes.Register(&routerInst, handlerSet)
@@ -50,6 +51,9 @@ func TestRegister(t *testing.T) {
 
 	req = httptest.NewRequest(http.MethodGet, "/api/v2/config", nil)
 	assert.True(t, muxRouter.Match(req, &match), "GET /api/v2/config route should be registered")
+
+	req = httptest.NewRequest(http.MethodPut, "/api/v2/config", nil)
+	assert.True(t, muxRouter.Match(req, &match), "PUT /api/v2/config route should be registered")
 }
 
 // TestRegister_RoutesRequireAuthentication dispatches real requests through the wired
@@ -58,11 +62,12 @@ func TestRegister(t *testing.T) {
 // wireup ever loses RequireAuth, this test will fail.
 func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-		mock       = mocks.NewMockService(t)
-		handlerSet = handlers.NewHandlers(mock)
+		cfg          = config.Configuration{}
+		authorizer   = auth.NewAuthorizer(nil)
+		routerInst   = router.NewRouter(cfg, authorizer, "")
+		mockService  = mocks.NewMockService(t)
+		mockFFReader = mocks.NewMockFeatureFlagReader(t)
+		handlerSet   = handlers.NewHandlers(mockService, mockFFReader, nil, nil)
 	)
 
 	routes.Register(&routerInst, handlerSet)
@@ -74,6 +79,7 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 	}{
 		{method: http.MethodGet, path: "/api/v2/datapipe/status"},
 		{method: http.MethodGet, path: "/api/v2/config"},
+		{method: http.MethodPut, path: "/api/v2/config"},
 	}
 
 	for _, cc := range cases {
