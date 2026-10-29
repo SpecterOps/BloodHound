@@ -17,7 +17,7 @@
 import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { Button, Menu, MenuContent, MenuItem, MenuTrigger, Typography } from 'doodle-ui';
+import { Button, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import React, { ComponentPropsWithoutRef, FC } from 'react';
 import FeatureFlag from '../FeatureFlag';
 
@@ -32,7 +32,7 @@ const MenuWithDropdown: React.FC<{
         <Menu modal={false}>
             <MenuTrigger asChild>
                 <Button disabled={disabled}>
-                    <Typography className='text-inherit dark:text-inherit'>{menuTitle}</Typography>
+                    {menuTitle}
                     <FontAwesomeIcon icon={faCaretDown} />
                 </Button>
             </MenuTrigger>
