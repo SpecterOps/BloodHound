@@ -217,6 +217,10 @@ export default {
                 // 'risk-text': 'var(--risk-text)',
             },
             keyframes: {
+                'progress-indeterminate': {
+                    from: { transform: 'translateX(-100%)' },
+                    to: { transform: 'translateX(300%)' },
+                },
                 'accordion-down': {
                     from: { height: '0' },
                     to: { height: 'var(--radix-accordion-content-height)' },
@@ -243,6 +247,7 @@ export default {
                 },
             },
             animation: {
+                'progress-indeterminate': 'progress-indeterminate 1.5s linear infinite',
                 'accordion-down': 'accordion-down 0.2s ease-out',
                 'accordion-up': 'accordion-up 0.2s ease-out',
                 'fade-in': 'fade-in 300ms ease-out forwards',

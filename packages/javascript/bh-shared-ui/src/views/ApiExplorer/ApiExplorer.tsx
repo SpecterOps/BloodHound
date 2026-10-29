@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { ProgressBar } from 'doodle-ui';
 import React, { Suspense } from 'react';
 import 'swagger-ui-react/swagger-ui.css';
-import GraphProgress from '../../components/GraphProgress';
 import { HideEditionTagsPlugin } from './swagger/HideEditionTagsPlugin';
 import { OperationsEditionPlugin } from './swagger/OperationsEditionPlugin';
 import { OperationsFilterPlugin } from './swagger/OperationsFilterPlugin';
@@ -42,7 +42,10 @@ const authInterceptor = (req: any) => {
 
 const ApiExplorer: React.FC = () => {
     return (
-        <Suspense fallback={<GraphProgress loading={true} />}>
+        <Suspense
+            fallback={
+                <ProgressBar value={null} aria-label='Loading API documentation' className='absolute inset-x-0 top-0' />
+            }>
             <SwaggerUI
                 url='/api/v2/spec'
                 requestInterceptor={authInterceptor}
