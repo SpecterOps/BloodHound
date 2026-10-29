@@ -22,6 +22,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -237,6 +238,69 @@ func (_c *MockDatabase_GetDatapipeStatus_Call) Return(datapipeStatus services.Da
 }
 
 func (_c *MockDatabase_GetDatapipeStatus_Call) RunAndReturn(run func(ctx context.Context) (services.DatapipeStatus, error)) *MockDatabase_GetDatapipeStatus_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpsertConfigurationParameter provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) UpsertConfigurationParameter(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error {
+	ret := _mock.Called(ctx, parameterKey, value)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpsertConfigurationParameter")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.ParameterKey, types.JSONBObject) error); ok {
+		r0 = returnFunc(ctx, parameterKey, value)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockDatabase_UpsertConfigurationParameter_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpsertConfigurationParameter'
+type MockDatabase_UpsertConfigurationParameter_Call struct {
+	*mock.Call
+}
+
+// UpsertConfigurationParameter is a helper method to define mock.On call
+//   - ctx context.Context
+//   - parameterKey services.ParameterKey
+//   - value types.JSONBObject
+func (_e *MockDatabase_Expecter) UpsertConfigurationParameter(ctx interface{}, parameterKey interface{}, value interface{}) *MockDatabase_UpsertConfigurationParameter_Call {
+	return &MockDatabase_UpsertConfigurationParameter_Call{Call: _e.mock.On("UpsertConfigurationParameter", ctx, parameterKey, value)}
+}
+
+func (_c *MockDatabase_UpsertConfigurationParameter_Call) Run(run func(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject)) *MockDatabase_UpsertConfigurationParameter_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 services.ParameterKey
+		if args[1] != nil {
+			arg1 = args[1].(services.ParameterKey)
+		}
+		var arg2 types.JSONBObject
+		if args[2] != nil {
+			arg2 = args[2].(types.JSONBObject)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_UpsertConfigurationParameter_Call) Return(err error) *MockDatabase_UpsertConfigurationParameter_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockDatabase_UpsertConfigurationParameter_Call) RunAndReturn(run func(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error) *MockDatabase_UpsertConfigurationParameter_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -19,7 +19,11 @@ import React from 'react';
 
 const escapeSpecialCharacters = (text: string) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 
-const HighlightedText: React.FC<{ text: string; search: string | undefined }> = ({ text, search }) => {
+const HighlightedText: React.FC<{ text: string; search: string | undefined; inheritColor?: boolean }> = ({
+    text,
+    search,
+    inheritColor = false,
+}) => {
     if (!search) return <>{text}</>;
     const escapedSearch = escapeSpecialCharacters(search);
     const regex = new RegExp(`(.*?)(${escapedSearch})(.*)`, 'mi');
@@ -27,13 +31,19 @@ const HighlightedText: React.FC<{ text: string; search: string | undefined }> = 
     if (groups === null || groups.length === 1) return <>{text}</>;
 
     const parts = groups.slice(1);
+    const colorClassName = inheritColor ? 'text-inherit dark:text-inherit' : undefined;
 
     return (
-        <Typography variant='body2' component={'span'}>
+        <Typography variant='body2' component={'span'} className={colorClassName}>
             {parts.map((part, i) => {
                 if (part.toLowerCase() === search.toLowerCase())
                     return (
-                        <Typography variant='body2' component={'span'} style={{ fontWeight: 'bold' }} key={i}>
+                        <Typography
+                            variant='body2'
+                            component={'span'}
+                            className={colorClassName}
+                            style={{ fontWeight: 'bold' }}
+                            key={i}>
                             {part}
                         </Typography>
                     );
