@@ -218,7 +218,7 @@ const CarouselPrev = React.forwardRef<HTMLButtonElement, CarouselPrevProps>(({ .
             disabled={!canScrollPrev}
             onClick={scrollPrev}
             {...props}>
-            <ChevronLeft className='h-3 w-3 text-[color:var(--carousel-control)]' />
+            <ChevronLeft className='h-3 w-3 text-main' />
         </IconButton>
     );
 });
@@ -241,8 +241,8 @@ const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
                                 : `Go to item ${index + 1} of ${scrollSnaps.length}`
                         }
                         aria-current={isCurrent ? 'true' : undefined}
-                        className={'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl border-[color:var(--carousel-control)] focus:outline-none focus-visible:focus-ring '.concat(
-                            index === selectedIndex ? 'active bg-[color:var(--carousel-control)] rounded-3xl' : ''
+                        className={'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl text-main border-current focus:outline-none focus-visible:focus-ring '.concat(
+                            index === selectedIndex ? 'active bg-current rounded-3xl' : ''
                         )}
                         onClick={() => onDotButtonClick(index)}></button>
                 );
@@ -265,7 +265,7 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, CarouselNextProps>(({ .
             disabled={!canScrollNext}
             onClick={scrollNext}
             {...props}>
-            <ChevronRight className='h-3 w-3 text-[color:var(--carousel-control)]' />
+            <ChevronRight className='h-3 w-3 text-main' />
         </IconButton>
     );
 });

@@ -17,6 +17,7 @@ import { faker } from '@faker-js/faker';
 import { faCaretDown, faCaretUp, faEllipsis, faGem, faUser, faUserGroup } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ColumnDef } from '@tanstack/react-table';
+import { TextButton } from '../../Button';
 
 export const getData = (entries: number): Finding[] =>
     Array(entries)
@@ -96,15 +97,12 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
                     </span>
                     Tier Zero Principal
                     {sortOrder !== undefined ? (
-                        <button
+                        <TextButton
                             onClick={() => handleSort?.('tierZeroPrincipal')}
-                            className='rounded-sm p-2 focus:outline-none focus-visible:focus-ring'
+                            className='rounded-sm p-2 hover:no-underline'
                             aria-label='Sort by Tier Zero Principal'>
-                            <FontAwesomeIcon
-                                icon={sortOrder === 'asc' ? faCaretUp : faCaretDown}
-                                className={sortOrder ? 'text-secondary' : 'text-main'}
-                            />
-                        </button>
+                            <FontAwesomeIcon icon={sortOrder === 'asc' ? faCaretUp : faCaretDown} />
+                        </TextButton>
                     ) : null}
                 </div>
             ),

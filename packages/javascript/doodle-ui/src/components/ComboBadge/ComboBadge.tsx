@@ -28,7 +28,7 @@ const ComboBadgeVariants = cva('relative leading-[1] z-10 h-8 text-nowrap', {
 });
 
 const AdornmentVariants = cva(
-    'bg-primary text-[color:var(--combo-badge-adornment-text)] rounded px-4 py-2 z-10 transition-[transform] duration-300',
+    'bg-primary text-neutral-light-1 rounded px-4 py-2 z-10 transition-[transform] duration-300',
     {
         variants: {
             type: {

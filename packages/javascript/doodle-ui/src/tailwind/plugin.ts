@@ -148,9 +148,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--breadcrumb-text': 'inherit',
             '--breadcrumb-page-text': 'var(--primary)',
 
-            // Components/Carousel
-            '--carousel-control': common.black,
-
             // Components/DatePicker
             '--date-picker-input-fill': 'var(--common-white)',
             '--date-picker-content-border': 'var(--neutral-light-5)',
@@ -165,7 +162,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/ComboBadge
             '--combo-badge-fill': 'var(--neutral-light-5)',
             '--combo-badge-text': 'var(--primary)',
-            '--combo-badge-adornment-text': 'var(--neutral-light-1)',
 
             // Components/Dialog
             '--dialog-overlay-fill': 'rgb(0 0 0 / 0.4)',
@@ -507,9 +503,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--breadcrumb-text': common.white,
             '--breadcrumb-page-text': 'var(--secondary-variant-2)',
 
-            // Components/Carousel
-            '--carousel-control': common.white,
-
             // Components/DatePicker
             '--date-picker-input-fill': 'var(--common-dark)',
             '--date-picker-content-border': 'var(--neutral-light-1)',
@@ -524,7 +517,6 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/ComboBadge
             '--combo-badge-fill': 'var(--neutral-dark-5)',
             '--combo-badge-text': 'var(--neutral-light-1)',
-            '--combo-badge-adornment-text': 'var(--neutral-light-1)',
 
             // Components/Dialog
             '--dialog-overlay-fill': 'rgb(0 0 0 / 0.4)',
