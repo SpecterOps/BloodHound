@@ -23,8 +23,11 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/appdb"
+	"github.com/specterops/bloodhound/server/opengraphschema/internal/handlers"
+	"github.com/specterops/bloodhound/server/opengraphschema/internal/routes"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 	"github.com/specterops/dawgs/graph"
 )
@@ -41,4 +44,13 @@ type OpenGraphSchemaRequestAdapter interface {
 // callers obtain the service without reaching into the persistence layer.
 func NewOpenGraphSchemaRequestAdapter(pool *pgxpool.Pool) OpenGraphSchemaRequestAdapter {
 	return services.NewService(appdb.NewStore(pool))
+}
+
+func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+	var (
+		store      = appdb.NewStore(pool)
+		service    = services.NewService(store)
+		handlerSet = handlers.NewHandlersContainer(service)
+	)
+	routes.Register(routerInst, handlerSet)
 }

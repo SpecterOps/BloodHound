@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,49 +13,37 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-// Package appdb stores open graph schema data in PostgreSQL. It owns the SQL for
-// this package and reads schema environments directly from the pgx pool.
 package appdb
 
 import (
 	"context"
+	"fmt"
+	"maps"
+	"slices"
 
+	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
-// selectEnvironmentsBase reads schema environments joined to their kind name and
-// owning extension. It mirrors the legacy GetEnvironmentsFiltered projection so
-// callers observe the same environment data.
-const selectEnvironmentsBase = `
-	SELECT
-		se.id,
-		se.schema_extension_id,
-		ext.display_name AS schema_extension_display_name,
-		se.environment_kind_id,
-		k.name AS environment_kind_name,
-		se.source_kind_id,
-		se.created_at,
-		se.updated_at,
-		se.deleted_at
-	FROM schema_environments se
-	INNER JOIN kind k ON se.environment_kind_id = k.id
-	INNER JOIN schema_extensions ext ON se.schema_extension_id = ext.id`
+// tableKind is the kind table joined when resolving node kinds to their names.
+const tableKind = "kind"
 
-const orderEnvironments = ` ORDER BY se.id`
+// PostgresUniqueViolationCode is the SQLSTATE code for unique constraint violations.
+const PostgresUniqueViolationCode = "23505"
 
-// filterBuiltinEnvironments narrows the base query to builtin extensions only.
-const filterBuiltinEnvironments = ` WHERE ext.is_builtin = true`
+// PostgresForeignKeyViolationCode is the SQLSTATE code for foreign key constraint violations.
+const PostgresForeignKeyViolationCode = "23503"
 
-// pgxQuerier lists only the pgx methods this package actually calls against
-// PostgreSQL, so the same Store code can run against either a pool or a
-// transaction.
+// pgxQuerier lists only the pgx methods this package actually calls against PostgreSQL.
 type pgxQuerier interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
 }
 
-// Store reads open graph schema data from PostgreSQL.
+// Store reads and writes OpenGraph extension schema data to/from PostgreSQL. Callers receive
+// services-layer sentinels rather than raw driver errors.
 type Store struct {
 	db pgxQuerier
 }
@@ -65,43 +53,55 @@ func NewStore(db pgxQuerier) *Store {
 	return &Store{db: db}
 }
 
-// GetEnvironmentsFiltered returns schema environments ordered by id. When
-// onlyBuiltin is true only environments belonging to builtin extensions are
-// returned.
-func (s *Store) GetEnvironmentsFiltered(ctx context.Context, onlyBuiltin bool) ([]model.SchemaEnvironment, error) {
-	var query = selectEnvironmentsBase
-	if onlyBuiltin {
-		query += filterBuiltinEnvironments
-	}
-	query += orderEnvironments
-
-	rows, err := s.db.Query(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var environments = []model.SchemaEnvironment{}
-	for rows.Next() {
-		var environment model.SchemaEnvironment
-		if err := rows.Scan(
-			&environment.ID,
-			&environment.SchemaExtensionId,
-			&environment.SchemaExtensionDisplayName,
-			&environment.EnvironmentKindId,
-			&environment.EnvironmentKindName,
-			&environment.SourceKindId,
-			&environment.CreatedAt,
-			&environment.UpdatedAt,
-			&environment.DeletedAt,
-		); err != nil {
-			return nil, err
+// buildFilterComparison builds a comparison for a validated, qualified SQL column.
+func buildFilterComparison(builder *sqlbuilder.SelectBuilder, column string, filter params.Filter) (string, error) {
+	switch filter.Operator {
+	case params.Equals:
+		if filter.Value == "null" {
+			return builder.IsNull(column), nil
 		}
-		environments = append(environments, environment)
+		return builder.Equal(column, filter.Value), nil
+	case params.NotEquals:
+		if filter.Value == "null" {
+			return builder.IsNotNull(column), nil
+		}
+		return builder.NotEqual(column, filter.Value), nil
+	case params.IsNull:
+		return builder.IsNull(column), nil
+	case params.IsNotNull:
+		return builder.IsNotNull(column), nil
+	case params.GreaterThan:
+		return builder.GreaterThan(column, filter.Value), nil
+	case params.GreaterThanOrEquals:
+		return builder.GreaterEqualThan(column, filter.Value), nil
+	case params.LessThan:
+		return builder.LessThan(column, filter.Value), nil
+	case params.LessThanOrEquals:
+		return builder.LessEqualThan(column, filter.Value), nil
+	case params.ApproximatelyEquals:
+		return builder.ILike(column, "%"+filter.Value+"%"), nil
+	default:
+		return "", fmt.Errorf("invalid operator specified")
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
+}
+
+// applyFilters combines each column's filters using their set operators,
+// then ANDs the column groups. Sorting columns keeps SQL and argument order deterministic.
+func applyFilters(builder *sqlbuilder.SelectBuilder, filters params.Filters) error {
+	for _, column := range slices.Sorted(maps.Keys(filters)) {
+		var expression string
+		for _, filter := range filters[column] {
+			if comparison, err := buildFilterComparison(builder, column, filter); err != nil {
+				return err
+			} else if filter.SetOperator == params.FilterOr {
+				expression = builder.Or(expression, comparison)
+			} else {
+				expression = builder.And(expression, comparison)
+			}
+		}
+
+		builder.Where(expression)
 	}
 
-	return environments, nil
+	return nil
 }
