@@ -70,3 +70,28 @@ func seedNodeKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSet
 
 	return testSetupData{kindID: kindID, nodeKindID: nodeKindID, extensionID: extensionID}
 }
+
+// seedEnvironment inserts an extension, environment kind and source kind, and a
+// schema_environment linking them, returning the environment kind name.
+func seedEnvironment(t *testing.T, pool *pgxpool.Pool, extName, kindName string, isBuiltin bool) string {
+	t.Helper()
+	ctx := context.Background()
+
+	var extID int
+	require.NoError(t, pool.QueryRow(ctx, `
+		INSERT INTO schema_extensions (name, namespace, display_name, version, is_builtin)
+		VALUES ($1, $2, $3, '1.0.0', $4) RETURNING id
+	`, extName, extName, extName+" Display", isBuiltin).Scan(&extID))
+
+	var envKindID, sourceKindID int
+	require.NoError(t, pool.QueryRow(ctx, `INSERT INTO kind (name) VALUES ($1) RETURNING id`, kindName).Scan(&envKindID))
+	require.NoError(t, pool.QueryRow(ctx, `INSERT INTO kind (name) VALUES ($1) RETURNING id`, kindName+"_source").Scan(&sourceKindID))
+
+	_, err := pool.Exec(ctx, `
+		INSERT INTO schema_environments (schema_extension_id, environment_kind_id, source_kind_id)
+		VALUES ($1, $2, $3)
+	`, extID, envKindID, sourceKindID)
+	require.NoError(t, err)
+
+	return kindName
+}
