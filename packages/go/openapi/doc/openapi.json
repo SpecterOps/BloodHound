@@ -22362,7 +22362,7 @@
             }
           },
           {
-            "name": "principalobjectid",
+            "name": "principal_object_id",
             "description": "Filter by one principal object identifier. A finding matches when the identifier is either its source (starting) principal or its target principal. The supported predicate is `eq` or `neq`.",
             "in": "query",
             "schema": {
