@@ -187,7 +187,9 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 		}
 	)
 
-	modules.Register(deps)
+	services := modules.Register(deps)
+	assert.NotNil(t, services.AuditRuntime)
+	assert.NotNil(t, services.AuditRuntime.Service)
 	assert.Equal(t, 1, rateLimitFactoryCalls, "the registry should create and install the matched-route limiter once")
 	routerInst.Handler().ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/v2/analysis/status", nil))
 	assert.Equal(t, 1, rateLimitRequestCalls, "registered feature routes should pass through the registry-owned limiter")

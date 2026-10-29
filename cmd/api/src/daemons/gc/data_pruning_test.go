@@ -18,19 +18,49 @@ package gc
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/daemons/ha"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
+type fakeAuditPartitionMaintainer struct {
+	createCalls     int
+	dropCalls       int
+	retentionMonths int
+}
+
+func (s *fakeAuditPartitionMaintainer) CreateNextPartition(context.Context, time.Time) error {
+	s.createCalls++
+	return nil
+}
+
+func (s *fakeAuditPartitionMaintainer) DropExpiredPartitions(_ context.Context, _ time.Time, retentionMonths int) error {
+	s.dropCalls++
+	s.retentionMonths = retentionMonths
+	return nil
+}
+
+type fakeHAMutex struct {
+	result ha.LockResult
+	err    error
+	calls  int
+}
+
+func (s *fakeHAMutex) TryLock() (ha.LockResult, error) {
+	s.calls++
+	return s.result, s.err
+}
+
 func TestGC_NewDataPruningDaemon(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl))
+	daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), nil, nil)
 	require.NotNil(t, daemon)
 }
 
@@ -38,7 +68,7 @@ func TestGC_Name(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl))
+	daemon := NewDataPruningDaemon(mocks.NewMockDatabase(mockCtrl), nil, nil)
 	require.NotNil(t, daemon)
 
 	result := daemon.Name()
@@ -62,7 +92,7 @@ func TestGC_Start(t *testing.T) {
 		time.Sleep(1 * time.Millisecond)
 	}).Return(nil)
 
-	daemon := NewDataPruningDaemon(mockDB)
+	daemon := NewDataPruningDaemon(mockDB, nil, nil)
 	require.NotNil(t, daemon)
 
 	go func() {
@@ -72,4 +102,48 @@ func TestGC_Start(t *testing.T) {
 	}()
 
 	daemon.Start(context.Background())
+}
+
+func TestDaemon_SweepAuditPartitions(t *testing.T) {
+	testCases := []struct {
+		name                string
+		lockResult          ha.LockResult
+		lockError           error
+		expectedCreateCalls int
+		expectedDropCalls   int
+	}{
+		{
+			name:                "leader maintains partitions",
+			lockResult:          ha.LockResult{Context: context.Background(), IsPrimary: true},
+			expectedCreateCalls: 1,
+			expectedDropCalls:   1,
+		},
+		{
+			name:       "non-leader skips maintenance",
+			lockResult: ha.LockResult{Context: context.Background()},
+		},
+		{
+			name:      "lock error skips maintenance",
+			lockError: errors.New("lock failed"),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				maintainer = &fakeAuditPartitionMaintainer{}
+				haMutex    = &fakeHAMutex{result: testCase.lockResult, err: testCase.lockError}
+				daemon     = NewDataPruningDaemon(nil, maintainer, haMutex)
+			)
+
+			daemon.sweepAuditPartitions(context.Background())
+
+			require.Equal(t, 1, haMutex.calls)
+			require.Equal(t, testCase.expectedCreateCalls, maintainer.createCalls)
+			require.Equal(t, testCase.expectedDropCalls, maintainer.dropCalls)
+			if testCase.expectedDropCalls > 0 {
+				require.Equal(t, defaultAuditRetentionMonths, maintainer.retentionMonths)
+			}
+		})
+	}
 }

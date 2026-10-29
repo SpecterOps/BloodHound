@@ -83,6 +83,7 @@ func TestNewAuditLog(t *testing.T) {
 	require.Equal(t, requestID, auditLog.RequestID)
 	require.Equal(t, requestIP, auditLog.SourceIpAddress)
 	require.Equal(t, model.AuditLogStatusSuccess, auditLog.Status)
+	require.Equal(t, model.AuditLogSourceLegacy, auditLog.Source)
 }
 
 func TestNewAuditLog_Error(t *testing.T) {

@@ -104,6 +104,11 @@ model {
 
   // GC daemon
   bloodhound.apiServer.gcDaemon -[uses]-> bloodhound.apiServer.databaseClient 'Sweeps expired data'
+  bloodhound.apiServer.gcDaemon -[uses]-> bloodhound.apiServer.auditStore 'Maintains audit partitions'
+
+  // Audit runtime
+  bloodhound.apiServer.auditService -[uses]-> bloodhound.apiServer.auditStore 'Persists lifecycle records'
+  bloodhound.apiServer.auditStore -[sync]-> bloodhound.postgresql 'Writes audit rows and manages partitions'
 
   // Data access → databases
   bloodhound.apiServer.databaseClient -[sync]-> bloodhound.postgresql 'SQL queries'
