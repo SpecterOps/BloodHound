@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import tailwindColors from 'tailwindcss/colors';
 import { PluginCreator } from 'tailwindcss/types/config';
 import { common, dark, elevation, light, palette, text } from './colors';
 
@@ -154,7 +153,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // Components/Pagination
             '--pagination-text': 'inherit',
-            '--pagination-disabled-text': tailwindColors.gray[400],
+            '--pagination-disabled-text': palette.neutral.light[800],
 
             // Components/Skeleton
             '--skeleton-fill': 'var(--neutral-light-5)',
@@ -313,7 +312,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--menu-item-disabled-fill': palette.neutral.light[200],
             '--menu-separator-fill': palette.neutral.light[300],
             '--menu-content-border': palette.neutral.light[300],
-            '--menu-sub-content-border': tailwindColors.gray[200],
+            '--menu-sub-content-border': palette.neutral.light[200],
             '--menu-item-highlight-border': light.secondary.main,
             '--menu-item-highlight-text': common.white,
             '--menu-item-disabled-text': palette.grey[700],
@@ -509,7 +508,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // Components/Pagination
             '--pagination-text': common.white,
-            '--pagination-disabled-text': tailwindColors.gray[400],
+            '--pagination-disabled-text': palette.neutral.light[800],
 
             // Components/Skeleton
             '--skeleton-fill': 'var(--neutral-dark-5)',
