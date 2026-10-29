@@ -232,7 +232,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // Components/Tooltip
             '--tooltip-fill': 'var(--neutral-light-2)',
-            '--tooltip-border': '#939597',
+            '--tooltip-border': palette.grey[500],
 
             // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.light[200],
@@ -588,7 +588,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // Components/Tooltip
             '--tooltip-fill': 'var(--neutral-dark-5)',
-            '--tooltip-border': '#939597',
+            '--tooltip-border': palette.grey[500],
 
             // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],
