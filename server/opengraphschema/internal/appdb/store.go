@@ -27,15 +27,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/params"
 )
 
-// tableKind is the kind table joined when resolving node kinds to their names.
-const tableKind = "kind"
-
-// PostgresUniqueViolationCode is the SQLSTATE code for unique constraint violations.
-const PostgresUniqueViolationCode = "23505"
-
-// PostgresForeignKeyViolationCode is the SQLSTATE code for foreign key constraint violations.
-const PostgresForeignKeyViolationCode = "23503"
-
 // pgxQuerier lists only the pgx methods this package actually calls against PostgreSQL.
 type pgxQuerier interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)

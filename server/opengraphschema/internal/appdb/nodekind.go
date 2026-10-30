@@ -30,9 +30,15 @@ import (
 )
 
 const (
-	tableSchemaNodeKinds                         = "schema_node_kinds"
+	tableSchemaNodeKinds = "schema_node_kinds"
+	// tableKind is the kind table joined when resolving node kinds to their names.
+	tableKind                                    = "kind"
 	graphSchemaNodeKindConstraintUniqueKindID    = "schema_node_kinds_kind_id_key"
 	graphSchemaNodeKindConstraintExtensionIDFKey = "schema_node_kinds_schema_extension_id_fkey"
+	// PostgresUniqueViolationCode is the SQLSTATE code for unique constraint violations.
+	PostgresUniqueViolationCode = "23505"
+	// PostgresForeignKeyViolationCode is the SQLSTATE code for foreign key constraint violations.
+	PostgresForeignKeyViolationCode = "23503"
 )
 
 // nodeKindRow is the package-local DB row type for a schema_node_kinds entry joined
