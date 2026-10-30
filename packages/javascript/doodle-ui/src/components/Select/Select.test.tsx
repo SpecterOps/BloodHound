@@ -39,7 +39,7 @@ describe('SelectTrigger', () => {
 
         expect(trigger).toBeDisabled();
         expect(trigger).toHaveAttribute('aria-busy', 'true');
-        expect(trigger.querySelector('[data-icon="spinner"]')).toBeInTheDocument();
+        expect(screen.getByRole('progressbar', { name: 'Loading', hidden: true })).toBeInTheDocument();
         expect(trigger.querySelector('[data-icon="chevron-down"]')).not.toBeInTheDocument();
         // jsdom does not implement pointer capture.
         Object.defineProperty(trigger, 'hasPointerCapture', { value: () => false });
@@ -50,7 +50,7 @@ describe('SelectTrigger', () => {
 
         expect(trigger).toBeEnabled();
         expect(trigger).toHaveAttribute('aria-busy', 'false');
-        expect(trigger.querySelector('[data-icon="spinner"]')).not.toBeInTheDocument();
+        expect(screen.queryByRole('progressbar', { hidden: true })).not.toBeInTheDocument();
         expect(trigger.querySelector('[data-icon="chevron-down"]')).toBeInTheDocument();
     });
 
