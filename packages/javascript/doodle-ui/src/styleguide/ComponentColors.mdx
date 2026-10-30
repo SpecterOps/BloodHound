@@ -304,6 +304,7 @@ export const tokenRows = [
         lightPalette: 'common.white',
         darkPalette: 'common.white',
         components: ['ComboBadge'],
+        utilities: ['bg-neutral-light-1', 'text-neutral-light-1', 'border-neutral-light-1'],
     },
     {
         token: '--pagination-disabled-text',
@@ -354,6 +355,7 @@ export const tokenRows = [
         lightPalette: 'light.primary.main',
         darkPalette: 'dark.primary.main',
         components: ['ComboBadge', 'IconButton', 'Stepper'],
+        utilities: ['bg-primary', 'text-primary', 'border-primary'],
     },
     {
         token: '--radio-border-default',
@@ -424,6 +426,7 @@ export const tokenRows = [
         lightPalette: 'light.secondary.main',
         darkPalette: 'dark.secondary.main',
         components: ['IconButton', 'Stepper'],
+        utilities: ['bg-secondary', 'text-secondary', 'border-secondary'],
     },
     {
         token: '--select-disabled-highlighted-fill',
@@ -614,6 +617,7 @@ export const tokenRows = [
         lightPalette: 'common.white',
         darkPalette: 'common.dark',
         components: ['Stepper'],
+        utilities: ['text-inverse'],
     },
     {
         token: '--text-main',
@@ -634,6 +638,7 @@ export const tokenRows = [
             'Tooltip',
             'Typography',
         ],
+        utilities: ['text-main'],
     },
     {
         token: '--textarea-border-default',
@@ -797,6 +802,10 @@ export const tokenRows = [
     },
 ];
 
+export const sharedTokenRows = tokenRows.filter((row) => row.utilities);
+
+export const componentTokenRows = tokenRows.filter((row) => !row.utilities);
+
 export const tableCellStyle = {
     textAlign: 'left',
     verticalAlign: 'top',
@@ -840,13 +849,14 @@ export const ColorValue = ({ value, reference, paletteSource }) => (
     </div>
 );
 
-export const TokenReference = () => {
+export const TokenReference = ({ rows }) => {
     const [query, setQuery] = useState('');
     const search = query.trim().toLowerCase();
-    const filtered = tokenRows.filter((row) =>
+    const filtered = rows.filter((row) =>
         [
             row.token,
             ...row.components,
+            ...(row.utilities ?? []),
             row.light,
             row.dark,
             row.lightReference,
@@ -868,7 +878,7 @@ export const TokenReference = () => {
                 />
             </label>
             <p role='status' aria-live='polite'>
-                {filtered.length} of {tokenRows.length} tokens
+                {filtered.length} of {rows.length} tokens
             </p>
             <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
@@ -898,6 +908,17 @@ export const TokenReference = () => {
                                     <small style={{ display: 'block', fontWeight: 'normal', marginTop: '0.25rem' }}>
                                         {row.components.join(', ')}
                                     </small>
+                                    {row.utilities && (
+                                        <small style={{ display: 'block', fontWeight: 'normal', marginTop: '0.25rem' }}>
+                                            Utilities:{' '}
+                                            {row.utilities.map((utility, index) => (
+                                                <span key={utility}>
+                                                    {index > 0 && ', '}
+                                                    <code>{utility}</code>
+                                                </span>
+                                            ))}
+                                        </small>
+                                    )}
                                 </th>
                                 <td style={tableCellStyle}>
                                     <ColorValue
@@ -918,7 +939,10 @@ export const TokenReference = () => {
                     </tbody>
                 </table>
                 {filtered.length === 0 && (
-                    <p>No matching tokens. Try a component, variable name, or HEX color, or clear the search.</p>
+                    <p>
+                        No matching tokens. Try a component, variable name, utility class, or HEX color, or clear the
+                        search.
+                    </p>
                 )}
             </div>
         </div>
@@ -930,13 +954,38 @@ export const TokenReference = () => {
 ## Where values live
 
 -   `src/tailwind/colors.ts` defines the shared palette.
--   `src/tailwind/plugin.ts` defines the default component tokens in `:root` and `.dark`.
--   `src/tailwind/preset.ts` exposes shared utilities such as `text-main`, `text-secondary`, and `text-disabled`.
+-   `src/tailwind/plugin.ts` defines every token as a CSS variable in `:root` (light) and `.dark`.
+-   `src/tailwind/preset.ts` maps a subset of those variables to Tailwind utilities, such as `text-main`, `text-light`, `text-disabled`, and `bg-primary`.
+
+## Token usage
+
+Tokens on this page fall into two groups:
+
+-   **Shared tokens** are defined in `plugin.ts` and also mapped in `preset.ts`, so they are available both as CSS variables and as Tailwind utility classes. Use them anywhere.
+-   **Component tokens** are used only inside their own component modules. They are available as CSS variables, but they are **not** available as Tailwind utility classes: `bg-tooltip-fill` or `border-card-border` will not generate any CSS.
+
+### Best practices
+
+-   In application code, use shared utilities (for example, `text-main` or `bg-primary`). Do not reference component tokens outside their component; they are implementation details and may be renamed or removed when the component changes.
+-   To change how a component looks, use its props or `className` first. Overriding a component token on a wrapper (for example, `[--tooltip-fill:var(--surface)]`) affects everything inside that wrapper, so use it only as a scoped last resort.
+-   Inside a component module, read component tokens with an arbitrary value and the `color:` type hint, for example `bg-[color:var(--tooltip-fill)]`. The hint tells Tailwind the variable is a color, so it generates the correct property.
+-   Utility names do not always match variable names. `text-inverse` reads `--text-contrast`, while `text-contrast` reads `--contrast`. Check the **Utilities** line in the shared tokens table.
+-   When adding a token, define it in both `:root` and `.dark` in `plugin.ts`, prefix it with the component name, and add a row to this page. Add it to `preset.ts` only when it is needed outside a single component; it then becomes a shared token.
 
 ## Color reference
 
-Search by component, token name, referenced variable (for example, `neutral-dark-2` or `text-main`), `colors.ts` path (for example, `palette.neutral.light[500]`), or HEX color. Variable searches match the light and dark references; the `--` prefix is optional.
+Search by component, token name, utility class, referenced variable (for example, `neutral-dark-2` or `text-main`), `colors.ts` path (for example, `palette.neutral.light[500]`), or HEX color. Variable searches match the light and dark references; the `--` prefix is optional.
 
 Each swatch is labeled with its exact `colors.ts` reference. CSS-variable aliases are followed to their source, and matching colors read their values directly from that export. HEX appears only when no export has exactly that color; nearest-color approximations are never used. Inherited values and dimensions remain literal.
 
-<TokenReference />
+### Shared tokens
+
+Available as CSS variables and as the Tailwind utilities listed under each token.
+
+<TokenReference rows={sharedTokenRows} />
+
+### Component tokens
+
+Available as CSS variables only. Use them inside the listed component modules; there are no Tailwind utilities for these tokens.
+
+<TokenReference rows={componentTokenRows} />
