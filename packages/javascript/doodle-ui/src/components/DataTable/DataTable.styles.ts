@@ -19,13 +19,13 @@ export const dataTableWrapperClasses =
 export const dataTableClasses = 'after:block after:h-[var(--prevent-vanishing-sticky-header)]';
 export const dataTableHeaderClasses = '[&_tr]:border-0';
 export const dataTableHeaderRowClasses = 'border-0';
-export const dataTableHeadClasses = 'bg-neutral-2 text-nowrap group relative z-10 overflow-x-clip';
-export const dataTableRowClasses = 'bg-neutral-1 hover:bg-data-table-row-hover-fill';
+export const dataTableHeadClasses = 'bg-neutral-2 text-main text-nowrap group relative z-10 overflow-x-clip';
+export const dataTableRowClasses = 'bg-neutral-1 hover:bg-[color:var(--data-table-row-hover-fill)]';
 export const dataTableSelectedRowClasses = 'shadow-[inset_0px_0px_0px_2px_var(--data-table-row-selected-outline)]';
 export const dataTableClickableRowClasses =
-    'focus:outline-none focus-visible:focus-ring focus-visible:bg-data-table-row-hover-fill';
+    'focus:outline-none focus-visible:focus-ring focus-visible:bg-[color:var(--data-table-row-hover-fill)]';
 export const dataTableCellClasses = 'text-left overflow-x-clip -outline-offset-2';
 
-export const dataTableResizeIndicatorClasses = `resizer opacity-100 absolute top-0 right-0 w-1 bg-neutral-5 dark:bg-neutral-light-5 cursor-col-resize select-none touch-none group-[.isResizing~_&:hover]:opacity-0 group-[.isResizing~_&:hover]:cursor-default [th:has(~_.isResizing)_>_&]:!opacity-0 [th:has(~_.isResizing)_>_&]:cursor-default`;
+export const dataTableResizeIndicatorClasses = `resizer opacity-0 absolute top-0 right-0 w-1 bg-[color:var(--data-table-resize-fill)] cursor-col-resize select-none touch-none group-hover:opacity-100 group-[.isResizing~_&:hover]:opacity-0 group-[.isResizing~_&:hover]:cursor-default [th:has(~_.isResizing)_>_&]:!opacity-0 [th:has(~_.isResizing)_>_&]:cursor-default`;
 
-export const dataTableActiveResizeIndicatorClasses = 'bg-primary opacity-100 dark:bg-secondary';
+export const dataTableActiveResizeIndicatorClasses = 'bg-[color:var(--data-table-resize-active-fill)] opacity-100';

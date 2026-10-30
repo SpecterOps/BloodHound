@@ -32,7 +32,7 @@ export const stepperIndicatorClasses =
     'group/indicator flex size-10 shrink-0 items-center justify-center rounded border border-transparent text-base font-bold leading-6 data-[state=active]:border-secondary';
 
 export const stepperIndicatorContentClasses = cn(
-    'flex size-8 items-center justify-center rounded border border-transparent group-data-[state=inactive]/indicator:border-[#939597] dark:group-data-[state=inactive]/indicator:border-input-border-default',
+    'flex size-8 items-center justify-center rounded border border-transparent group-data-[state=inactive]/indicator:border-[color:var(--stepper-inactive-border)]',
     'group-data-[state=completed]/indicator:border-primary group-data-[state=completed]/indicator:bg-primary group-data-[state=completed]/indicator:text-inverse',
     'group-data-[state=active]/indicator:rounded-sm group-data-[state=active]/indicator:border-secondary group-data-[state=active]/indicator:bg-secondary group-data-[state=active]/indicator:text-inverse'
 );

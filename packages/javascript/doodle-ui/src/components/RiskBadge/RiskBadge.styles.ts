@@ -30,7 +30,7 @@ export const RiskBadgePropVariants = cva('flex justify-center items-center round
 export const RiskBadgeContentVariants = cva('rounded-full', {
     variants: {
         outlined: {
-            true: 'border-solid border-2 shadow-none bg-transparent',
+            true: 'border-solid border-2 shadow-none bg-transparent text-main',
         },
         type: {
             labeled: 'size-max w-32 px-6 py-2.5 border-none text-center tracking-[.25px]',

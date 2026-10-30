@@ -40,16 +40,12 @@ export const sliderIndicatorStyles = cva(
 );
 
 export const sliderThumbStyles = cva(
-    [
-        'group/thumb relative size-4 rounded-full border border-neutral-300 bg-neutral-100 shadow-outer-1',
-        'dark:has-[:focus-visible]:bg-neutral-400',
-        'data-[disabled]:bg-disabled',
-    ],
+    'group/thumb relative size-4 rounded-full border border-[color:var(--slider-thumb-border)] shadow-outer-1 has-[:focus-visible]:bg-[color:var(--slider-thumb-focus-fill)] data-[disabled]:bg-disabled',
     {
         variants: {
             active: {
-                true: 'dark:bg-common-white',
-                false: '',
+                true: 'bg-[color:var(--slider-thumb-active-fill)]',
+                false: 'bg-[color:var(--slider-thumb-fill)]',
             },
         },
         defaultVariants: {

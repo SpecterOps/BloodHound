@@ -17,13 +17,15 @@ import { cva } from 'class-variance-authority';
 
 export const ToggleVariants = cva(
     [
-        'inline-flex items-center justify-center gap-2 rounded border border-toggle-btn-border bg-toggle-btn-fill text-sm text-main transition-colors',
+        'inline-flex items-center justify-center gap-2 rounded border border-[color:var(--toggle-btn-border)] bg-[color:var(--toggle-btn-fill)] text-sm text-main transition-colors',
         '[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
-        'hover:border-secondary hover:bg-secondary hover:text-common-white hover:underline dark:hover:text-common-dark',
-        'focus:outline-none focus-visible:border-secondary focus-visible:bg-secondary focus-visible:text-common-white focus-visible:focus-ring dark:focus-visible:text-common-dark',
-        'active:border-primary-variant active:bg-primary-variant active:text-common-white dark:active:text-common-dark',
-        'data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-common-white dark:data-[state=on]:text-common-dark',
-        'disabled:cursor-not-allowed disabled:border-btn-disabled-fill disabled:bg-btn-disabled-fill disabled:text-disabled dark:disabled:border-btn-disabled-fill-dark dark:disabled:bg-btn-disabled-fill-dark',
+        'hover:border-[color:var(--toggle-hover-border)] hover:bg-secondary hover:text-[color:var(--toggle-highlight-text)] hover:underline',
+        'focus:outline-none focus-visible:border-[color:var(--toggle-hover-border)] focus-visible:bg-secondary focus-visible:text-[color:var(--toggle-highlight-text)] focus-visible:focus-ring',
+        'active:border-[color:var(--toggle-active-border)] active:bg-primary-variant active:text-[color:var(--toggle-highlight-text)]',
+        'data-[state=on]:border-[color:var(--toggle-selected-border)] data-[state=on]:bg-primary data-[state=on]:text-[color:var(--toggle-highlight-text)]',
+        'disabled:hover:data-[state=on]:text-[color:var(--toggle-highlight-text)]',
+        'disabled:hover:text-[color:var(--toggle-disabled-hover-text)]',
+        'disabled:cursor-not-allowed disabled:border-[color:var(--toggle-disabled-border)] disabled:bg-[color:var(--button-disabled-fill)] disabled:text-disabled',
     ],
     {
         variants: {
@@ -39,4 +41,4 @@ export const ToggleVariants = cva(
 );
 
 export const toggleGroupClasses =
-    'flex items-center justify-center gap-2 p-1 rounded-lg bg-toggle-group-fill shadow-outer-1';
+    'flex items-center justify-center gap-2 p-1 rounded-lg bg-[color:var(--toggle-group-fill)] shadow-outer-1';
