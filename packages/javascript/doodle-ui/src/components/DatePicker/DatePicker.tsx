@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { faCalendarDay } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -22,6 +23,7 @@ import { IconButton } from '../IconButton';
 import { Input, InputProps } from '../Input';
 import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
 import { cn } from '../utils';
+import { datePickerContentClasses, datePickerInputClasses, datePickerTriggerClasses } from './DatePicker.styles';
 
 interface DatePickerProps extends InputHTMLAttributes<HTMLInputElement>, InputProps {
     calendarProps?: CalendarProps;
@@ -42,31 +44,20 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
             <Popover onOpenChange={handleOpenChange} open={calendarOpen}>
                 <div className='relative'>
                     {InputElement ? (
-                        <InputElement
-                            {...props}
-                            className={cn('bg-common-white dark:bg-common-dark peer', props.className)}
-                            ref={ref}
-                        />
+                        <InputElement {...props} className={cn(datePickerInputClasses, props.className)} ref={ref} />
                     ) : (
-                        <Input
-                            variant='outlined'
-                            {...props}
-                            className={cn('bg-common-white dark:bg-common-dark peer', props.className)}
-                        />
+                        <Input variant='outlined' {...props} className={cn(datePickerInputClasses, props.className)} />
                     )}
                     <PopoverTrigger asChild>
                         <IconButton
                             triggerClassName='absolute right-2 top-1/2 -translate-y-1/2'
-                            className='h-6 p-0 opacity-50 hover:opacity-100 peer-hover:opacity-100 focus-visible:opacity-100'
+                            className={datePickerTriggerClasses}
                             aria-label='Choose Date'>
                             <FontAwesomeIcon aria-hidden='true' size='lg' icon={faCalendarDay} />
                         </IconButton>
                     </PopoverTrigger>
                 </div>
-                <PopoverContent
-                    align='end'
-                    alignOffset={-7}
-                    className='w-auto p-3 border border-neutral-light-5 dark:border-neutral-light-1 z-[1500]'>
+                <PopoverContent align='end' alignOffset={-7} className={datePickerContentClasses}>
                     <Calendar classNames={{ day_selected: 'bg-primary text-neutral-light-1' }} {...calendarProps} />
                 </PopoverContent>
             </Popover>
