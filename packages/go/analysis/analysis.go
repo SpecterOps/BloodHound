@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -278,9 +279,13 @@ func (s analysisPipeline) dispatchAnalysisSteps(run analysisPipelineRun) analysi
 
 		if pipelineStep.shouldRun(run.analysisSteps) {
 			if pipelineStep.operation != nil {
+				start_ts := time.Now()
 				status, errs := pipelineStep.operation(run)
+				step_duration := time.Now().Sub(start_ts)
+
 				pipelineStepResult.status = status
 				pipelineStepResult.errors = errs
+				RecordAnalysisStepDuration(pipelineStep.String(), step_duration)
 			}
 		}
 
