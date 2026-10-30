@@ -49,7 +49,8 @@ describe('DataTable', () => {
         expect(container.firstChild).toHaveClass(
             'border',
             'border-solid',
-            'border-[color:var(--data-table-wrapper-border)]',
+            'border-neutral-light-4',
+            'dark:border-neutral-900',
             'bg-neutral-1',
             'shadow-none'
         );
@@ -58,7 +59,7 @@ describe('DataTable', () => {
 
         expect(screen.getByRole('row', { name: 'Ada Lovelace' })).toHaveClass(
             'bg-neutral-1',
-            'hover:bg-[color:var(--data-table-row-hover-fill)]'
+            'hover:bg-data-table-row-hover-fill'
         );
 
         expect(screen.getByRole('row', { name: 'Ada Lovelace' })).not.toHaveClass(
