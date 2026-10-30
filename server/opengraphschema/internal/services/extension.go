@@ -16,7 +16,10 @@
 
 package services
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 // ErrExtensionNotFound indicates that no extension exists for the requested id.
 var ErrExtensionNotFound = errors.New("extension not found")
@@ -29,4 +32,8 @@ type Extension struct {
 	Namespace   string
 	IsBuiltin   bool
 	Version     string
+}
+
+func (s *Service) GetExtension(ctx context.Context, id int32) (Extension, error) {
+	return s.db.GetExtension(ctx, id)
 }

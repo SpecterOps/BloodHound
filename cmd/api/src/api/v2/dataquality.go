@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -221,99 +220,6 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 			api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, stats, start, end, limit, skip, count, http.StatusOK, response)
 		}
 	}
-}
-
-// GetDataQualityAggregations returns data quality metric counts aggregated per environment kind for an OpenGraph extension.
-// Requires a schema_environment_kind_id, with optional schema_extension_id, created_at range, sorting, and pagination.
-func (s *Resources) GetDataQualityAggregations(response http.ResponseWriter, request *http.Request) {
-	var (
-		ctx         = request.Context()
-		queryParams = request.URL.Query()
-
-		schemaEnvironmentKindIDParam = "schema_environment_kind_id"
-		schemaExtensionIDParam       = "schema_extension_id"
-
-		err         error
-		sortItems   model.Sort
-		skip, limit int
-		start, end  time.Time
-
-		defaultEnd, defaultStart = DefaultTimeRange()
-	)
-
-	// schema_environment_kind_id is required
-	kindID := queryParams.Get(schemaEnvironmentKindIDParam)
-	if kindID == "" {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest,
-			fmt.Sprintf(api.FmtErrorResponseDetailsMissingRequiredQueryParameter, schemaEnvironmentKindIDParam), request),
-			response)
-		return
-	}
-	if _, err := strconv.ParseInt(kindID, 10, 32); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest,
-			fmt.Sprintf(FmtErrInvalidIntegerQueryParameter, schemaEnvironmentKindIDParam), request),
-			response)
-		return
-	}
-
-	// parse sort_by, skip, limit, start, end
-	if sortItems, err = api.ParseSortParameters(model.DataQualityAggregations{}, queryParams); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		return
-	}
-	if skip, err = ParseSkipQueryParameter(queryParams, 0); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		return
-	}
-	if limit, err = ParseLimitQueryParameter(queryParams, 1000); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-		return
-	}
-	if start, err = ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
-		return
-	}
-	if end, err = ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
-		return
-	}
-
-	// when filtering on schema_extension_id, verify the extension exists or return a 404
-	extensionID := queryParams.Get(schemaExtensionIDParam)
-	if extensionID != "" {
-		id, err := strconv.ParseInt(extensionID, 10, 32)
-		if err != nil {
-			api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest,
-				fmt.Sprintf(FmtErrInvalidIntegerQueryParameter, schemaExtensionIDParam), request),
-				response)
-			return
-		}
-		if _, err := s.DB.GetGraphSchemaExtensionById(ctx, int32(id)); err != nil {
-			api.HandleDatabaseError(request, response, err)
-			return
-		}
-	}
-
-	filters := model.Filters{
-		schemaEnvironmentKindIDParam: []model.Filter{
-			{Value: kindID, Operator: model.Equals, SetOperator: model.FilterAnd, IsStringData: false},
-		},
-	}
-	if extensionID != "" {
-		filters[schemaExtensionIDParam] = []model.Filter{
-			{Value: extensionID, Operator: model.Equals, SetOperator: model.FilterAnd, IsStringData: false},
-		}
-	}
-
-	// created_at is filtered by the start/end params, so set the time window here
-	filters["created_at"] = dataQualityCreatedAtFilters(start, end)
-
-	aggs, count, err := s.DB.GetDataQualityAggregations(ctx, filters, sortItems, skip, limit)
-	if err != nil {
-		api.HandleDatabaseError(request, response, err)
-		return
-	}
-	api.WriteResponseWrapperWithTimeWindowAndPagination(ctx, aggs, start, end, limit, skip, count, http.StatusOK, response)
 }
 
 // parseOrder is a helper function which parses any sort_by query params into both the legacy sort string format and the model.Sort format. Returns an error if the columns is not sortable, or if an empty sort param is provided.
