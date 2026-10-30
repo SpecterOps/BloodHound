@@ -321,7 +321,7 @@ describe('MultiSelect', () => {
             name: /menu item a/i,
         });
 
-        expect(trigger).toHaveClass('bg-select-trigger-outlined-fill');
+        expect(trigger).toHaveClass('bg-[color:var(--select-trigger-outlined-fill)]');
         expect(trigger).toHaveClass('ring-1');
         expect(trigger).not.toHaveClass('bg-primary');
     });

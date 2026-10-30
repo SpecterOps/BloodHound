@@ -23,9 +23,9 @@ import { Tooltip, type TooltipPosition } from '../Tooltip';
 import { cn, cnWithState } from '../utils';
 
 const defaultIconButtonClasses = [
-    'hover:text-primary dark:hover:text-primary',
-    'active:bg-transparent active:text-secondary dark:active:text-secondary',
-    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary dark:focus-visible:text-primary',
+    'hover:text-primary',
+    'active:bg-transparent active:text-secondary',
+    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary',
 ];
 
 export const IconButtonVariants = cva(

@@ -450,7 +450,7 @@ function StepperContent({ value, forceMount, children, className, ...props }: St
 
     return (
         <div
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Text-only tab panels need a Tab focus target (WAI-ARIA Tabs Pattern).
+            // oxlint-disable-next-line a11y-compat/no-noninteractive-tabindex -- Text-only tab panels need a Tab focus target (WAI-ARIA Tabs Pattern).
             tabIndex={0}
             {...props}
             id={`${stepperId}-panel-${value}`}
