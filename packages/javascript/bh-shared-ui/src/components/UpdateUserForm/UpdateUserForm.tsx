@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, CircularProgress } from '@mui/material';
+import { Alert } from '@mui/material';
 import {
     Button,
     DialogActions,
@@ -27,6 +27,7 @@ import {
     FormLabel,
     FormMessage,
     Input,
+    LoadingSpinner,
     Select,
     SelectContent,
     SelectItem,
@@ -52,6 +53,11 @@ export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id' | 
     roles: number | undefined;
 };
 
+const formPanelClasses =
+    'rounded-md bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900 p-6';
+const formStatePanelClasses = `w-[600px] max-w-full m-auto ${formPanelClasses}`;
+const formStateContentClasses = 'flex min-h-40 items-center justify-center py-6';
+
 const UpdateUserForm: React.FC<{
     onSubmit: (user: UpdateUserRequest) => void;
     userId: string;
@@ -72,18 +78,24 @@ const UpdateUserForm: React.FC<{
         getEnvironmentsQuery.isLoading
     ) {
         return (
-            <div className='w-full h-full text-center'>
-                <CircularProgress />
+            <div className={formStatePanelClasses}>
+                <DialogTitle>Edit User</DialogTitle>
+                <div className={formStateContentClasses}>
+                    <LoadingSpinner />
+                </div>
             </div>
         );
     }
 
     if (getUserQuery.isError || getRolesQuery.isError || getSSOProvidersQuery.isError || getEnvironmentsQuery.isError) {
         return (
-            <div className='w-[600px] m-auto h-[800px] flex flex-col justify-center rounded-md bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900 p-6'>
-                <div>Unable to load data required to edit this user.</div>
+            <div className={formStatePanelClasses}>
+                <DialogTitle>Edit User</DialogTitle>
+                <div className={formStateContentClasses} role='alert'>
+                    Unable to load data required to edit this user.
+                </div>
 
-                <DialogActions>
+                <DialogActions className='flex justify-end gap-4'>
                     <DialogClose asChild>
                         <Button
                             data-testid='update-user-dialog_button-cancel'
@@ -190,7 +202,7 @@ const UpdateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <div className='flex flex-col w-full max-w-[600px] rounded-md bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900 p-6'>
+                    <div className={`flex flex-col w-full max-w-[600px] ${formPanelClasses}`}>
                         {' '}
                         <DialogTitle>{'Edit User'}</DialogTitle>
                         <div className='flex flex-col mt-4 mb-8 w-full' data-testid='update-user-dialog_dialog-content'>

@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box } from '@mui/material';
 import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient, useAppName } from 'bh-shared-ui';
 import { LoadingSpinner } from 'doodle-ui';
 import React, { useEffect, useState } from 'react';
@@ -88,9 +87,9 @@ const Login: React.FC = () => {
         return (
             <LoginPage>
                 {title}
-                <Box textAlign='center'>
+                <div className='text-center'>
                     <LoadingSpinner />
-                </Box>
+                </div>
             </LoginPage>
         );
     }

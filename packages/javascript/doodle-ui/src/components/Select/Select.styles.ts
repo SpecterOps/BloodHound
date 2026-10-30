@@ -59,8 +59,6 @@ export const SelectTriggerVariants = cva(
 
 export const selectIconClasses = 'h-3 w-3';
 
-export const selectLoadingIconClasses = [selectIconClasses, 'animate-spin motion-reduce:animate-none'];
-
 export const selectScrollButtonClasses = 'flex cursor-default items-center justify-center py-1';
 
 export const selectContentClasses = [

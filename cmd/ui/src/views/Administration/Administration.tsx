@@ -14,8 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, CircularProgress, Container } from '@mui/material';
+import { Container } from '@mui/material';
 import { AppNavigate, flattenRoutes, GenericErrorBoundaryFallback, getSubRoute, useSubNavRoutes } from 'bh-shared-ui';
+import { LoadingSpinner } from 'doodle-ui';
 import React, { Suspense } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
@@ -29,25 +30,11 @@ const Administration: React.FC = () => {
 
     return (
         <div className='flex h-full'>
-            <Box flexGrow={1} position='relative' minWidth={0}>
+            <div className='relative flex-grow min-w-0'>
                 <div>
                     <Container maxWidth='xl' disableGutters>
-                        <Box py={2}>
-                            <Suspense
-                                fallback={
-                                    <Box
-                                        position='absolute'
-                                        top='0'
-                                        left='0'
-                                        right='0'
-                                        bottom='0'
-                                        display='flex'
-                                        alignItems='center'
-                                        justifyContent='center'
-                                        zIndex={1000}>
-                                        <CircularProgress color='primary' size={80} />
-                                    </Box>
-                                }>
+                        <div className='py-2'>
+                            <Suspense fallback={<LoadingSpinner variant='overlay' spinnerClassName='size-20' />}>
                                 <Routes>
                                     {flattenRoutes(adminRoutes).map((item) => (
                                         <Route
@@ -68,10 +55,10 @@ const Administration: React.FC = () => {
                                     )}
                                 </Routes>
                             </Suspense>
-                        </Box>
+                        </div>
                     </Container>
                 </div>
-            </Box>
+            </div>
         </div>
     );
 };
