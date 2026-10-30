@@ -220,6 +220,7 @@ export default {
                 'progress-indeterminate': {
                     from: { transform: 'translateX(-100%)' },
                     to: { transform: 'translateX(300%)' },
+                },
                 'loading-spinner-rotate': {
                     from: { transform: 'rotate(0deg)' },
                     to: { transform: 'rotate(360deg)' },
