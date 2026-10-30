@@ -14,14 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, vi } from 'vitest';
 import { Slider } from './Slider';
-
-expect.extend(matchers);
 
 describe('Slider Tests', () => {
     it('renders a thumb exposing the provided aria-label', () => {

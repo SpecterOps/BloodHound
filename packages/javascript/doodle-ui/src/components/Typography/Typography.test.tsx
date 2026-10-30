@@ -74,6 +74,13 @@ describe('Typography', () => {
             render(<Typography>Default</Typography>);
             expect(screen.getByText('Default').tagName.toLowerCase()).toBe(variantMapping[DEFAULT_VARIANT]);
         });
+
+        it(`applies the typography-${DEFAULT_VARIANT} class when no variant is provided`, () => {
+            render(<Typography>Default class</Typography>);
+            const classList = screen.getByText('Default class').classList;
+            expect(classList.contains(`typography-${DEFAULT_VARIANT}`)).toBe(true);
+            expect(classList.contains('typography-undefined')).toBe(false);
+        });
     });
 
     describe('variant → tag mapping', () => {

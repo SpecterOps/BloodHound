@@ -18,8 +18,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { AccessibleIcon } from '../AccessibleIcon';
-import { primaryClasses, secondaryClasses } from '../Button/Button.styles';
 import { IconButton } from './IconButton';
+import { iconPrimaryClasses, iconSecondaryClasses } from './IconButton.styles';
 
 describe('IconButton', () => {
     it('renders an AppIcon and defaults the tooltip to its accessible label', async () => {
@@ -180,9 +180,9 @@ describe('IconButton', () => {
     });
 
     it.each([
-        ['primary', primaryClasses],
-        ['secondary', secondaryClasses],
-    ] as const)('uses the same %s variant styles as Button', (variant, variantClasses) => {
+        ['primary', iconPrimaryClasses],
+        ['secondary', iconSecondaryClasses],
+    ] as const)('applies the %s variant styles', (variant, variantClasses) => {
         render(
             <IconButton aria-label={`${variant} action`} variant={variant}>
                 <AppIcon.Info />
