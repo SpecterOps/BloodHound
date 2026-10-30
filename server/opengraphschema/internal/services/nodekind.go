@@ -26,6 +26,9 @@ import (
 // ErrNodeKindNotFound indicates that no node kind exists for the requested id.
 var ErrNodeKindNotFound = errors.New("node kind not found")
 
+// ErrInvalidSortDirection indicates an unsupported node-kind sort direction.
+var ErrInvalidSortDirection = errors.New("invalid sort direction")
+
 // ErrDuplicateSchemaNodeKindName indicates that the node kind already exists.
 var ErrDuplicateSchemaNodeKindName = errors.New("duplicate schema node kind name")
 

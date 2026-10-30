@@ -22,7 +22,6 @@ package mocks
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -55,23 +54,23 @@ func (_m *MockDatabase) EXPECT() *MockDatabase_Expecter {
 }
 
 // GetEnvironmentsFiltered provides a mock function for the type MockDatabase
-func (_mock *MockDatabase) GetEnvironmentsFiltered(ctx context.Context, onlyBuiltin bool) ([]model.SchemaEnvironment, error) {
+func (_mock *MockDatabase) GetEnvironmentsFiltered(ctx context.Context, onlyBuiltin bool) ([]services.Environment, error) {
 	ret := _mock.Called(ctx, onlyBuiltin)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetEnvironmentsFiltered")
 	}
 
-	var r0 []model.SchemaEnvironment
+	var r0 []services.Environment
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, bool) ([]model.SchemaEnvironment, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, bool) ([]services.Environment, error)); ok {
 		return returnFunc(ctx, onlyBuiltin)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, bool) []model.SchemaEnvironment); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, bool) []services.Environment); ok {
 		r0 = returnFunc(ctx, onlyBuiltin)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.SchemaEnvironment)
+			r0 = ret.Get(0).([]services.Environment)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, bool) error); ok {
@@ -112,12 +111,12 @@ func (_c *MockDatabase_GetEnvironmentsFiltered_Call) Run(run func(ctx context.Co
 	return _c
 }
 
-func (_c *MockDatabase_GetEnvironmentsFiltered_Call) Return(schemaEnvironments []model.SchemaEnvironment, err error) *MockDatabase_GetEnvironmentsFiltered_Call {
-	_c.Call.Return(schemaEnvironments, err)
+func (_c *MockDatabase_GetEnvironmentsFiltered_Call) Return(environments []services.Environment, err error) *MockDatabase_GetEnvironmentsFiltered_Call {
+	_c.Call.Return(environments, err)
 	return _c
 }
 
-func (_c *MockDatabase_GetEnvironmentsFiltered_Call) RunAndReturn(run func(ctx context.Context, onlyBuiltin bool) ([]model.SchemaEnvironment, error)) *MockDatabase_GetEnvironmentsFiltered_Call {
+func (_c *MockDatabase_GetEnvironmentsFiltered_Call) RunAndReturn(run func(ctx context.Context, onlyBuiltin bool) ([]services.Environment, error)) *MockDatabase_GetEnvironmentsFiltered_Call {
 	_c.Call.Return(run)
 	return _c
 }
