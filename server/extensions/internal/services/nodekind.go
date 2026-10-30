@@ -26,6 +26,22 @@ import (
 // ErrNodeKindNotFound indicates that no node kind exists for the requested id.
 var ErrNodeKindNotFound = errors.New("node kind not found")
 
+// ErrDuplicateSchemaNodeKindName indicates that the node kind already exists.
+var ErrDuplicateSchemaNodeKindName = errors.New("duplicate schema node kind name")
+
+type (
+	NodesInput []NodeInput
+	NodeInput  struct {
+		Name          string
+		DisplayName   string         // human-readable name
+		Description   string         // human-readable description of the node kind
+		IsDisplayKind bool           // indicates if this kind should supersede others and be displayed
+		Icon          string         // font-awesome icon for the registered node kind
+		IconColor     string         // icon hex color
+		Info          KindInfoInputs // entity panel definitions for this node kind
+	}
+)
+
 // NodeKind is the domain representation of a node kind, combining the schema_node_kinds
 // row with the kind name resolved from the kind table. Info is populated by the service.
 type NodeKind struct {
