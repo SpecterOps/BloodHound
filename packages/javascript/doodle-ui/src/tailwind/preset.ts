@@ -179,6 +179,10 @@ export default {
                 // 'risk-text': 'var(--risk-text)',
             },
             keyframes: {
+                'progress-indeterminate': {
+                    from: { transform: 'translateX(-100%)' },
+                    to: { transform: 'translateX(300%)' },
+                },
                 'loading-spinner-rotate': {
                     from: { transform: 'rotate(0deg)' },
                     to: { transform: 'rotate(360deg)' },
@@ -214,6 +218,7 @@ export default {
                 },
             },
             animation: {
+                'progress-indeterminate': 'progress-indeterminate 1.5s linear infinite',
                 'loading-spinner':
                     'loading-spinner-rotate 1.4s linear infinite, loading-spinner-dash 1.4s ease-in-out infinite',
                 'accordion-down': 'accordion-down 0.2s ease-out',
