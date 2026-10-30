@@ -638,9 +638,16 @@ func postAzureResetPassword(ctx context.Context, db graph.Database, sink *post.F
 	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if pwResetRoles, err := TenantRoles(tx, tenant, ResetPasswordRoleIDs()...); err != nil {
 			return err
+		} else if pwResetRoles.Len() == 0 {
+			return nil
+		} else if targetRoleAssignments, err := resetPasswordTargetRoleAssignments(tx, tenant, roleAssignments); err != nil {
+			return err
 		} else {
+			// Use the combined active-and-eligible view to check for resettable targets,
+			// but do not modify the original roleAssignments. This ensures that
+			// the original roleAssignments is passed to other post-processing functions without mutations specific to this operation.
 			for _, role := range pwResetRoles {
-				if targets, err := resetPasswordEndNodeBitmapForRole(role, roleAssignments); err != nil {
+				if targets, err := resetPasswordEndNodeBitmapForRole(role, targetRoleAssignments); err != nil {
 					return fmt.Errorf("unable to continue processing azresetpassword for tenant node %d: %w", tenant.ID, err)
 				} else {
 					targets.Each(func(nextID uint64) bool {
@@ -660,6 +667,73 @@ func postAzureResetPassword(ctx context.Context, db graph.Database, sink *post.F
 	})
 }
 
+func resetPasswordTargetRoleAssignments(tx graph.Transaction, tenant *graph.Node, roleAssignments RoleAssignments) (RoleAssignments, error) {
+	var (
+		roleMap               = make(map[string]cardinality.Duplex[uint64], len(roleAssignments.RoleMap))
+		eligiblePrincipals    = cardinality.NewBitmap64()
+		targetRoleAssignments = roleAssignments
+	)
+
+	for roleTemplateID, members := range roleAssignments.RoleMap {
+		roleMap[roleTemplateID] = members
+	}
+	targetRoleAssignments.RoleMap = roleMap
+
+	// Examine all tenant roles, not just Global Administrator or roles that can reset
+	// passwords. Allowed eligible roles must remain valid targets, and any protected
+	// eligible role must be visible to the source role's allowed-roles-only check.
+	if tenantRoles, err := TenantRoles(tx, tenant); err != nil {
+		return RoleAssignments{}, err
+	} else {
+		for _, role := range tenantRoles {
+			if roleTemplateID, err := role.Properties.Get(azure.RoleTemplateID.String()).String(); err != nil {
+				if !graph.IsErrPropertyNotFound(err) {
+					return RoleAssignments{}, err
+				}
+			} else if members, err := roleMembersByRelationshipKinds(tx, graph.NewNodeSet(role), azure.MemberOf, azure.AZRoleEligible); err != nil {
+				if !graph.IsErrNotFound(err) {
+					return RoleAssignments{}, err
+				}
+			} else {
+				// Traversal aggregates every node along accepted paths, including the
+				// role at the root. Remove it so it is not treated as its own assignee.
+				members.Remove(role.ID)
+				eligibleMembers := members.IDBitmap()
+				if eligibleMembers.Cardinality() == 0 {
+					continue
+				}
+
+				// Collect eligible principals across roles so we can update the cached
+				// user classifications after the traversal finishes.
+				eligiblePrincipals.Or(eligibleMembers)
+				if existingMembers, hasRole := roleMap[roleTemplateID]; hasRole {
+					mergedMembers := existingMembers.Clone()
+					mergedMembers.Or(eligibleMembers)
+					roleMap[roleTemplateID] = mergedMembers
+				} else {
+					// A role with no active members can still protect eligible users.
+					roleMap[roleTemplateID] = eligibleMembers
+				}
+			}
+		}
+	}
+
+	// And intersects sets: restrict the collected IDs to this tenant's users.
+	// Groups and service principals may participate in traversal but cannot be reset
+	// targets. If no users are affected, the original view already gives the same result.
+	eligiblePrincipals.And(roleAssignments.users)
+	if eligiblePrincipals.Cardinality() == 0 {
+		return roleAssignments, nil
+	}
+
+	// Reclassify eligible users in this view only. Or adds them to "with any role".
+	targetRoleAssignments.usersWithAnyRole = roleAssignments.usersWithAnyRole.Clone()
+	targetRoleAssignments.usersWithAnyRole.Or(eligiblePrincipals)
+	targetRoleAssignments.usersWithoutRoles = roleAssignments.usersWithoutRoles.Clone()
+	targetRoleAssignments.usersWithoutRoles.AndNot(eligiblePrincipals)
+	return targetRoleAssignments, nil
+}
+
 func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAssignments) (cardinality.Duplex[uint64], error) {
 	if roleTemplateIDProp := role.Properties.Get(azure.RoleTemplateID.String()); roleTemplateIDProp.IsNil() {
 		return nil, fmt.Errorf("role node %d is missing property %s", role.ID, azure.RoleTemplateID)
@@ -669,8 +743,15 @@ func resetPasswordEndNodeBitmapForRole(role *graph.Node, roleAssignments RoleAss
 		result := cardinality.NewBitmap64()
 		switch roleTemplateID {
 		case azure.CompanyAdministratorRole, azure.PrivilegedAuthenticationAdministratorRole, azure.PartnerTier2SupportRole:
+			// These sources can reset any user, including active or eligible Global
+			// Administrators. Eligibility should not remove their reset edges.
 			result.Or(roleAssignments.Users())
 		case azure.UserAccountAdministratorRole:
+			// User Administrator can reset users with no active or eligible roles,
+			// or users whose active and eligible roles are ALL in its allowed list.
+			// Reports Reader is allowed, but Global Administrator is not. A user with
+			// active Reports Reader and eligible Global Administrator is therefore
+			// excluded: one allowed role does not override another role's protection.
 			result.Or(roleAssignments.UsersWithoutRoles())
 			result.Or(roleAssignments.UsersWithRolesExclusive(UserAdministratorPasswordResetTargetRoles()...))
 			result.AndNot(roleAssignments.UsersWithRoleAssignableGroupMembership())
