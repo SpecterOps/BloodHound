@@ -36,6 +36,8 @@ type Database interface {
 }
 
 var (
+	ErrInvalidSortDirection = errors.New("invalid sort direction")
+
 	ErrKindInfoNotFound          = errors.New("kind info not found")
 	ErrKindInfoKindNotFound      = errors.New("kind info references a kind that does not exist")
 	ErrKindInfoDuplicatePosition = errors.New("kind info position already in use for this kind")
