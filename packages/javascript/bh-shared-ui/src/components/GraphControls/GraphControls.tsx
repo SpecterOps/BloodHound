@@ -29,10 +29,20 @@ import {
     faUpDown,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IconButton, MenuItem, Popover, PopoverContent, PopoverTrigger, Slider, Tooltip } from 'doodle-ui';
+import {
+    IconButton,
+    MenuItem,
+    MenuLabel,
+    MenuSeparator,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+    Slider,
+    Tooltip,
+} from 'doodle-ui';
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
-import { useCallback, useRef, useState } from 'react';
+import { Fragment, useCallback, useRef, useState } from 'react';
 import { useExploreParams, useKeybindings } from '../../hooks';
 import { cn } from '../../utils';
 import { exportToJson } from '../../utils/exportGraphData';
@@ -42,6 +52,7 @@ import SearchCurrentNodes, { FlatNode } from '../SearchCurrentNodes';
 export interface GraphExportAction {
     id: string;
     label: string;
+    group?: string;
     onSelect: () => void;
     disabled?: boolean;
 }
@@ -240,11 +251,24 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                 </GraphMenu>
 
                 <GraphMenu label='Export' icon={faDownload}>
-                    {additionalExportActions.map((action) => (
-                        <MenuItem key={action.id} onSelect={action.onSelect} disabled={action.disabled}>
-                            {action.label}
-                        </MenuItem>
+                    {additionalExportActions.map((action, index) => (
+                        <Fragment key={action.id}>
+                            {index > 0 && action.group !== additionalExportActions[index - 1]?.group && (
+                                <MenuSeparator />
+                            )}
+                            {action.group && action.group !== additionalExportActions[index - 1]?.group && (
+                                <MenuLabel>{action.group}</MenuLabel>
+                            )}
+                            <MenuItem
+                                aria-label={action.group ? `${action.label} ${action.group}` : undefined}
+                                className={action.group ? 'pl-6' : undefined}
+                                onSelect={action.onSelect}
+                                disabled={action.disabled}>
+                                {action.label}
+                            </MenuItem>
+                        </Fragment>
                     ))}
+                    {additionalExportActions.length > 0 && <MenuSeparator />}
                     <MenuItem onSelect={() => exportToJson(jsonData)} disabled={isEmpty(jsonData)}>
                         JSON
                     </MenuItem>
