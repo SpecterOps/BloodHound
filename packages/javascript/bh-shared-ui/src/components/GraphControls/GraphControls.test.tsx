@@ -16,7 +16,7 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { act, render, screen, waitFor } from '../../test-utils';
+import { act, render, screen, waitFor, within } from '../../test-utils';
 import * as exportUtils from '../../utils/exportGraphData';
 import GraphControls, { type GraphExportAction, type GraphLayoutControlOptions } from './GraphControls';
 
@@ -496,6 +496,56 @@ describe('GraphControls', () => {
                 'Additional action two',
                 'JSON',
             ]);
+        });
+
+        it('renders a heading for each action group and separates groups from JSON', async () => {
+            const groupedExportActions: readonly GraphExportAction[] = [
+                { id: 'png-view', label: 'PNG', group: 'Current View', onSelect: vi.fn() },
+                { id: 'svg-view', label: 'SVG', group: 'Current View', onSelect: vi.fn() },
+                { id: 'png-graph', label: 'PNG', group: 'Full Graph', onSelect: vi.fn() },
+            ];
+            const { user } = setup({ additionalExportActions: groupedExportActions });
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            const menu = await screen.findByRole('menu');
+            expect(within(menu).getByText('Current View')).toBeInTheDocument();
+            expect(within(menu).getByText('Full Graph')).toBeInTheDocument();
+            expect(within(menu).getAllByRole('separator')).toHaveLength(2);
+            expect(
+                within(menu)
+                    .getAllByRole('menuitem')
+                    .map((item) => item.getAttribute('aria-label'))
+            ).toEqual(['PNG Current View', 'SVG Current View', 'PNG Full Graph', null]);
+        });
+
+        it('renders ungrouped actions without headings or group labels', async () => {
+            const { user } = setup({ additionalExportActions });
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            const menu = await screen.findByRole('menu');
+            expect(within(menu).queryByText('Current View')).not.toBeInTheDocument();
+            expect(within(menu).queryByText('Full Graph')).not.toBeInTheDocument();
+            expect(within(menu).getAllByRole('separator')).toHaveLength(1);
+            for (const item of within(menu).getAllByRole('menuitem')) {
+                expect(item).not.toHaveAttribute('aria-label');
+            }
+        });
+
+        it('separates an ungrouped action from the preceding group', async () => {
+            const mixedExportActions: readonly GraphExportAction[] = [
+                { id: 'png-view', label: 'PNG', group: 'Current View', onSelect: vi.fn() },
+                { id: 'other-export', label: 'Other export', onSelect: vi.fn() },
+            ];
+            const { user } = setup({ additionalExportActions: mixedExportActions });
+
+            await user.click(screen.getByRole('button', { name: 'Export' }));
+
+            const menu = await screen.findByRole('menu');
+            expect(within(menu).getByText('Current View')).toBeInTheDocument();
+            expect(within(menu).getByRole('menuitem', { name: 'Other export' })).toBeInTheDocument();
+            expect(within(menu).getAllByRole('separator')).toHaveLength(2);
         });
 
         it('invokes the selected action, closes the menu, and restores focus', async () => {
