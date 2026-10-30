@@ -27,7 +27,7 @@ const meta = {
     argTypes: {
         value: {
             control: { type: 'range', min: 0, max: 100, step: 1 },
-            description: 'The completion percentage, from 0 to 100.',
+            description: 'The completion percentage, from 0 to 100. Use null for indeterminate progress.',
         },
         'aria-label': {
             control: 'text',
@@ -59,4 +59,10 @@ export const Complete: Story = {
 
 export const CustomWidth: Story = {
     args: { className: 'w-64', value: 75 },
+};
+
+/** Use when the task has no measurable completion percentage. */
+export const Indeterminate: Story = {
+    argTypes: { value: { control: false } },
+    args: { value: null, 'aria-label': 'Loading data' },
 };
