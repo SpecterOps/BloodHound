@@ -36,10 +36,16 @@ import (
 type Environment = services.Environment
 type EnvironmentKindsToEnvironment = services.EnvironmentKindsToEnvironment
 
+// Extension is the schema extension model exposed to other slices.
+type Extension = services.Extension
+
+var ErrExtensionNotFound = services.ErrExtensionNotFound
+
 // OpenGraphSchemaRequestAdapter is the exported open graph schema capability
 // other feature slices depend on. It is satisfied by the internal service
 // constructed by NewOpenGraphSchemaRequestAdapter.
 type OpenGraphSchemaRequestAdapter interface {
+	GetExtension(ctx context.Context, id int32) (Extension, error)
 	GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, EnvironmentKindsToEnvironment, error)
 }
 
