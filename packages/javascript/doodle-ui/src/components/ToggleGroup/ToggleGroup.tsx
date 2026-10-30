@@ -18,6 +18,7 @@ import { type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 
 import { ToggleVariants } from '../Toggle';
+import { toggleGroupClasses } from '../Toggle/Toggle.styles';
 import { cn } from '../utils';
 
 const ToggleGroupContext = React.createContext<VariantProps<typeof ToggleVariants>>({
@@ -28,13 +29,7 @@ const ToggleGroup = React.forwardRef<
     React.ElementRef<typeof ToggleGroupPrimitive.Root>,
     React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof ToggleVariants>
 >(({ className, size, children, ...props }, ref) => (
-    <ToggleGroupPrimitive.Root
-        ref={ref}
-        className={cn(
-            'flex items-center justify-center gap-2 p-1 rounded-lg bg-[color:var(--toggle-group-fill)] shadow-outer-1',
-            className
-        )}
-        {...props}>
+    <ToggleGroupPrimitive.Root ref={ref} className={cn(toggleGroupClasses, className)} {...props}>
         <ToggleGroupContext.Provider value={{ size }}>{children}</ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
 ));

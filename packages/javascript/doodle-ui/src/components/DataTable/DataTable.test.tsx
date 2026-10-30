@@ -49,7 +49,8 @@ describe('DataTable', () => {
         expect(container.firstChild).toHaveClass(
             'border',
             'border-solid',
-            'border-[color:var(--data-table-wrapper-border)]',
+            'border-neutral-light-4',
+            'dark:border-neutral-900',
             'bg-neutral-1',
             'shadow-none'
         );

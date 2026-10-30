@@ -13,63 +13,18 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { Slider as SliderPrimitive, type SliderRootProps as BaseSliderRootProps } from '@base-ui/react/slider';
-import { cva } from 'class-variance-authority';
 import * as React from 'react';
 import { cnWithState } from '../utils';
-
-const sliderRootStyles =
-    'relative flex w-full touch-none select-none items-center data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
-
-const sliderControlStyles = 'group/slider relative flex w-full grow items-center py-3';
-
-const sliderTrackStyles =
-    'relative h-1 w-full grow overflow-hidden rounded-full bg-[color:var(--slider-track-fill)] data-[disabled]:bg-disabled';
-
-const sliderIndicatorStyles = cva(
-    'h-full rounded-full group-has-[:focus-visible]/slider:bg-secondary data-[disabled]:bg-disabled',
-    {
-        variants: {
-            active: {
-                true: 'bg-primary',
-                false: 'bg-[color:var(--slider-track-fill)]',
-            },
-        },
-        defaultVariants: {
-            active: false,
-        },
-    }
-);
-
-const sliderThumbStyles = cva(
-    'group/thumb relative size-4 rounded-full border border-[color:var(--slider-thumb-border)] shadow-outer-1 has-[:focus-visible]:bg-[color:var(--slider-thumb-focus-fill)] data-[disabled]:bg-disabled',
-    {
-        variants: {
-            active: {
-                true: 'bg-[color:var(--slider-thumb-active-fill)]',
-                false: 'bg-[color:var(--slider-thumb-fill)]',
-            },
-        },
-        defaultVariants: {
-            active: false,
-        },
-    }
-);
-
-const sliderThumbDotStyles = cva(
-    'pointer-events-none absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full group-has-[:focus-visible]/thumb:block group-has-[:focus-visible]/thumb:bg-secondary group-data-[disabled]/thumb:hidden',
-    {
-        variants: {
-            active: {
-                true: 'block bg-primary',
-                false: 'hidden',
-            },
-        },
-        defaultVariants: {
-            active: false,
-        },
-    }
-);
+import {
+    sliderControlStyles,
+    sliderIndicatorStyles,
+    sliderRootStyles,
+    sliderThumbDotStyles,
+    sliderThumbStyles,
+    sliderTrackStyles,
+} from './Slider.styles';
 
 type SliderRootProps = Omit<BaseSliderRootProps<number>, 'children'>;
 type SliderChangeEventDetails = Parameters<NonNullable<SliderRootProps['onValueChange']>>[1];
