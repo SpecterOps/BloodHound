@@ -146,7 +146,7 @@ const Pagination: React.FC<PaginationProps> = (props) => {
         onRowsPerPageChange(Number(value));
     };
 
-    const lowerBoundary = rowsPerPage * page + 1;
+    const lowerBoundary = count === 0 ? 0 : rowsPerPage * page + 1;
     const upperBoundary = rowsPerPage * (page + 1) > count ? count : rowsPerPage * (page + 1);
 
     const selectItems = paginationOptions ?? ['5', '10', '25', '100'];
