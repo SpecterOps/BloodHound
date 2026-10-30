@@ -22,9 +22,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/params"
@@ -57,12 +55,16 @@ func NewHandlersContainer(identity Identity) *Handlers {
 // GetPermission returns the permission for the id in the request path.
 func (s *Handlers) GetPermission(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx             = request.Context()
-		rawPermissionID = mux.Vars(request)[api.URIPathVariablePermissionID]
+		ctx = request.Context()
 	)
 
-	permissionID, err := strconv.Atoi(rawPermissionID)
+	permissionIDValue, err := params.PathInt64(request, api.URIPathVariablePermissionID)
 	if err != nil {
+		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, response)
+		return
+	}
+	permissionID := int(permissionIDValue)
+	if int64(permissionID) != permissionIDValue {
 		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, response)
 		return
 	}
@@ -79,17 +81,16 @@ func (s *Handlers) GetPermission(response http.ResponseWriter, request *http.Req
 // GetRole returns the role for the id in the request path.
 func (s *Handlers) GetRole(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx       = request.Context()
-		rawRoleID = mux.Vars(request)[api.URIPathVariableRoleID]
+		ctx = request.Context()
 	)
 
-	roleID, err := strconv.ParseInt(rawRoleID, 10, 32)
+	roleID, err := params.PathInt32(request, api.URIPathVariableRoleID)
 	if err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, response)
 		return
 	}
 
-	role, err := s.identity.GetRole(ctx, int32(roleID))
+	role, err := s.identity.GetRole(ctx, roleID)
 	if err != nil {
 		handleIdentityError(request, response, err)
 		return
