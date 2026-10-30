@@ -24,7 +24,7 @@ const sliderRootStyles =
 const sliderControlStyles = 'group/slider relative flex w-full grow items-center py-3';
 
 const sliderTrackStyles =
-    'relative h-1 w-full grow overflow-hidden rounded-full bg-neutral-200 data-[disabled]:bg-disabled';
+    'relative h-1 w-full grow overflow-hidden rounded-full bg-[color:var(--slider-track-fill)] data-[disabled]:bg-disabled';
 
 const sliderIndicatorStyles = cva(
     'h-full rounded-full group-has-[:focus-visible]/slider:bg-secondary data-[disabled]:bg-disabled',
@@ -32,7 +32,7 @@ const sliderIndicatorStyles = cva(
         variants: {
             active: {
                 true: 'bg-primary',
-                false: 'bg-neutral-200',
+                false: 'bg-[color:var(--slider-track-fill)]',
             },
         },
         defaultVariants: {
@@ -42,12 +42,12 @@ const sliderIndicatorStyles = cva(
 );
 
 const sliderThumbStyles = cva(
-    'group/thumb relative size-4 rounded-full border border-neutral-300 bg-neutral-100 shadow-outer-1 dark:has-[:focus-visible]:bg-neutral-400 data-[disabled]:bg-disabled',
+    'group/thumb relative size-4 rounded-full border border-[color:var(--slider-thumb-border)] shadow-outer-1 has-[:focus-visible]:bg-[color:var(--slider-thumb-focus-fill)] data-[disabled]:bg-disabled',
     {
         variants: {
             active: {
-                true: 'dark:bg-common-white',
-                false: '',
+                true: 'bg-[color:var(--slider-thumb-active-fill)]',
+                false: 'bg-[color:var(--slider-thumb-fill)]',
             },
         },
         defaultVariants: {

@@ -444,7 +444,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             accessibility={{ announcements, screenReaderInstructions: { draggable: 'draggable column header' } }}>
             <div
                 className={cn(
-                    'w-full border border-solid border-neutral-light-4 bg-neutral-1 shadow-none dark:border-neutral-900',
+                    'w-full border border-solid border-[color:var(--data-table-wrapper-border)] bg-neutral-1 shadow-none',
                     className
                 )}
                 {...wrapperRest}
@@ -505,7 +505,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     scope='col'
                                                     enableDragging={enableDragAndDrop && isColDraggingEnabled}
                                                     className={cn(
-                                                        'bg-neutral-2 text-nowrap group relative z-10 overflow-x-clip',
+                                                        'bg-neutral-2 text-main text-nowrap group relative z-10 overflow-x-clip',
                                                         `${header.column.getIsResizing() ? 'isResizing' : ''}`,
                                                         propsClassName
                                                     )}
@@ -613,14 +613,14 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                             tabIndex={tableBodyRowTabIndex ?? (onRowClick ? 0 : undefined)}
                                             data-state={row.getIsSelected() && 'selected'}
                                             className={cn(
-                                                'bg-neutral-1 hover:bg-data-table-row-hover-fill',
+                                                'bg-neutral-1 hover:bg-[color:var(--data-table-row-hover-fill)]',
                                                 {
                                                     // Border is tricky on <tr> https://github.com/TanStack/virtual/issues/620
-                                                    'shadow-[inset_0px_0px_0px_2px_var(--data-table-row-selected-outline)]':
+                                                    'shadow-[shadow:var(--data-table-row-selected)]':
                                                         row.getIsSelected(),
                                                     'cursor-pointer': onRowClick,
                                                     'cursor-default': !onRowClick,
-                                                    'focus:outline-none focus-visible:focus-ring focus-visible:bg-data-table-row-hover-fill':
+                                                    'focus:outline-none focus-visible:focus-ring focus-visible:bg-[color:var(--data-table-row-hover-fill)]':
                                                         onRowClick,
                                                 },
 

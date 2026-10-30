@@ -46,14 +46,14 @@ const MultiSelectTriggerVariants = cva(
         'focus:outline-none focus-visible:focus-ring',
         'enabled:hover:bg-secondary enabled:hover:text-inverse',
         'data-[state=open]:bg-primary data-[state=open]:text-inverse',
-        'disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled dark:disabled:bg-input-fill-disabled-dark disabled:text-disabled',
-        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill aria-[invalid=true]:enabled:hover:text-input-placeholder-text aria-[invalid=true]:data-[state=open]:text-input-placeholder-text aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main',
+        'disabled:cursor-not-allowed disabled:border disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled',
+        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:data-[state=open]:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:enabled:hover:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:data-[state=open]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main',
     ],
     {
         variants: {
             variant: {
                 outlined:
-                    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-input-placeholder-text [&>svg]:text-main [&:enabled:hover>svg]:text-inverse [&[data-state=open]>svg]:text-inverse',
+                    'ring-1 ring-[color:var(--input-border-default)] bg-[color:var(--select-trigger-outlined-fill)] text-[color:var(--input-placeholder-text)] [&>svg]:text-main [&:enabled:hover>svg]:text-inverse [&[data-state=open]>svg]:text-inverse',
                 filled: 'bg-primary text-inverse',
             },
         },
@@ -73,7 +73,7 @@ const multiSelectCheckboxStyles =
 
 // Controls the default, unhovered partial-selection appearance.
 const multiSelectIndeterminateCheckboxStyles =
-    'enabled:data-[state=indeterminate]:!border-checkbox-border enabled:data-[state=indeterminate]:!bg-checkbox-unchecked-fill enabled:data-[state=indeterminate]:!text-checkbox-border';
+    'enabled:data-[state=indeterminate]:!border-[color:var(--checkbox-border)] enabled:data-[state=indeterminate]:!bg-[color:var(--checkbox-unchecked-fill)] enabled:data-[state=indeterminate]:!text-[color:var(--checkbox-border)]';
 
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
@@ -143,10 +143,10 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
                 multiSelectRowStyles,
                 'text-base font-normal leading-4',
                 option.disabled
-                    ? 'cursor-not-allowed bg-btn-disabled-fill text-disabled'
+                    ? 'cursor-not-allowed bg-[color:var(--button-disabled-fill)] text-disabled'
                     : multiSelectInteractiveRowStyles
             )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
+            labelClassName='min-w-0 flex-1 truncate text-inherit'
         />
     </div>
 );
@@ -163,7 +163,7 @@ const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOp
                 multiSelectInteractiveRowStyles,
                 'text-base font-normal leading-4'
             )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
+            labelClassName='min-w-0 flex-1 truncate text-inherit'
         />
     </div>
 );
@@ -334,7 +334,7 @@ const MultiSelect = ({
                 </MultiSelectTrigger>
             </PopoverTrigger>
             <PopoverContent
-                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-select-content-fill p-0 text-main'
+                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-[color:var(--select-content-fill)] p-0 text-main'
                 align='start'>
                 {isSearchable && (
                     <div className='flex items-center gap-2 p-2'>
@@ -344,15 +344,14 @@ const MultiSelect = ({
                             value={searchValue}
                             onChange={(e) => setSearchValue(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className='h-6 border-none bg-transparent px-2 text-main leading-4 placeholder:text-input-placeholder-text focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+                            className='h-6 border-none bg-transparent px-2 text-main leading-4 placeholder:text-[color:var(--input-placeholder-text)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
                         />
                     </div>
                 )}
 
-                {/* TODO: Add theme-aware scrollbar color tokens to ScrollArea and remove this MultiSelect-specific override. */}
                 <ScrollArea
                     thumbColor='var(--multiselect-scrollbar-thumb)'
-                    className='max-h-60 [--multiselect-scrollbar-thumb:var(--neutral-400)] dark:[--multiselect-scrollbar-thumb:var(--input-placeholder-text)] [&_[data-radix-scroll-area-viewport]]:max-h-60'>
+                    className='max-h-60 [&_[data-radix-scroll-area-viewport]]:max-h-60'>
                     <div
                         role='group'
                         aria-label={placeholder ?? 'Select options'}

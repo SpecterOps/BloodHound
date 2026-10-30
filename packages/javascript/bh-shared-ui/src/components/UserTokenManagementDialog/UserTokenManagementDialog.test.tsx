@@ -79,7 +79,9 @@ describe('UserTokenManagementDialog', () => {
 
     beforeEach(async () => {
         render(<UserTokenManagementDialog open={true} onClose={testOnClose} userId={testUserId} />);
-        await waitForElementToBeRemoved(screen.queryByRole('progressbar'));
+        const progress = screen.getByRole('progressbar', { name: 'Loading API tokens' });
+        expect(progress).not.toHaveAttribute('aria-valuenow');
+        await waitForElementToBeRemoved(progress);
     });
 
     it('should display "Generate/Revoke API Tokens" title', () => {
@@ -133,7 +135,9 @@ describe('UserTokenManagementDialog', () => {
 describe('UserTokenManagementDialog - API Expiration Date column', () => {
     async function renderAndWait() {
         render(<UserTokenManagementDialog open={true} onClose={vi.fn()} userId={testUserId} />);
-        await waitForElementToBeRemoved(screen.queryByRole('progressbar'));
+        const progress = screen.getByRole('progressbar', { name: 'Loading API tokens' });
+        expect(progress).not.toHaveAttribute('aria-valuenow');
+        await waitForElementToBeRemoved(progress);
     }
 
     it('does not show "API Expiration Date" column header when expiration is disabled', async () => {
