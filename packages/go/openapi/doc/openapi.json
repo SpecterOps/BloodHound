@@ -7822,56 +7822,6 @@
         }
       }
     },
-    "/api/v2/graph-retention-policies/base/policy": {
-      "parameters": [
-        {
-          "$ref": "#/components/parameters/header.prefer"
-        }
-      ],
-      "get": {
-        "operationId": "GetBaseRetentionPolicy",
-        "summary": "Get Base Retention Policy",
-        "tags": [
-          "Graph Retention Policies",
-          "Enterprise"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/model.graph-retention-policy"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/bad-request"
-          },
-          "401": {
-            "$ref": "#/components/responses/unauthorized"
-          },
-          "403": {
-            "$ref": "#/components/responses/forbidden"
-          },
-          "404": {
-            "$ref": "#/components/responses/not-found"
-          },
-          "429": {
-            "$ref": "#/components/responses/too-many-requests"
-          },
-          "500": {
-            "$ref": "#/components/responses/internal-server-error"
-          }
-        }
-      }
-    },
     "/api/v2/extensions": {
       "put": {
         "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP bundle must contain `schema.json`, without embedded optional components, and may contain `pz_rules.json` and `saved_queries.json`. Recognized components may be at the ZIP root or one folder deep. For ZIP bundles, findings require `pz_rules.json` with at least one rule. Duplicate components and unexpected files are rejected.\n\nThe root `__MACOSX` entry and everything under `__MACOSX/`, along with hidden files at the ZIP root, are ignored. Top-level directory entries are ignored; deeper directory entries and files more than one folder deep are rejected. All other files remain subject to normal component validation.\n\nEach recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.\n",
@@ -28447,19 +28397,6 @@
             "items": {
               "$ref": "#/components/schemas/model.unified-graph.edge"
             }
-          }
-        }
-      },
-      "model.graph-retention-policy": {
-        "type": "object",
-        "description": "The core data to describe a retention policy",
-        "properties": {
-          "enabled": {
-            "type": "boolean"
-          },
-          "ttl": {
-            "type": "string",
-            "example": "P14D"
           }
         }
       },
