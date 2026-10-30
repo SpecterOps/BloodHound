@@ -8,13 +8,25 @@ Because these suites drive a real browser against a running app, the live state 
 
 ## Quick Start
 
+Run these commands from the repository root. Set credentials in `cmd/ui/.env` and start a backend with data for the feature.
+
+```sh
+yarn playwright:install
+yarn test:a11y
+yarn codegen findings-table --url '/ui/graphview?view=table'
+yarn test:e2e tests/e2e/findings-table.spec.ts
+yarn test:e2e:update-mocks findings-table
+```
+
+Codegen opens a recorder. Click through the feature, add assertions, and close the browser. It creates `findings-table.spec.ts` and `findings-table.har` under `cmd/ui/tests/e2e/`, then runs the spec. HARs are API mocks. `test:e2e:update-mocks` requires a spec name and refreshes only that spec's HAR against the live backend. Specs stay unchanged. Review captured data before committing. Delete both files together when removing a spec.
+
 First-time setup and a full run of the `a11y` suite. All commands are run from the root (`/`); the same script names also work from within `cmd/ui`.
 
 1. **Install dependencies** — from the root, install workspace packages and the Playwright browsers the suite drives:
 
     ```sh
     yarn install
-    yarn workspace bloodhound-ui playwright install chromium firefox
+    yarn playwright:install
     ```
 
 2. **Configure environment** — copy the example env and fill in real login credentials (see [Required Environment Variables](#required-environment-variables) for what each key does):
@@ -26,7 +38,7 @@ First-time setup and a full run of the `a11y` suite. All commands are run from t
 
     With `A11Y_TEST_SERVE="true"` (the default in `.env.example`), Playwright starts the Vite dev server itself, so no separately-running UI is required.
 
-3. **Run the suite for the first time** — this clears `cmd/ui/playwright/` and runs the full browser × theme matrix:
+3. **Run the suite for the first time** — this clears `cmd/ui/playwright/a11y/`, preserves authentication state and temporary codegen recordings, and runs the full browser × theme matrix:
 
     ```sh
     # Run the full test matrix
@@ -56,8 +68,11 @@ First-time setup and a full run of the `a11y` suite. All commands are run from t
 ```text
 tests/
 ├── global.setup.ts   # Logs in once and snapshots auth storage state
-└── a11y/             # Accessibility regression suite
-    └── *.a11y.spec.ts
+├── a11y/             # Accessibility regression suite
+│   └── *.a11y.spec.ts
+└── e2e/              # Browser feature specs and adjacent API mocks
+    ├── *.spec.ts
+    └── *.har
 ```
 
 Shared Playwright building blocks (fixtures, stubs, and auth helper) live in the `bh-playwright-testing` workspace package (`packages/javascript/bh-playwright-testing`) for reusability. See the [full module map](../../../packages/javascript/bh-playwright-testing/README.md#modules) in that package's README.
@@ -96,7 +111,7 @@ See the [`axe` fixture API](../../../packages/javascript/bh-playwright-testing/R
 From the root or from within `cmd/ui`:
 
 ```sh
-yarn test:a11y       # clears cmd/ui/playwright folder and runs the suite
+yarn test:a11y       # clears cmd/ui/playwright/a11y and runs the complete suite
 ```
 
 Running in interactive UI mode
@@ -105,7 +120,7 @@ Running in interactive UI mode
 yarn test:a11y --ui
 ```
 
-The root script delegates to the `bloodhound-ui` workspace, whose `test:a11y` script clears the playwright artifact directory (`cmd/ui/playwright`) and runs the a11y test suite as configured in `playwright.a11y.config.ts` — the clean step is baked in so every run starts with a fresh `playwright/` directory. CI-mode behavior (single worker, 1 retry, `forbidOnly`) is auto-enabled when `process.env.CI` is set, so there is no separate `:ci` script. The Playwright config (`cmd/ui/playwright.a11y.config.ts`) generates a project matrix of `chromium-light`, `chromium-dark`, `firefox-light`, `firefox-dark`, each depending on the `setup` project.
+The root script delegates to the `bloodhound-ui` workspace, whose `test:a11y` script clears the accessibility results directory (`cmd/ui/playwright/a11y`) while preserving authentication state and temporary codegen recordings, then runs the suite configured in `playwright.a11y.config.ts`. CI-mode behavior (single worker, 1 retry, `forbidOnly`) is auto-enabled when `process.env.CI` is set, so there is no separate `:ci` script. The Playwright config (`cmd/ui/playwright.a11y.config.ts`) generates a project matrix of `chromium-light`, `chromium-dark`, `firefox-light`, `firefox-dark`, each depending on the `setup` project.
 
 By default, the full 2x2 matrix (browsers x themes) is run, but projects may be individually specified:
 
