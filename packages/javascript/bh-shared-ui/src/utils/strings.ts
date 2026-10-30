@@ -17,7 +17,7 @@
 import { type Nullable } from './type';
 
 /** Represents a string literal type that can be widened to string, keeping intellisense for literal values */
-// eslint-disable-next-line @typescript-eslint/ban-types
+// oxlint-disable-next-line typescript/ban-types
 export type LiteralUnion<T extends string> = T | (string & {});
 
 // Allows to truncate text and add an ellipsis

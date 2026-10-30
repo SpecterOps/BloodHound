@@ -21,60 +21,51 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
+	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
 	"github.com/specterops/bloodhound/packages/go/stbernard/cmdrunner"
 	"github.com/specterops/bloodhound/packages/go/stbernard/environment"
 )
 
-type esLintEntry struct {
-	FilePath        string          `json:"filePath"`
-	ErrorCount      int             `json:"errorCount"`
-	WarningCount    int             `json:"warningCount"`
-	FatalErrorCount int             `json:"fatalErrorCount"`
-	Messages        []esLintMessage `json:"messages"`
+type oxlintOutput struct {
+	Diagnostics []oxlintDiagnostic `json:"diagnostics"`
 }
 
-type esLintMessage struct {
-	RuleID   string `json:"ruleId"`
-	Severity int    `json:"severity"`
+type oxlintDiagnostic struct {
+	Code     string `json:"code"`
+	Severity string `json:"severity"`
 	Message  string `json:"message"`
-	Line     uint64 `json:"line"`
+	Filename string `json:"filename"`
+	Labels   []struct {
+		Span struct {
+			Line uint64 `json:"line"`
+		} `json:"span"`
+	} `json:"labels"`
 }
 
-// Run eslint for all passed jsPaths and returns a slice of CodeClimate-like entries
+// Run each workspace's lint script and collect CodeClimate entries.
 func Run(jsPaths []string, env environment.Environment) (codeclimate.SeverityMap, error) {
-	result := make([]codeclimate.Entry, 0, len(jsPaths))
+	var result = make([]codeclimate.Entry, 0, len(jsPaths))
 
-	slog.Info("Running eslint")
-
+	slog.Info("Running JavaScript lint")
 	for _, path := range jsPaths {
-		if entries, err := runEslint(path, env); err != nil {
-			return nil, fmt.Errorf("running eslint at %v: %w", path, err)
+		if entries, err := runLint(path, env); err != nil {
+			return nil, fmt.Errorf("running lint at %v: %w", path, err)
 		} else {
 			result = append(result, entries...)
 		}
 	}
-
-	slog.Info("Completed eslint")
-
+	slog.Info("Completed JavaScript lint")
 	return codeclimate.NewSeverityMap(result), nil
 }
 
-// runEslint runs the actual yarn command and processes the raw output to a slice of CodeClimate-like entries
-func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, error) {
-	var (
-		lintEntries   []codeclimate.Entry
-		esLintEntries []esLintEntry
-
-		command = env[environment.YarnCmdVarName]
-		args    = []string{"run", "lint", "--format", "json"}
-	)
-
-	executionPlan := cmdrunner.ExecutionPlan{
-		Command:        command,
-		Args:           args,
+func runLint(path string, env environment.Environment) ([]codeclimate.Entry, error) {
+	var executionPlan = cmdrunner.ExecutionPlan{
+		Command:        env[environment.YarnCmdVarName],
+		Args:           []string{"run", "lint", "--format", "json"},
 		Path:           path,
 		Env:            env.Slice(),
 		SuppressErrors: true,
@@ -82,42 +73,67 @@ func runEslint(path string, env environment.Environment) ([]codeclimate.Entry, e
 
 	result, err := cmdrunner.Run(context.TODO(), executionPlan)
 	if err != nil && !errors.Is(err, cmdrunner.ErrCmdExecutionFailed) {
-		return lintEntries, fmt.Errorf("yarn run lint: %w", err)
+		return nil, fmt.Errorf("yarn run lint: %w", err)
 	}
-
-	if err := json.NewDecoder(result.StandardOutput).Decode(&esLintEntries); err != nil {
-		return lintEntries, fmt.Errorf("decoding output from eslint: %w", err)
+	entries, decodeError := decodeDiagnostics(result.StandardOutput, path)
+	if decodeError != nil {
+		return nil, fmt.Errorf("decoding lint output: %w; stderr: %s", decodeError, result.ErrorOutput.String())
 	}
+	// Exit 1 with diagnostics is an ordinary lint failure. Empty output or other
+	// exit codes indicate a tooling failure and must not be treated as a clean run.
+	if err != nil && (result.ReturnCode != 1 || len(entries) == 0) {
+		return nil, fmt.Errorf("lint failed: %w; stderr: %s", err, result.ErrorOutput.String())
+	}
+	return entries, nil
+}
 
-	for _, entry := range esLintEntries {
-		for _, msg := range entry.Messages {
-			var severity codeclimate.Severity
-
-			switch msg.Severity {
-			case 0:
-				severity = codeclimate.SeverityInfo
-			case 1:
-				severity = codeclimate.SeverityMinor
-			case 2:
-				severity = codeclimate.SeverityMajor
-			default:
-				return nil, fmt.Errorf("yarn run lint: unknown severity %d", msg.Severity)
-			}
-
-			ccEntry := codeclimate.Entry{
-				Description: msg.RuleID + ": " + msg.Message,
-				Severity:    severity,
-				Location: codeclimate.Location{
-					Path: entry.FilePath,
-					Lines: codeclimate.Lines{
-						Begin: msg.Line,
-					},
-				},
-			}
-
-			lintEntries = append(lintEntries, ccEntry)
+func decodeDiagnostics(reader io.Reader, workspacePath string) ([]codeclimate.Entry, error) {
+	var (
+		output  oxlintOutput
+		entries []codeclimate.Entry
+	)
+	if err := json.NewDecoder(reader).Decode(&output); err != nil {
+		return nil, err
+	}
+	if output.Diagnostics == nil {
+		return nil, errors.New("missing diagnostics array")
+	}
+	for _, diagnostic := range output.Diagnostics {
+		var (
+			severity codeclimate.Severity
+			line     uint64 = 1
+			path            = diagnostic.Filename
+		)
+		switch diagnostic.Severity {
+		case "advice":
+			severity = codeclimate.SeverityInfo
+		case "warning":
+			severity = codeclimate.SeverityMinor
+		case "error":
+			severity = codeclimate.SeverityMajor
+		default:
+			return nil, fmt.Errorf("unknown severity %q", diagnostic.Severity)
 		}
+		for _, label := range diagnostic.Labels {
+			if label.Span.Line > 0 {
+				line = label.Span.Line
+				break
+			}
+		}
+		if path == "" {
+			return nil, errors.New("diagnostic missing filename")
+		}
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(workspacePath, path)
+		}
+		entries = append(entries, codeclimate.Entry{
+			Description: diagnostic.Code + ": " + diagnostic.Message,
+			Severity:    severity,
+			Location: codeclimate.Location{
+				Path:  path,
+				Lines: codeclimate.Lines{Begin: line},
+			},
+		})
 	}
-
-	return lintEntries, nil
+	return entries, nil
 }
