@@ -18,6 +18,7 @@ package crypto
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -161,13 +162,9 @@ func (s Argon2Digest) Validate(content string) bool {
 
 	contentDigest := argon2.IDKey([]byte(content), s.Salt, s.NumIterations, s.MemoryKibibytes, s.NumThreads, uint32(len(s.Digest)))
 
-	for idx := 0; idx < len(contentDigest); idx++ {
-		if s.Digest[idx] != contentDigest[idx] {
-			return false
-		}
-	}
-
-	return true
+	// Compare digests in constant time so validation timing does not leak how
+	// many leading bytes match a stored digest.
+	return subtle.ConstantTimeCompare(contentDigest, s.Digest) == 1
 }
 
 func (s Argon2Digest) String() string {
