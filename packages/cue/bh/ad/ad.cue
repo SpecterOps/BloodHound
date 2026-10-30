@@ -413,6 +413,27 @@ VulnerableNetlogonSecurityDescriptorCollected: types.#StringEnum & {
 	representation: "vulnerablenetlogonsecuritydescriptorcollected"
 }
 
+WindowsBuildNumber: types.#StringEnum & {
+	symbol:         "WindowsBuildNumber"
+	schema:         "ad"
+	name:           "Windows Build Number"
+	representation: "windowsbuildnumber"
+}
+
+WindowsBuildCollected: types.#StringEnum & {
+	symbol:         "WindowsBuildCollected"
+	schema:         "ad"
+	name:           "Windows Build Collected"
+	representation: "windowsbuildcollected"
+}
+
+WindowsBuildRevision: types.#StringEnum & {
+	symbol:         "WindowsBuildRevision"
+	schema:         "ad"
+	name:           "Windows Build Revision"
+	representation: "windowsbuildrevision"
+}
+
 CrossCertificatePair: types.#StringEnum & {
 	symbol:         "CrossCertificatePair"
 	schema:         "ad"
@@ -1124,6 +1145,9 @@ Properties: [
 	StrongCertificateBindingEnforcement,
 	VulnerableNetlogonSecurityDescriptor,
 	VulnerableNetlogonSecurityDescriptorCollected,
+	WindowsBuildNumber,
+	WindowsBuildCollected,
+	WindowsBuildRevision,
 	EKUs,
 	SubjectAltRequireUPN,
 	SubjectAltRequireDNS,
@@ -1317,6 +1341,11 @@ SiteSubnet: types.#Kind & {
 	schema: "active_directory"
 }
 
+DMSA: types.#Kind & {
+	symbol: "DMSA"
+	schema: "active_directory"
+}
+
 NodeKinds: [
 	Entity,
 	User,
@@ -1336,7 +1365,8 @@ NodeKinds: [
 	IssuancePolicy,
 	Site,
 	SiteServer,
-	SiteSubnet
+	SiteSubnet,
+	DMSA
 ]
 
 Owns: types.#Kind & {
@@ -1791,6 +1821,36 @@ WritePublicInformation: types.#Kind & {
 	schema: "active_directory"
 }
 
+WriteSupersededManagedAccountLink: types.#Kind & {
+	symbol: "WriteSupersededManagedAccountLink"
+	schema: "active_directory"
+}
+
+WriteSupersededServiceAccountState: types.#Kind & {
+	symbol: "WriteSupersededServiceAccountState"
+	schema: "active_directory"
+}
+
+DMSAPrecededBy: types.#Kind & {
+	symbol: "DMSAPrecededBy"
+	schema: "active_directory"
+}
+
+CreateDMSA: types.#Kind & {
+	symbol: "CreateDMSA"
+	schema: "active_directory"
+}
+
+BadSuccessor: types.#Kind & {
+	symbol: "BadSuccessor"
+	schema: "active_directory"
+}
+
+OuroborosSelfEnroll: types.#Kind & {
+	symbol: "OuroborosSelfEnroll"
+	schema: "active_directory"
+}
+
 // Relationship Kinds
 RelationshipKinds: [
 	Owns,
@@ -1881,7 +1941,13 @@ RelationshipKinds: [
 	HasTrustKeys,
 	WriteAltSecurityIdentities,
 	WritePublicInformation,
+	WriteSupersededManagedAccountLink,
+	WriteSupersededServiceAccountState,
 	ProtectAdminGroups,
+	DMSAPrecededBy,
+	CreateDMSA,
+	BadSuccessor,
+	OuroborosSelfEnroll,
 ]
 
 // ACL Relationships
@@ -1916,6 +1982,11 @@ ACLRelationships: [
 	OwnsLimitedRights,
 	WriteAltSecurityIdentities,
 	WritePublicInformation,
+	WriteSupersededManagedAccountLink,
+	WriteSupersededServiceAccountState,
+	CreateDMSA,
+	BadSuccessor,
+	OuroborosSelfEnroll,
 ]
 
 // ACL edges which are created by post-processing rather than ingested from collected data
@@ -1924,6 +1995,8 @@ PostProcessedACLRelationships: [
 	WriteOwner,
 	DCSync,
 	SyncLAPSPassword,
+	BadSuccessor,
+	OuroborosSelfEnroll,
 ]
 
 IngestACLRelationships: [for r in ACLRelationships if !list.Contains(PostProcessedACLRelationships, r) {r}],
@@ -1990,6 +2063,10 @@ SharedRelationshipKinds: [
 	ManageCA,
 	ManageCertificates,
 	ServerIs,
+	DMSAPrecededBy,
+	CreateDMSA,
+	BadSuccessor,
+	OuroborosSelfEnroll,
 ]
 
 // Edges that are used during inbound traversal

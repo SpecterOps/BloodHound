@@ -49,6 +49,7 @@ const (
 	DataTypeSite           DataType = "sites"
 	DataTypeSiteServer     DataType = "siteservers"
 	DataTypeSiteSubnet     DataType = "sitesubnets"
+	DataTypeDMSA           DataType = "dmsas"
 )
 
 func AllOriginalIngestDataTypes() []DataType {
@@ -73,6 +74,7 @@ func AllOriginalIngestDataTypes() []DataType {
 		DataTypeSite,
 		DataTypeSiteServer,
 		DataTypeSiteSubnet,
+		DataTypeDMSA,
 	}
 }
 

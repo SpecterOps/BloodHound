@@ -174,6 +174,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('Site');
 	PERFORM genscript_upsert_kind('SiteServer');
 	PERFORM genscript_upsert_kind('SiteSubnet');
+	PERFORM genscript_upsert_kind('DMSA');
 
 	-- Insert Relationship Kinds
 	PERFORM genscript_upsert_kind('Owns');
@@ -264,7 +265,13 @@ BEGIN
 	PERFORM genscript_upsert_kind('HasTrustKeys');
 	PERFORM genscript_upsert_kind('WriteAltSecurityIdentities');
 	PERFORM genscript_upsert_kind('WritePublicInformation');
+	PERFORM genscript_upsert_kind('WriteSupersededManagedAccountLink');
+	PERFORM genscript_upsert_kind('WriteSupersededServiceAccountState');
 	PERFORM genscript_upsert_kind('ProtectAdminGroups');
+	PERFORM genscript_upsert_kind('DMSAPrecededBy');
+	PERFORM genscript_upsert_kind('CreateDMSA');
+	PERFORM genscript_upsert_kind('BadSuccessor');
+	PERFORM genscript_upsert_kind('OuroborosSelfEnroll');
 
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Base', 'Base', '', false, '', '');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'User', 'User', '', true, 'user', '#17E625');
@@ -285,6 +292,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Site', 'Site', '', true, 'map-signs', '#2DD4BF');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteServer', 'SiteServer', '', true, 'map-marker', '#60A5FA');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteSubnet', 'SiteSubnet', '', true, 'map', '#F59E0B');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'DMSA', 'DMSA', '', true, 'user-shield', '#17E625');
 
 	-- Keep custom_node_kinds in sync with node kinds
 	PERFORM genscript_upsert_custom_node_kind('User', '{"icon": {"name": "user", "type": "font-awesome", "color": "#17E625"}}');
@@ -303,6 +311,7 @@ BEGIN
 	PERFORM genscript_upsert_custom_node_kind('Site', '{"icon": {"name": "map-signs", "type": "font-awesome", "color": "#2DD4BF"}}');
 	PERFORM genscript_upsert_custom_node_kind('SiteServer', '{"icon": {"name": "map-marker", "type": "font-awesome", "color": "#60A5FA"}}');
 	PERFORM genscript_upsert_custom_node_kind('SiteSubnet', '{"icon": {"name": "map", "type": "font-awesome", "color": "#F59E0B"}}');
+	PERFORM genscript_upsert_custom_node_kind('DMSA', '{"icon": {"name": "user-shield", "type": "font-awesome", "color": "#17E625"}}');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Owns', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GenericAll', '', true);
@@ -392,7 +401,13 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'HasTrustKeys', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteAltSecurityIdentities', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WritePublicInformation', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteSupersededManagedAccountLink', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteSupersededServiceAccountState', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ProtectAdminGroups', '', false);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'DMSAPrecededBy', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CreateDMSA', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'BadSuccessor', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'OuroborosSelfEnroll', '', true);
 
 	PERFORM genscript_upsert_source_kind('Base');
 	PERFORM genscript_upsert_kind('Domain');

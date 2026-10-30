@@ -1006,6 +1006,10 @@ func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled boo
 		return &aggregateStats, err
 	} else if ntlmStats, err := PostNTLM(ctx, db, localGroupData, adcsCache, ntlmEnabled); err != nil {
 		return &aggregateStats, err
+	} else if badSuccessorStats, err := PostBadSuccessor(ctx, db); err != nil {
+		return &aggregateStats, err
+	} else if ouroborosStats, err := PostOuroborosSelfEnroll(ctx, db); err != nil {
+		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(syncLAPSStats)
 		aggregateStats.Merge(hasTrustKeyStats)
@@ -1016,6 +1020,8 @@ func Post(ctx context.Context, db graph.Database, citrixEnabled, ntlmEnabled boo
 		aggregateStats.Merge(adcsStats)
 		aggregateStats.Merge(ownsStats)
 		aggregateStats.Merge(ntlmStats)
+		aggregateStats.Merge(badSuccessorStats)
+		aggregateStats.Merge(ouroborosStats)
 
 		return &aggregateStats, nil
 	}
