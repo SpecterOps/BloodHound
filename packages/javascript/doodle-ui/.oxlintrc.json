@@ -1,0 +1,132 @@
+{
+    "$schema": "../../../node_modules/oxlint/configuration_schema.json",
+    "extends": ["../../../tools/oxc/configs/base.json"],
+    "plugins": [],
+    "categories": {
+        "correctness": "off",
+        "suspicious": "off",
+        "pedantic": "off",
+        "perf": "off",
+        "style": "off",
+        "restriction": "off",
+        "nursery": "off"
+    },
+    "env": {
+        "builtin": true,
+        "browser": true
+    },
+    "ignorePatterns": ["**/dist", "**/coverage", "**/storybook-static", "**/eslint.config.cjs"],
+    "settings": {
+        "react": {
+            "version": "18.2.0"
+        }
+    },
+    "jsPlugins": [
+        {
+            "name": "hooks-compat",
+            "specifier": "../../../tools/oxc/plugins/hooks-compat.cjs"
+        },
+        {
+            "name": "a11y-compat",
+            "specifier": "../../../tools/oxc/plugins/a11y-compat.cjs"
+        },
+        {
+            "name": "refresh-compat",
+            "specifier": "../../../tools/oxc/plugins/refresh-compat.cjs"
+        },
+        {
+            "name": "storybook",
+            "specifier": "../../../tools/oxc/plugins/storybook.cjs"
+        }
+    ],
+    "rules": {
+        "typescript/ban-ts-comment": "error",
+        "typescript/no-explicit-any": "error",
+        "hooks-compat/rules-of-hooks": [2],
+        "hooks-compat/exhaustive-deps": [1],
+        "a11y-compat/alt-text": [2],
+        "a11y-compat/anchor-has-content": [2],
+        "a11y-compat/anchor-is-valid": [2],
+        "a11y-compat/aria-activedescendant-has-tabindex": [2],
+        "a11y-compat/aria-props": [2],
+        "a11y-compat/aria-proptypes": [2],
+        "a11y-compat/aria-role": [2],
+        "a11y-compat/aria-unsupported-elements": [2],
+        "a11y-compat/autocomplete-valid": [2],
+        "a11y-compat/click-events-have-key-events": [2],
+        "a11y-compat/heading-has-content": [2],
+        "a11y-compat/html-has-lang": [2],
+        "a11y-compat/iframe-has-title": [2],
+        "a11y-compat/img-redundant-alt": [2],
+        "a11y-compat/interactive-supports-focus": [
+            2,
+            {
+                "tabbable": [
+                    "button",
+                    "checkbox",
+                    "link",
+                    "progressbar",
+                    "searchbox",
+                    "slider",
+                    "spinbutton",
+                    "switch",
+                    "textbox"
+                ]
+            }
+        ],
+        "a11y-compat/label-has-associated-control": [2],
+        "a11y-compat/media-has-caption": [2],
+        "a11y-compat/mouse-events-have-key-events": [2],
+        "a11y-compat/no-access-key": [2],
+        "a11y-compat/no-autofocus": [2],
+        "a11y-compat/no-distracting-elements": [2],
+        "a11y-compat/no-interactive-element-to-noninteractive-role": [2],
+        "a11y-compat/no-noninteractive-element-interactions": [
+            2,
+            {
+                "body": ["onError", "onLoad"],
+                "iframe": ["onError", "onLoad"],
+                "img": ["onError", "onLoad"]
+            }
+        ],
+        "a11y-compat/no-noninteractive-element-to-interactive-role": [2],
+        "a11y-compat/no-noninteractive-tabindex": [2],
+        "a11y-compat/no-redundant-roles": [2],
+        "a11y-compat/no-static-element-interactions": [2],
+        "a11y-compat/role-has-required-aria-props": [2],
+        "a11y-compat/role-supports-aria-props": [2],
+        "a11y-compat/scope": [2],
+        "a11y-compat/tabindex-no-positive": [2],
+        "refresh-compat/only-export-components": [
+            1,
+            {
+                "allowConstantExport": true
+            }
+        ]
+    },
+    "overrides": [
+        {
+            "files": ["**/*.stories.{ts,tsx,js,jsx,mjs,cjs}", "**/*.story.{ts,tsx,js,jsx,mjs,cjs}"],
+            "rules": {
+                "import/no-anonymous-default-export": "off",
+                "storybook/await-interactions": "error",
+                "storybook/context-in-play-function": "error",
+                "storybook/default-exports": "error",
+                "storybook/hierarchy-separator": "warn",
+                "storybook/no-redundant-story-name": "warn",
+                "storybook/prefer-pascal-case": "warn",
+                "storybook/story-exports": "error",
+                "storybook/use-storybook-expect": "error",
+                "storybook/use-storybook-testing-library": "error",
+                "hooks-compat/rules-of-hooks": "off"
+            },
+            "plugins": ["import"]
+        },
+        {
+            "files": [".storybook/main.{js,cjs,mjs,ts}"],
+            "rules": {
+                "storybook/no-uninstalled-addons": "error"
+            }
+        }
+    ]
+}
