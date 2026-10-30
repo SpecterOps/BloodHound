@@ -15,38 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button as BaseUIButton } from '@base-ui/react/button';
-import { cva } from 'class-variance-authority';
 import * as React from 'react';
 import { AccessibleIcon } from '../AccessibleIcon';
-import { buttonBaseClasses, primaryClasses, secondaryClasses } from '../Button/Button.styles';
 import { Tooltip, type TooltipPosition } from '../Tooltip';
 import { cn, cnWithState } from '../utils';
-
-const defaultIconButtonClasses = [
-    'hover:text-primary dark:hover:text-primary',
-    'active:bg-transparent active:text-secondary dark:active:text-secondary',
-    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary dark:focus-visible:text-primary',
-];
-
-export const IconButtonVariants = cva(
-    [
-        ...buttonBaseClasses,
-        'inline-grid h-fit aspect-square box-border',
-        'shrink-0 place-items-center align-middle rounded-full border-0 p-2',
-    ],
-    {
-        variants: {
-            variant: {
-                default: defaultIconButtonClasses,
-                primary: primaryClasses,
-                secondary: secondaryClasses,
-            },
-        },
-        defaultVariants: {
-            variant: 'default',
-        },
-    }
-);
+import { iconButtonIconClasses, IconButtonVariants } from './IconButton.styles';
+export { IconButtonVariants } from './IconButton.styles';
 
 export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | 'className' | 'render'> {
     'aria-label': string;
@@ -99,9 +73,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
                     '--icon-button-icon-size': `${size}px`,
                 }) as IconButtonStyle
             }>
-            <span className='inline-flex size-[var(--icon-button-icon-size)] shrink-0 items-center justify-center [&>*]:size-full [&_svg]:size-full'>
-                {buttonIcon}
-            </span>
+            <span className={iconButtonIconClasses}>{buttonIcon}</span>
         </BaseUIButton>
     );
 

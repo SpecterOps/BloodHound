@@ -13,12 +13,15 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { invalidControlClasses } from '../formControl.styles';
+import { cn } from '../utils';
 
-export const textareaStyles = [
-    'w-full resize-none rounded-md border border-[color:var(--textarea-border-default)] bg-[color:var(--textarea-fill)] px-3 py-2 text-main placeholder:text-[color:var(--input-placeholder-text)]',
+export const textareaStyles = cn(
+    'w-full resize-none rounded-md border border-[color:var(--textarea-border-default)] bg-[color:var(--textarea-fill)] px-3 py-2 text-main',
+    'placeholder:text-[color:var(--input-placeholder-text)]',
     'enabled:hover:border-[color:var(--textarea-border-hover)]',
     'focus:outline-none focus:focus-ring focus:border-[color:var(--textarea-focus-border)] enabled:hover:focus:border-[color:var(--textarea-hover-focus-border)]',
     'disabled:cursor-not-allowed disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--textarea-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
     'transition-[color,box-shadow] md:text-sm',
-    'aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main',
-];
+    invalidControlClasses
+);
