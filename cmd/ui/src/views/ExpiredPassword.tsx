@@ -19,7 +19,7 @@ import React from 'react';
 import { PasswordResetForm, useAppName } from 'bh-shared-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import { Helmet } from 'react-helmet-async';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 import { authExpiredSelector, logout, updateExpiredPassword } from 'src/ducks/auth/authSlice';
 import { ROUTE_HOME } from 'src/routes/constants';
@@ -28,6 +28,7 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 const PasswordReset: React.FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
+    const location = useLocation();
     const authState = useAppSelector((state) => state.auth);
     const authExpired = useAppSelector(authExpiredSelector);
     const appName = useAppName();
@@ -42,7 +43,7 @@ const PasswordReset: React.FC = () => {
     };
 
     // Redirect if auth is not expired
-    if (authExpired === false) return <Navigate to={ROUTE_HOME} />;
+    if (authExpired === false) return <Navigate to={ROUTE_HOME} state={location.state} replace />;
 
     return (
         <LoginPage>
