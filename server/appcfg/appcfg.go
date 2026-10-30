@@ -33,15 +33,12 @@ import (
 	"github.com/specterops/bloodhound/server/featureflags"
 )
 
-type ParameterKey = services.ParameterKey
-type Parameter = services.Parameter
 type ScheduledAnalysisParameter = services.ScheduledAnalysisParameter
 
-const ScheduledAnalysis = services.ScheduledAnalysis
-
-// ConfigurationAdapter lets other slices read configuration
+// ConfigurationAdapter supplies GetConfig<Type> methods for fetching typed parameter values.
+// If any problem is encountered, these methods log a warning and return both the parameter default value and an error.
 type ConfigurationAdapter interface {
-	GetApplicationConfiguration(ctx context.Context, parameterKey ParameterKey) (Parameter, error)
+	GetConfigScheduledAnalysis(ctx context.Context) (ScheduledAnalysisParameter, error)
 }
 
 func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
