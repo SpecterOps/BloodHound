@@ -44,14 +44,14 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                     {InputElement ? (
                         <InputElement
                             {...props}
-                            className={cn('bg-common-white dark:bg-common-dark peer', props.className)}
+                            className={cn('bg-[color:var(--date-picker-input-fill)] peer', props.className)}
                             ref={ref}
                         />
                     ) : (
                         <Input
                             variant='outlined'
                             {...props}
-                            className={cn('bg-common-white dark:bg-common-dark peer', props.className)}
+                            className={cn('bg-[color:var(--date-picker-input-fill)] peer', props.className)}
                         />
                     )}
                     <PopoverTrigger asChild>
@@ -66,7 +66,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                 <PopoverContent
                     align='end'
                     alignOffset={-7}
-                    className='w-auto p-3 border border-neutral-light-5 dark:border-neutral-light-1 z-[1500]'>
+                    className='w-auto p-3 border border-[color:var(--date-picker-content-border)] z-[1500]'>
                     <Calendar classNames={{ day_selected: 'bg-primary text-neutral-light-1' }} {...calendarProps} />
                 </PopoverContent>
             </Popover>
