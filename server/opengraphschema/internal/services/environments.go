@@ -1,0 +1,60 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+package services
+
+import (
+	"context"
+	"time"
+
+	"github.com/specterops/dawgs/graph"
+)
+
+// Environment describes a schema environment and its owning extension.
+type Environment struct {
+	ID                         int32
+	SchemaExtensionID          int32
+	SchemaExtensionDisplayName string
+	EnvironmentKindID          int32
+	EnvironmentKindName        string
+	SourceKindID               int32
+	CreatedAt                  time.Time
+	UpdatedAt                  time.Time
+	DeletedAt                  *time.Time
+}
+
+type EnvironmentKindsToEnvironment map[string]Environment
+
+// GetEnvironmentKindsAndSchemaEnvironmentData returns all environment kinds as
+// graph.Kinds and a map of their schema environments. When onlyBuiltin is true
+// only builtin environment kinds are returned.
+func (s *Service) GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, EnvironmentKindsToEnvironment, error) {
+	if environments, err := s.db.GetEnvironmentsFiltered(ctx, onlyBuiltin); err != nil {
+		return nil, nil, err
+	} else {
+		var (
+			environmentKinds     = make([]graph.Kind, 0, len(environments))
+			envKindToEnvironment = make(EnvironmentKindsToEnvironment, len(environments))
+		)
+
+		for _, env := range environments {
+			environmentKinds = append(environmentKinds, graph.StringKind(env.EnvironmentKindName))
+			envKindToEnvironment[env.EnvironmentKindName] = env
+		}
+
+		return environmentKinds, envKindToEnvironment, nil
+	}
+}
