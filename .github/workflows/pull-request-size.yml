@@ -24,11 +24,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: SpecterOps/pr-size-check@47a422c9146fb4e4c9d90c08e11c1a5aee74ec46 # ratchet:SpecterOps/pr-size-check@v0.1.0
+        id: pr_size
         with:
           github-token: ${{ github.token }}
           max-lines: 1000
           bypass-label: pr-size-exception
           count: additions-and-deletions
+          message: >-
+            Please split this PR or request a size exception from SpecterOps/engineering-admins.
+            See the job summary for the team link and instructions.
           ignored-paths: |
             **/doc/**
             **/docs/**
@@ -72,3 +76,15 @@ jobs:
             **/*.integration.*
             .yarn/build-state.yml
             .yarn/install-state.gz
+      - name: Explain size exception process
+        if: ${{ failure() && steps.pr_size.outcome == 'failure' && steps.pr_size.outputs.counted-lines > 1000 }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ### PR size exception required
+
+          This PR exceeds the 1,000 counted-line limit. Please split it into smaller PRs or request a size exception:
+
+          1. In the PR's **Reviewers** menu, request review from `SpecterOps/engineering-admins` or a member of [the engineering-admins team](https://github.com/orgs/SpecterOps/teams/engineering-admins).
+          2. Ask the reviewer to approve the size exception.
+          3. After approving the exception, an engineering admin should apply the `pr-size-exception` label. The size check will run again automatically.
+          EOF
