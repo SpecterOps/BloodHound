@@ -31,8 +31,11 @@ jobs:
           bypass-label: pr-size-exception
           count: additions-and-deletions
           message: >-
-            Please split this PR or request a size exception from SpecterOps/engineering-admins.
-            See the job summary for the team link and instructions.
+            Please split this PR or use the PR's Reviewers menu to request a size exception
+            from SpecterOps/engineering-admins or a member of the team:
+            https://github.com/orgs/SpecterOps/teams/engineering-admins.
+            After approving the exception, an engineering admin should apply the
+            pr-size-exception label; the size check will run again automatically.
           ignored-paths: |
             **/doc/**
             **/docs/**
