@@ -14,29 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, CircularProgress } from '@mui/material';
-import React from 'react';
+import { LoadingSpinner } from 'doodle-ui';
+import type { FC } from 'react';
 
-const LoadingOverlay: React.FC<{
+/** @deprecated Use `LoadingSpinner` from `doodle-ui` with `variant='overlay'` instead. */
+const LoadingOverlay: FC<{
     loading: boolean;
 }> = ({ loading }) => {
     if (!loading) return null;
 
-    return (
-        <Box
-            position='absolute'
-            top='0'
-            left='0'
-            right='0'
-            bottom='0'
-            bgcolor='rgba(0, 0, 0, 0.2)'
-            display='flex'
-            alignItems='center'
-            justifyContent='center'
-            zIndex={1000}>
-            <CircularProgress color='primary' />
-        </Box>
-    );
+    return <LoadingSpinner variant='overlay' />;
 };
 
 export default LoadingOverlay;
