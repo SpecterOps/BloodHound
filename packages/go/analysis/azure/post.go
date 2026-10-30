@@ -861,89 +861,6 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPo
 	}
 }
 
-// CreateAZRoleApproverEdge creates AZRoleApprover edges from AZUser/AZGroup nodes to AZRole nodes.
-//
-// This function implements the AZRoleApprover edge creation logic according to the following requirements:
-//
-//  1. Identify each AZTenant labeled node in the database
-//  2. For each AZTenant, find all AZRole nodes where:
-//     - The AZRole's tenantid property matches the AZTenant's objectid property
-//     - The AZRole's isApprovalRequired property is true
-//     - The AZRole has primaryApprovers configured (user or group approvers)
-//  3. For each qualifying AZRole node:
-//     a. If primaryApprovers is empty/null:
-//     - Create AZRoleApprover edges from "Global Administrator" and "Privileged Role Administrator"
-//     roles in the same tenant to this AZRole
-//     b. If primaryApprovers contains GUIDs:
-//     - Create AZRoleApprover edges from each AZUser/AZGroup node matching those GUIDs to this AZRole
-//
-// Note: Groups for approvers can be nested as long as the root groups are not role eligible.
-// Note: If no specific approvers are selected, privileged role administrators/global administrators
-// become the default approvers (primaryApprovers array will be empty in this case).
-//
-// Returns post-processing statistics and any error encountered during processing.
-func CreateAZRoleApproverEdge(
-	ctx context.Context,
-	db graph.Database,
-) (
-	*post.AtomicPostProcessingStats,
-	error,
-) {
-	defer measure.ContextLogAndMeasure(
-		ctx,
-		slog.LevelInfo,
-		"Post-processing Azure Role Approver Edges",
-		attr.Namespace("analysis"),
-		attr.Function("CreateAZRoleApproverEdge"),
-		attr.Scope("process"),
-	)()
-
-	// Clear old post-processed edges that will not have a `firstseen` property
-	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, roleApproverPostProcessedEdges); err != nil {
-		return &post.AtomicPostProcessingStats{}, err
-	}
-
-	// Pull a subgraph to compare against for tracking changes
-	roleApproverTracker, err := post.FetchTracker(ctx, db, roleApproverPostProcessedEdges)
-	if err != nil {
-		return &post.AtomicPostProcessingStats{}, err
-	}
-
-	// Step 0: Identify each AZTenant labeled node in the database.
-	tenantNodes, err := FetchTenants(ctx, db)
-	if err != nil {
-		return &post.AtomicPostProcessingStats{}, err
-	}
-
-	var (
-		readerPool = ops.StartNewOperation[any](ops.OperationContext{
-			Parent:     ctx,
-			DB:         db,
-			NumReaders: post.MaximumDatabaseParallelWorkers,
-		})
-		sink = post.NewFilteredRelationshipSink(ctx, "AZRoleApprover Post Processing", db, roleApproverTracker)
-	)
-
-	// Process each tenant to create AZRoleApprover edges for roles requiring approval
-	for _, tenantNode := range tenantNodes {
-		if err := CreateApproverEdge(ctx, db, tenantNode, readerPool, sink); err != nil {
-			readerPool.Done()
-			sink.Done()
-			return &post.AtomicPostProcessingStats{}, err
-		}
-	}
-
-	// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
-	readerErr := readerPool.Done()
-	sink.Done()
-
-	return sink.Stats(), readerErr
-}
-
-var roleApproverPostProcessedEdges = graph.Kinds{
-	azure.AZRoleApprover,
-}
-
 func FixManagementGroupNames(ctx context.Context, db graph.Database, useRawObjectIDs bool) error {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -1052,13 +969,10 @@ func Post(ctx context.Context, db graph.Database, useRawObjectIDs bool) (*post.A
 		return &aggregateStats, err
 	} else if hybridStats, err := hybrid.PostHybrid(ctx, db); err != nil {
 		return &aggregateStats, err
-	} else if pimRolesStats, err := CreateAZRoleApproverEdge(ctx, db); err != nil {
-		return &aggregateStats, err
 	} else {
 		aggregateStats.Merge(executeCommandStats)
 		aggregateStats.Merge(addOwnerStats)
 		aggregateStats.Merge(hybridStats)
-		aggregateStats.Merge(pimRolesStats)
 
 		return &aggregateStats, nil
 	}
