@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Typography } from 'doodle-ui';
+import { LoadingSpinner, Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { useMountEffect, usePermissions } from '../../hooks';
 import { PERSIST_NOTIFICATION, useNotifications } from '../../providers';
@@ -23,7 +23,6 @@ import DocumentationLinks from '../DocumentationLinks';
 import FeatureFlag from '../FeatureFlag';
 import { FileIngestTable } from '../FileIngestTable';
 import LegacyFileIngestTable from '../LegacyFileIngestTable/LegacyFileIngestTable';
-import LoadingOverlay from '../LoadingOverlay';
 import PageWithTitle from '../PageWithTitle';
 
 const FileIngest: FC = () => {
@@ -60,7 +59,7 @@ const FileIngest: FC = () => {
             }>
             <FeatureFlag
                 flagKey='open_graph_phase_2'
-                loadingFallback={<LoadingOverlay loading />}
+                loadingFallback={<LoadingSpinner variant='overlay' />}
                 enabled={<FileIngestTable />}
                 disabled={<LegacyFileIngestTable />}
             />

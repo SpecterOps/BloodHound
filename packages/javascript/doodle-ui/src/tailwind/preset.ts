@@ -220,6 +220,14 @@ export default {
                 'progress-indeterminate': {
                     from: { transform: 'translateX(-100%)' },
                     to: { transform: 'translateX(300%)' },
+                'loading-spinner-rotate': {
+                    from: { transform: 'rotate(0deg)' },
+                    to: { transform: 'rotate(360deg)' },
+                },
+                'loading-spinner-dash': {
+                    '0%': { '--doodle-spinner-start': '0deg', '--doodle-spinner-sweep': '3deg' },
+                    '50%': { '--doodle-spinner-start': '45deg', '--doodle-spinner-sweep': '285deg' },
+                    '100%': { '--doodle-spinner-start': '357deg', '--doodle-spinner-sweep': '3deg' },
                 },
                 'accordion-down': {
                     from: { height: '0' },
@@ -248,6 +256,8 @@ export default {
             },
             animation: {
                 'progress-indeterminate': 'progress-indeterminate 1.5s linear infinite',
+                'loading-spinner':
+                    'loading-spinner-rotate 1.4s linear infinite, loading-spinner-dash 1.4s ease-in-out infinite',
                 'accordion-down': 'accordion-down 0.2s ease-out',
                 'accordion-up': 'accordion-up 0.2s ease-out',
                 'fade-in': 'fade-in 300ms ease-out forwards',

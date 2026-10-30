@@ -44,6 +44,9 @@ type Deps struct {
 	Graph          graph.Database
 	DogTags        dogtags.Service
 	AlertPublisher alerts.Publisher
+	// Included to allow the config module to continue requesting some side effect
+	// legacy DB requests until that functionality can be migrated to onion
+	ConfigUpdateSideEffects appcfg.ConfigUpdateSideEffecter
 	// RateLimitMiddleware is installed once for matched routes before authentication.
 	RateLimitMiddleware func() mux.MiddlewareFunc
 }
@@ -64,6 +67,9 @@ func Register(deps Deps) {
 	if deps.DogTags == nil {
 		panic("modules: Register requires a non-nil DogTags")
 	}
+	if deps.ConfigUpdateSideEffects == nil {
+		panic("modules: Register requires a non-nil ConfigUpdateSideEffects")
+	}
 	if deps.RateLimitMiddleware == nil {
 		panic("modules: Register requires a non-nil RateLimitMiddleware")
 	}
@@ -76,7 +82,7 @@ func Register(deps Deps) {
 	}
 
 	analysis.Register(deps.Router, deps.Pool)
-	appcfg.Register(deps.Router, deps.Pool)
+	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects)
 	identity.Register(deps.Router, deps.Pool)
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
