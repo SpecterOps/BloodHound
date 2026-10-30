@@ -24,7 +24,6 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/appdb"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/handlers"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/routes"
@@ -32,11 +31,16 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
+// Environment and EnvironmentKindsToEnvironment expose the slice-owned models
+// without requiring callers to import an internal package.
+type Environment = services.Environment
+type EnvironmentKindsToEnvironment = services.EnvironmentKindsToEnvironment
+
 // OpenGraphSchemaRequestAdapter is the exported open graph schema capability
 // other feature slices depend on. It is satisfied by the internal service
 // constructed by NewOpenGraphSchemaRequestAdapter.
 type OpenGraphSchemaRequestAdapter interface {
-	GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error)
+	GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, EnvironmentKindsToEnvironment, error)
 }
 
 // NewOpenGraphSchemaRequestAdapter builds a ready-to-use open graph schema

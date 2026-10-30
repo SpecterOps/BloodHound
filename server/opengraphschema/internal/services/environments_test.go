@@ -21,7 +21,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services/mocks"
 	"github.com/specterops/dawgs/graph"
@@ -33,8 +32,8 @@ func TestService_GetEnvironmentKindsAndSchemaEnvironmentData(t *testing.T) {
 	var (
 		ctx           = context.Background()
 		unexpectedErr = errors.New("connection refused")
-		azureEnv      = model.SchemaEnvironment{EnvironmentKindName: "AZBase", EnvironmentKindId: 1}
-		adEnv         = model.SchemaEnvironment{EnvironmentKindName: "Base", EnvironmentKindId: 2}
+		azureEnv      = services.Environment{EnvironmentKindName: "AZBase", EnvironmentKindID: 1}
+		adEnv         = services.Environment{EnvironmentKindName: "Base", EnvironmentKindID: 2}
 	)
 
 	tests := []struct {
@@ -42,7 +41,7 @@ func TestService_GetEnvironmentKindsAndSchemaEnvironmentData(t *testing.T) {
 		onlyBuiltin bool
 		setupMock   func(databaseMock *mocks.MockDatabase)
 		wantKinds   graph.Kinds
-		wantEnvMap  model.EnvironmentKindsToEnvironment
+		wantEnvMap  services.EnvironmentKindsToEnvironment
 		wantErr     error
 	}{
 		{
@@ -50,10 +49,10 @@ func TestService_GetEnvironmentKindsAndSchemaEnvironmentData(t *testing.T) {
 			onlyBuiltin: false,
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetEnvironmentsFiltered(ctx, false).
-					Return([]model.SchemaEnvironment{azureEnv, adEnv}, nil)
+					Return([]services.Environment{azureEnv, adEnv}, nil)
 			},
 			wantKinds: graph.Kinds{graph.StringKind("AZBase"), graph.StringKind("Base")},
-			wantEnvMap: model.EnvironmentKindsToEnvironment{
+			wantEnvMap: services.EnvironmentKindsToEnvironment{
 				"AZBase": azureEnv,
 				"Base":   adEnv,
 			},
@@ -63,10 +62,10 @@ func TestService_GetEnvironmentKindsAndSchemaEnvironmentData(t *testing.T) {
 			onlyBuiltin: true,
 			setupMock: func(databaseMock *mocks.MockDatabase) {
 				databaseMock.EXPECT().GetEnvironmentsFiltered(ctx, true).
-					Return([]model.SchemaEnvironment{}, nil)
+					Return([]services.Environment{}, nil)
 			},
 			wantKinds:  graph.Kinds{},
-			wantEnvMap: model.EnvironmentKindsToEnvironment{},
+			wantEnvMap: services.EnvironmentKindsToEnvironment{},
 		},
 		{
 			name:        "error_-_propagates_database_error",

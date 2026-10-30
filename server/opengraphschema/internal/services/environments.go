@@ -18,21 +18,36 @@ package services
 
 import (
 	"context"
+	"time"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/dawgs/graph"
 )
+
+// Environment describes a schema environment and its owning extension.
+type Environment struct {
+	ID                         int32
+	SchemaExtensionID          int32
+	SchemaExtensionDisplayName string
+	EnvironmentKindID          int32
+	EnvironmentKindName        string
+	SourceKindID               int32
+	CreatedAt                  time.Time
+	UpdatedAt                  time.Time
+	DeletedAt                  *time.Time
+}
+
+type EnvironmentKindsToEnvironment map[string]Environment
 
 // GetEnvironmentKindsAndSchemaEnvironmentData returns all environment kinds as
 // graph.Kinds and a map of their schema environments. When onlyBuiltin is true
 // only builtin environment kinds are returned.
-func (s *Service) GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error) {
+func (s *Service) GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, EnvironmentKindsToEnvironment, error) {
 	if environments, err := s.db.GetEnvironmentsFiltered(ctx, onlyBuiltin); err != nil {
 		return nil, nil, err
 	} else {
 		var (
 			environmentKinds     = make([]graph.Kind, 0, len(environments))
-			envKindToEnvironment = make(model.EnvironmentKindsToEnvironment, len(environments))
+			envKindToEnvironment = make(EnvironmentKindsToEnvironment, len(environments))
 		)
 
 		for _, env := range environments {

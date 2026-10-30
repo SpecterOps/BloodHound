@@ -20,6 +20,9 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
+
+	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
@@ -43,14 +46,19 @@ func TestStore_GetEnvironmentsFiltered(t *testing.T) {
 		"created_at", "updated_at", "deleted_at",
 	}
 
-	unexpectedErr := errors.New("db unavailable")
+	var (
+		unexpectedErr     = errors.New("db unavailable")
+		timestamp         = time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)
+		firstEnvironment  = services.Environment{ID: 1, SchemaExtensionID: 10, SchemaExtensionDisplayName: "Ext A", EnvironmentKindID: 100, EnvironmentKindName: "AZBase", SourceKindID: 200, CreatedAt: timestamp, UpdatedAt: timestamp}
+		secondEnvironment = services.Environment{ID: 2, SchemaExtensionID: 11, SchemaExtensionDisplayName: "Ext B", EnvironmentKindID: 101, EnvironmentKindName: "Base", SourceKindID: 201, CreatedAt: timestamp, UpdatedAt: timestamp, DeletedAt: &timestamp}
+	)
 
 	tests := []struct {
-		name        string
-		onlyBuiltin bool
-		setupMock   func(pool pgxmock.PgxPoolIface)
-		wantKinds   []string
-		wantErr     error
+		name             string
+		onlyBuiltin      bool
+		setupMock        func(pool pgxmock.PgxPoolIface)
+		wantEnvironments []services.Environment
+		errorContext     string
 	}{
 		{
 			name:        "Success: returns all environments when not builtin only",
@@ -58,10 +66,10 @@ func TestStore_GetEnvironmentsFiltered(t *testing.T) {
 			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetEnvironmentsSQL + " ORDER BY se.id").
 					WillReturnRows(pool.NewRows(columns).
-						AddRow(int32(1), int32(10), "Ext A", int32(100), "AZBase", int32(200), nil, nil, nil).
-						AddRow(int32(2), int32(11), "Ext B", int32(101), "Base", int32(201), nil, nil, nil))
+						AddRow(int32(1), int32(10), "Ext A", int32(100), "AZBase", int32(200), timestamp, timestamp, nil).
+						AddRow(int32(2), int32(11), "Ext B", int32(101), "Base", int32(201), timestamp, timestamp, timestamp))
 			},
-			wantKinds: []string{"AZBase", "Base"},
+			wantEnvironments: []services.Environment{firstEnvironment, secondEnvironment},
 		},
 		{
 			name:        "Success: applies builtin filter",
@@ -69,18 +77,32 @@ func TestStore_GetEnvironmentsFiltered(t *testing.T) {
 			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetEnvironmentsSQL + " WHERE ext.is_builtin = true ORDER BY se.id").
 					WillReturnRows(pool.NewRows(columns).
-						AddRow(int32(1), int32(10), "Ext A", int32(100), "AZBase", int32(200), nil, nil, nil))
+						AddRow(int32(1), int32(10), "Ext A", int32(100), "AZBase", int32(200), timestamp, timestamp, nil))
 			},
-			wantKinds: []string{"AZBase"},
+			wantEnvironments: []services.Environment{firstEnvironment},
 		},
 		{
-			name:        "Error: propagates query error",
+			name:        "Error: isolates query error",
 			onlyBuiltin: false,
 			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedGetEnvironmentsSQL + " ORDER BY se.id").
 					WillReturnError(unexpectedErr)
 			},
-			wantErr: unexpectedErr,
+			errorContext: "listing schema environments",
+		},
+		{
+			name: "Success: returns initialized empty environments",
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedGetEnvironmentsSQL + " ORDER BY se.id").WillReturnRows(pool.NewRows(columns))
+			},
+			wantEnvironments: []services.Environment{},
+		},
+		{
+			name: "Error: isolates row errors",
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedGetEnvironmentsSQL + " ORDER BY se.id").WillReturnRows(pool.NewRows(columns).AddRow(int32(1), int32(10), "Ext A", int32(100), "AZBase", int32(200), timestamp, timestamp, nil).RowError(0, unexpectedErr))
+			},
+			errorContext: "reading schema environments",
 		},
 	}
 
@@ -92,17 +114,15 @@ func TestStore_GetEnvironmentsFiltered(t *testing.T) {
 
 			environments, err := store.GetEnvironmentsFiltered(context.Background(), test.onlyBuiltin)
 			require.NoError(t, pool.ExpectationsWereMet())
-			if test.wantErr != nil {
-				assert.ErrorIs(t, err, test.wantErr)
+			if test.errorContext != "" {
+				require.ErrorContains(t, err, test.errorContext)
+				assert.NotErrorIs(t, err, unexpectedErr)
+				assert.Nil(t, errors.Unwrap(err))
 				return
 			}
 
 			require.NoError(t, err)
-			var kinds []string
-			for _, environment := range environments {
-				kinds = append(kinds, environment.EnvironmentKindName)
-			}
-			assert.Equal(t, test.wantKinds, kinds)
+			assert.Equal(t, test.wantEnvironments, environments)
 		})
 	}
 }

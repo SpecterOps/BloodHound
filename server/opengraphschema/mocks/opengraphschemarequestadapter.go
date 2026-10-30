@@ -22,7 +22,7 @@ package mocks
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/server/opengraphschema"
 	"github.com/specterops/dawgs/graph"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -55,7 +55,7 @@ func (_m *MockOpenGraphSchemaRequestAdapter) EXPECT() *MockOpenGraphSchemaReques
 }
 
 // GetEnvironmentKindsAndSchemaEnvironmentData provides a mock function for the type MockOpenGraphSchemaRequestAdapter
-func (_mock *MockOpenGraphSchemaRequestAdapter) GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error) {
+func (_mock *MockOpenGraphSchemaRequestAdapter) GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, opengraphschema.EnvironmentKindsToEnvironment, error) {
 	ret := _mock.Called(ctx, onlyBuiltin)
 
 	if len(ret) == 0 {
@@ -63,9 +63,9 @@ func (_mock *MockOpenGraphSchemaRequestAdapter) GetEnvironmentKindsAndSchemaEnvi
 	}
 
 	var r0 graph.Kinds
-	var r1 model.EnvironmentKindsToEnvironment
+	var r1 opengraphschema.EnvironmentKindsToEnvironment
 	var r2 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, bool) (graph.Kinds, opengraphschema.EnvironmentKindsToEnvironment, error)); ok {
 		return returnFunc(ctx, onlyBuiltin)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, bool) graph.Kinds); ok {
@@ -75,11 +75,11 @@ func (_mock *MockOpenGraphSchemaRequestAdapter) GetEnvironmentKindsAndSchemaEnvi
 			r0 = ret.Get(0).(graph.Kinds)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, bool) model.EnvironmentKindsToEnvironment); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, bool) opengraphschema.EnvironmentKindsToEnvironment); ok {
 		r1 = returnFunc(ctx, onlyBuiltin)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(model.EnvironmentKindsToEnvironment)
+			r1 = ret.Get(1).(opengraphschema.EnvironmentKindsToEnvironment)
 		}
 	}
 	if returnFunc, ok := ret.Get(2).(func(context.Context, bool) error); ok {
@@ -120,12 +120,12 @@ func (_c *MockOpenGraphSchemaRequestAdapter_GetEnvironmentKindsAndSchemaEnvironm
 	return _c
 }
 
-func (_c *MockOpenGraphSchemaRequestAdapter_GetEnvironmentKindsAndSchemaEnvironmentData_Call) Return(kinds graph.Kinds, environmentKindsToEnvironment model.EnvironmentKindsToEnvironment, err error) *MockOpenGraphSchemaRequestAdapter_GetEnvironmentKindsAndSchemaEnvironmentData_Call {
-	_c.Call.Return(kinds, environmentKindsToEnvironment, err)
+func (_c *MockOpenGraphSchemaRequestAdapter_GetEnvironmentKindsAndSchemaEnvironmentData_Call) Return(kinds graph.Kinds, v opengraphschema.EnvironmentKindsToEnvironment, err error) *MockOpenGraphSchemaRequestAdapter_GetEnvironmentKindsAndSchemaEnvironmentData_Call {
+	_c.Call.Return(kinds, v, err)
 	return _c
 }
 
-func (_c *MockOpenGraphSchemaRequestAdapter_GetEnvironmentKindsAndSchemaEnvironmentData_Call) RunAndReturn(run func(ctx context.Context, onlyBuiltin bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error)) *MockOpenGraphSchemaRequestAdapter_GetEnvironmentKindsAndSchemaEnvironmentData_Call {
+func (_c *MockOpenGraphSchemaRequestAdapter_GetEnvironmentKindsAndSchemaEnvironmentData_Call) RunAndReturn(run func(ctx context.Context, onlyBuiltin bool) (graph.Kinds, opengraphschema.EnvironmentKindsToEnvironment, error)) *MockOpenGraphSchemaRequestAdapter_GetEnvironmentKindsAndSchemaEnvironmentData_Call {
 	_c.Call.Return(run)
 	return _c
 }
