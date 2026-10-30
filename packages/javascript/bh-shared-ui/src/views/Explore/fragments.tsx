@@ -17,7 +17,7 @@
 import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
-import { EntityField, format } from '../../utils';
+import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 
 const accordionCountClassName =
@@ -109,9 +109,13 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
     );
 };
 
-export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
+export const FieldsContainer: React.FC<PropsWithChildren<{ className?: string }>> = ({ children, className }) => {
     return (
-        <div className='rounded-lg text-xs [&>:nth-child(even)]:bg-neutral-2 [&>:nth-child(odd)]:bg-neutral-3'>
+        <div
+            className={cn(
+                '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
+                className
+            )}>
             {children}
         </div>
     );
@@ -147,12 +151,19 @@ export const Field: React.FC<EntityField> = (entityField) => {
     const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
 
+    const formattedLabel = typeof label === 'string' ? label.replace(/:$/, '') : label;
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
         content = (
-            <div className='flex flex-row flex-wrap p-2'>
-                <div className='mr-2 grow shrink-0 font-bold'>{label}</div>
-                <div className='overflow-hidden text-ellipsis break-all' title={formattedValue}>
+            <div className='flex flex-wrap items-baseline justify-between p-2 text-left'>
+                <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                    {formattedLabel}
+                </Typography>
+                <Typography
+                    component='span'
+                    variant='body2'
+                    className='min-w-0 max-w-full break-words'
+                    title={formattedValue}>
                     {emptyValueAccessibleLabel ? (
                         <>
                             <span aria-hidden='true'>{formattedValue}</span>
@@ -161,7 +172,7 @@ export const Field: React.FC<EntityField> = (entityField) => {
                     ) : (
                         formattedValue
                     )}
-                </div>
+                </Typography>
             </div>
         );
     } else {
@@ -172,9 +183,22 @@ export const Field: React.FC<EntityField> = (entityField) => {
                     : emptyValueAccessibleLabel;
 
             return (
-                <div className='flex flex-row flex-wrap justify-end p-2' key={`${keyprop}-${index}`}>
-                    {index === 0 && <div className='mr-2 grow shrink-0 font-bold'>{label}</div>}
-                    <div className='overflow-hidden text-ellipsis break-all' title={value}>
+                <div
+                    className='flex flex-wrap items-baseline justify-between p-2 text-left'
+                    key={`${keyprop}-${index}`}>
+                    {/* Only render the label for the first item, since it kicks the list */}
+                    {index === 0 ? (
+                        <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                            {formattedLabel}
+                        </Typography>
+                    ) : (
+                        <span aria-hidden='true' />
+                    )}
+                    <Typography
+                        component='span'
+                        variant='body2'
+                        className='min-w-0 max-w-full break-words'
+                        title={value}>
                         {listItemEmptyValueAccessibleLabel ? (
                             <>
                                 <span aria-hidden='true'>{value}</span>
@@ -183,7 +207,7 @@ export const Field: React.FC<EntityField> = (entityField) => {
                         ) : (
                             value
                         )}
-                    </div>
+                    </Typography>
                 </div>
             );
         });
