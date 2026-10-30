@@ -365,34 +365,6 @@ func TestBuildSQLFilter(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{
-			name: "equals literal null string",
-			input: model.Filters{
-				"foo": {{
-					Operator:           model.Equals,
-					Value:              "null",
-					IsStringData:       true,
-					TreatNullAsLiteral: true,
-				}},
-			},
-			output: model.SQLFilter{
-				SQLString: "foo = E'null'",
-			},
-		},
-		{
-			name: "not equals literal null string",
-			input: model.Filters{
-				"foo": {{
-					Operator:           model.NotEquals,
-					Value:              "null",
-					IsStringData:       true,
-					TreatNullAsLiteral: true,
-				}},
-			},
-			output: model.SQLFilter{
-				SQLString: "foo != E'null'",
-			},
-		},
 	}
 
 	// Run each test case and compare the output with the expected result
