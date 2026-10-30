@@ -17,13 +17,12 @@
 import { Alert, AlertTitle, Box, Grid, Link } from '@mui/material';
 import {
     getStatsComponent,
-    LoadingOverlay,
     PageWithTitle,
     SelectedEnvironment,
     SimpleEnvironmentSelector,
     useInitialEnvironment,
 } from 'bh-shared-ui';
-import { Typography } from 'doodle-ui';
+import { LoadingSpinner, Typography } from 'doodle-ui';
 import { useEffect, useState } from 'react';
 import { dataCollectionMessage } from './utils';
 
@@ -64,7 +63,7 @@ const DataQuality: React.FC = () => {
                 pageDescription={
                     <>
                         <QualityAssuranceDescription />
-                        <LoadingOverlay loading />
+                        <LoadingSpinner variant='overlay' />
                     </>
                 }
             />

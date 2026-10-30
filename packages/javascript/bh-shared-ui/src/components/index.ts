@@ -93,8 +93,6 @@ export * from './InfiniteScrollingTable';
 export { default as InfiniteScrollingTable } from './InfiniteScrollingTable';
 export * from './LabelWithCopy';
 export { default as LabelWithCopy } from './LabelWithCopy';
-export * from './LoadingOverlay';
-export { default as LoadingOverlay } from './LoadingOverlay';
 export * from './LoginForm';
 export { default as LoginForm } from './LoginForm';
 export * from './LoginViaSSOForm';

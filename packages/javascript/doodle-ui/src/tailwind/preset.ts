@@ -219,6 +219,15 @@ export default {
                 // 'risk-text': 'var(--risk-text)',
             },
             keyframes: {
+                'loading-spinner-rotate': {
+                    from: { transform: 'rotate(0deg)' },
+                    to: { transform: 'rotate(360deg)' },
+                },
+                'loading-spinner-dash': {
+                    '0%': { '--doodle-spinner-start': '0deg', '--doodle-spinner-sweep': '3deg' },
+                    '50%': { '--doodle-spinner-start': '45deg', '--doodle-spinner-sweep': '285deg' },
+                    '100%': { '--doodle-spinner-start': '357deg', '--doodle-spinner-sweep': '3deg' },
+                },
                 'accordion-down': {
                     from: { height: '0' },
                     to: { height: 'var(--radix-accordion-content-height)' },
@@ -245,6 +254,8 @@ export default {
                 },
             },
             animation: {
+                'loading-spinner':
+                    'loading-spinner-rotate 1.4s linear infinite, loading-spinner-dash 1.4s ease-in-out infinite',
                 'accordion-down': 'accordion-down 0.2s ease-out',
                 'accordion-up': 'accordion-up 0.2s ease-out',
                 'fade-in': 'fade-in 300ms ease-out forwards',
