@@ -23,6 +23,17 @@ const focusRingOffsetWidth = '2px';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
+        // Register angles so the spinner's arc interpolates smoothly between keyframes.
+        '@property --doodle-spinner-start': {
+            syntax: "'<angle>'",
+            inherits: 'false',
+            'initial-value': '0deg',
+        },
+        '@property --doodle-spinner-sweep': {
+            syntax: "'<angle>'",
+            inherits: 'false',
+            'initial-value': '225deg',
+        },
         ' :root': {
             // SHARED (same in light and dark)
             '--common-dark': common.dark,

@@ -34,6 +34,7 @@ export * from './IconButton';
 export * from './Input';
 export * from './Label';
 export * from './Link';
+export * from './LoadingSpinner';
 export * from './Menu';
 export * from './MultiSelect';
 export * from './Pagination';

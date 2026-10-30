@@ -65,7 +65,7 @@ const TooltipTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>((props,
     const descriptionId = React.useContext(TooltipDescriptionContext);
     const describedBy = [ariaDescribedBy, descriptionId].filter(Boolean).join(' ') || undefined;
     const trigger = children ?? (
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+        // oxlint-disable-next-line a11y-compat/no-noninteractive-tabindex
         <span role='img' tabIndex={0} className='inline-flex items-center justify-center rounded-full'>
             <AppIcon.Info size={16} aria-hidden='true' />
         </span>

@@ -1,0 +1,74 @@
+diff --git a/dist/rules/prefer-pascal-case.js b/dist/rules/prefer-pascal-case.js
+index 1a4a9cd286ffc15af02c21c9af53995e6184cbe2..6d89bc6cba3724db359a442a51a298f52df19906 100644
+--- a/dist/rules/prefer-pascal-case.js
++++ b/dist/rules/prefer-pascal-case.js
+@@ -3,7 +3,7 @@
+  * @fileoverview Prefer pascal case
+  * @author Yann Braga
+  */
+-const utils_1 = require("@typescript-eslint/utils");
++const utils_1 = require("../utils/oxlint-utils");
+ const csf_1 = require("@storybook/csf");
+ const utils_2 = require("../utils");
+ const ast_1 = require("../utils/ast");
+diff --git a/dist/utils/ast.js b/dist/utils/ast.js
+index e13daae349a914da4bfed4415f01f8a38bad5adf..e676d2cf304e33ac51df8a25ba21da9b376bb546 100644
+--- a/dist/utils/ast.js
++++ b/dist/utils/ast.js
+@@ -1,8 +1,8 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.isMetaProperty = exports.isTSNonNullExpression = exports.isTSSatisfiesExpression = exports.isTSAsExpression = exports.isTSInterfaceDeclaration = exports.isTSTypeAliasDeclaration = exports.isProgram = exports.isFunctionExpression = exports.isFunctionDeclaration = exports.isReturnStatement = exports.isRestElement = exports.isSpreadElement = exports.isProperty = exports.isObjectPattern = exports.isObjectExpression = exports.isNewExpression = exports.isMemberExpression = exports.isLiteral = exports.isJSXAttribute = exports.isImportSpecifier = exports.isImportNamespaceSpecifier = exports.isImportDefaultSpecifier = exports.isImportDeclaration = exports.isSequenceExpression = exports.isAssignmentExpression = exports.isVariableDeclaration = exports.isExpressionStatement = exports.isCallExpression = exports.isBlockStatement = exports.isArrowFunctionExpression = exports.isArrayExpression = exports.isVariableDeclarator = exports.isIdentifier = exports.isAwaitExpression = exports.ASTUtils = void 0;
+-const utils_1 = require("@typescript-eslint/utils");
+-var utils_2 = require("@typescript-eslint/utils");
++const utils_1 = require("./oxlint-utils");
++var utils_2 = require("./oxlint-utils");
+ Object.defineProperty(exports, "ASTUtils", { enumerable: true, get: function () { return utils_2.ASTUtils; } });
+ const isNodeOfType = (nodeType) => (node) => (node === null || node === void 0 ? void 0 : node.type) === nodeType;
+ exports.isAwaitExpression = isNodeOfType(utils_1.AST_NODE_TYPES.AwaitExpression);
+diff --git a/dist/utils/create-storybook-rule.js b/dist/utils/create-storybook-rule.js
+index 9f59d0e8bc67180dc9057b092e033ac5fc0b765f..a8af4f51c9e25eed4b4c76e9430ca581b40f2106 100644
+--- a/dist/utils/create-storybook-rule.js
++++ b/dist/utils/create-storybook-rule.js
+@@ -12,10 +12,12 @@ var __rest = (this && this.__rest) || function (s, e) {
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.createStorybookRule = void 0;
+-const utils_1 = require("@typescript-eslint/utils");
++// Import RuleCreator directly so unused ESLint RuleTester classes are never loaded.
++const path = require("path");
++const utils_1 = require(path.join(path.dirname(require.resolve("@typescript-eslint/utils/package.json")), "dist/eslint-utils/RuleCreator.js"));
+ const utils_2 = require("../utils");
+ function createStorybookRule(_a) {
+     var { create, meta } = _a, remainingConfig = __rest(_a, ["create", "meta"]);
+-    return utils_1.ESLintUtils.RuleCreator(utils_2.docsUrl)(Object.assign(Object.assign({}, remainingConfig), { create, meta: Object.assign(Object.assign({}, meta), { docs: Object.assign({}, meta.docs) }) }));
++    return utils_1.RuleCreator(utils_2.docsUrl)(Object.assign(Object.assign({}, remainingConfig), { create, meta: Object.assign(Object.assign({}, meta), { docs: Object.assign({}, meta.docs) }) }));
+ }
+ exports.createStorybookRule = createStorybookRule;
+diff --git a/dist/utils/index.js b/dist/utils/index.js
+index 292e9b0a05ba0a14ac7979fc637c751bb47d5a3c..8386d01612a35cd8b89f2026220c5d31972ed406 100644
+--- a/dist/utils/index.js
++++ b/dist/utils/index.js
+@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.getAllNamedExports = exports.isValidStoryExport = exports.getDescriptor = exports.getMetaObjectExpression = exports.docsUrl = void 0;
+ /* eslint-disable no-fallthrough */
+ const csf_1 = require("@storybook/csf");
+-const utils_1 = require("@typescript-eslint/utils");
++const utils_1 = require("./oxlint-utils");
+ const ast_1 = require("./ast");
+ const docsUrl = (ruleName) => `https://github.com/storybookjs/eslint-plugin-storybook/blob/main/docs/rules/${ruleName}.md`;
+ exports.docsUrl = docsUrl;
+diff --git a/dist/utils/oxlint-utils.js b/dist/utils/oxlint-utils.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..fe80b8c4560e7cabdb65f9c67f7444fb87b5f1d8
+--- /dev/null
++++ b/dist/utils/oxlint-utils.js
+@@ -0,0 +1,8 @@
++"use strict";
++// Load only runtime AST helpers; the package barrel also imports ESLint test classes.
++const path = require("path");
++const root = path.dirname(require.resolve("@typescript-eslint/utils/package.json"));
++module.exports = {
++  ASTUtils: require(path.join(root, "dist/ast-utils/index.js")),
++  AST_NODE_TYPES: require(path.join(root, "dist/ts-estree.js")).AST_NODE_TYPES,
++};
