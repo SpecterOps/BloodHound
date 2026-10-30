@@ -19,7 +19,7 @@ import { cn } from '../utils';
 export const buttonBaseClasses = [
     'inline-flex items-center justify-center whitespace-nowrap transition-colors',
     'focus:outline-none focus-visible:focus-ring',
-    'disabled:text-[color:var(--button-disabled-text)] disabled:pointer-events-none disabled:opacity-50',
+    'disabled:text-[color:var(--button-disabled-text)] disabled:pointer-events-none',
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 

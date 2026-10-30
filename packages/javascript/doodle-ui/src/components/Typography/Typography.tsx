@@ -54,7 +54,7 @@ const Typography = forwardRef<HTMLElement, TypographyProps>(
         return (
             <Tag
                 ref={ref}
-                className={cn(TypographyVariants({ variant }), `typography-${variant}`, className)}
+                className={cn(TypographyVariants({ variant }), `typography-${variant ?? DEFAULT_VARIANT}`, className)}
                 {...rest}>
                 {children}
             </Tag>
