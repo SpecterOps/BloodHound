@@ -47,6 +47,9 @@ type PathValidationError struct {
 }
 
 func (s *PathValidationError) Error() string {
+	if s.Err == ErrMissingPathParameter {
+		return fmt.Sprintf("%s: %s", s.Err, s.Parameter)
+	}
 	if s.Cause != nil {
 		return fmt.Sprintf("%s: %s %q: %s", s.Err, s.Parameter, s.Value, s.Cause)
 	}

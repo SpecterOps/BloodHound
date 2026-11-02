@@ -225,6 +225,7 @@ func requirePathValidationError(t *testing.T, err, sentinel error, rawValue stri
 	require.Equal(t, "id", validationError.Parameter)
 	require.Equal(t, rawValue, validationError.Value)
 	if sentinel == params.ErrMissingPathParameter {
+		require.EqualError(t, err, "path parameter is missing: id")
 		require.NotErrorIs(t, wrapped, params.ErrMalformedPathParameter)
 		require.Nil(t, validationError.Cause)
 	} else {
