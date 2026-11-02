@@ -65,7 +65,7 @@ func buildSQLFilter(filters model.Filters) (sqlFilter, error) {
 		var (
 			formattedName = strings.TrimSpace(strings.ToLower(name))
 
-			columnReference          pgsql.Expression = pgsql.Identifier(formattedName)
+			columnReference          pgsql.Expression = pgsql.AsCompoundIdentifier(strings.Split(formattedName, ".")...)
 			innerWhereClauseFragment pgsql.Expression
 			needsParenthetical       bool
 		)
