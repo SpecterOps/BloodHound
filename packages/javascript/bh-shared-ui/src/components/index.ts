@@ -80,8 +80,6 @@ export * from './GraphControls';
 export * from './GraphDataCheckboxes';
 export * from './GraphMenu';
 export { default as GraphMenu } from './GraphMenu';
-export * from './GraphProgress';
-export { default as GraphProgress } from './GraphProgress';
 export * from './GroupManagementContent';
 export { default as GroupManagementContent } from './GroupManagementContent';
 export * from './HelpTexts/index';
