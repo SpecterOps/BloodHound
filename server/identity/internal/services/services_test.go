@@ -23,6 +23,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 	"github.com/specterops/bloodhound/server/identity/internal/services/mocks"
@@ -410,6 +411,143 @@ func TestService_ListUsers(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, testCase.expected.users, result)
+			}
+		})
+	}
+}
+
+func TestService_ListAuthTokens(t *testing.T) {
+	type mock struct {
+		database *mocks.MockDatabase
+	}
+
+	type expected struct {
+		authTokens []services.AuthToken
+		err        error
+	}
+
+	type testData struct {
+		name         string
+		requester    services.AuthTokenRequester
+		queryFilters params.Filters
+		setupMocks   func(mock mock)
+		expected     expected
+	}
+
+	var (
+		ctx                = context.Background()
+		requesterID        = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		otherUserID        = uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222")
+		sortItems          = params.SortItems{{Field: "name", Direction: params.Ascending}}
+		unexpectedErr      = errors.New("connection refused")
+		adminRequester     = services.AuthTokenRequester{UserID: requesterID, IsUser: true, CanManageUsers: true}
+		nonAdminRequester  = services.AuthTokenRequester{UserID: requesterID, IsUser: true}
+		nameFilters        = params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: "token", SetOperator: params.FilterAnd, IsStringData: true}}}
+		requesterIDFilters = []params.Filter{{Field: "user_id", Operator: params.Equals, Value: requesterID.String(), SetOperator: params.FilterAnd}}
+		expectedAuthTokens = []services.AuthToken{
+			{
+				ID:         uuid.FromStringOrNil("33333333-3333-3333-3333-333333333333"),
+				UserID:     uuid.NullUUID{UUID: requesterID, Valid: true},
+				Name:       sql.NullString{String: "token", Valid: true},
+				HmacMethod: "hmac-sha2-256",
+				CreatedAt:  time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			},
+		}
+	)
+
+	tt := []testData{
+		{
+			name:         "Success: admin filters are passed through unchanged - 200",
+			requester:    adminRequester,
+			queryFilters: params.Filters{"user_id": {{Field: "user_id", Operator: params.NotEquals, Value: otherUserID.String(), SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListAuthTokens(ctx, params.Filters{"user_id": {{Field: "user_id", Operator: params.NotEquals, Value: otherUserID.String(), SetOperator: params.FilterAnd}}}, sortItems).Return(expectedAuthTokens, nil)
+			},
+			expected: expected{authTokens: expectedAuthTokens},
+		},
+		{
+			name:         "Success: non-user requester filters are passed through unchanged - 200",
+			requester:    services.AuthTokenRequester{},
+			queryFilters: nameFilters,
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListAuthTokens(ctx, nameFilters, sortItems).Return(expectedAuthTokens, nil)
+			},
+			expected: expected{authTokens: expectedAuthTokens},
+		},
+		{
+			name:         "Success: non-admin is scoped to their own user_id - 200",
+			requester:    nonAdminRequester,
+			queryFilters: nameFilters,
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListAuthTokens(ctx, params.Filters{"name": nameFilters["name"], "user_id": requesterIDFilters}, sortItems).Return(expectedAuthTokens, nil)
+			},
+			expected: expected{authTokens: expectedAuthTokens},
+		},
+		{
+			name:         "Success: non-admin filtering by their own user_id - 200",
+			requester:    nonAdminRequester,
+			queryFilters: params.Filters{"user_id": {{Field: "user_id", Operator: params.Equals, Value: requesterID.String(), SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListAuthTokens(ctx, params.Filters{"user_id": requesterIDFilters}, sortItems).Return(expectedAuthTokens, nil)
+			},
+			expected: expected{authTokens: expectedAuthTokens},
+		},
+		{
+			name:         "Error: user_id filter is not a UUID - 400",
+			requester:    adminRequester,
+			queryFilters: params.Filters{"user_id": {{Field: "user_id", Operator: params.Equals, Value: "not-a-uuid", SetOperator: params.FilterAnd}}},
+			setupMocks:   func(mock) {},
+			expected:     expected{err: services.ErrInvalidAuthTokenUserID},
+		},
+		{
+			name:         "Error: empty user_id is rejected before querying the database",
+			requester:    nonAdminRequester,
+			queryFilters: params.Filters{"user_id": {{Field: "user_id", Operator: params.Equals, Value: "", SetOperator: params.FilterAnd}}},
+			setupMocks:   func(mock) {},
+			expected:     expected{err: services.ErrInvalidAuthTokenUserID},
+		},
+		{
+			name:         "Error: non-admin filtering by another user's user_id - 403",
+			requester:    nonAdminRequester,
+			queryFilters: params.Filters{"user_id": {{Field: "user_id", Operator: params.Equals, Value: otherUserID.String(), SetOperator: params.FilterAnd}}},
+			setupMocks:   func(mock) {},
+			expected:     expected{err: services.ErrAuthTokenUserIDRequiresAdmin},
+		},
+		{
+			name:         "Error: non-admin filtering by their own user_id with neq - 403",
+			requester:    nonAdminRequester,
+			queryFilters: params.Filters{"user_id": {{Field: "user_id", Operator: params.NotEquals, Value: requesterID.String(), SetOperator: params.FilterAnd}}},
+			setupMocks:   func(mock) {},
+			expected:     expected{err: services.ErrAuthTokenUserIDOperatorNotAllowed},
+		},
+		{
+			name:         "Error: database query fails - 500",
+			requester:    adminRequester,
+			queryFilters: nameFilters,
+			setupMocks: func(mock mock) {
+				mock.database.EXPECT().ListAuthTokens(ctx, nameFilters, sortItems).Return(nil, unexpectedErr)
+			},
+			expected: expected{err: unexpectedErr},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				databaseMock = mocks.NewMockDatabase(t)
+				svc          = services.NewService(databaseMock)
+			)
+
+			testCase.setupMocks(mock{database: databaseMock})
+
+			result, err := svc.ListAuthTokens(ctx, testCase.requester, testCase.queryFilters, sortItems)
+			if testCase.expected.err != nil {
+				assert.ErrorIs(t, err, testCase.expected.err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expected.authTokens, result)
 			}
 		})
 	}

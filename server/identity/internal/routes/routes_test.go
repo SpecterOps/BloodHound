@@ -17,23 +17,159 @@
 package routes_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	databaseMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/identity/internal/routes"
+	"github.com/specterops/bloodhound/server/identity/internal/services"
 	"github.com/stretchr/testify/assert"
+	testifyMock "github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+func TestRegister_ListAuthTokens_QueryParameters(t *testing.T) {
+	var (
+		userID = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		user   = model.User{
+			Unique: model.Unique{ID: userID},
+			Roles: model.Roles{{Permissions: model.Permissions{
+				auth.Permissions().AuthCreateToken,
+				auth.Permissions().AuthManageSelf,
+				auth.Permissions().AuthManageUsers,
+			}}},
+		}
+		tests = []struct {
+			name         string
+			query        string
+			filters      params.Filters
+			sortItems    params.SortItems
+			responseCode int
+		}{
+			{
+				name:         "no query parameters returns an unpaginated token list",
+				responseCode: http.StatusOK,
+			},
+			{
+				name:         "pagination parameters are ignored",
+				query:        "?limit=1&skip=2",
+				responseCode: http.StatusOK,
+			},
+			{
+				name:         "empty name is applied as a filter",
+				query:        "?name=eq:",
+				filters:      params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: "", SetOperator: params.FilterAnd, IsStringData: true}}},
+				responseCode: http.StatusOK,
+			},
+			{
+				name:         "punctuation in a name is preserved",
+				query:        "?name=eq:foo%21bar%2Bbaz",
+				filters:      params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: "foo!bar+baz", SetOperator: params.FilterAnd, IsStringData: true}}},
+				responseCode: http.StatusOK,
+			},
+			{
+				name:  "repeated timestamp filters are combined with AND",
+				query: "?expires_at=gte:2026-01-01T00:00:00Z&expires_at=lt:2027-01-01T00:00:00Z",
+				filters: params.Filters{"expires_at": {
+					{Field: "expires_at", Operator: params.GreaterThanOrEquals, Value: "2026-01-01T00:00:00Z", SetOperator: params.FilterAnd},
+					{Field: "expires_at", Operator: params.LessThan, Value: "2027-01-01T00:00:00Z", SetOperator: params.FilterAnd},
+				}},
+				responseCode: http.StatusOK,
+			},
+			{
+				name:         "deleted_at sort is rejected",
+				query:        "?sort_by=deleted_at",
+				responseCode: http.StatusBadRequest,
+			},
+			{
+				name:         "empty sort is rejected",
+				query:        "?sort_by=",
+				responseCode: http.StatusBadRequest},
+			{
+				name:         "key filter is rejected",
+				query:        "?key=eq:secret",
+				responseCode: http.StatusBadRequest},
+			{
+				name:         "deleted_at filter is rejected",
+				query:        "?deleted_at=eq:null",
+				responseCode: http.StatusBadRequest},
+			{
+				name:         "unsupported name operator is rejected",
+				query:        "?name=gt:token",
+				responseCode: http.StatusBadRequest},
+			{
+				name:         "unknown filter operator is rejected",
+				query:        "?name=invalid:token",
+				responseCode: http.StatusBadRequest},
+		}
+	)
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				identityMock = mocks.NewMockIdentity(t)
+				routerInst   = router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
+				request      = bhctx.SetRequestContext(
+					httptest.NewRequest(http.MethodGet, "/api/v2/tokens"+testCase.query, nil),
+					&bhctx.Context{AuthCtx: auth.Context{Owner: user}},
+				)
+				recorder  = httptest.NewRecorder()
+				filters   = testCase.filters
+				sortItems = testCase.sortItems
+			)
+
+			if testCase.responseCode == http.StatusOK {
+				if filters == nil {
+					filters = params.Filters{}
+				}
+				if sortItems == nil {
+					sortItems = params.SortItems{}
+				}
+				identityMock.EXPECT().ListAuthTokens(
+					testifyMock.Anything,
+					services.AuthTokenRequester{UserID: userID, IsUser: true, CanManageUsers: true},
+					filters, sortItems,
+				).Return([]services.AuthToken{}, nil).Once()
+			}
+
+			routes.Register(&routerInst, handlers.NewHandlersContainer(identityMock))
+			routerInst.Handler().ServeHTTP(recorder, request)
+
+			require.Equal(t, testCase.responseCode, recorder.Code, recorder.Body.String())
+			if testCase.responseCode == http.StatusOK {
+				assert.JSONEq(t, `{"data":{"tokens":[]}}`, recorder.Body.String())
+			} else {
+				var envelope struct {
+					HTTPStatus int `json:"http_status"`
+					Errors     []struct {
+						Message string `json:"message"`
+					} `json:"errors"`
+				}
+				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &envelope))
+				assert.Equal(t, testCase.responseCode, envelope.HTTPStatus)
+				require.Len(t, envelope.Errors, 1)
+				assert.NotEmpty(t, envelope.Errors[0].Message)
+			}
+		})
+	}
+}
 
 func TestRegister_RegistersRoutes(t *testing.T) {
 	type mock struct {
@@ -88,6 +224,14 @@ func TestRegister_RegistersRoutes(t *testing.T) {
 			name: "Success: GET /api/v2/bloodhound-users is registered",
 			buildRequest: func() *http.Request {
 				return httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users", nil)
+			},
+			setupMocks: func(mock) {},
+			expected:   expected{routeRegistered: true},
+		},
+		{
+			name: "Success: GET /api/v2/tokens is registered",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/tokens", nil)
 			},
 			setupMocks: func(mock) {},
 			expected:   expected{routeRegistered: true},
@@ -172,6 +316,14 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 			name: "Error: unauthenticated GET /api/v2/bloodhound-users - 401",
 			buildRequest: func() *http.Request {
 				return httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users", nil)
+			},
+			setupMocks: func(mock) {},
+			expected:   expected{responseCode: http.StatusUnauthorized},
+		},
+		{
+			name: "Error: unauthenticated GET /api/v2/tokens - 401",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/tokens", nil)
 			},
 			setupMocks: func(mock) {},
 			expected:   expected{responseCode: http.StatusUnauthorized},

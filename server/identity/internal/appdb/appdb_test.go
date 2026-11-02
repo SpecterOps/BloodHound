@@ -882,3 +882,243 @@ func TestStore_ListUsers(t *testing.T) {
 		})
 	}
 }
+
+// expectedListAuthTokensSQL is the literal SQL the Store issues for ListAuthTokens
+// when no filters or sorts are supplied.
+const expectedListAuthTokensSQL = `SELECT user_id, name, hmac_method, last_access, id, created_at, updated_at, expires_at, created_by FROM auth_tokens`
+
+func authTokenRowColumns() []string {
+	return []string{"user_id", "name", "hmac_method", "last_access", "id", "created_at", "updated_at", "expires_at", "created_by"}
+}
+
+func TestStore_ListAuthTokens(t *testing.T) {
+	type mock struct {
+		pool pgxmock.PgxPoolIface
+	}
+
+	type expected struct {
+		authTokens  []services.AuthToken
+		err         error
+		errContains string
+	}
+
+	type testData struct {
+		name       string
+		filters    params.Filters
+		sortItems  params.SortItems
+		setupMocks func(mock mock)
+		expected   expected
+	}
+
+	var (
+		ctx        = context.Background()
+		dbErr      = errors.New("connection refused")
+		createdAt  = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		updatedAt  = time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
+		lastAccess = time.Date(2026, 1, 3, 0, 0, 0, 0, time.UTC)
+		expiresAt  = time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
+		userID     = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		token1ID   = uuid.FromStringOrNil("33333333-3333-3333-3333-333333333333")
+		token2ID   = uuid.FromStringOrNil("44444444-4444-4444-4444-444444444444")
+
+		userToken = services.AuthToken{
+			ID:         token1ID,
+			UserID:     uuid.NullUUID{UUID: userID, Valid: true},
+			Name:       sql.NullString{String: "user token", Valid: true},
+			HmacMethod: "hmac-sha2-256",
+			LastAccess: lastAccess,
+			ExpiresAt:  sql.NullTime{Time: expiresAt, Valid: true},
+			CreatedBy:  uuid.NullUUID{UUID: userID, Valid: true},
+			CreatedAt:  createdAt,
+			UpdatedAt:  updatedAt,
+		}
+		nullableToken = services.AuthToken{
+			ID: token2ID,
+		}
+	)
+
+	addUserTokenRow := func(rows *pgxmock.Rows) {
+		rows.AddRow(userID.String(), "user token", "hmac-sha2-256", lastAccess, token1ID.String(), createdAt, updatedAt, expiresAt, userID.String())
+	}
+
+	tt := []testData{
+		{
+			name: "Success: every auth token is returned with nullable columns",
+			setupMocks: func(mock mock) {
+				rows := mock.pool.NewRows(authTokenRowColumns())
+				addUserTokenRow(rows)
+				rows.AddRow(nil, nil, nil, nil, token2ID.String(), nil, nil, nil, nil)
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL).WillReturnRows(rows).RowsWillBeClosed()
+			},
+			expected: expected{authTokens: []services.AuthToken{userToken, nullableToken}},
+		},
+		{
+			name:      "Success: auth tokens are sorted by last_access descending - 200",
+			sortItems: params.SortItems{{Field: "last_access", Direction: params.Descending}},
+			setupMocks: func(mock mock) {
+				rows := mock.pool.NewRows(authTokenRowColumns())
+				addUserTokenRow(rows)
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL + ` ORDER BY last_access DESC`).WillReturnRows(rows)
+			},
+			expected: expected{authTokens: []services.AuthToken{userToken}},
+		},
+		{
+			name:    "Success: auth tokens are filtered by user_id - 200",
+			filters: params.Filters{"user_id": {{Field: "user_id", Operator: params.Equals, Value: userID.String(), SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				rows := mock.pool.NewRows(authTokenRowColumns())
+				addUserTokenRow(rows)
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL + ` WHERE (user_id = $1)`).WithArgs(userID.String()).WillReturnRows(rows)
+			},
+			expected: expected{authTokens: []services.AuthToken{userToken}},
+		},
+		{
+			name:    "Success: null equality uses IS NULL - 200",
+			filters: params.Filters{"expires_at": {{Field: "expires_at", Operator: params.Equals, Value: "null", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL + ` WHERE (expires_at IS NULL)`).WillReturnRows(mock.pool.NewRows(authTokenRowColumns()))
+			},
+			expected: expected{authTokens: []services.AuthToken{}},
+		},
+		{
+			name: "Success: no auth tokens match - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL).WillReturnRows(mock.pool.NewRows(authTokenRowColumns()))
+			},
+			expected: expected{authTokens: []services.AuthToken{}},
+		},
+		{
+			name:      "Success: multiple sort fields retain their order and direction",
+			sortItems: params.SortItems{{Field: "name", Direction: params.Ascending}, {Field: "created_at", Direction: params.Descending}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL + ` ORDER BY name ASC, created_at DESC`).WillReturnRows(mock.pool.NewRows(authTokenRowColumns()))
+			},
+			expected: expected{authTokens: []services.AuthToken{}},
+		},
+		{
+			name:    "Success: null inequality uses IS NOT NULL",
+			filters: params.Filters{"expires_at": {{Field: "expires_at", Operator: params.NotEquals, Value: "null", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL + ` WHERE (expires_at IS NOT NULL)`).WillReturnRows(mock.pool.NewRows(authTokenRowColumns()))
+			},
+			expected: expected{authTokens: []services.AuthToken{}},
+		},
+		{
+			name: "Success: timestamp range filters bind both boundaries",
+			filters: params.Filters{"expires_at": {
+				{Field: "expires_at", Operator: params.GreaterThanOrEquals, Value: "2026-01-01T00:00:00Z", SetOperator: params.FilterAnd},
+				{Field: "expires_at", Operator: params.LessThan, Value: "2027-01-01T00:00:00Z", SetOperator: params.FilterAnd},
+			}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL+` WHERE (expires_at >= $1 AND expires_at < $2)`).
+					WithArgs("2026-01-01T00:00:00Z", "2027-01-01T00:00:00Z").
+					WillReturnRows(mock.pool.NewRows(authTokenRowColumns()))
+			},
+			expected: expected{authTokens: []services.AuthToken{}},
+		},
+		{
+			name: "Success: alternative names are combined with OR and sorted",
+			filters: params.Filters{"name": {
+				{Field: "name", Operator: params.Equals, Value: "user token", SetOperator: params.FilterOr},
+				{Field: "name", Operator: params.Equals, Value: "other token", SetOperator: params.FilterOr},
+			}},
+			sortItems: params.SortItems{{Field: "name", Direction: params.Ascending}},
+			setupMocks: func(mock mock) {
+				rows := mock.pool.NewRows(authTokenRowColumns())
+				addUserTokenRow(rows)
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL+` WHERE (name = $1 OR name = $2) ORDER BY name ASC`).
+					WithArgs("user token", "other token").WillReturnRows(rows)
+			},
+			expected: expected{authTokens: []services.AuthToken{userToken}},
+		},
+		{
+			name:    "Error: range comparison binds null as a string and propagates the database error",
+			filters: params.Filters{"expires_at": {{Field: "expires_at", Operator: params.GreaterThan, Value: "null", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL + ` WHERE (expires_at > $1)`).WithArgs("null").WillReturnError(dbErr)
+			},
+			expected: expected{err: dbErr},
+		},
+		{
+			name:       "Error: filter field is unknown - 400",
+			filters:    params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: "unknown field"},
+		},
+		{
+			name:       "Error: sort field is unknown - 400",
+			sortItems:  params.SortItems{{Field: "nope", Direction: params.Ascending}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: "unknown field"},
+		},
+		{
+			name:       "Error: client_id filter is unsupported",
+			filters:    params.Filters{"client_id": {{Field: "client_id", Operator: params.Equals, Value: userID.String()}}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: `auth token filter references unknown field "client_id"`},
+		},
+		{
+			name:       "Error: client_id sort is unsupported",
+			sortItems:  params.SortItems{{Field: "client_id", Direction: params.Ascending}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: `auth token sort references unknown field "client_id"`},
+		},
+		{
+			name:       "Error: filter operator is unsupported",
+			filters:    params.Filters{"name": {{Field: "name", Operator: params.ApproximatelyEquals, Value: "token"}}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: `auth token filter uses unsupported operator "~eq"`},
+		},
+		{
+			name: "Error: auth token row cannot be scanned",
+			setupMocks: func(mock mock) {
+				rows := mock.pool.NewRows(authTokenRowColumns()).
+					AddRow(nil, nil, nil, nil, "invalid-uuid", nil, nil, nil, nil)
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL).WillReturnRows(rows).RowsWillBeClosed()
+			},
+			expected: expected{errContains: "collecting auth tokens:"},
+		},
+		{
+			name: "Error: auth token row iteration fails after a valid row",
+			setupMocks: func(mock mock) {
+				rows := mock.pool.NewRows(authTokenRowColumns())
+				addUserTokenRow(rows)
+				rows.AddRow(nil, nil, nil, nil, token2ID.String(), nil, nil, nil, nil).RowError(1, dbErr)
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL).WillReturnRows(rows).RowsWillBeClosed()
+			},
+			expected: expected{err: dbErr, errContains: "collecting auth tokens:"},
+		},
+		{
+			name: "Error: auth tokens query fails - 500",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListAuthTokensSQL).WillReturnError(dbErr)
+			},
+			expected: expected{err: dbErr},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			store, pool := newTestStore(t)
+			testCase.setupMocks(mock{pool: pool})
+
+			result, err := store.ListAuthTokens(ctx, testCase.filters, testCase.sortItems)
+			switch {
+			case testCase.expected.err != nil || testCase.expected.errContains != "":
+				assert.Nil(t, result)
+				if testCase.expected.err != nil {
+					assert.ErrorIs(t, err, testCase.expected.err)
+				}
+				if testCase.expected.errContains != "" {
+					assert.ErrorContains(t, err, testCase.expected.errContains)
+				}
+			default:
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expected.authTokens, result)
+			}
+			require.NoError(t, pool.ExpectationsWereMet())
+		})
+	}
+}

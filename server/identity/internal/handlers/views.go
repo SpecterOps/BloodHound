@@ -374,3 +374,87 @@ func (s PermissionListView) IsSortable(field string) bool {
 		return false
 	}
 }
+
+type AuthTokenView struct {
+	UserID     uuid.NullUUID `json:"user_id"`
+	Name       *string       `json:"name"`
+	HmacMethod string        `json:"hmac_method"`
+	LastAccess time.Time     `json:"last_access"`
+	ExpiresAt  sql.NullTime  `json:"expires_at"`
+	CreatedBy  uuid.NullUUID `json:"created_by"`
+	ID         uuid.UUID     `json:"id"`
+	CreatedAt  time.Time     `json:"created_at"`
+	UpdatedAt  time.Time     `json:"updated_at"`
+	DeletedAt  sql.NullTime  `json:"deleted_at"`
+}
+
+func BuildAuthTokenView(authToken services.AuthToken) AuthTokenView {
+	return AuthTokenView{
+		UserID:     authToken.UserID,
+		Name:       nullStringToPtr(authToken.Name),
+		HmacMethod: authToken.HmacMethod,
+		LastAccess: authToken.LastAccess,
+		ExpiresAt:  authToken.ExpiresAt,
+		CreatedBy:  authToken.CreatedBy,
+		ID:         authToken.ID,
+		CreatedAt:  authToken.CreatedAt,
+		UpdatedAt:  authToken.UpdatedAt,
+		DeletedAt:  authToken.DeletedAt,
+	}
+}
+
+func (s AuthTokenView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+type AuthTokenListView struct {
+	Tokens []AuthTokenView `json:"tokens"`
+}
+
+func BuildAuthTokenListView(authTokens []services.AuthToken) AuthTokenListView {
+	var views = make([]AuthTokenView, 0, len(authTokens))
+	for _, authToken := range authTokens {
+		views = append(views, BuildAuthTokenView(authToken))
+	}
+
+	return AuthTokenListView{Tokens: views}
+}
+
+func (s AuthTokenListView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+func (s AuthTokenListView) ValidFilters() map[string]params.FilterableField {
+	var (
+		equalityOperators = []params.FilterOperator{params.Equals, params.NotEquals}
+		numericOperators  = []params.FilterOperator{
+			params.Equals,
+			params.NotEquals,
+			params.GreaterThan,
+			params.GreaterThanOrEquals,
+			params.LessThan,
+			params.LessThanOrEquals,
+		}
+	)
+
+	return map[string]params.FilterableField{
+		"user_id":     {Operators: equalityOperators},
+		"name":        {Operators: equalityOperators, IsStringData: true},
+		"hmac_method": {Operators: equalityOperators, IsStringData: true},
+		"id":          {Operators: equalityOperators},
+		"created_by":  {Operators: equalityOperators},
+		"last_access": {Operators: numericOperators},
+		"created_at":  {Operators: numericOperators},
+		"updated_at":  {Operators: numericOperators},
+		"expires_at":  {Operators: numericOperators},
+	}
+}
+
+func (s AuthTokenListView) IsSortable(field string) bool {
+	switch field {
+	case "name", "last_access", "created_at", "updated_at", "expires_at":
+		return true
+	default:
+		return false
+	}
+}

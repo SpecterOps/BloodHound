@@ -22,6 +22,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"maps"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -95,12 +97,40 @@ type User struct {
 	DeletedAt                        sql.NullTime
 }
 
+type AuthToken struct {
+	UserID     uuid.NullUUID
+	Name       sql.NullString
+	HmacMethod string
+	LastAccess time.Time
+	ID         uuid.UUID
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	ExpiresAt  sql.NullTime
+	CreatedBy  uuid.NullUUID
+	DeletedAt  sql.NullTime
+}
+
+type AuthTokenRequester struct {
+	UserID         uuid.UUID
+	IsUser         bool
+	CanManageUsers bool
+}
+
+const authTokenUserIDField = "user_id"
+
+var (
+	ErrInvalidAuthTokenUserID            = errors.New("invalid UUID")
+	ErrAuthTokenUserIDRequiresAdmin      = errors.New("filtering tokens by another user's user_id requires admin privileges")
+	ErrAuthTokenUserIDOperatorNotAllowed = errors.New("non-admin users may only apply the eq operator when filtering by user_id")
+)
+
 type Database interface {
 	GetRole(ctx context.Context, id int32) (Role, error)
 	GetPermission(ctx context.Context, id int) (Permission, error)
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error)
 	ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]User, error)
 	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error)
+	ListAuthTokens(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]AuthToken, error)
 }
 
 type Service struct {
@@ -129,4 +159,53 @@ func (s *Service) ListUsers(ctx context.Context, queryFilters params.Filters, so
 
 func (s *Service) ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error) {
 	return s.db.ListPermissions(ctx, queryFilters, sortItems)
+}
+
+func (s *Service) ListAuthTokens(ctx context.Context, requester AuthTokenRequester, queryFilters params.Filters, sortItems params.SortItems) ([]AuthToken, error) {
+	scopedFilters, err := scopeAuthTokenFilters(requester, queryFilters)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.db.ListAuthTokens(ctx, scopedFilters, sortItems)
+}
+
+func scopeAuthTokenFilters(requester AuthTokenRequester, queryFilters params.Filters) (params.Filters, error) {
+	var (
+		scopedFilters   = maps.Clone(queryFilters)
+		userIDFilters   = queryFilters[authTokenUserIDField]
+		validatedUserID uuid.UUID
+		err             error
+	)
+
+	if scopedFilters == nil {
+		scopedFilters = params.Filters{}
+	}
+
+	if len(userIDFilters) > 0 {
+		if validatedUserID, err = uuid.FromString(userIDFilters[0].Value); err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrInvalidAuthTokenUserID, err)
+		}
+	}
+
+	if !requester.IsUser || requester.CanManageUsers {
+		return scopedFilters, nil
+	}
+
+	if len(userIDFilters) > 0 {
+		if validatedUserID != requester.UserID {
+			return nil, ErrAuthTokenUserIDRequiresAdmin
+		} else if userIDFilters[0].Operator != params.Equals {
+			return nil, ErrAuthTokenUserIDOperatorNotAllowed
+		}
+	}
+
+	scopedFilters[authTokenUserIDField] = []params.Filter{{
+		Field:       authTokenUserIDField,
+		Operator:    params.Equals,
+		Value:       requester.UserID.String(),
+		SetOperator: params.FilterAnd,
+	}}
+
+	return scopedFilters, nil
 }
