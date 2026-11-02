@@ -36,6 +36,27 @@ http://dev-portal.localhost:8888/#/storybook?path=/story/button--primary
     than stepping through stories.
 -   Editing `path` in the address bar while already on the page has no effect until you reload.
 
+## Configuration (`conf.json`)
+
+`conf.json` controls the landing page cards and which markdown files the Documentation page shows. It is read at build
+time (and on every change under `yarn workspace dev-portal dev`); an invalid config fails the build.
+
+-   `cards`: the landing page cards, in display order. Each has `accent` (`blue` or `orange`), `title`, `description`,
+    `href`, and `icon` (`storybook` or `documentation`). The card number comes from its position.
+-   `docs.include` / `docs.exclude`: glob patterns, relative to the repo root, selecting the docs. Folders whose name
+    starts with a dot are skipped unless a pattern names them, as `.github/**/*.md` does. An include pattern that
+    matches nothing prints a warning.
+-   `docs.defaultPage`: the doc opened by `#/docs`. It must be one of the included docs.
+-   `docs.repositoryUrl`: where links to repo files that are not included docs point, for example source files.
+
+## Dependencies
+
+Packages used only by the Dev Portal, not by `cmd/ui` or Doodle UI:
+
+| Package      | Type | Purpose                                                                        |
+| ------------ | ---- | ------------------------------------------------------------------------------ |
+| `tinyglobby` | dev  | Resolves the `conf.json` doc patterns at build time (`portalContentPlugin.ts`) |
+
 ## Development
 
 ```bash

@@ -164,7 +164,7 @@ dev-portal *ARGS='up':
     fi
     if [[ -n "$storybook_reason" ]]; then
       echo "Building Doodle UI Storybook: $storybook_reason"
-      yarn workspace doodle-ui build-storybook
+      yarn workspace doodle-ui build:storybook
     fi
     yarn workspace dev-portal build
   fi

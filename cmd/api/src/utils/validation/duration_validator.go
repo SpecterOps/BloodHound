@@ -23,6 +23,7 @@ import (
 
 	iso8601 "github.com/channelmeter/iso8601duration"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/packages/go/duration"
 )
 
 const (
@@ -70,11 +71,14 @@ func (s DurationValidator) okMax(d time.Duration) bool {
 
 func (s DurationValidator) Validate(value any) utils.Errors {
 	var (
+		iso  duration.ISODuration
 		d    time.Duration
 		ok   bool
 		errs = utils.Errors{}
 	)
-	if d, ok = value.(time.Duration); !ok {
+	if iso, ok = value.(duration.ISODuration); ok {
+		d = time.Duration(iso)
+	} else if d, ok = value.(time.Duration); !ok {
 		return append(errs, fmt.Errorf(ErrorDuration, value))
 	}
 

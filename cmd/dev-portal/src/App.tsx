@@ -14,11 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ReactNode } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
+import { cards } from 'virtual:dev-portal';
 import { DocumentationIcon, StorybookIcon } from './components/Icons';
 import { PortalCard } from './components/PortalCard';
+import type { CardIcon } from './config/portalConfig';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { StorybookPage } from './pages/StorybookPage';
+
+const CARD_ICONS: Record<CardIcon, ReactNode> = {
+    documentation: <DocumentationIcon />,
+    storybook: <StorybookIcon />,
+};
 
 export default function App() {
     return (
@@ -64,22 +72,17 @@ function LandingPage() {
                 </section>
 
                 <section className='portal-grid' aria-label='Developer portal destinations'>
-                    <PortalCard
-                        accent='blue'
-                        index='01'
-                        title='Doodle UI Storybook'
-                        description='Explore our shared components, patterns, and design foundations.'
-                        href='#/storybook?path=%2Fdocs%2Fabout--docs'
-                        icon={<StorybookIcon />}
-                    />
-                    <PortalCard
-                        accent='orange'
-                        index='02'
-                        title='Documentation'
-                        description='Find technical guides, standards, and product knowledge.'
-                        href='#documentation'
-                        icon={<DocumentationIcon />}
-                    />
+                    {cards.map((card, position) => (
+                        <PortalCard
+                            key={card.title}
+                            accent={card.accent}
+                            index={String(position + 1).padStart(2, '0')}
+                            title={card.title}
+                            description={card.description}
+                            href={card.href}
+                            icon={CARD_ICONS[card.icon]}
+                        />
+                    ))}
                 </section>
 
                 <footer>

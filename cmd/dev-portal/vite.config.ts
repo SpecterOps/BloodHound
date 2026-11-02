@@ -19,6 +19,7 @@ import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 import { defineConfig, searchForWorkspaceRoot, type Connect, type Plugin } from 'vite';
+import { portalContentPlugin } from './portalContentPlugin';
 
 const STORYBOOK_URL_PREFIX = '/doodle-ui-storybook/';
 const STORYBOOK_BUILD_DIR = path.resolve(
@@ -49,7 +50,7 @@ const CONTENT_TYPES: Record<string, string> = {
 // justfile rebuilds Storybook first when it is missing or older than the Doodle UI sources. The Vite
 // dev and preview servers have no such path, so this plugin serves the same build directory there. Unlike
 // `just dev-portal`, it never builds or checks freshness: it serves whatever is currently in
-// storybook-static, and responds 404 until `yarn workspace doodle-ui build-storybook` has been run.
+// storybook-static, and responds 404 until `yarn workspace doodle-ui build:storybook` has been run.
 //
 // Serving happens in a post hook so Vite's host check runs first. The requested path is captured
 // beforehand because Vite's SPA fallback rewrites request.url to /index.html before post hooks run.
@@ -75,7 +76,7 @@ const doodleUIStorybookMiddleware: Connect.NextHandleFunction = (request, respon
     }
     if (!fs.existsSync(filePath)) {
         response.statusCode = 404;
-        return response.end('Doodle UI Storybook not found. Run `yarn workspace doodle-ui build-storybook`.');
+        return response.end('Doodle UI Storybook not found. Run `yarn workspace doodle-ui build:storybook`.');
     }
 
     response.setHeader('Content-Type', CONTENT_TYPES[path.extname(filePath)] ?? 'application/octet-stream');
@@ -96,7 +97,14 @@ const serveDoodleUIStorybook = (): Plugin => ({
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react(), serveDoodleUIStorybook()],
+    plugins: [
+        react(),
+        serveDoodleUIStorybook(),
+        portalContentPlugin({
+            configPath: path.resolve(__dirname, 'conf.json'),
+            repoRoot: path.resolve(__dirname, '..', '..'),
+        }),
+    ],
     resolve: {
         alias: {
             'doodle-ui': path.resolve(__dirname, '..', '..', 'packages', 'javascript', 'doodle-ui', 'src'),

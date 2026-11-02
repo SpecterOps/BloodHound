@@ -60,7 +60,7 @@ const DialogClose = React.forwardRef<
 DialogClose.displayName = DialogPrimitive.Close.displayName;
 
 const DialogOverlayVariants = cva(
-    'fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+    'fixed inset-0 bg-[color:var(--dialog-overlay-fill)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
     {
         variants: {
             blurBackground: { true: 'backdrop-blur-sm' },
@@ -150,7 +150,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
                         'left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]',
                         'duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
                         // Above the dialog backdrop (1501).
-                        'rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 dark:text-neutral-light-1 z-[1502]',
+                        'rounded-md bg-[color:var(--dialog-fill)] text-[color:var(--dialog-text)] z-[1502]',
                         'focus:outline-none focus-visible:focus-ring',
                         maxWidthClass,
                         { 'overflow-y-auto': disableStickyLayout },

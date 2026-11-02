@@ -407,14 +407,11 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		ResponseStatusCode(http.StatusBadRequest)
 
 	// Empty asset group name
-	jsonBody, err := json.Marshal(v2.CreateAssetGroupRequest{Name: "", Tag: "valid_tag"})
-	require.Nil(t, err)
-
 	requestTemplate.
 		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
-		WithBody(jsonBody).
+		WithBody(v2.CreateAssetGroupRequest{Name: "", Tag: "valid_tag"}).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
 		ResponseStatusCode(http.StatusBadRequest).
@@ -426,14 +423,11 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		})
 
 	// Empty asset group tag
-	jsonBody, err = json.Marshal(v2.CreateAssetGroupRequest{Name: "Valid Name", Tag: ""})
-	require.Nil(t, err)
-
 	requestTemplate.
 		WithContext(&bhctx.Context{
 			Host: &url.URL{},
 		}).
-		WithBody(jsonBody).
+		WithBody(v2.CreateAssetGroupRequest{Name: "Valid Name", Tag: ""}).
 		OnHandlerFunc(resources.CreateAssetGroup).
 		Require().
 		ResponseStatusCode(http.StatusBadRequest).
@@ -445,7 +439,7 @@ func TestResources_CreateAssetGroup(t *testing.T) {
 		})
 
 	// Whitespace in asset group tag must error
-	jsonBody, err = json.Marshal(v2.CreateAssetGroupRequest{Tag: "one space"})
+	jsonBody, err := json.Marshal(v2.CreateAssetGroupRequest{Tag: "one space"})
 	require.Nil(t, err)
 
 	requestTemplate.
