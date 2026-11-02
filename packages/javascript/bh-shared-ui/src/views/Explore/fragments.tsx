@@ -113,7 +113,7 @@ export const FieldsContainer: React.FC<PropsWithChildren<{ className?: string }>
     return (
         <div
             className={cn(
-                '[&>:nth-child(even)]:bg-data-table-row-even-fill [&>:nth-child(odd)]:bg-data-table-row-odd-fill',
+                '[&>:nth-child(even)]:bg-[color:var(--data-table-row-even-fill)] [&>:nth-child(odd)]:bg-[color:var(--data-table-row-odd-fill)]',
                 className
             )}>
             {children}
