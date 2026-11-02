@@ -38,7 +38,7 @@ export const EdgeFilter = ({ pathfindingFilterState }: { pathfindingFilterState:
             <IconButton
                 variant='primary'
                 size={14}
-                className={'h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'}
+                className='h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25'
                 aria-label='Show pathfinding filter options'
                 onClick={() => {
                     setIsOpenDialog(true);

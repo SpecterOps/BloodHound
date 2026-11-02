@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export const dataTableWrapperClasses =
-    'w-full border border-solid border-neutral-light-4 bg-neutral-1 shadow-none dark:border-neutral-900';
+    'w-full border border-solid border-neutral-light-4 dark:border-neutral-900 bg-neutral-1 shadow-none ';
 export const dataTableClasses = 'after:block after:h-[var(--prevent-vanishing-sticky-header)]';
 export const dataTableHeaderClasses = '[&_tr]:border-0';
 export const dataTableHeaderRowClasses = 'border-0';
