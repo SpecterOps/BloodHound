@@ -174,9 +174,13 @@ func (s *BloodhoundDB) pzRulesReconcileConfig(extensionID int32) reconcileConfig
 			if selector, err := s.agtSelectorFromPzRule(ctx, extensionID, input); err != nil {
 				return model.AssetGroupTagSelector{}, err
 			} else {
-				if !input.Enabled && existing.DisabledAt.Valid {
+				// Preserve the current state unless the rule must always be enabled.
+				if input.AllowDisable {
 					selector.DisabledAt = existing.DisabledAt
 					selector.DisabledBy = existing.DisabledBy
+				} else {
+					selector.DisabledAt = null.Time{}
+					selector.DisabledBy = null.String{}
 				}
 				return s.UpdateOpenGraphAssetGroupTagSelector(ctx, extensionID, selector)
 			}

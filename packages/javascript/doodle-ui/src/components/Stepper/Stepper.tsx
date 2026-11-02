@@ -358,7 +358,7 @@ function StepperIndicator({ children, className, ...props }: ComponentProps<'div
             )}>
             <div
                 className={cn(
-                    'flex size-8 items-center justify-center rounded border border-transparent group-data-[state=inactive]/indicator:border-[#939597] dark:group-data-[state=inactive]/indicator:border-input-border-default',
+                    'flex size-8 items-center justify-center rounded border border-transparent group-data-[state=inactive]/indicator:border-[color:var(--stepper-inactive-border)]',
                     'group-data-[state=completed]/indicator:border-primary group-data-[state=completed]/indicator:bg-primary group-data-[state=completed]/indicator:text-inverse',
                     'group-data-[state=active]/indicator:rounded-sm group-data-[state=active]/indicator:border-secondary group-data-[state=active]/indicator:bg-secondary group-data-[state=active]/indicator:text-inverse'
                 )}>
@@ -457,7 +457,7 @@ function StepperContent({ value, forceMount, children, className, ...props }: St
 
     return (
         <div
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- Text-only tab panels need a Tab focus target (WAI-ARIA Tabs Pattern).
+            // oxlint-disable-next-line a11y-compat/no-noninteractive-tabindex -- Text-only tab panels need a Tab focus target (WAI-ARIA Tabs Pattern).
             tabIndex={0}
             {...props}
             id={`${stepperId}-panel-${value}`}

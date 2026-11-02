@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import tailwindColors from 'tailwindcss/colors';
 import { PluginCreator } from 'tailwindcss/types/config';
 import { common, dark, elevation, light, palette, text } from './colors';
 
@@ -24,6 +23,17 @@ const focusRingOffsetWidth = '2px';
 
 const plugin: PluginCreator = ({ addBase, addUtilities }) => {
     addBase({
+        // Register angles so the spinner's arc interpolates smoothly between keyframes.
+        '@property --doodle-spinner-start': {
+            syntax: "'<angle>'",
+            inherits: 'false',
+            'initial-value': '0deg',
+        },
+        '@property --doodle-spinner-sweep': {
+            syntax: "'<angle>'",
+            inherits: 'false',
+            'initial-value': '225deg',
+        },
         ' :root': {
             // SHARED (same in light and dark)
             '--common-dark': common.dark,
@@ -126,11 +136,73 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
-            // Components/Button
-            // TODO remove
+            // Components/Accordion
+            '--accordion-fill': 'var(--neutral-light-2)',
+
+            // Components/Card
+            '--card-border': 'var(--neutral-light-4)',
+
+            // Components/Table
+            '--table-fill': 'var(--neutral-light-2)',
+            '--table-row-border-width': '1px',
+            '--table-dragging-fill': 'var(--neutral-light-1)',
+
+            // Components/Tabs
+            '--tabs-text': 'inherit',
+            '--tabs-active-accent': 'var(--primary)',
+
+            // Components/Typography
+            '--typography-body-text': 'var(--text-light)',
+
+            // Components/Breadcrumbs
+            '--breadcrumb-text': 'inherit',
+            '--breadcrumb-page-text': 'var(--primary)',
+
+            // Components/DatePicker
+            '--date-picker-input-fill': 'var(--common-white)',
+            '--date-picker-content-border': 'var(--neutral-light-5)',
+
+            // Components/Pagination
+            '--pagination-text': 'inherit',
+            '--pagination-disabled-text': palette.neutral.light[800],
+
+            // Components/Skeleton
+            '--skeleton-fill': 'var(--neutral-light-5)',
+
+            // Components/ComboBadge
+            '--combo-badge-fill': 'var(--neutral-light-5)',
+            '--combo-badge-text': 'var(--primary)',
+
+            // Components/Dialog
+            '--dialog-overlay-fill': 'rgb(0 0 0 / 0.4)',
+            '--dialog-fill': 'var(--neutral-light-2)',
+            '--dialog-text': 'inherit',
+
+            // Components/Popover
+            '--popover-fill': 'var(--neutral-light-2)',
+            '--popover-text': 'var(--neutral-dark-1)',
+
+            // Components/Slider
+            '--slider-track-fill': 'var(--neutral-200)',
+            '--slider-thumb-fill': 'var(--neutral-100)',
+            '--slider-thumb-border': 'var(--neutral-300)',
+            '--slider-thumb-focus-fill': 'var(--neutral-100)',
+            '--slider-thumb-active-fill': 'var(--neutral-100)',
+
+            // Components/Stepper
+            '--stepper-inactive-border': '#939597',
+
+            // Components/Toggle
             '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.light[500],
             '--toggle-group-fill': 'var(--surface-subtle)',
+
+            '--toggle-hover-border': 'var(--secondary)',
+            '--toggle-active-border': 'var(--primary-variant)',
+            '--toggle-selected-border': 'var(--primary)',
+            '--toggle-disabled-border': 'var(--button-disabled-fill)',
+            '--toggle-disabled-hover-text': 'var(--disabled)',
+            '--toggle-highlight-text': 'var(--common-white)',
 
             // Components/Checkbox
             '--checkbox-checked-active-border': 'var(--primary)',
@@ -147,6 +219,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/Input
             '--input-fill': common.white,
             '--input-disabled-fill': palette.neutral.light[100],
+            '--input-disabled-invalid-border': 'var(--status-error-main)',
             '--input-outlined-hover-focus-border': 'var(--input-outlined-border-hover)',
             // '--input-label': 'var(--text-main)',
             '--input-border-default': palette.grey[700],
@@ -165,6 +238,13 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
 
+            // Components/MultiSelect
+            '--multiselect-scrollbar-thumb': 'var(--neutral-400)',
+
+            // Components/Tooltip
+            '--tooltip-fill': 'var(--neutral-light-2)',
+            '--tooltip-border': palette.grey[500],
+
             // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.light[200],
             '--radio-border-default': palette.neutral.light[400],
@@ -176,9 +256,13 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
             '--select-open-fill': 'var(--primary)',
+            '--select-open-text': 'var(--common-white)',
+            '--select-open-placeholder-text': 'var(--common-white)',
+            '--select-item-disabled-fill': palette.neutral.light[300],
+            '--select-disabled-highlighted-fill': 'var(--secondary)',
             '--select-open-disabled-fill': 'var(--primary)',
             '--select-disabled-placeholder-text': 'var(--disabled)',
-            '--select-invalid-placeholder-open-text': 'var(--input-placeholder-text)',
+            '--select-invalid-placeholder-open-text': 'var(--select-open-placeholder-text)',
             '--select-open-focus-border': 'var(--primary)',
             '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
             '--select-highlight-text': 'var(--common-white)',
@@ -209,6 +293,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-odd-fill': 'var(--surface-subtle)',
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': light.primary.main,
+            '--data-table-row-selected': 'inset 0px 0px 0px 2px var(--data-table-row-selected-outline)',
+            '--data-table-wrapper-border': 'var(--neutral-light-4)',
+            '--data-table-resize-fill': 'var(--neutral-5)',
+            '--data-table-resize-active-fill': 'var(--primary)',
 
             // Components/Switch
             '--switch-fill': palette.neutral.dark[700],
@@ -235,7 +323,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--menu-item-disabled-fill': palette.neutral.light[200],
             '--menu-separator-fill': palette.neutral.light[300],
             '--menu-content-border': palette.neutral.light[300],
-            '--menu-sub-content-border': tailwindColors.gray[200],
+            '--menu-sub-content-border': palette.neutral.light[200],
             '--menu-item-highlight-border': light.secondary.main,
             '--menu-item-highlight-text': common.white,
             '--menu-item-disabled-text': palette.grey[700],
@@ -403,10 +491,73 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // '--brand-primary-medium-blue': 'var(--secondary)',
             // '--brand-secondary-highlight-green': 'var(--tertiary)',
 
+            // Components/Accordion
+            '--accordion-fill': 'var(--neutral-dark-2)',
+
+            // Components/Card
+            '--card-border': 'var(--neutral-900)',
+
+            // Components/Table
+            '--table-fill': 'var(--neutral-dark-2)',
+            '--table-row-border-width': '0px',
+            '--table-dragging-fill': 'var(--neutral-dark-1)',
+
+            // Components/Tabs
+            '--tabs-text': common.white,
+            '--tabs-active-accent': 'var(--secondary-variant-2)',
+
+            // Components/Typography
+            '--typography-body-text': 'var(--text-main)',
+
+            // Components/Breadcrumbs
+            '--breadcrumb-text': common.white,
+            '--breadcrumb-page-text': 'var(--secondary-variant-2)',
+
+            // Components/DatePicker
+            '--date-picker-input-fill': 'var(--common-dark)',
+            '--date-picker-content-border': 'var(--neutral-light-1)',
+
+            // Components/Pagination
+            '--pagination-text': common.white,
+            '--pagination-disabled-text': palette.neutral.light[800],
+
+            // Components/Skeleton
+            '--skeleton-fill': 'var(--neutral-dark-5)',
+
+            // Components/ComboBadge
+            '--combo-badge-fill': 'var(--neutral-dark-5)',
+            '--combo-badge-text': 'var(--neutral-light-1)',
+
+            // Components/Dialog
+            '--dialog-overlay-fill': 'rgb(0 0 0 / 0.4)',
+            '--dialog-fill': 'var(--neutral-dark-2)',
+            '--dialog-text': 'var(--neutral-light-1)',
+
+            // Components/Popover
+            '--popover-fill': 'var(--neutral-dark-2)',
+            '--popover-text': common.white,
+
+            // Components/Slider
+            '--slider-track-fill': 'var(--neutral-200)',
+            '--slider-thumb-fill': 'var(--neutral-100)',
+            '--slider-thumb-border': 'var(--neutral-300)',
+            '--slider-thumb-focus-fill': 'var(--neutral-400)',
+            '--slider-thumb-active-fill': 'var(--common-white)',
+
+            // Components/Stepper
+            '--stepper-inactive-border': 'var(--input-border-default)',
+
             // Components/Toggle
             '--toggle-btn-fill': 'var(--surface)',
             '--toggle-btn-border': palette.neutral.dark[600],
             '--toggle-group-fill': 'var(--surface-subtle)',
+
+            '--toggle-hover-border': 'var(--toggle-btn-border)',
+            '--toggle-active-border': 'var(--toggle-btn-border)',
+            '--toggle-selected-border': 'var(--toggle-btn-border)',
+            '--toggle-disabled-border': 'var(--toggle-btn-border)',
+            '--toggle-disabled-hover-text': 'var(--toggle-highlight-text)',
+            '--toggle-highlight-text': 'var(--common-dark)',
 
             // Components/Checkbox
             '--checkbox-checked-active-border': 'var(--primary-variant)',
@@ -423,6 +574,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/Input
             '--input-fill': palette.neutral.dark[50],
             '--input-disabled-fill': palette.neutral.dark[400],
+            '--input-disabled-invalid-border': 'var(--input-border-disabled)',
             '--input-outlined-hover-focus-border': 'var(--input-outlined-border-default)',
             // '--input-label': 'var(--text-main)',
             '--input-border-default': palette.neutral.light[400],
@@ -442,6 +594,13 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--textarea-border-default': 'var(--border-control)',
             '--textarea-border-hover': 'var(--secondary)',
 
+            // Components/MultiSelect
+            '--multiselect-scrollbar-thumb': 'var(--input-placeholder-text)',
+
+            // Components/Tooltip
+            '--tooltip-fill': 'var(--neutral-dark-5)',
+            '--tooltip-border': palette.grey[500],
+
             // Components/RadioGroup
             '--radio-label-focus-fill': palette.neutral.dark[600],
             '--radio-border-default': palette.neutral.light[400],
@@ -453,10 +612,14 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             // Components/Input/Selectors
             // '--selector-disable-fill': common.white,
             '--select-open-fill': 'var(--input-fill)',
+            '--select-open-text': 'var(--text-main)',
+            '--select-open-placeholder-text': 'var(--input-placeholder-text)',
+            '--select-item-disabled-fill': palette.neutral.dark[700],
+            '--select-disabled-highlighted-fill': 'var(--select-item-disabled-fill)',
             '--select-open-disabled-fill': 'var(--select-disabled-fill)',
             '--select-disabled-placeholder-text': 'var(--select-trigger-placeholder-text)',
-            '--select-invalid-placeholder-open-text': 'var(--select-highlight-text)',
-            // '--select-open-focus-border': 'var(--input-outlined-border-default)',
+            '--select-invalid-placeholder-open-text': 'var(--select-open-placeholder-text)',
+            '--select-open-focus-border': 'var(--input-outlined-border-default)',
             '--select-open-invalid-hover-focus-border': 'var(--status-error-main)',
             '--select-highlight-text': 'var(--common-dark)',
             '--select-placeholder-text': 'var(--select-trigger-placeholder-text)',
@@ -486,6 +649,10 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-row-odd-fill': 'var(--surface-subtle)',
             '--data-table-row-hover-fill': 'var(--surface-hover)',
             '--data-table-row-selected-outline': darkDataTableRowSelectedOutline,
+            '--data-table-row-selected': 'inset 0px 0px 0px 2px var(--data-table-row-selected-outline)',
+            '--data-table-wrapper-border': 'var(--neutral-900)',
+            '--data-table-resize-fill': 'var(--neutral-light-5)',
+            '--data-table-resize-active-fill': 'var(--secondary)',
 
             // Components/Switch
             '--switch-fill': common.white,
@@ -572,7 +739,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             ///////////// Legacy below //////////
             // same as common.white
-            '--contrast': '#ffffff',
+            '--contrast': common.white,
             '--neutral-1': 'var(--neutral-dark-1)',
             '--neutral-2': 'var(--neutral-dark-2)',
             '--neutral-3': 'var(--neutral-dark-3)',

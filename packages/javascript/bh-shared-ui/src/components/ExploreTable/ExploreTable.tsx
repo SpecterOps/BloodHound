@@ -184,7 +184,7 @@ const ExploreTable = ({
         <div
             data-testid='explore-table-container-wrapper'
             className={cn(
-                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2 rounded-lg shadow-outer-1 border',
+                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 overflow-hidden rounded-lg border border-solid border-neutral-light-4 bg-neutral-light-2 dark:border-neutral-900',
                 {
                     'h-1/2': !isExpanded,
                     'h-[calc(100%-72px)]': isExpanded,
@@ -225,7 +225,7 @@ const ExploreTable = ({
                     onColumnOrderChange={(newOrder) => {
                         setColumnOrder(newOrder);
                     }}
-                    className='overflow-auto h-full'
+                    className='h-full overflow-auto border-0'
                     growLastColumn
                     enableResizing
                     enableDragAndDrop

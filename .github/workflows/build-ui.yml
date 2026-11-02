@@ -52,7 +52,7 @@ jobs:
         run: |
           yarn audit
 
-      - name: Run eslint
+      - name: Run Lint
         run: |
           yarn lint
 

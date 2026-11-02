@@ -172,7 +172,7 @@ const UpdateUserFormInner: React.FC<{
             }
         }
         // ignoring so we don't have to include the form element
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // oxlint-disable-next-line hooks-compat/exhaustive-deps
     }, [error]);
 
     const handleOnSave = () => {
