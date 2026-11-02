@@ -54,9 +54,11 @@ import {
     dataTableCellClasses,
     dataTableClasses,
     dataTableClickableRowClasses,
+    dataTableEvenRowClasses,
     dataTableHeadClasses,
     dataTableHeaderClasses,
     dataTableHeaderRowClasses,
+    dataTableOddRowClasses,
     dataTableRowClasses,
     dataTableSelectedRowClasses,
     dataTableWrapperClasses,
@@ -64,6 +66,7 @@ import {
 import NoDataFallback from './NoDataFallback';
 import PinDialog from './components/PinDialog';
 import { ResizeIndicator } from './components/ResizeIndicator';
+import { useTableLayout } from './useTableLayout';
 import { getExpandedColWidth, updateColumnOrder } from './utils';
 
 interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
@@ -185,6 +188,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     const parentRef = useRef<HTMLDivElement>(null);
     const tableHeaderRef = useRef<HTMLTableSectionElement>(null);
+    const tableBodyRef = useRef<HTMLTableSectionElement>(null);
     const tableHeadRef = useRef<HTMLTableCellElement>(null);
     const tableCellRef = useRef<HTMLTableCellElement>(null);
 
@@ -236,6 +240,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     );
 
     const virtualizer = useVirtualizer(virtualizationOptions);
+    useTableLayout(parentRef, tableHeaderRef, tableBodyRef, virtualizer.getTotalSize());
 
     const handleRowClick = useCallback(
         (row: Row<TData>) => {
@@ -457,7 +462,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             <div className={cn(dataTableWrapperClasses, className)} {...wrapperRest} ref={parentRef}>
                 <div
                     style={{
-                        height: `${virtualizer.getTotalSize()}px`,
+                        height: 'var(--data-table-content-height)',
                     }}
                     className={cn(heightContainerClassName)}>
                     <Table
@@ -535,11 +540,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     {header.column.getCanResize() && (
                                                         <ResizeIndicator
                                                             header={header as Header<TData, TValue>}
-                                                            tableHeight={
-                                                                tableHeaderRef.current &&
-                                                                tableHeaderRef.current?.clientHeight +
-                                                                    virtualizer.getTotalSize()
-                                                            }
                                                             onSetExpanded={setExpanded}
                                                         />
                                                     )}
@@ -561,16 +561,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                 );
                             })}
                         </TableHeader>
-                        <TableBody
-                            {...TableBodyProps}
-                            ref={(ref) => {
-                                if (!ref) return;
-                                const height = virtualizer.getTotalSize() - ref.getBoundingClientRect().height;
-                                document.documentElement.style.setProperty(
-                                    '--prevent-vanishing-sticky-header',
-                                    `${height}px`
-                                );
-                            }}>
+                        <TableBody {...TableBodyProps} ref={tableBodyRef}>
                             {tableRows.length ? (
                                 virtualizer.getVirtualItems().map((virtualRow, index) => {
                                     const row = tableRows[virtualRow.index];
@@ -621,6 +612,8 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                             className={cn(
                                                 dataTableRowClasses,
                                                 {
+                                                    [dataTableEvenRowClasses]: virtualRow.index % 2 === 0,
+                                                    [dataTableOddRowClasses]: virtualRow.index % 2 !== 0,
                                                     // Border is tricky on <tr> https://github.com/TanStack/virtual/issues/620
                                                     [dataTableSelectedRowClasses]: row.getIsSelected(),
                                                     'cursor-pointer': onRowClick,

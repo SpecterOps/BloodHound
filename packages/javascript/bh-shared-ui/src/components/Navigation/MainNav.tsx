@@ -250,7 +250,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 aria-expanded={isExpanded}
                 aria-label='Toggle Navigation'
                 className={cn(
-                    'h-8 w-8 p-2 border-none',
+                    'h-8 w-8',
                     'text-common-white bg-primary dark:text-main dark:bg-neutral-5',
                     'hover:text-common-white hover:bg-secondary dark:hover:text-main dark:hover:bg-neutral-3',
                     'active:text-common-white active:bg-primary-variant dark:active:text-main dark:active:bg-neutral-2',

@@ -20,15 +20,10 @@ import { dataTableActiveResizeIndicatorClasses, dataTableResizeIndicatorClasses 
 
 interface ResizeIndicatorProps<TData, TValue> {
     header: Header<TData, TValue>;
-    tableHeight: number | null;
     onSetExpanded: (header: Header<TData, TValue>) => void;
 }
 
-export const ResizeIndicator = <TData, TValue>({
-    header,
-    tableHeight,
-    onSetExpanded,
-}: ResizeIndicatorProps<TData, TValue>) => {
+export const ResizeIndicator = <TData, TValue>({ header, onSetExpanded }: ResizeIndicatorProps<TData, TValue>) => {
     const { isDragging } = useSortable({ id: header.column.id });
 
     if (isDragging) return null;
@@ -44,7 +39,7 @@ export const ResizeIndicator = <TData, TValue>({
                 ),
             }}
             style={{
-                height: tableHeight ? `${tableHeight}px` : '100%',
+                height: 'var(--data-table-height, 100%)',
                 transform: 'translateZ(0)',
             }}
         />
