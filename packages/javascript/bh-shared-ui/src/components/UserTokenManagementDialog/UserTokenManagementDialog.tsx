@@ -20,14 +20,13 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
-    LinearProgress,
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableRow,
 } from '@mui/material';
-import { Button, TextButton, Typography } from 'doodle-ui';
+import { Button, ProgressBar, TextButton, Typography } from 'doodle-ui';
 import { AuthToken, NewAuthToken } from 'js-client-library';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
@@ -106,7 +105,7 @@ const UserTokenManagementDialog: React.FC<{
             return (
                 <TableRow>
                     <TableCell colSpan={colSpan}>
-                        <LinearProgress />
+                        <ProgressBar value={null} aria-label='Loading API tokens' />
                     </TableCell>
                 </TableRow>
             );

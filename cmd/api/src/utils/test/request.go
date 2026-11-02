@@ -29,6 +29,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/stretchr/testify/require"
@@ -162,33 +163,26 @@ func (s RequestResponseAssertions) ResponseStatusCode(status int) RequestRespons
 }
 
 func (s RequestResponseAssertions) ResponseJSONBody(body any) RequestResponseAssertions {
+	var actualContent string
+
 	require.Equal(s.t, mediatypes.ApplicationJson.String(), s.response.Header().Get(headers.ContentType.String()))
 
-	content, err := json.Marshal(body)
+	expectedContent, err := json.Marshal(body)
 	if err != nil {
 		s.t.Fatalf("Failed marshaling expected body: %v", err)
 	}
 
-	var contentAsInterface any = content
-	if v1Expected, ok := contentAsInterface.(map[string]any); ok {
-		var v1Actual map[string]any
+	actualContent = normalizeResponseJSONBody(s.response.Body.String())
 
-		if err := json.Unmarshal(s.response.Body.Bytes(), &v1Actual); err != nil {
-			s.t.Fatalf("Failed unmarshaling response body: %v", err)
-		}
-
-		require.Equal(s.t, v1Expected, v1Actual)
-	}
-
-	if v2Expected, ok := contentAsInterface.(string); ok {
-		var v2Actual string
-
-		if err := json.Unmarshal(s.response.Body.Bytes(), &v2Actual); err != nil {
-			s.t.Fatalf("Failed unmarshaling response body: %v", err)
-		}
-
-		require.Equal(s.t, v2Expected, v2Actual)
-	}
+	require.JSONEq(s.t, string(expectedContent), actualContent)
 
 	return s
+}
+
+func normalizeResponseJSONBody(body string) string {
+	if normalizedBody, err := utils.ReplaceFieldValueInJsonString(body, "timestamp", "0001-01-01T00:00:00Z"); err == nil {
+		return normalizedBody
+	}
+
+	return body
 }

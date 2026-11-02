@@ -110,7 +110,7 @@ describe('EntityInfoContent', () => {
 
         render(<EntityInfoContentWithProvider selectedNode={selectedNode} />);
 
-        expect(await screen.findByText('Labels:')).toBeInTheDocument();
+        expect(await screen.findByText('Labels')).toBeInTheDocument();
         expect(screen.getByText('Crown Jewels, Incident Response')).toBeInTheDocument();
         expect(screen.queryByText('Owned')).not.toBeInTheDocument();
         expect(screen.queryByText('Not Associated')).not.toBeInTheDocument();
@@ -125,7 +125,7 @@ describe('EntityInfoContent', () => {
 
         render(<EntityInfoContentWithProvider selectedNode={selectedNode} />);
 
-        expect(screen.queryByText('Labels:')).not.toBeInTheDocument();
+        expect(screen.queryByText('Labels')).not.toBeInTheDocument();
     });
 
     it('AZRole information panel will not display a section for PIM Assignments', async () => {

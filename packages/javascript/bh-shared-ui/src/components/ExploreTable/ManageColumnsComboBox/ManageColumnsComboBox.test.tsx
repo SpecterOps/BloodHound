@@ -24,7 +24,7 @@ import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColu
 vi.mock('@fortawesome/react-fontawesome', () => ({
     FontAwesomeIcon: vi.fn(({ icon, onClick }: any) => {
         const iconName = typeof icon === 'string' ? icon : icon.iconName;
-        // eslint-disable-next-line
+        // oxlint-disable-next-line
         return <span onClick={onClick}>{iconName}</span>;
     }),
 }));

@@ -20,8 +20,10 @@ package database_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -202,13 +204,14 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionPZRules(t *testing.T) {
 				var (
 					extensionName       = "PZRuleReconcileUpdate"
 					initialPZRules      = model.PZRulesInput{pzRule("PZR_keep", "Keep", "initial rule", true, true, "MATCH (n:Keep) RETURN n")}
-					expectedPZRules     = model.PZRulesInput{pzRule("PZR_keep", "Keep Updated", "updated rule", false, false, "MATCH (n:KeepUpdated) RETURN n")}
+					expectedPZRules     = model.PZRulesInput{pzRule("PZR_keep", "Keep Updated", "updated rule", true, false, "MATCH (n:KeepUpdated) RETURN n")}
 					graphExtensionInput = baseGraphExtensionInput
 					extensionID         = upsertExtensionPZRules(t, testSuite, extensionName, initialPZRules...)
 				)
 
 				graphExtensionInput.ExtensionInput.Name = extensionName
-				graphExtensionInput.PZRulesInput = expectedPZRules
+				graphExtensionInput.PZRulesInput = append(model.PZRulesInput{}, expectedPZRules...)
+				graphExtensionInput.PZRulesInput[0].Enabled = false
 
 				return testSetupData{
 					graphExtensionInput:    graphExtensionInput,
@@ -277,6 +280,75 @@ func TestBloodhoundDB_UpsertOpenGraphExtensionPZRules(t *testing.T) {
 
 			updated, err := testSuite.BHDatabase.UpsertOpenGraphExtension(testSuite.Context, setupData.graphExtensionInput)
 			testCase.assert(t, testSuite, &setupData, updated.ExtensionExisted, err)
+		})
+	}
+}
+
+func TestBloodhoundDB_UpsertOpenGraphExtensionPZRulesEnabledState(t *testing.T) {
+	var (
+		testSuite = setupIntegrationTestSuite(t)
+		tests     = []struct {
+			name                string
+			initialEnableState  bool
+			allowDisable        bool
+			expectedEnableState bool
+		}{
+			{
+				name:                "preserves_user_disabled_selector",
+				initialEnableState:  true,
+				allowDisable:        true,
+				expectedEnableState: false,
+			},
+			{
+				name:                "enables_selector_when_disabling_is_disallowed",
+				initialEnableState:  true,
+				allowDisable:        false,
+				expectedEnableState: true,
+			},
+			{
+				name:                "preserves_user_enabled_selector_when_bundle_is_disabled",
+				initialEnableState:  false,
+				allowDisable:        true,
+				expectedEnableState: true,
+			},
+		}
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				extensionName = "PZRuleState_" + testCase.name
+				rule          = pzRule("PZR_state", "State", "rule", testCase.initialEnableState, true, "MATCH (n:State) RETURN n")
+				extensionID   = upsertExtensionPZRules(t, testSuite, extensionName, rule)
+				selector      = assertExtensionPZRules(t, testSuite, extensionID, rule)[rule.ExtensionRuleId]
+			)
+			t.Cleanup(func() {
+				assert.NoError(t, testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extensionID))
+			})
+
+			// The user toggles the selector's enabled state outside of the extension upsert flow.
+			if testCase.initialEnableState {
+				selector.DisabledAt = null.TimeFrom(time.Now().UTC().Truncate(time.Microsecond))
+				selector.DisabledBy = null.StringFrom("test-user")
+			} else {
+				selector.DisabledAt = null.Time{}
+				selector.DisabledBy = null.String{}
+			}
+			_, err := testSuite.BHDatabase.UpdateAssetGroupTagSelector(testSuite.Context, "test-user", "", selector)
+			require.NoError(t, err)
+
+			rule.AllowDisable = testCase.allowDisable
+			upsertExtensionPZRules(t, testSuite, extensionName, rule)
+
+			updatedSelector, err := testSuite.BHDatabase.GetAssetGroupTagSelectorBySelectorId(testSuite.Context, selector.ID)
+			require.NoError(t, err)
+			assert.Equal(t, testCase.expectedEnableState, !updatedSelector.DisabledAt.Valid)
+			assert.Equal(t, testCase.expectedEnableState, !updatedSelector.DisabledBy.Valid)
+			if !testCase.expectedEnableState {
+				assert.Equal(t, selector.DisabledAt.Time.UTC(), updatedSelector.DisabledAt.Time.UTC())
+				assert.Equal(t, selector.DisabledBy, updatedSelector.DisabledBy)
+			}
 		})
 	}
 }
