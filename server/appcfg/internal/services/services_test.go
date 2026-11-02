@@ -18,13 +18,14 @@ package services_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	legacyAppcfg "github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/packages/go/duration"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -115,6 +116,82 @@ func setUpMockWithParam(t *testing.T, ctx context.Context, paramKey services.Par
 	return services.NewService(mockDB)
 }
 
+func TestService_ValidateValue(t *testing.T) {
+	mockDB := mocks.NewMockDatabase(t)
+	svc := services.NewService(mockDB)
+
+	// specific validator tag rules are already tested elsewhere
+	var cases = []struct {
+		name            string
+		parameterKey    services.ParameterKey
+		input           string
+		expectError     bool
+		expectErrorLike string
+	}{
+		{
+			name:         "happy: input matches type",
+			parameterKey: services.APITokenExpiration,
+			input:        `{"enabled":true, "expiration_period":200}`,
+			expectError:  false,
+		},
+		{
+			name:         "happy: input matches type with a different parameter",
+			parameterKey: services.ClientMetricsKey,
+			input:        `{"enabled":true}`,
+			expectError:  false,
+		},
+		{
+			name:         "happy: duration validation passes",
+			parameterKey: services.PruneTTL,
+			input:        `{"base_ttl": "P14D","has_session_edge_ttl": "P3D"}`,
+			expectError:  false,
+		},
+		{
+			name:            "sad: duration validation fails",
+			parameterKey:    services.PruneTTL,
+			input:           `{"base_ttl": "P14D","has_session_edge_ttl": "P100D"}`,
+			expectError:     true,
+			expectErrorLike: "HasSessionEdgeTTL: must be <= P7D",
+		},
+		{
+			name:            "sad: too few fields",
+			parameterKey:    services.APITokenExpiration,
+			input:           `{"expiration_period":200}`,
+			expectError:     true,
+			expectErrorLike: "value property contains an invalid field",
+		},
+		{
+			name:            "sad: too many fields",
+			parameterKey:    services.APITokenExpiration,
+			input:           `{"enabled":true, "expiration_period":200, "blah":"blah"}`,
+			expectError:     true,
+			expectErrorLike: "value property contains an invalid field",
+		},
+		{
+			name:            "sad: value out of range",
+			parameterKey:    services.APITokenExpiration,
+			input:           `{"enabled":true, "expiration_period":500}`,
+			expectError:     true,
+			expectErrorLike: "ExpirationPeriod: must be <= 365",
+		},
+	}
+
+	for _, cc := range cases {
+		t.Run(cc.name, func(t *testing.T) {
+			var object types.JSONBObject
+			err := json.Unmarshal([]byte(cc.input), &object)
+			require.NoError(t, err)
+
+			errs := svc.ValidateValue(cc.parameterKey, object)
+			if !cc.expectError {
+				assert.Nil(t, errs)
+			} else {
+				assert.Contains(t, errs.Error(), cc.expectErrorLike)
+			}
+		})
+	}
+}
+
 func TestService_GetConfig(t *testing.T) {
 	// Consider testing actual param configurations in future rather than fixtures
 	// (once those exist), and making param definition types and vars private
@@ -134,7 +211,7 @@ func TestService_GetConfig(t *testing.T) {
 
 	type fixtureParam2 struct {
 		Enabled    bool                 `json:"enabled,omitempty"`
-		SessionTTL services.ISODuration `json:"session_ttl,omitempty"`
+		SessionTTL duration.ISODuration `json:"session_ttl,omitempty"`
 	}
 
 	originalDefinitions := services.ParamTypeDefinitions
@@ -160,7 +237,7 @@ func TestService_GetConfig(t *testing.T) {
 			HydrationRules: services.ParamTypeHydrationRules[fixtureParam2]{
 				Default: fixtureParam2{
 					Enabled:    true,
-					SessionTTL: services.ISODuration(time.Hour * 2),
+					SessionTTL: duration.ISODuration(time.Hour * 2),
 				},
 			},
 		},
@@ -245,31 +322,6 @@ func TestService_GetConfig(t *testing.T) {
 		assert.False(t, getConfigError.AppliedDefault)
 		assert.Equal(t, fixtureKey1, getConfigError.ParameterKey)
 	})
-}
-
-func TestService_IsAPIAllowedKey_TempMigration(t *testing.T) {
-	// test to ensure that IsAPIAllowedKey continues tracking with legacy functions
-	// while onion migration is in progress
-	// Note: this is limited in that it only is aware of defined keys. New keys
-	// added in the legacy implementation will be missed.
-
-	var (
-		mockDB  = mocks.NewMockDatabase(t)
-		service = services.NewService(mockDB)
-	)
-
-	for key := range services.ParamTypeDefinitions {
-		t.Run("testing "+string(key), func(t *testing.T) {
-			param := legacyAppcfg.Parameter{Key: legacyAppcfg.ParameterKey(key)}
-			legacyIsValid := param.IsValidKey(param.Key)
-			legacyIsProtected := param.IsProtectedKey(param.Key)
-
-			newIsAllowed := service.IsAPIAllowedKey(key)
-
-			assert.Equal(t, newIsAllowed, legacyIsValid)
-			assert.NotEqual(t, newIsAllowed, legacyIsProtected)
-		})
-	}
 }
 
 func TestService_IsAPIAllowedKey(t *testing.T) {

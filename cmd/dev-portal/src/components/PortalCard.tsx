@@ -16,9 +16,10 @@
 //
 
 import type { ReactNode } from 'react';
+import type { CardAccent } from '../config/portalConfig';
 
 type PortalCardProps = {
-    accent: 'blue' | 'orange';
+    accent: CardAccent;
     description: string;
     href: string;
     icon: ReactNode;

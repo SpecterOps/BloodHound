@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, CircularProgress } from '@mui/material';
 import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient, useAppName } from 'bh-shared-ui';
+import { LoadingSpinner } from 'doodle-ui';
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useQueryClient } from 'react-query';
@@ -87,9 +87,9 @@ const Login: React.FC = () => {
         return (
             <LoginPage>
                 {title}
-                <Box textAlign='center'>
-                    <CircularProgress />
-                </Box>
+                <div className='text-center'>
+                    <LoadingSpinner />
+                </div>
             </LoginPage>
         );
     }

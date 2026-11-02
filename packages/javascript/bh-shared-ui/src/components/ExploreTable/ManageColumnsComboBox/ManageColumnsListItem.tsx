@@ -33,7 +33,7 @@ type ManageColumnsListItemProps = {
 
 const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps, onPinClick }: ManageColumnsListItemProps) => (
     <li
-        role='button' // eslint-disable-line
+        role='button' // oxlint-disable-line
         tabIndex={0}
         className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer flex items-center'
         {...itemProps}

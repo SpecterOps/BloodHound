@@ -125,8 +125,74 @@
 }
 
 .brand-context,
-.header-label {
+.header-label,
+.portal-header-home {
     color: var(--color-ink-muted);
+}
+
+.portal-frame-shell {
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+    background: var(--color-night-deep);
+}
+
+.portal-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 3.5rem;
+    padding-inline: 1.5rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-line) 75%, transparent);
+}
+
+.portal-header .brand-mark {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+.portal-header-home {
+    transition: color 180ms ease;
+}
+
+.portal-header-home:hover {
+    color: var(--color-ink);
+}
+
+.portal-header-home:focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: 0.3rem;
+}
+
+.portal-frame {
+    width: 100%;
+    flex: 1;
+    border: 0;
+}
+
+.not-found {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+}
+
+.not-found-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 600;
+    letter-spacing: -0.05em;
+}
+
+.not-found-copy {
+    max-width: 28rem;
+    margin-top: 1rem;
+    color: var(--color-ink-muted);
+    line-height: 1.6;
 }
 
 .header-label {
@@ -373,6 +439,10 @@ footer {
         display: none;
     }
 
+    .portal-header .brand-divider {
+        display: block;
+    }
+
     .hero {
         padding-block: 5rem 3rem;
     }
@@ -405,7 +475,8 @@ footer {
     }
 
     .portal-card,
-    .card-action svg {
+    .card-action svg,
+    .portal-header-home {
         transition: none;
     }
 }
