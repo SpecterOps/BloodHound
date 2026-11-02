@@ -13,8 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { CircularProgress } from '@mui/material';
-import { Tabs, TabsList, TabsTrigger } from 'doodle-ui';
+import { LoadingSpinner, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import { FC, Suspense } from 'react';
 import { usePZPathParams } from '../../../../hooks';
 import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
@@ -43,21 +42,21 @@ export const SelectedDetailsTabs: FC = () => {
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
-            <Suspense
-                fallback={
-                    <div className='absolute inset-0 flex items-center justify-center'>
-                        <CircularProgress color='primary' size={80} />
+            <div className='relative min-h-0 flex-1'>
+                <Suspense
+                    fallback={
+                        <LoadingSpinner variant='overlay' className='bg-transparent' spinnerClassName='size-20' />
+                    }>
+                    <div className='overflow-y-auto overflow-x-hidden h-full rounded-lg'>
+                        <SelectedDetailsTabContent
+                            currentDetailsTab={selectedDetailsTab}
+                            tagId={tagId}
+                            ruleId={ruleId}
+                            memberId={memberId}
+                        />
                     </div>
-                }>
-                <div className='overflow-y-auto overflow-x-hidden h-full rounded-lg'>
-                    <SelectedDetailsTabContent
-                        currentDetailsTab={selectedDetailsTab}
-                        tagId={tagId}
-                        ruleId={ruleId}
-                        memberId={memberId}
-                    />
-                </div>
-            </Suspense>
+                </Suspense>
+            </div>
         </div>
     );
 };
