@@ -97,6 +97,10 @@ func TestMarshalJson(t *testing.T) {
 			input:  24*time.Hour + 45*time.Minute,
 			output: `"P1DT45M"`,
 		},
+		{
+			input:  365*24*time.Hour - time.Nanosecond,
+			output: `"P364DT23H59M"`,
+		},
 	}
 
 	for _, cc := range cases {

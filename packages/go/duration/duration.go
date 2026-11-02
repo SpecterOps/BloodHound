@@ -68,13 +68,13 @@ func (s *ISODuration) ToISO8601String() string {
 
 	result := "P"
 
-	days := int(d.Hours() / 24)
+	days := int(d / (24 * time.Hour))
 	if days > 0 {
 		result += fmt.Sprintf("%dD", days)
 	}
 
-	hours := int(d.Hours()) % 24
-	minutes := int(d.Minutes()) % 60
+	hours := int(d/(time.Hour)) % 24
+	minutes := int(d/(time.Minute)) % 60
 
 	if hours > 0 || minutes > 0 {
 		result += "T"
