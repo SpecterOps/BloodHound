@@ -34,13 +34,13 @@ import (
 // Environment and EnvironmentKindsToEnvironment expose the slice-owned models
 // without requiring callers to import an internal package.
 type Environment = services.Environment
-type EnvironmentKindsToEnvironment = services.EnvironmentKindsToEnvironment
+type EnvironmentByEnvironmentKinds = services.EnvironmentByEnvironmentKinds
 
 // OpenGraphSchemaRequestAdapter is the exported open graph schema capability
 // other feature slices depend on. It is satisfied by the internal service
 // constructed by NewOpenGraphSchemaRequestAdapter.
 type OpenGraphSchemaRequestAdapter interface {
-	GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, EnvironmentKindsToEnvironment, error)
+	GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, EnvironmentByEnvironmentKinds, error)
 }
 
 // NewOpenGraphSchemaRequestAdapter builds a ready-to-use open graph schema

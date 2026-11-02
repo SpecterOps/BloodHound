@@ -36,18 +36,18 @@ type Environment struct {
 	DeletedAt                  *time.Time
 }
 
-type EnvironmentKindsToEnvironment map[string]Environment
+type EnvironmentByEnvironmentKinds map[string]Environment
 
 // GetEnvironmentKindsAndSchemaEnvironmentData returns all environment kinds as
 // graph.Kinds and a map of their schema environments. When onlyBuiltin is true
 // only builtin environment kinds are returned.
-func (s *Service) GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, EnvironmentKindsToEnvironment, error) {
+func (s *Service) GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, EnvironmentByEnvironmentKinds, error) {
 	if environments, err := s.db.GetEnvironmentsFiltered(ctx, onlyBuiltin); err != nil {
 		return nil, nil, err
 	} else {
 		var (
 			environmentKinds     = make([]graph.Kind, 0, len(environments))
-			envKindToEnvironment = make(EnvironmentKindsToEnvironment, len(environments))
+			envKindToEnvironment = make(EnvironmentByEnvironmentKinds, len(environments))
 		)
 
 		for _, env := range environments {

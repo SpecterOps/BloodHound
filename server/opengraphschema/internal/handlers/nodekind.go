@@ -104,7 +104,7 @@ func (s Handlers) GetNodeKindByID(response http.ResponseWriter, request *http.Re
 	if id, err := params.PathInt32(request, URIPathVariableNodeKindID); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "node kind id is malformed", response)
 		return
-	} else if nodeKind, err := s.schema.GetNodeKind(ctx, id); errors.Is(err, services.ErrNodeKindNotFound) {
+	} else if nodeKind, err := s.service.GetNodeKind(ctx, id); errors.Is(err, services.ErrNodeKindNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "node kind not found", response)
 		return
 	} else if err != nil {

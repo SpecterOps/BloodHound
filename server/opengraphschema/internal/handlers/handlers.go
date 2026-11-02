@@ -31,12 +31,12 @@ type OpenGraphSchema interface {
 
 // Handlers is a dependency injection container for OpenGraph schema handlers.
 type Handlers struct {
-	schema OpenGraphSchema
+	service OpenGraphSchema
 }
 
 // NewHandlersContainer initializes the Handlers dependency injection container.
 func NewHandlersContainer(schema OpenGraphSchema) *Handlers {
 	return &Handlers{
-		schema: schema,
+		service: schema,
 	}
 }

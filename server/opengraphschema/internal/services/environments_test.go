@@ -41,7 +41,7 @@ func TestService_GetEnvironmentKindsAndSchemaEnvironmentData(t *testing.T) {
 		onlyBuiltin bool
 		setupMock   func(databaseMock *mocks.MockDatabase)
 		wantKinds   graph.Kinds
-		wantEnvMap  services.EnvironmentKindsToEnvironment
+		wantEnvMap  services.EnvironmentByEnvironmentKinds
 		wantErr     error
 	}{
 		{
@@ -52,7 +52,7 @@ func TestService_GetEnvironmentKindsAndSchemaEnvironmentData(t *testing.T) {
 					Return([]services.Environment{azureEnv, adEnv}, nil)
 			},
 			wantKinds: graph.Kinds{graph.StringKind("AZBase"), graph.StringKind("Base")},
-			wantEnvMap: services.EnvironmentKindsToEnvironment{
+			wantEnvMap: services.EnvironmentByEnvironmentKinds{
 				"AZBase": azureEnv,
 				"Base":   adEnv,
 			},
@@ -65,7 +65,7 @@ func TestService_GetEnvironmentKindsAndSchemaEnvironmentData(t *testing.T) {
 					Return([]services.Environment{}, nil)
 			},
 			wantKinds:  graph.Kinds{},
-			wantEnvMap: services.EnvironmentKindsToEnvironment{},
+			wantEnvMap: services.EnvironmentByEnvironmentKinds{},
 		},
 		{
 			name:        "error_-_propagates_database_error",

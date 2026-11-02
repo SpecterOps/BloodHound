@@ -35,7 +35,7 @@ func (s Handlers) GetRelationshipKindByID(response http.ResponseWriter, request 
 	if id, err := params.PathInt32(request, URIPathVariableRelationshipKindID); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "relationship kind id is malformed", response)
 		return
-	} else if relationshipKind, err := s.schema.GetRelationshipKind(ctx, id); errors.Is(err, services.ErrRelationshipKindNotFound) {
+	} else if relationshipKind, err := s.service.GetRelationshipKind(ctx, id); errors.Is(err, services.ErrRelationshipKindNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "relationship kind not found", response)
 		return
 	} else if err != nil {
