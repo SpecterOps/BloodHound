@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { mergeProps, useRender } from '@base-ui/react';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     type ComponentProps,
     type HTMLAttributes,
@@ -27,6 +25,7 @@ import {
     useRef,
     useState,
 } from 'react';
+import { LoadingSpinner } from '../LoadingSpinner';
 import { Typography } from '../Typography';
 import { cn } from '../utils.ts';
 import {
@@ -70,7 +69,7 @@ const BasicStepper = ({
     panelHeader,
     navClassName,
     indicators = {
-        loading: <FontAwesomeIcon icon={faSpinner} className='size-4 animate-spin' aria-label='Loading' />,
+        loading: <LoadingSpinner className='size-4 text-inherit' />,
     },
     ...props
 }: BasicStepperProps) => {
