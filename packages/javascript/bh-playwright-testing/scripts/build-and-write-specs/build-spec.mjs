@@ -16,7 +16,7 @@
 
 import ts from 'typescript';
 
-function removeRecorderSetup(node, parsed) {
+function shouldRemoveBoilerplate(node, parsed) {
     if (ts.isImportDeclaration(node)) return true;
     if (
         ts.isExpressionStatement(node) &&
@@ -61,7 +61,7 @@ function transformBrowserActions(parsed, origin, name) {
     const transformed = ts.transform(parsed, [
         (context) => {
             const visit = (node) => {
-                if (removeRecorderSetup(node, parsed)) return undefined;
+                if (shouldRemoveBoilerplate(node, parsed)) return undefined;
                 return (
                     rewritePageUrl(node, parsed, origin) ??
                     rewriteSpecName(node, parsed, name, visit) ??
