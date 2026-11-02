@@ -42,7 +42,7 @@ func TestRegisterRequiresAuthentication(t *testing.T) {
 		recorder       = httptest.NewRecorder()
 		match          mux.RouteMatch
 	)
-	routes.Register(&routerInstance, handlers.NewHandlersContainer(service), featureFlags)
+	routes.Register(&routerInstance, handlers.NewHandlers(service), featureFlags)
 	assert.True(t, routerInstance.MuxRouter().Match(request, &match))
 	routerInstance.Handler().ServeHTTP(recorder, request)
 	assert.Equal(t, http.StatusUnauthorized, recorder.Code)

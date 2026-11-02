@@ -22,6 +22,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/dataquality/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -54,8 +55,8 @@ func (_m *MockDatabase) EXPECT() *MockDatabase_Expecter {
 }
 
 // ListAggregations provides a mock function for the type MockDatabase
-func (_mock *MockDatabase) ListAggregations(ctx context.Context, query services.AggregationQuery) ([]services.Aggregation, int, error) {
-	ret := _mock.Called(ctx, query)
+func (_mock *MockDatabase) ListAggregations(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems, skip int, limit int) ([]services.Aggregation, int, error) {
+	ret := _mock.Called(ctx, queryFilters, sortItems, skip, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListAggregations")
@@ -64,23 +65,23 @@ func (_mock *MockDatabase) ListAggregations(ctx context.Context, query services.
 	var r0 []services.Aggregation
 	var r1 int
 	var r2 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, services.AggregationQuery) ([]services.Aggregation, int, error)); ok {
-		return returnFunc(ctx, query)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, params.Filters, params.SortItems, int, int) ([]services.Aggregation, int, error)); ok {
+		return returnFunc(ctx, queryFilters, sortItems, skip, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, services.AggregationQuery) []services.Aggregation); ok {
-		r0 = returnFunc(ctx, query)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, params.Filters, params.SortItems, int, int) []services.Aggregation); ok {
+		r0 = returnFunc(ctx, queryFilters, sortItems, skip, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]services.Aggregation)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, services.AggregationQuery) int); ok {
-		r1 = returnFunc(ctx, query)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, params.Filters, params.SortItems, int, int) int); ok {
+		r1 = returnFunc(ctx, queryFilters, sortItems, skip, limit)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
-	if returnFunc, ok := ret.Get(2).(func(context.Context, services.AggregationQuery) error); ok {
-		r2 = returnFunc(ctx, query)
+	if returnFunc, ok := ret.Get(2).(func(context.Context, params.Filters, params.SortItems, int, int) error); ok {
+		r2 = returnFunc(ctx, queryFilters, sortItems, skip, limit)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -94,24 +95,42 @@ type MockDatabase_ListAggregations_Call struct {
 
 // ListAggregations is a helper method to define mock.On call
 //   - ctx context.Context
-//   - query services.AggregationQuery
-func (_e *MockDatabase_Expecter) ListAggregations(ctx interface{}, query interface{}) *MockDatabase_ListAggregations_Call {
-	return &MockDatabase_ListAggregations_Call{Call: _e.mock.On("ListAggregations", ctx, query)}
+//   - queryFilters params.Filters
+//   - sortItems params.SortItems
+//   - skip int
+//   - limit int
+func (_e *MockDatabase_Expecter) ListAggregations(ctx interface{}, queryFilters interface{}, sortItems interface{}, skip interface{}, limit interface{}) *MockDatabase_ListAggregations_Call {
+	return &MockDatabase_ListAggregations_Call{Call: _e.mock.On("ListAggregations", ctx, queryFilters, sortItems, skip, limit)}
 }
 
-func (_c *MockDatabase_ListAggregations_Call) Run(run func(ctx context.Context, query services.AggregationQuery)) *MockDatabase_ListAggregations_Call {
+func (_c *MockDatabase_ListAggregations_Call) Run(run func(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems, skip int, limit int)) *MockDatabase_ListAggregations_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 services.AggregationQuery
+		var arg1 params.Filters
 		if args[1] != nil {
-			arg1 = args[1].(services.AggregationQuery)
+			arg1 = args[1].(params.Filters)
+		}
+		var arg2 params.SortItems
+		if args[2] != nil {
+			arg2 = args[2].(params.SortItems)
+		}
+		var arg3 int
+		if args[3] != nil {
+			arg3 = args[3].(int)
+		}
+		var arg4 int
+		if args[4] != nil {
+			arg4 = args[4].(int)
 		}
 		run(
 			arg0,
 			arg1,
+			arg2,
+			arg3,
+			arg4,
 		)
 	})
 	return _c
@@ -122,7 +141,7 @@ func (_c *MockDatabase_ListAggregations_Call) Return(aggregations []services.Agg
 	return _c
 }
 
-func (_c *MockDatabase_ListAggregations_Call) RunAndReturn(run func(ctx context.Context, query services.AggregationQuery) ([]services.Aggregation, int, error)) *MockDatabase_ListAggregations_Call {
+func (_c *MockDatabase_ListAggregations_Call) RunAndReturn(run func(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems, skip int, limit int) ([]services.Aggregation, int, error)) *MockDatabase_ListAggregations_Call {
 	_c.Call.Return(run)
 	return _c
 }

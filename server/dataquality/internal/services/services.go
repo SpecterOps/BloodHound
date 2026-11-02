@@ -20,46 +20,15 @@ package services
 
 import (
 	"context"
-	"errors"
-	"time"
 
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema"
 )
 
-var (
-	ErrExtensionNotFound = errors.New("extension not found")
-	ErrInvalidQuery      = errors.New("invalid aggregation query")
-)
-
-type Aggregation struct {
-	ID                      int32
-	RunID                   string
-	SchemaExtensionID       int32
-	SchemaEnvironmentKindID int32
-	MetricType              string
-	MetricName              string
-	MetricValue             float64
-	KindID                  *int32
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
-}
-
-type AggregationQuery struct {
-	EnvironmentKindID int32
-	ExtensionID       *int32
-	Start             time.Time
-	End               time.Time
-	Sort              params.SortItems
-	Skip              int
-	Limit             int
-}
-
 type Database interface {
-	ListAggregations(ctx context.Context, query AggregationQuery) ([]Aggregation, int, error)
+	ListAggregations(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems, skip, limit int) ([]Aggregation, int, error)
 }
 
-// Extensions observes extensions through their owning slice.
 type Extensions interface {
 	GetExtension(ctx context.Context, id int32) (opengraphschema.Extension, error)
 }
@@ -74,16 +43,4 @@ func NewService(databaseInterface Database, extensions Extensions) *Service {
 		panic("dataquality: service requires database and extensions")
 	}
 	return &Service{database: databaseInterface, extensions: extensions}
-}
-
-func (s *Service) ListAggregations(ctx context.Context, query AggregationQuery) ([]Aggregation, int, error) {
-	if query.ExtensionID != nil {
-
-		if _, err := s.extensions.GetExtension(ctx, *query.ExtensionID); errors.Is(err, opengraphschema.ErrExtensionNotFound) {
-			return nil, 0, ErrExtensionNotFound
-		} else if err != nil {
-			return nil, 0, err
-		}
-	}
-	return s.database.ListAggregations(ctx, query)
 }

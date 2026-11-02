@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -76,16 +77,16 @@ func (s *Resources) GetADDataQualityStats(response http.ResponseWriter, request 
 	var (
 		adDataQualityStats       model.ADDataQualityStats
 		queryParams              = request.URL.Query()
-		defaultEnd, defaultStart = DefaultTimeRange()
+		defaultEnd, defaultStart = params.DefaultTimeRange()
 	)
 
 	if order, _, err := parseOrder(queryParams, adDataQualityStats); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if id, hasDomainID := mux.Vars(request)[api.URIPathVariableDomainID]; !hasDomainID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorNoDomainId, request), response)
-	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+	} else if start, err := params.ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
-	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+	} else if end, err := params.ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
 	} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
@@ -102,16 +103,16 @@ func (s *Resources) GetAzureDataQualityStats(response http.ResponseWriter, reque
 	var (
 		azureDataQualityStats    model.AzureDataQualityStats
 		queryParams              = request.URL.Query()
-		defaultEnd, defaultStart = DefaultTimeRange()
+		defaultEnd, defaultStart = params.DefaultTimeRange()
 	)
 
 	if order, _, err := parseOrder(queryParams, azureDataQualityStats); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if id, hasTenantID := mux.Vars(request)[api.URIPathVariableTenantID]; !hasTenantID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoTenantId, request), response)
-	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+	} else if start, err := params.ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
-	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+	} else if end, err := params.ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
 	} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
@@ -128,7 +129,7 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 	var (
 		azureDataQualityStats    model.AzureDataQualityStats
 		queryParams              = request.URL.Query()
-		defaultEnd, defaultStart = DefaultTimeRange()
+		defaultEnd, defaultStart = params.DefaultTimeRange()
 	)
 
 	// TODO: This is currently using only the Azure stat type, but should check against the appropriate aggregate type for the chosen platform
@@ -137,9 +138,9 @@ func (s *Resources) GetPlatformAggregateStats(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if id, hasPlatformID := mux.Vars(request)[api.URIPathVariablePlatformID]; !hasPlatformID {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrNoPlatformId, request), response)
-	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+	} else if start, err := params.ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
-	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+	} else if end, err := params.ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
 	} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)
@@ -178,7 +179,7 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 		ctx                      = request.Context()
 		dataQualityStats         model.DataQualityStats
 		queryParams              = request.URL.Query()
-		defaultEnd, defaultStart = DefaultTimeRange()
+		defaultEnd, defaultStart = params.DefaultTimeRange()
 	)
 
 	if environmentId := queryParams.Get(api.QueryParameterEnvironmentId); environmentId == "" {
@@ -187,9 +188,9 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, ErrUnknownUser, request), response)
 	} else if _, sort, err := parseOrder(queryParams, dataQualityStats); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-	} else if start, err := ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
+	} else if start, err := params.ParseTimeQueryParameter(queryParams, "start", defaultStart); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["start"]), request), response)
-	} else if end, err := ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
+	} else if end, err := params.ParseTimeQueryParameter(queryParams, "end", defaultEnd); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.ErrorInvalidRFC3339, queryParams["end"]), request), response)
 	} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidLimit, queryParams["limit"]), request), response)

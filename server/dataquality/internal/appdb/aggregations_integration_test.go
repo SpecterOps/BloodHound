@@ -20,12 +20,12 @@ package appdb_test
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/dataquality/internal/appdb"
-	"github.com/specterops/bloodhound/server/dataquality/internal/services"
 	"github.com/specterops/bloodhound/server/internal/servertest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -71,10 +71,14 @@ func TestListAggregationsIntegration(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			records, count, err := store.ListAggregations(ctx, services.AggregationQuery{
-				EnvironmentKindID: kindID, ExtensionID: testCase.extensionID, Start: timestamp, End: timestamp,
-				Sort: testCase.sort, Skip: testCase.skip, Limit: testCase.limit,
-			})
+			queryFilters := params.Filters{
+				"schema_environment_kind_id": {{Field: "schema_environment_kind_id", Operator: params.Equals, Value: strconv.FormatInt(int64(kindID), 10)}},
+				"created_at":                 {{Field: "created_at", Operator: params.GreaterThanOrEquals, Value: timestamp.Format(time.RFC3339Nano)}, {Field: "created_at", Operator: params.LessThanOrEquals, Value: timestamp.Format(time.RFC3339Nano)}},
+			}
+			if testCase.extensionID != nil {
+				queryFilters["schema_extension_id"] = []params.Filter{{Field: "schema_extension_id", Operator: params.Equals, Value: strconv.FormatInt(int64(*testCase.extensionID), 10)}}
+			}
+			records, count, err := store.ListAggregations(ctx, queryFilters, testCase.sort, testCase.skip, testCase.limit)
 			require.NoError(t, err)
 			assert.Equal(t, testCase.count, count)
 			require.Len(t, records, len(testCase.expected))

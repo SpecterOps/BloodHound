@@ -30,8 +30,8 @@ type FeatureFlags interface {
 	IsEnabled(ctx context.Context, key string) (bool, error)
 }
 
-func Register(routerInst *router.Router, handlerSet *handlers.Handlers, featureFlags FeatureFlags) {
-	routerInst.GET("/api/v2/data-quality-stats-aggregations", handlerSet.ListAggregations).
+func Register(routerInst *router.Router, handler *handlers.Handlers, featureFlags FeatureFlags) {
+	routerInst.GET("/api/v2/data-quality-stats-aggregations", handler.ListAggregations).
 		RequirePermissions(auth.Permissions().GraphDBRead).
 		CheckFeatureFlag(featureFlags, appcfg.FeatureOpenGraphExtensionManagement).
 		WithSort(handlers.AggregationsView{}).

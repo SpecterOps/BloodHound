@@ -33,14 +33,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestBuildAggregationsViewOmitsZeroTimeBounds(t *testing.T) {
+	t.Parallel()
+	view := handlers.BuildAggregationsView(nil, time.Time{}, time.Time{}, 0, 0, 1000)
+	encoded, err := view.JSONView()
+	require.NoError(t, err)
+	assert.JSONEq(t, `{"count":0,"limit":1000,"skip":0,"data":null}`, string(encoded))
+}
+
 func TestListAggregations(t *testing.T) {
 	t.Parallel()
 	var (
-		start       = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-		end         = start.Add(time.Hour)
-		extensionID = int32(42)
-		query       = services.AggregationQuery{EnvironmentKindID: 10, ExtensionID: &extensionID, Start: start, End: end, Sort: params.SortItems{{Field: "updated_at", Direction: params.Descending}}, Skip: 3, Limit: 7}
-		baseURL     = "/api/v2/data-quality-stats-aggregations?schema_environment_kind_id=10&schema_extension_id=42&start=2026-01-01T00:00:00Z&end=2026-01-01T01:00:00Z"
+		start     = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		end       = start.Add(time.Hour)
+		sortItems = params.SortItems{{Field: "updated_at", Direction: params.Descending}}
+		query     = params.Filters{
+			"schema_environment_kind_id": {{Field: "schema_environment_kind_id", Operator: params.Equals, Value: "10"}},
+			"schema_extension_id":        {{Field: "schema_extension_id", Operator: params.Equals, Value: "42"}},
+			"created_at": {
+				{Field: "created_at", Operator: params.GreaterThanOrEquals, Value: start.Format(time.RFC3339Nano)},
+				{Field: "created_at", Operator: params.LessThanOrEquals, Value: end.Format(time.RFC3339Nano)},
+			},
+		}
+		baseURL = "/api/v2/data-quality-stats-aggregations?schema_environment_kind_id=10&schema_extension_id=42&start=2026-01-01T00:00:00Z&end=2026-01-01T01:00:00Z"
 	)
 	testCases := []struct {
 		name      string
@@ -49,16 +64,16 @@ func TestListAggregations(t *testing.T) {
 		status    int
 	}{
 		{name: "forwards query and builds envelope", url: baseURL, status: 200, setupMock: func(service *mocks.MockDataQuality, request *http.Request) {
-			service.EXPECT().ListAggregations(request.Context(), query).Return([]services.Aggregation{{ID: 1, RunID: "run", SchemaExtensionID: 42, SchemaEnvironmentKindID: 10, MetricType: "count", MetricName: "nodes", MetricValue: 1.5, CreatedAt: start, UpdatedAt: end}}, 42, nil).Once()
+			service.EXPECT().ListAggregations(request.Context(), query, sortItems, 3, 7).Return([]services.Aggregation{{ID: 1, RunID: "run", SchemaExtensionID: 42, SchemaEnvironmentKindID: 10, MetricType: "count", MetricName: "nodes", MetricValue: 1.5, CreatedAt: start, UpdatedAt: end}}, 42, nil).Once()
 		}},
 		{name: "missing extension", url: baseURL, status: 404, setupMock: func(service *mocks.MockDataQuality, request *http.Request) {
-			service.EXPECT().ListAggregations(request.Context(), query).Return(nil, 0, services.ErrExtensionNotFound).Once()
+			service.EXPECT().ListAggregations(request.Context(), query, sortItems, 3, 7).Return(nil, 0, services.ErrExtensionNotFound).Once()
 		}},
 		{name: "database fails", url: baseURL, status: 500, setupMock: func(service *mocks.MockDataQuality, request *http.Request) {
-			service.EXPECT().ListAggregations(request.Context(), query).Return(nil, 0, errors.New("private database failure")).Once()
+			service.EXPECT().ListAggregations(request.Context(), query, sortItems, 3, 7).Return(nil, 0, errors.New("private database failure")).Once()
 		}},
 		{name: "invalid query", url: baseURL, status: 400, setupMock: func(service *mocks.MockDataQuality, request *http.Request) {
-			service.EXPECT().ListAggregations(request.Context(), query).Return(nil, 0, services.ErrInvalidQuery).Once()
+			service.EXPECT().ListAggregations(request.Context(), query, sortItems, 3, 7).Return(nil, 0, services.ErrInvalidQuery).Once()
 		}},
 		{name: "missing kind", url: "/", status: 400},
 		{name: "invalid kind", url: "/?schema_environment_kind_id=abc", status: 400},
@@ -73,14 +88,14 @@ func TestListAggregations(t *testing.T) {
 			var (
 				service           = mocks.NewMockDataQuality(t)
 				request           = httptest.NewRequest(http.MethodGet, testCase.url, nil)
-				bloodhoundContext = &bhctx.Context{Sort: query.Sort, Skip: 3, Limit: 7}
+				bloodhoundContext = &bhctx.Context{Sort: sortItems, Skip: 3, Limit: 7}
 				recorder          = httptest.NewRecorder()
 			)
 			request = request.WithContext(bhctx.Set(request.Context(), bloodhoundContext))
 			if testCase.setupMock != nil {
 				testCase.setupMock(service, request)
 			}
-			handlers.NewHandlersContainer(service).ListAggregations(recorder, request)
+			handlers.NewHandlers(service).ListAggregations(recorder, request)
 			require.Equal(t, testCase.status, recorder.Code)
 			if testCase.status == 200 {
 				var view handlers.AggregationsView

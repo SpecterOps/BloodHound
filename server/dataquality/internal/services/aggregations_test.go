@@ -19,6 +19,7 @@ package services_test
 import (
 	"context"
 	"errors"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"testing"
 
 	"github.com/specterops/bloodhound/server/dataquality/internal/services"
@@ -33,7 +34,7 @@ func TestListAggregations(t *testing.T) {
 	var (
 		ctx             = context.Background()
 		extensionID     = int32(42)
-		query           = services.AggregationQuery{EnvironmentKindID: 10, ExtensionID: &extensionID, Limit: 1000}
+		query           = params.Filters{"schema_extension_id": {{Field: "schema_extension_id", Operator: params.Equals, Value: "42"}}}
 		records         = []services.Aggregation{{ID: 1, SchemaExtensionID: extensionID}}
 		unexpectedError = errors.New("extension lookup failed")
 	)
@@ -46,7 +47,7 @@ func TestListAggregations(t *testing.T) {
 	}{
 		{name: "existing extension", setupMock: func(database *mocks.MockDatabase, extensions *mocks.MockExtensions) {
 			extensions.EXPECT().GetExtension(ctx, extensionID).Return(opengraphschema.Extension{ID: extensionID}, nil).Once()
-			database.EXPECT().ListAggregations(ctx, query).Return(records, 7, nil).Once()
+			database.EXPECT().ListAggregations(ctx, query, params.SortItems(nil), 0, 1000).Return(records, 7, nil).Once()
 		}, expected: records, count: 7},
 		{name: "missing extension", setupMock: func(database *mocks.MockDatabase, extensions *mocks.MockExtensions) {
 			extensions.EXPECT().GetExtension(ctx, extensionID).Return(opengraphschema.Extension{}, opengraphschema.ErrExtensionNotFound).Once()
@@ -64,7 +65,7 @@ func TestListAggregations(t *testing.T) {
 				service    = services.NewService(database, extensions)
 			)
 			testCase.setupMock(database, extensions)
-			actual, count, err := service.ListAggregations(ctx, query)
+			actual, count, err := service.ListAggregations(ctx, query, params.SortItems(nil), 0, 1000)
 			require.ErrorIs(t, err, testCase.err)
 			assert.Equal(t, testCase.expected, actual)
 			assert.Equal(t, testCase.count, count)
@@ -78,12 +79,38 @@ func TestListAggregationsWithoutExtension(t *testing.T) {
 		ctx        = context.Background()
 		database   = mocks.NewMockDatabase(t)
 		extensions = mocks.NewMockExtensions(t)
-		query      = services.AggregationQuery{EnvironmentKindID: 10, Limit: 1000}
+		query      = params.Filters{"schema_environment_kind_id": {{Field: "schema_environment_kind_id", Operator: params.Equals, Value: "10"}}}
 		expected   = []services.Aggregation{{ID: 1}}
 	)
-	database.EXPECT().ListAggregations(ctx, query).Return(expected, 1, nil).Once()
-	records, count, err := services.NewService(database, extensions).ListAggregations(ctx, query)
+	database.EXPECT().ListAggregations(ctx, query, params.SortItems(nil), 0, 1000).Return(expected, 1, nil).Once()
+	records, count, err := services.NewService(database, extensions).ListAggregations(ctx, query, params.SortItems(nil), 0, 1000)
 	require.NoError(t, err)
 	assert.Equal(t, expected, records)
 	assert.Equal(t, 1, count)
+}
+
+func TestListAggregationsRejectsInvalidExtensionFilters(t *testing.T) {
+	t.Parallel()
+	for _, testCase := range []struct {
+		name   string
+		filter params.Filter
+	}{
+		{name: "invalid ID", filter: params.Filter{Field: "schema_extension_id", Operator: params.Equals, Value: "bad"}},
+		{name: "ID overflow", filter: params.Filter{Field: "schema_extension_id", Operator: params.Equals, Value: "2147483648"}},
+		{name: "unsupported operator", filter: params.Filter{Field: "schema_extension_id", Operator: params.NotEquals, Value: "42"}},
+		{name: "OR filter", filter: params.Filter{Field: "schema_extension_id", Operator: params.Equals, Value: "42", SetOperator: params.FilterOr}},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			var (
+				database   = mocks.NewMockDatabase(t)
+				extensions = mocks.NewMockExtensions(t)
+				service    = services.NewService(database, extensions)
+			)
+			records, count, err := service.ListAggregations(context.Background(), params.Filters{"schema_extension_id": {testCase.filter}}, nil, 0, 1000)
+			require.ErrorIs(t, err, services.ErrInvalidQuery)
+			assert.Nil(t, records)
+			assert.Zero(t, count)
+		})
+	}
 }

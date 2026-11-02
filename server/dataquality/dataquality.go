@@ -31,7 +31,7 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (
 		store      = appdb.NewStore(pool)
 		service    = services.NewService(store, opengraphschema.NewOpenGraphSchemaRequestAdapter(pool))
-		handlerSet = handlers.NewHandlersContainer(service)
+		handlerSet = handlers.NewHandlers(service)
 	)
 	routes.Register(routerInst, handlerSet, featureflags.NewFeatureFlagRequestAdapter(pool))
 }
