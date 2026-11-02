@@ -23,14 +23,14 @@ export async function writeNewHar(file, har) {
     await writeFile(file, `${JSON.stringify(har, null, 2)}\n`, { flag: 'wx' });
 }
 
-export async function writeRecordedHar(browserActions) {
-    const rawHar = JSON.parse(await readFile(browserActions.rawHar, 'utf8'));
-    const authState = JSON.parse(await readFile(browserActions.storageState, 'utf8'));
+export async function writeRecordedHar(recordingSession) {
+    const rawHar = JSON.parse(await readFile(recordingSession.rawHar, 'utf8'));
+    const authState = JSON.parse(await readFile(recordingSession.storageState, 'utf8'));
     const har = sanitizeHar(rawHar, authState);
     if (!har.log.entries.length) {
         throw new Error('No API responses captured. Visit your feature before closing codegen.');
     }
-    await writeNewHar(browserActions.files.har, har);
+    await writeNewHar(recordingSession.files.har, har);
 }
 
 export async function writeUpdatedHar(captures, authState, spec) {

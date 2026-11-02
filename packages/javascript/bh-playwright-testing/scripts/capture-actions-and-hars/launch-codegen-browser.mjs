@@ -19,19 +19,19 @@ import { makeDevServerArguments, recorderArguments } from './prepare-arguments.m
 
 const uiDirectory = process.cwd();
 
-export async function launchCodegenBrowser(browserActions) {
-    console.log(`Opening the Playwright browser at ${browserActions.homeUrl}; this may take a few seconds...`);
+export async function launchCodegenBrowser(recordingSession) {
+    console.log(`Opening the Playwright browser at ${recordingSession.homeUrl}; this may take a few seconds...`);
     console.log('Record the flow, add assertions, then close the browser to save.');
     const result = await new Promise((resolve, reject) => {
         const child = spawn(
             process.execPath,
             [
-                browserActions.playwrightCli,
+                recordingSession.playwrightCli,
                 ...recorderArguments(
-                    browserActions.storageState,
-                    browserActions.rawSource,
-                    browserActions.rawHar,
-                    browserActions.homeUrl
+                    recordingSession.storageState,
+                    recordingSession.rawSource,
+                    recordingSession.rawHar,
+                    recordingSession.homeUrl
                 ),
             ],
             { cwd: uiDirectory, env: process.env, stdio: 'inherit' }
@@ -41,7 +41,7 @@ export async function launchCodegenBrowser(browserActions) {
     });
     if (result.signal || result.code !== 0)
         throw new Error(
-            `Browser action capture did not finish successfully. Temporary files remain in ${browserActions.temporaryDirectory}.`
+            `Browser action capture did not finish successfully. Temporary files remain in ${recordingSession.temporaryDirectory}.`
         );
 }
 

@@ -27,13 +27,13 @@ export function checkForDuplicateSpecName(files) {
     }
 }
 
-export function announceFilesCreated(browserActions, source) {
+export function announceFilesCreated(recordingSession, source) {
     if (!/\bexpect\s*\(/.test(source)) {
         console.log('No assertions were recorded. Add an expected result before treating this as regression coverage.');
     }
     console.log(
-        `Created ${path.relative(uiDirectory, browserActions.files.spec)} and ${path.relative(uiDirectory, browserActions.files.har)}.`
+        `Created ${path.relative(uiDirectory, recordingSession.files.spec)} and ${path.relative(uiDirectory, recordingSession.files.har)}.`
     );
     console.log('Review the assertions and captured data before committing.');
-    console.log(`Run: yarn test:e2e tests/e2e/${browserActions.name}.spec.ts`);
+    console.log(`Run: yarn test:e2e tests/e2e/${recordingSession.name}.spec.ts`);
 }

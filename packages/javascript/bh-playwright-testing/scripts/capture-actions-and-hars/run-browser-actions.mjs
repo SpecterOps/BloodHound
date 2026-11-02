@@ -24,13 +24,13 @@ import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
 import { ensureStorageState } from './refresh-capture-auth.mjs';
 import { launchCodegenBrowser, prepareUiServer } from './launch-codegen-browser.mjs';
 import { announceFilesCreated, checkForDuplicateSpecName } from './manage-files.mjs';
-import { parseBrowserActionsArguments } from './prepare-arguments.mjs';
+import { parseRecordingSessionArguments } from './prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
-async function prepareBrowserActions(args) {
-    const { name, requestedUrl } = parseBrowserActionsArguments(args);
+async function prepareRecordingSession(args) {
+    const { name, requestedUrl } = parseRecordingSessionArguments(args);
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
     const files = {
         spec: path.join(uiDirectory, 'tests', 'e2e', `${name}.spec.ts`),
@@ -51,22 +51,22 @@ async function prepareBrowserActions(args) {
         playwrightCli,
         temporaryDirectory,
         storageState: path.join(uiDirectory, 'playwright', '.auth', 'user-light.json'),
-        rawSource: path.join(temporaryDirectory, 'browserActions.ts'),
+        rawSource: path.join(temporaryDirectory, 'recordingSession.ts'),
         rawHar: path.join(temporaryDirectory, 'capture.har'),
     };
 }
 
-async function runBrowserActions() {
-    const browserActions = await prepareBrowserActions(process.argv.slice(2));
-    const server = await prepareUiServer(browserActions.homeUrl);
+async function runRecordingSession() {
+    const recordingSession = await prepareRecordingSession(process.argv.slice(2));
+    const server = await prepareUiServer(recordingSession.homeUrl);
     try {
-        await ensureStorageState(browserActions.playwrightCli, browserActions.storageState);
-        await launchCodegenBrowser(browserActions);
-        await writeRecordedHar(browserActions);
-        const source = await buildAndWriteSpec(browserActions, process.env.A11Y_TEST_URL);
-        await rm(browserActions.temporaryDirectory, { recursive: true });
-        announceFilesCreated(browserActions, source);
-        replayRecordedSpec(browserActions);
+        await ensureStorageState(recordingSession.playwrightCli, recordingSession.storageState);
+        await launchCodegenBrowser(recordingSession);
+        await writeRecordedHar(recordingSession);
+        const source = await buildAndWriteSpec(recordingSession, process.env.A11Y_TEST_URL);
+        await rm(recordingSession.temporaryDirectory, { recursive: true });
+        announceFilesCreated(recordingSession, source);
+        replayRecordedSpec(recordingSession);
     } finally {
         if (server) {
             console.log('Stopping the UI server started for codegen.');
@@ -75,7 +75,7 @@ async function runBrowserActions() {
     }
 }
 
-runBrowserActions().catch((error) => {
+runRecordingSession().catch((error) => {
     console.error(error.message);
     process.exitCode = 1;
 });

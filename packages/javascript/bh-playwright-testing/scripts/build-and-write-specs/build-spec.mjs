@@ -57,15 +57,15 @@ function rewriteSpecName(node, parsed, name, visit) {
     }
 }
 
-function transformBrowserActions(parsed, origin, name) {
-    const transformed = ts.transform(parsed, [
+function transformSpecFile(parsedSpecFile, originUrl, fileName) {
+    const transformed = ts.transform(parsedSpecFile, [
         (context) => {
-            const visit = (node) => {
-                if (shouldRemoveBoilerplate(node, parsed)) return undefined;
+            const visit = (chunkOfCode) => {
+                if (shouldRemoveBoilerplate(chunkOfCode, parsedSpecFile)) return undefined;
                 return (
-                    rewritePageUrl(node, parsed, origin) ??
-                    rewriteSpecName(node, parsed, name, visit) ??
-                    ts.visitEachChild(node, visit, context)
+                    rewritePageUrl(chunkOfCode, parsedSpecFile, originUrl) ??
+                    rewriteSpecName(chunkOfCode, parsedSpecFile, fileName, visit) ??
+                    ts.visitEachChild(chunkOfCode, visit, context)
                 );
             };
             return (node) => ts.visitNode(node, visit);
@@ -78,7 +78,7 @@ function transformBrowserActions(parsed, origin, name) {
 
 export function makeMockedSpec(source, name, baseUrl, licenseHeader) {
     const parsed = ts.createSourceFile('browserActions.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const actions = transformBrowserActions(parsed, new URL(baseUrl).origin, name);
+    const actions = transformSpecFile(parsed, new URL(baseUrl).origin, name);
     return `${licenseHeader}
 import { test, expect } from 'bh-playwright-testing/har';
 
