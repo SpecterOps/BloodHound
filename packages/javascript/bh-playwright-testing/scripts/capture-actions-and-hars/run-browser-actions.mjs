@@ -29,7 +29,7 @@ import { parseRecordingSessionArguments } from './prepare-arguments.mjs';
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
-async function makeRecordingSessionObject(args) {
+async function makeCodegenRecordingSessionObject(args) {
     const { name, requestedUrl } = parseRecordingSessionArguments(args);
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
     const files = {
@@ -64,7 +64,7 @@ async function makeRecordingSessionObject(args) {
 }
 
 async function recordAndVerifyAutoMockedCodegenSpec() {
-    const recordingSession = await makeRecordingSessionObject(process.argv.slice(2));
+    const recordingSession = await makeCodegenRecordingSessionObject(process.argv.slice(2));
     const server = await prepareUiServer(recordingSession.homeUrl);
     try {
         await refreshAuthState(recordingSession.playwrightCli, recordingSession.storageState);

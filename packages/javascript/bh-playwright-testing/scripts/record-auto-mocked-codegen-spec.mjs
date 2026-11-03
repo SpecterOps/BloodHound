@@ -19,7 +19,7 @@ import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { buildAndWriteSpec } from './build-and-write-specs/write-spec.mjs';
 import { launchCodegenBrowser, prepareUiServer } from './capture-actions-and-hars/launch-codegen-browser.mjs';
-import { makeRecordingSessionObject } from './capture-actions-and-hars/make-recording-session.mjs';
+import { makeCodegenRecordingSessionObject } from './capture-actions-and-hars/make-recording-session.mjs';
 import { announceFilesCreated } from './capture-actions-and-hars/manage-files.mjs';
 import { refreshAuthState } from './capture-actions-and-hars/refresh-auth-state.mjs';
 import { replayRecordedSpec } from './run-specs/replay-spec.mjs';
@@ -28,7 +28,7 @@ import { writeRecordedHar } from './transform-and-write-hars/write-har.mjs';
 dotenv.config({ path: path.join(process.cwd(), '.env'), quiet: true });
 
 async function recordAndVerifyAutoMockedCodegenSpec() {
-    const recordingSession = await makeRecordingSessionObject(process.argv.slice(2));
+    const recordingSession = await makeCodegenRecordingSessionObject(process.argv.slice(2));
     const server = await prepareUiServer(recordingSession.homeUrl);
     try {
         await refreshAuthState(recordingSession.playwrightCli, recordingSession.storageState);

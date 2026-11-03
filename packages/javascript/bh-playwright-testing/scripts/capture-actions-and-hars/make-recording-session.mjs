@@ -20,7 +20,7 @@ import path from 'node:path';
 import { checkForDuplicateSpecName } from './manage-files.mjs';
 import { parseRecordingSessionArguments } from './prepare-arguments.mjs';
 
-export async function makeRecordingSessionObject(args) {
+export async function makeCodegenRecordingSessionObject(args) {
     const uiDirectory = process.cwd();
 
     const { name, requestedUrl } = parseRecordingSessionArguments(args);
