@@ -196,7 +196,7 @@ const CreateUserFormInner: React.FC<{
                                                 </FormLabel>
 
                                                 <Tooltip
-                                                    tooltip='Only Read-Only and Users roles contain the environment target access control.'
+                                                    tooltip='Only Read-Only, Read-Only (No API Keys), and User roles contain the environment target access control.'
                                                     triggerProps={{ className: 'size-4 mb-0.5' }}
                                                     contentProps={{
                                                         className: 'max-w-80',

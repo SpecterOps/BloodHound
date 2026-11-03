@@ -47,6 +47,11 @@ const CONFIG_DISABLED_RESPONSE = {
     ],
 };
 
+const API_TOKEN_PERMISSION = {
+    authority: 'auth',
+    name: 'CreateToken',
+};
+
 const server = setupServer(
     rest.get(`/api/v2/self`, (req, res) => {
         return res();
@@ -70,6 +75,7 @@ describe('UserProfile with SSO User', () => {
             {
                 id: 1,
                 name: 'Test Role',
+                permissions: [API_TOKEN_PERMISSION],
             },
         ],
         sso_provider_id: 'test-idp-1',
@@ -112,6 +118,7 @@ describe('UserProfile', () => {
             {
                 id: 1,
                 name: 'Test Role',
+                permissions: [API_TOKEN_PERMISSION],
             },
         ],
         sso_provider_id: null,
@@ -193,6 +200,20 @@ describe('UserProfile', () => {
 
 describe('Api Keys', () => {
     it('should display api key management button', async () => {
+        server.use(
+            rest.get(`/api/v2/self`, (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            id: 100,
+                            roles: [{ id: 1, name: 'Test Role', permissions: [API_TOKEN_PERMISSION] }],
+                            sso_provider_id: null,
+                        },
+                    })
+                );
+            })
+        );
+
         render(<UserProfile />);
         const apiKeyManagementButton = await screen.findByRole('button', { name: 'API Key Management' });
         expect(apiKeyManagementButton).toBeInTheDocument();
@@ -211,5 +232,26 @@ describe('Api Keys', () => {
         await waitFor(() =>
             expect(screen.queryByRole('button', { name: 'API Key Management' })).not.toBeInTheDocument()
         );
+    });
+
+    it('should not display api key management without the create token permission', async () => {
+        server.use(
+            rest.get(`/api/v2/self`, (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            id: 100,
+                            roles: [{ id: 1, name: 'Read-Only (No API Keys)', permissions: [] }],
+                            sso_provider_id: null,
+                        },
+                    })
+                );
+            })
+        );
+
+        render(<UserProfile />);
+
+        await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+        expect(screen.queryByRole('button', { name: 'API Key Management' })).not.toBeInTheDocument();
     });
 });

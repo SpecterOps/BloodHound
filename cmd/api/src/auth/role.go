@@ -21,12 +21,13 @@ import (
 )
 
 const (
-	RoleUploadOnly    = "Upload-Only"
-	RoleReadOnly      = "Read-Only"
-	RoleAuditor       = "Auditor"
-	RoleUser          = "User"
-	RolePowerUser     = "Power User"
-	RoleAdministrator = "Administrator"
+	RoleUploadOnly        = "Upload-Only"
+	RoleReadOnly          = "Read-Only"
+	RoleReadOnlyNoAPIKeys = "Read-Only (No API Keys)"
+	RoleAuditor           = "Auditor"
+	RoleUser              = "User"
+	RolePowerUser         = "Power User"
+	RoleAdministrator     = "Administrator"
 )
 
 type RoleTemplate struct {
@@ -40,6 +41,19 @@ func Roles() map[string]RoleTemplate {
 	permissions := Permissions()
 
 	return map[string]RoleTemplate{
+		RoleReadOnlyNoAPIKeys: {
+			Name:        RoleReadOnlyNoAPIKeys,
+			Description: "Can read data without API key management",
+			Permissions: model.Permissions{
+				permissions.AppReadApplicationConfiguration,
+				permissions.APsGenerateReport,
+				permissions.AuthManageSelf,
+				permissions.AuthReadUsersMinimal,
+				permissions.GraphDBRead,
+				permissions.SavedQueriesRead,
+				permissions.OpenGraphRead,
+			},
+		},
 		RoleReadOnly: {
 			Name:        RoleReadOnly,
 			Description: "Used for integrations",

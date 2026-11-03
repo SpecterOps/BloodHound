@@ -28,10 +28,10 @@ import {
     TextWithFallback,
     UserTokenManagementDialog,
 } from '../../components';
-import { useAPITokensConfiguration } from '../../hooks';
+import { useAPITokensConfiguration, usePermissions } from '../../hooks';
 import { useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
-import { apiClient, getUsername } from '../../utils';
+import { apiClient, getUsername, Permission } from '../../utils';
 
 const UserProfile = () => {
     const { addNotification } = useNotifications();
@@ -47,6 +47,8 @@ const UserProfile = () => {
 
     const getSelfQuery = useSelf();
     const apiTokensEnabled = useAPITokensConfiguration();
+    const { checkPermission } = usePermissions();
+    const canManageAPITokens = checkPermission(Permission.AUTH_CREATE_TOKEN);
 
     const updateUserPasswordMutation = useMutation(
         ({ userId, ...payload }: { userId: string } & PutUserAuthSecretRequest) =>
@@ -127,7 +129,7 @@ const UserProfile = () => {
                         <Typography variant='h2'>Authentication</Typography>
                     </div>
                     <Grid container spacing={2} alignItems='center'>
-                        {apiTokensEnabled && (
+                        {apiTokensEnabled && canManageAPITokens && (
                             <Grid container item>
                                 <Grid item xs={3}>
                                     <Typography variant='body1'>API Key Management</Typography>

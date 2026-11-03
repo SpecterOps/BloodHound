@@ -19,6 +19,7 @@ import { Role } from 'js-client-library';
 export const Roles = {
     UPLOAD_ONLY: 'Upload-Only',
     READ_ONLY: 'Read-Only',
+    READ_ONLY_NO_API_KEYS: 'Read-Only (No API Keys)',
     AUDITOR: 'Auditor',
     USER: 'User',
     POWER_USER: 'Power User',
@@ -27,7 +28,7 @@ export const Roles = {
 
 type RoleValue = (typeof Roles)[keyof typeof Roles];
 
-const ETAC_ROLES = [Roles.READ_ONLY, Roles.USER];
+const ETAC_ROLES = [Roles.READ_ONLY, Roles.READ_ONLY_NO_API_KEYS, Roles.USER];
 const ADMIN_ROLES = [Roles.ADMINISTRATOR, Roles.POWER_USER, Roles.AUDITOR];
 const DEFAULT_USER_ROLE = Roles.READ_ONLY;
 

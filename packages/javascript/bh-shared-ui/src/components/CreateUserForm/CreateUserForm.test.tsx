@@ -67,6 +67,18 @@ const MOCK_ROLES = [
         },
     },
     {
+        name: Roles.READ_ONLY_NO_API_KEYS,
+        description: 'Can read data without API key management',
+        permissions: [],
+        id: 6,
+        created_at: '2025-04-24T20:28:45.676055Z',
+        updated_at: '2025-04-24T20:28:45.676055Z',
+        deleted_at: {
+            Time: '0001-01-01T00:00:00Z',
+            Valid: false,
+        },
+    },
+    {
         name: Roles.UPLOAD_ONLY,
         description: 'Used for data collection clients, can post data but cannot read data',
         permissions: [],
@@ -235,6 +247,18 @@ describe('CreateUserForm', () => {
         await user.click(option);
 
         expect(option).not.toBeInTheDocument();
+        expect(await screen.findByText('Environmental Targeted Access Control')).toBeInTheDocument();
+    });
+
+    it('should display Environmental Targeted Access Control panel when the no API keys read-only role is selected', async () => {
+        createFormInitSetup({ renderShowEnvironmentAccessControls: true });
+
+        const user = userEvent.setup();
+        const input = screen.getByRole('combobox', { name: /Role/i });
+
+        await user.click(input);
+        await user.click(screen.getByRole('option', { name: Roles.READ_ONLY_NO_API_KEYS }));
+
         expect(await screen.findByText('Environmental Targeted Access Control')).toBeInTheDocument();
     });
 

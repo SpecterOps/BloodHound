@@ -224,7 +224,7 @@ const UpdateUserFormInner: React.FC<{
                                                             className='flex'
                                                             data-testid='update-user-dialog_select_role-tooltip'>
                                                             <Tooltip
-                                                                tooltip='Only Read-Only and Users roles contain the environment target access control.'
+                                                                tooltip='Only Read-Only, Read-Only (No API Keys), and User roles contain the environment target access control.'
                                                                 contentProps={{
                                                                     className: 'max-w-80',
                                                                 }}
