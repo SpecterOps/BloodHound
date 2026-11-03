@@ -19,19 +19,19 @@ import path from 'node:path';
 export function selectFailingSpecs(report, specs) {
     const failedPaths = new Set();
 
-    function visit(suite) {
+    function checkForFailures(suite) {
         for (const spec of suite.specs ?? []) {
             if (spec.tests?.some((result) => result.status === 'unexpected')) {
                 failedPaths.add(path.resolve(report.config.rootDir, spec.file));
             }
         }
         for (const child of suite.suites ?? []) {
-            visit(child);
+            checkForFailures(child);
         }
     }
 
     for (const suite of report.suites ?? []) {
-        visit(suite);
+        checkForFailures(suite);
     }
 
     return specs.filter((spec) => failedPaths.has(path.resolve(spec.spec)));
