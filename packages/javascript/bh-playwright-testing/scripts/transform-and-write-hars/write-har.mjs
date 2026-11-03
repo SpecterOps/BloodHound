@@ -35,14 +35,23 @@ export async function writeRecordedHar(recordingSession) {
 
 export async function writeUpdatedHar(captures, authState, spec) {
     const files = (await readdir(captures)).filter((name) => name.endsWith('.har'));
-    if (!files.length) throw new Error(`No HAR files captured for ${spec.name}.`);
+
+    if (!files.length) {
+        throw new Error(`No HAR files captured for ${spec.name}.`);
+    }
+
     const hars = await Promise.all(
         files.map(async (name) => JSON.parse(await readFile(path.join(captures, name), 'utf8')))
     );
     const combined = hars[0];
     combined.log.entries = hars.flatMap((har) => har.log.entries);
+
     const har = sanitizeHar(combined, authState);
-    if (!har.log.entries.length) throw new Error(`No API responses captured for ${spec.name}.`);
+
+    if (!har.log.entries.length) {
+        throw new Error(`No API responses captured for ${spec.name}.`);
+    }
+
     const temporaryFile = path.join(path.dirname(captures), 'sanitized.har');
     await writeFile(temporaryFile, `${JSON.stringify(har, null, 2)}\n`);
     await rename(temporaryFile, spec.har);

@@ -21,6 +21,7 @@ const uiDirectory = process.cwd();
 
 export function replayRecordedSpec(recordingSession) {
     console.log('Checking the new spec with API replay and no live login...');
+
     const config = fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url));
     const result = spawnSync(
         process.execPath,
@@ -34,9 +35,14 @@ export function replayRecordedSpec(recordingSession) {
         ],
         { cwd: uiDirectory, env: process.env, stdio: 'inherit' }
     );
-    if (result.error) throw result.error;
+
+    if (result.error) {
+        throw result.error;
+    }
+
     const exitCode = result.status ?? 1;
     process.exitCode = exitCode;
+
     console.log(
         exitCode === 0
             ? 'Mocked spec passed. Review the spec and HAR before committing.'

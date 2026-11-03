@@ -23,12 +23,20 @@ const uiDirectory = process.cwd();
 export function runSuite(playwrightCli, specs, reportFile) {
     const config = fileURLToPath(new URL('../../playwright.e2e.config.mjs', import.meta.url));
     const args = ['test', '-c', config, ...specs.map((spec) => path.relative(uiDirectory, spec.spec))];
-    if (reportFile) args.push('--reporter=list,json', '--retries=0');
+
+    if (reportFile) {
+        args.push('--reporter=list,json', '--retries=0');
+    }
+
     const result = spawnSync(process.execPath, [playwrightCli, ...args], {
         cwd: uiDirectory,
         env: { ...process.env, ...(reportFile ? { PLAYWRIGHT_JSON_OUTPUT_FILE: reportFile } : {}) },
         stdio: 'inherit',
     });
-    if (result.error) throw result.error;
+
+    if (result.error) {
+        throw result.error;
+    }
+
     return result.status ?? 1;
 }

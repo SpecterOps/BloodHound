@@ -27,11 +27,15 @@ export async function writeSpec(file, spec) {
 
 export async function buildAndWriteSpec(recordingSession, baseUrl) {
     const source = await readFile(recordingSession.rawSource, 'utf8');
-    const licenseHeader = (await readFile(fileURLToPath(import.meta.url), 'utf8')).split('\n\n')[0];
-    const spec = await prettier.format(makeMockedSpec(source, recordingSession.name, baseUrl, licenseHeader), {
-        ...(await prettier.resolveConfig(recordingSession.files.spec)),
+    const rawHeader = await readFile(fileURLToPath(import.meta.url));
+    const licenseHeader = (rawHeader, 'utf8').split('\n\n')[0];
+    const mockedSpec = makeMockedSpec(source, recordingSession.name, baseUrl, licenseHeader);
+    const prettierConfig = await prettier.resolveConfig(recordingSession.files.spec);
+    const spec = await prettier.format(mockedSpec, {
+        ...prettierConfig,
         parser: 'typescript',
     });
+
     await writeSpec(recordingSession.files.spec, spec);
     return source;
 }

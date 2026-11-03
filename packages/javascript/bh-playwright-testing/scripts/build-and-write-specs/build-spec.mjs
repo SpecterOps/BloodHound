@@ -16,59 +16,65 @@
 
 import ts from 'typescript';
 
-function shouldRemoveBoilerplate(node, parsed) {
-    if (ts.isImportDeclaration(node)) return true;
+function shouldRemoveBoilerplate(parsedCodeChunk, parsed) {
+    if (ts.isImportDeclaration(parsedCodeChunk)) return true;
     if (
-        ts.isExpressionStatement(node) &&
-        ts.isCallExpression(node.expression) &&
-        node.expression.expression.getText(parsed) === 'test.use'
+        ts.isExpressionStatement(parsedCodeChunk) &&
+        ts.isCallExpression(parsedCodeChunk.expression) &&
+        parsedCodeChunk.expression.expression.getText(parsed) === 'test.use'
     )
         return true;
     return (
-        ts.isExpressionStatement(node) &&
-        ts.isAwaitExpression(node.expression) &&
-        ts.isCallExpression(node.expression.expression) &&
-        node.expression.expression.expression.getText(parsed).endsWith('.routeFromHAR')
+        ts.isExpressionStatement(parsedCodeChunk) &&
+        ts.isAwaitExpression(parsedCodeChunk.expression) &&
+        ts.isCallExpression(parsedCodeChunk.expression.expression) &&
+        parsedCodeChunk.expression.expression.expression.getText(parsed).endsWith('.routeFromHAR')
     );
 }
 
-function rewritePageUrl(node, parsed, origin) {
+function rewritePageUrl(parsedCodeChunk, parsed, origin) {
     if (
-        ts.isStringLiteral(node) &&
-        node.text.startsWith(`${origin}/`) &&
-        ts.isCallExpression(node.parent) &&
-        node.parent.expression.getText(parsed).endsWith('.goto')
+        ts.isStringLiteral(parsedCodeChunk) &&
+        parsedCodeChunk.text.startsWith(`${origin}/`) &&
+        ts.isCallExpression(parsedCodeChunk.parent) &&
+        parsedCodeChunk.parent.expression.getText(parsed).endsWith('.goto')
     ) {
-        return ts.factory.createStringLiteral(node.text.slice(origin.length));
+        const relativeUrl = parsedCodeChunk.text.slice(origin.length);
+        return ts.factory.createStringLiteral(relativeUrl);
     }
 }
 
-function rewriteSpecName(node, parsed, name, visit) {
+function rewriteSpecName(parsedCodeChunk, parsed, name, visit) {
     if (
-        ts.isCallExpression(node) &&
-        node.expression.getText(parsed) === 'test' &&
-        node.arguments[0] &&
-        ts.isStringLiteral(node.arguments[0])
+        ts.isCallExpression(parsedCodeChunk) &&
+        parsedCodeChunk.expression.getText(parsed) === 'test' &&
+        parsedCodeChunk.arguments[0] &&
+        ts.isStringLiteral(parsedCodeChunk.arguments[0])
     ) {
-        return ts.factory.updateCallExpression(node, node.expression, node.typeArguments, [
-            ts.factory.createStringLiteral(name),
-            ...node.arguments.slice(1).map((argument) => ts.visitNode(argument, visit)),
-        ]);
+        return ts.factory.updateCallExpression(
+            parsedCodeChunk,
+            parsedCodeChunk.expression,
+            parsedCodeChunk.typeArguments,
+            [
+                ts.factory.createStringLiteral(name),
+                ...parsedCodeChunk.arguments.slice(1).map((argument) => ts.visitNode(argument, visit)),
+            ]
+        );
     }
 }
 
 function transformSpecFile(parsedSpecFile, originUrl, fileName) {
     const transformed = ts.transform(parsedSpecFile, [
         (context) => {
-            const visit = (chunkOfCode) => {
-                if (shouldRemoveBoilerplate(chunkOfCode, parsedSpecFile)) return undefined;
+            const visit = (parsedCodeChunk) => {
+                if (shouldRemoveBoilerplate(parsedCodeChunk, parsedSpecFile)) return undefined;
                 return (
-                    rewritePageUrl(chunkOfCode, parsedSpecFile, originUrl) ??
-                    rewriteSpecName(chunkOfCode, parsedSpecFile, fileName, visit) ??
-                    ts.visitEachChild(chunkOfCode, visit, context)
+                    rewritePageUrl(parsedCodeChunk, parsedSpecFile, originUrl) ??
+                    rewriteSpecName(parsedCodeChunk, parsedSpecFile, fileName, visit) ??
+                    ts.visitEachChild(parsedCodeChunk, visit, context)
                 );
             };
-            return (node) => ts.visitNode(node, visit);
+            return (parsedCodeChunk) => ts.visitNode(parsedCodeChunk, visit);
         },
     ]);
     const actions = ts.createPrinter().printFile(transformed.transformed[0]);
@@ -78,7 +84,8 @@ function transformSpecFile(parsedSpecFile, originUrl, fileName) {
 
 export function makeMockedSpec(source, name, baseUrl, licenseHeader) {
     const parsed = ts.createSourceFile('browserActions.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const actions = transformSpecFile(parsed, new URL(baseUrl).origin, name);
+    const origin = new URL(baseUrl).origin;
+    const actions = transformSpecFile(parsed, origin, name);
     return `${licenseHeader}
 import { test, expect } from 'bh-playwright-testing/har';
 

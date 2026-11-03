@@ -21,7 +21,7 @@ import path from 'node:path';
 import { buildAndWriteSpec } from '../build-and-write-specs/write-spec.mjs';
 import { replayRecordedSpec } from '../run-specs/replay-spec.mjs';
 import { writeRecordedHar } from '../transform-and-write-hars/write-har.mjs';
-import { ensureStorageState } from './refresh-capture-auth.mjs';
+import { refreshAuthState } from './refresh-auth-state.mjs';
 import { launchCodegenBrowser, prepareUiServer } from './launch-codegen-browser.mjs';
 import { announceFilesCreated, checkForDuplicateSpecName } from './manage-files.mjs';
 import { parseRecordingSessionArguments } from './prepare-arguments.mjs';
@@ -29,21 +29,28 @@ import { parseRecordingSessionArguments } from './prepare-arguments.mjs';
 const uiDirectory = process.cwd();
 dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
-async function prepareRecordingSession(args) {
+async function makeRecordingSessionObject(args) {
     const { name, requestedUrl } = parseRecordingSessionArguments(args);
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
     const files = {
         spec: path.join(uiDirectory, 'tests', 'e2e', `${name}.spec.ts`),
         har: path.join(uiDirectory, 'tests', 'e2e', `${name}.har`),
     };
+
     checkForDuplicateSpecName(files);
+
     const homeUrl = new URL(requestedUrl, process.env.A11Y_TEST_URL).toString();
+
     if (new URL(homeUrl).origin !== new URL(process.env.A11Y_TEST_URL).origin) {
         throw new Error('--url must use the configured A11Y_TEST_URL origin.');
     }
+
     const playwrightCli = createRequire(path.join(uiDirectory, 'package.json')).resolve('@playwright/test/cli');
+
     await mkdir(path.join(uiDirectory, 'playwright'), { recursive: true });
+
     const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'codegen-'));
+
     return {
         name,
         files,
@@ -56,15 +63,18 @@ async function prepareRecordingSession(args) {
     };
 }
 
-async function runRecordingSession() {
-    const recordingSession = await prepareRecordingSession(process.argv.slice(2));
+async function recordAndVerifyAutoMockedCodegenSpec() {
+    const recordingSession = await makeRecordingSessionObject(process.argv.slice(2));
     const server = await prepareUiServer(recordingSession.homeUrl);
     try {
-        await ensureStorageState(recordingSession.playwrightCli, recordingSession.storageState);
+        await refreshAuthState(recordingSession.playwrightCli, recordingSession.storageState);
         await launchCodegenBrowser(recordingSession);
         await writeRecordedHar(recordingSession);
+
         const source = await buildAndWriteSpec(recordingSession, process.env.A11Y_TEST_URL);
+
         await rm(recordingSession.temporaryDirectory, { recursive: true });
+
         announceFilesCreated(recordingSession, source);
         replayRecordedSpec(recordingSession);
     } finally {
@@ -75,7 +85,7 @@ async function runRecordingSession() {
     }
 }
 
-runRecordingSession().catch((error) => {
+recordAndVerifyAutoMockedCodegenSpec().catch((error) => {
     console.error(error.message);
     process.exitCode = 1;
 });

@@ -23,11 +23,17 @@ const uiDirectory = process.cwd();
 
 export async function authenticateForUpdate() {
     if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
+
     const playwrightCli = createRequire(path.join(uiDirectory, 'package.json')).resolve('@playwright/test/cli');
     const storageState = path.join(uiDirectory, 'playwright', '.auth', 'user-light.json');
+
     await mkdir(path.dirname(storageState), { recursive: true });
+
     runPlaywright(playwrightCli, ['test', '-c', 'playwright.a11y.config.ts', '--project=setup']);
+
     await access(storageState);
+
     const authState = JSON.parse(await readFile(storageState, 'utf8'));
+
     return { playwrightCli, authState };
 }

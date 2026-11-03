@@ -17,7 +17,10 @@
 function sessionTokens(storageState) {
     return storageState.origins.flatMap(({ localStorage }) =>
         localStorage.flatMap(({ name, value }) => {
-            if (name !== 'persistedState') return [];
+            if (name !== 'persistedState') {
+                return [];
+            }
+
             const token = JSON.parse(value).auth?.sessionToken;
             return token ? [token] : [];
         })
@@ -28,6 +31,7 @@ function stripCredentials(entry) {
     entry.request.headers = (entry.request.headers ?? []).map((header) =>
         /^authorization$/i.test(header.name) ? { ...header, value: 'Bearer playwright-mock-session' } : header
     );
+
     for (const message of [entry.request, entry.response]) {
         message.headers = (message.headers ?? []).filter(
             ({ name }) =>
@@ -39,8 +43,15 @@ function stripCredentials(entry) {
 
 export function sanitizeHar(har, storageState) {
     const document = structuredClone(har);
-    for (const entry of document.log.entries) stripCredentials(entry);
+    for (const entry of document.log.entries) {
+        stripCredentials(entry);
+    }
+
     let json = JSON.stringify(document);
-    for (const secret of sessionTokens(storageState)) json = json.replaceAll(secret, 'playwright-mock-session');
+
+    for (const secret of sessionTokens(storageState)) {
+        json = json.replaceAll(secret, 'playwright-mock-session');
+    }
+
     return JSON.parse(json);
 }

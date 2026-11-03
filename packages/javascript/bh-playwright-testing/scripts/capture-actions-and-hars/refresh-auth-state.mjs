@@ -17,19 +17,27 @@
 import { spawnSync } from 'node:child_process';
 import { access } from 'node:fs/promises';
 import path from 'node:path';
-import { authSetupArguments } from './prepare-arguments.mjs';
+import { makeAuthSetupArguments } from './prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
 
-export async function ensureStorageState(playwrightCli, storageState) {
+export async function refreshAuthState(playwrightCli, storageState) {
     console.log(`Refreshing authentication state at ${path.relative(uiDirectory, storageState)}.`);
-    const result = spawnSync(process.execPath, [playwrightCli, ...authSetupArguments()], {
+
+    const result = spawnSync(process.execPath, [playwrightCli, ...makeAuthSetupArguments()], {
         cwd: uiDirectory,
         env: process.env,
         stdio: 'inherit',
     });
-    if (result.error) throw result.error;
-    if (result.status !== 0) throw new Error(`Unable to generate authentication state (exit code ${result.status}).`);
+
+    if (result.error) {
+        throw result.error;
+    }
+
+    if (result.status !== 0) {
+        throw new Error(`Unable to generate authentication state (exit code ${result.status}).`);
+    }
+
     await access(storageState);
     console.log(`Using fresh authentication state at ${path.relative(uiDirectory, storageState)}.`);
 }

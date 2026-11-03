@@ -18,7 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-export function parseBrowserActionsArguments(args) {
+export function parseRecordingSessionArguments(args) {
     const usage = 'Usage: yarn codegen <name> [--url /ui/feature]';
     let parsed;
     try {
@@ -38,7 +38,7 @@ export function parseBrowserActionsArguments(args) {
     return { name, requestedUrl };
 }
 
-export function recorderArguments(storageState, source, har, url) {
+export function makeRecorderArguments(storageState, source, har, url) {
     return [
         'codegen',
         '--block-service-workers',
@@ -61,7 +61,7 @@ export function makeDevServerArguments(baseUrl) {
     return ['dev', '--mode', 'playwright', '--host', hostname, '--port', port || '3000'];
 }
 
-export function harCaptureArguments(specFile, uiDirectory) {
+export function makeHarCaptureArguments(specFile, uiDirectory) {
     return [
         'test',
         '-c',
@@ -72,6 +72,6 @@ export function harCaptureArguments(specFile, uiDirectory) {
     ];
 }
 
-export function authSetupArguments() {
+export function makeAuthSetupArguments() {
     return ['test', '-c', 'playwright.a11y.config.ts', '--project=setup'];
 }

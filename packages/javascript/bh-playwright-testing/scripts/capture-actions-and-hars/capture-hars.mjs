@@ -17,12 +17,12 @@
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { runPlaywright } from '../run-specs/run-playwright.mjs';
-import { harCaptureArguments } from './prepare-arguments.mjs';
+import { makeHarCaptureArguments } from './prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
 
 function captureHarsByRunningSpecs(playwrightCli, spec, captures) {
-    runPlaywright(playwrightCli, harCaptureArguments(spec.spec, uiDirectory), {
+    runPlaywright(playwrightCli, makeHarCaptureArguments(spec.spec, uiDirectory), {
         ...process.env,
         HAR_UPDATE_CAPTURE: captures,
         HAR_UPDATE_STORAGE_STATE: path.join(uiDirectory, 'playwright', '.auth', 'user-light.json'),
@@ -32,12 +32,16 @@ function captureHarsByRunningSpecs(playwrightCli, spec, captures) {
 export async function captureForUpdate(playwrightCli, spec) {
     const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'har-update-'));
     const captures = path.join(temporaryDirectory, 'captures');
+
     await mkdir(captures);
+
     try {
         captureHarsByRunningSpecs(playwrightCli, spec, captures);
+
         return { captures, temporaryDirectory };
     } catch (error) {
         await rm(temporaryDirectory, { recursive: true, force: true });
+
         throw error;
     }
 }

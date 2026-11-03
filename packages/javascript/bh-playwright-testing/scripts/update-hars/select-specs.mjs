@@ -29,7 +29,11 @@ export async function listRecordedSpecs(directory) {
     const names = (await readdir(directory))
         .filter((name) => name.endsWith('.spec.ts'))
         .map((name) => name.slice(0, -8));
-    if (!names.length) throw new Error('No recorded specs found.');
+
+    if (!names.length) {
+        throw new Error('No recorded specs found.');
+    }
+
     return names.map((name) => recordedSpec(directory, name));
 }
 
@@ -37,5 +41,6 @@ export async function selectRecordedSpecs(directory, args) {
     if (args.length !== 1 || !/^[a-z0-9][a-z0-9_-]*$/i.test(args[0])) {
         throw new Error('Usage: yarn test:e2e:update-mocks <name>');
     }
+
     return [recordedSpec(directory, args[0])];
 }

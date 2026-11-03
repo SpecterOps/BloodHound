@@ -24,6 +24,12 @@ export function runPlaywright(playwrightCli, args, env = process.env) {
         env,
         stdio: 'inherit',
     });
-    if (result.error) throw result.error;
-    if (result.status !== 0) throw new Error(`Playwright failed (exit code ${result.status}).`);
+
+    if (result.error) {
+        throw result.error;
+    }
+
+    if (result.status !== 0) {
+        throw new Error(`Playwright failed (exit code ${result.status}).`);
+    }
 }

@@ -28,8 +28,8 @@ import { writeNewHar, writeRecordedHar, writeUpdatedHar } from '../transform-and
 import { listRecordedSpecs, selectRecordedSpecs } from '../update-hars/select-specs.mjs';
 import {
     makeDevServerArguments,
-    parseBrowserActionsArguments,
-    recorderArguments,
+    parseRecordingSessionArguments,
+    makeRecorderArguments,
 } from '../capture-actions-and-hars/prepare-arguments.mjs';
 import { checkForDuplicateSpecName } from '../capture-actions-and-hars/manage-files.mjs';
 
@@ -221,7 +221,7 @@ async function closeReplayFixture(fixture) {
 }
 
 test('codegen requires one valid spec name', () => {
-    assert.deepEqual(parseBrowserActionsArguments(['feature', '--url', '/ui/explore']), {
+    assert.deepEqual(parseRecordingSessionArguments(['feature', '--url', '/ui/explore']), {
         name: 'feature',
         requestedUrl: '/ui/explore',
     });
@@ -233,7 +233,7 @@ test('codegen requires one valid spec name', () => {
         ['feature', '--url'],
         ['feature', '--update'],
     ]) {
-        assert.throws(() => parseBrowserActionsArguments(args), /Usage:/);
+        assert.throws(() => parseRecordingSessionArguments(args), /Usage:/);
     }
 });
 
@@ -259,7 +259,7 @@ test('codegen creates a new spec and HAR; updater selects existing specs', async
 });
 
 test('codegen records source alongside HAR data', () => {
-    const args = recorderArguments('auth.json', 'capture.ts', 'capture.har', 'http://localhost:3000/ui/');
+    const args = makeRecorderArguments('auth.json', 'capture.ts', 'capture.har', 'http://localhost:3000/ui/');
     assert.ok(args.includes('--output'));
     assert.ok(args.includes('--save-har'));
 });

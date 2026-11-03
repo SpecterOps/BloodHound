@@ -14,21 +14,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import dotenv from 'dotenv';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
+import { captureForUpdate } from '../capture-actions-and-hars/capture-hars.mjs';
 import { writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
 import { authenticateForUpdate } from './refresh-update-auth.mjs';
-import { captureForUpdate } from '../capture-actions-and-hars/capture-hars.mjs';
-import { selectRecordedSpecs } from './select-specs.mjs';
 
 const uiDirectory = process.cwd();
-dotenv.config({ path: path.join(uiDirectory, '.env'), quiet: true });
 
 export async function updateSelectedSpecs(specs) {
     const { playwrightCli, authState } = await authenticateForUpdate();
+
     for (const spec of specs) {
         const { captures, temporaryDirectory } = await captureForUpdate(playwrightCli, spec);
+
         try {
             await writeUpdatedHar(captures, authState, spec);
             console.log(`Updated ${path.relative(uiDirectory, spec.har)}.`);
@@ -36,16 +35,4 @@ export async function updateSelectedSpecs(specs) {
             await rm(temporaryDirectory, { recursive: true, force: true });
         }
     }
-}
-
-async function main() {
-    const specs = await selectRecordedSpecs(path.join(uiDirectory, 'tests', 'e2e'), process.argv.slice(2));
-    await updateSelectedSpecs(specs);
-}
-
-if (process.argv[1] && path.resolve(process.argv[1]) === new URL(import.meta.url).pathname) {
-    main().catch((error) => {
-        console.error(error.message);
-        process.exitCode = 1;
-    });
 }
