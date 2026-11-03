@@ -21,22 +21,22 @@ import { makeHarCaptureArguments } from './prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
 
-function captureHarsByRunningSpecs(playwrightCli, spec, captures) {
+function captureHarsByRunningSpecs(playwrightCli, spec, capturesPath) {
     runPlaywright(playwrightCli, makeHarCaptureArguments(spec.spec, uiDirectory), {
         ...process.env,
-        HAR_UPDATE_CAPTURE: captures,
+        HAR_UPDATE_CAPTURE_DIRECTORY: capturesPath,
         HAR_UPDATE_STORAGE_STATE: path.join(uiDirectory, 'playwright', '.auth', 'user-light.json'),
     });
 }
 
 export async function captureForUpdate(playwrightCli, spec) {
     const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'har-update-'));
-    const captures = path.join(temporaryDirectory, 'captures');
+    const capturesPath = path.join(temporaryDirectory, 'captures');
 
-    await mkdir(captures);
+    await mkdir(capturesPath);
 
     try {
-        captureHarsByRunningSpecs(playwrightCli, spec, captures);
+        captureHarsByRunningSpecs(playwrightCli, spec, capturesPath);
 
         return { captures, temporaryDirectory };
     } catch (error) {

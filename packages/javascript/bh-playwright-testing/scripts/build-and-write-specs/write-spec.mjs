@@ -31,6 +31,7 @@ export async function buildAndWriteSpec(recordingSession, baseUrl) {
     const licenseHeader = (rawHeader, 'utf8').split('\n\n')[0];
     const mockedSpec = makeMockedSpec(source, recordingSession.name, baseUrl, licenseHeader);
     const prettierConfig = await prettier.resolveConfig(recordingSession.files.spec);
+
     const spec = await prettier.format(mockedSpec, {
         ...prettierConfig,
         parser: 'typescript',

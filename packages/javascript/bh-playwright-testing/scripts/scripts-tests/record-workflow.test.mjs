@@ -204,7 +204,7 @@ async function verifyUpdate(fixture) {
     await mkdir(captures);
     const update = await runBrowserTest(fixture, {
         ...process.env,
-        HAR_UPDATE_CAPTURE: captures,
+        HAR_UPDATE_CAPTURE_DIRECTORY: captures,
         HAR_UPDATE_STORAGE_STATE: path.join(fixture.directory, 'auth.json'),
     });
     assert.equal(update.code, 0, `${update.output}\nLive API requests: ${fixture.server.state.liveApiRequests}`);

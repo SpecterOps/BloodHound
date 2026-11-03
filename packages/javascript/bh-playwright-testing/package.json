@@ -14,8 +14,7 @@
     "exports": {
         ".": "./src/index.ts",
         "./axe": "./src/axe.ts",
-        "./har": "./src/with-har-mocks.ts",
-        "./mocked": "./src/with-har-mocks.ts",
+        "./har": "./src/har-fixtures.ts",
         "./themes": "./src/themes.ts",
         "./auth": "./src/auth.ts",
         "./stubs": "./src/stubs/index.ts"
