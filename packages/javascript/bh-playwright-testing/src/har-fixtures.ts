@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { test as base, expect } from '@playwright/test';
-import { configureHarCapture, configureHarReplay } from './har-test-fixtures-helpers';
+import { configureHarCapture, configureHarReplay } from './configure-har-fixtures';
 
 /** Self-contained API replay for generated tests, with an isolated fake session. */
 export const test = base.extend<{ replayHar: URL | undefined }>({
