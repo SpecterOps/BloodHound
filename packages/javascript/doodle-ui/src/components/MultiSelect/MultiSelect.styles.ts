@@ -19,23 +19,19 @@ import { cva } from 'class-variance-authority';
 import { cn } from '../utils';
 
 export const MultiSelectTriggerVariants = cva(
-    cn(
+    [
         'flex h-10 w-full items-center justify-between rounded px-[14px] py-2 text-base font-normal leading-6 tracking-[0.15px]',
         'focus:outline-none focus-visible:focus-ring',
         'enabled:hover:bg-secondary enabled:hover:text-inverse',
         'data-[state=open]:bg-primary data-[state=open]:text-inverse',
-        'disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled dark:disabled:bg-input-fill-disabled-dark disabled:text-disabled',
-        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill aria-[invalid=true]:enabled:hover:text-input-placeholder-text aria-[invalid=true]:data-[state=open]:text-input-placeholder-text aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main'
-    ),
+        'disabled:cursor-not-allowed disabled:border disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled',
+        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:data-[state=open]:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:enabled:hover:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:data-[state=open]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main',
+    ],
     {
         variants: {
             variant: {
-                outlined: cn(
-                    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-input-placeholder-text',
-                    '[&>svg]:text-main',
-                    '[&:enabled:hover>svg]:text-inverse',
-                    '[&[data-state=open]>svg]:text-inverse'
-                ),
+                outlined:
+                    'ring-1 ring-[color:var(--input-border-default)] bg-[color:var(--select-trigger-outlined-fill)] text-[color:var(--input-placeholder-text)] [&>svg]:text-main [&:enabled:hover>svg]:text-inverse [&[data-state=open]>svg]:text-inverse',
                 filled: 'bg-primary text-inverse',
             },
         },
@@ -49,13 +45,15 @@ export const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p
 
 export const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-secondary hover:text-inverse';
 
+// Override Checkbox hover styles because the entire MultiSelect row owns the hover state.
 export const multiSelectCheckboxStyles = cn(
     'enabled:data-[state=unchecked]:!border-current',
     'group-hover:enabled:!border-current group-hover:enabled:data-[state=checked]:!bg-transparent group-hover:enabled:data-[state=checked]:!text-inverse group-hover:enabled:data-[state=indeterminate]:!bg-transparent group-hover:enabled:data-[state=indeterminate]:!text-inverse'
 );
 
+// Controls the default, unhovered partial-selection appearance.
 export const multiSelectIndeterminateCheckboxStyles =
-    'enabled:data-[state=indeterminate]:!border-checkbox-border enabled:data-[state=indeterminate]:!bg-checkbox-unchecked-fill enabled:data-[state=indeterminate]:!text-checkbox-border';
+    'enabled:data-[state=indeterminate]:!border-[color:var(--checkbox-border)] enabled:data-[state=indeterminate]:!bg-[color:var(--checkbox-unchecked-fill)] enabled:data-[state=indeterminate]:!text-[color:var(--checkbox-border)]';
 
 export const multiSelectCaretClasses = 'ml-2 shrink-0 transition-transform duration-200';
 
@@ -64,7 +62,7 @@ export const multiSelectLoadingRowsClasses = 'flex items-center gap-2 mx-1 p-2 p
 export const multiSelectStateRowClasses = 'px-3 py-2 text-center text-main';
 
 export const multiSelectContentClasses =
-    'w-[var(--radix-popover-trigger-width)] rounded-lg bg-select-content-fill p-0 text-main';
+    'w-[var(--radix-popover-trigger-width)] rounded-lg bg-[color:var(--select-content-fill)] p-0 text-main';
 
 export const multiSelectSearchRowClasses = 'flex items-center gap-2 p-2';
 
@@ -72,7 +70,7 @@ export const multiSelectSearchIconClasses = 'size-4 shrink-0 text-main';
 
 export const multiSelectSearchInputClasses = cn(
     'h-6 border-none bg-transparent px-2 text-main leading-4',
-    'placeholder:text-input-placeholder-text',
+    'placeholder:text-[color:var(--input-placeholder-text)]',
     'focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
 );
 

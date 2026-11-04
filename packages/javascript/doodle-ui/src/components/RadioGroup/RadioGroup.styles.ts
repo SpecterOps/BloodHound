@@ -20,17 +20,17 @@ export const radioItemLabelClasses = cn(
     'flex items-center font-normal cursor-pointer',
     'has-[:disabled]:cursor-default has-[:disabled]:text-disabled',
     'mb-1 mr-4 rounded-md px-1',
-    '[&:has(:focus-visible)]:bg-radio-label-focus-fill'
+    '[&:has(:focus-visible)]:bg-[color:var(--radio-label-focus-fill)]'
 );
 
 export const radioItemControlClasses = cn(
-    'w-4 h-4 rounded-full border border-radio-border-default',
-    'hover:border-radio-border-hover',
+    'w-4 h-4 rounded-full border border-[color:var(--radio-border-default)]',
+    'hover:border-[color:var(--radio-border-hover)]',
     'active:border-primary-variant',
     'mr-2 relative',
     'focus:outline-none',
     'focus-visible:focus-ring',
-    'data-[disabled]:border-radio-disabled-border data-[disabled]:bg-radio-disabled-fill',
+    'data-[disabled]:border-[color:var(--radio-disabled-border)] data-[disabled]:bg-[color:var(--radio-disabled-fill)]',
     'peer'
 );
 

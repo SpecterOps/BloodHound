@@ -16,8 +16,8 @@
 
 export const carouselItemClasses = 'min-w-0 shrink-0 grow-0 basis-full';
 
-export const carouselNavigationIconClasses = 'h-3 w-3 text-black dark:text-white';
+export const carouselNavigationIconClasses = 'h-3 w-3 text-main';
 
 export const carouselIndicatorClasses =
-    'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl border-black dark:border-white focus:outline-none focus-visible:focus-ring';
-export const carouselSelectedIndicatorClasses = 'active bg-black dark:bg-white rounded-3xl';
+    'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl text-main border-current focus:outline-none focus-visible:focus-ring';
+export const carouselSelectedIndicatorClasses = 'active bg-current rounded-3xl';

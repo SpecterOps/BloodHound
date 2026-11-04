@@ -22,6 +22,6 @@ export const breadcrumbItemClasses = 'inline-flex items-center gap-1.5';
 export const breadcrumbLinkClasses =
     'rounded-sm transition-colors hover:underline focus:outline-none focus-visible:focus-ring focus-visible:underline';
 
-export const breadcrumbPageClasses = 'font-bold text-primary dark:text-secondary-variant-2';
+export const breadcrumbPageClasses = 'font-bold text-[color:var(--breadcrumb-page-text)]';
 
 export const breadcrumbEllipsisClasses = 'flex h-9 w-9 items-center justify-center';
