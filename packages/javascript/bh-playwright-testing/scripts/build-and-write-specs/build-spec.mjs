@@ -63,8 +63,8 @@ function makeRenamedSpecCall(parsedCodeChunk, parsed, name, visit) {
     }
 }
 
-function transformSpecSyntaxTree(parsedSpecFile, originUrl, fileName) {
-    const specTransformation = ts.transform(parsedSpecFile, [
+function makeTransformedSpec(parsedSpecFile, originUrl, fileName) {
+    const transformedSpec = ts.transform(parsedSpecFile, [
         (context) => {
             const visit = (parsedCodeChunk) => {
                 if (shouldRemoveBoilerplate(parsedCodeChunk, parsedSpecFile)) return undefined;
@@ -78,7 +78,7 @@ function transformSpecSyntaxTree(parsedSpecFile, originUrl, fileName) {
         },
     ]);
 
-    return specTransformation;
+    return transformedSpec;
 }
 
 function makeSpecString(specSyntaxTree) {
@@ -97,11 +97,11 @@ export function makeMockedSpecString(source, name, baseUrl, licenseHeader) {
         ts.ScriptKind.TS
     );
     const origin = new URL(baseUrl).origin;
-    const specTransformation = transformSpecSyntaxTree(parsedSpecSyntaxTree, origin, name);
+    const transformedSpec = makeTransformedSpec(parsedSpecSyntaxTree, origin, name);
 
     try {
-        const transformedSpecSyntaxTree = specTransformation.transformed[0];
-        const specActionsString = makeSpecString(transformedSpecSyntaxTree);
+        const specSyntaxTree = transformedSpec.transformed[0];
+        const specActionsString = makeSpecString(specSyntaxTree);
         const mockedSpecString = [
             licenseHeader,
             "import { test, expect } from 'bh-playwright-testing/har';",
@@ -113,6 +113,6 @@ export function makeMockedSpecString(source, name, baseUrl, licenseHeader) {
 
         return mockedSpecString;
     } finally {
-        specTransformation.dispose();
+        transformedSpec.dispose();
     }
 }
