@@ -19,8 +19,9 @@ package services_test
 import (
 	"context"
 	"errors"
-	"github.com/specterops/bloodhound/packages/go/params"
 	"testing"
+
+	"github.com/specterops/bloodhound/packages/go/params"
 
 	"github.com/specterops/bloodhound/server/dataquality/internal/services"
 	"github.com/specterops/bloodhound/server/dataquality/internal/services/mocks"
