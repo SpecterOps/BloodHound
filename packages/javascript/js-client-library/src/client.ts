@@ -92,6 +92,7 @@ import {
     EndFileIngestResponse,
     Environment,
     FileIngestCompletedTasksResponse,
+    FindingGroupsResponse,
     FindingSchemaResponse,
     FindingTypeResponse,
     GetAlertAttemptsResponse,
@@ -538,6 +539,9 @@ class BHEAPIClient {
 
     getFindings = (key: string, options?: RequestOptions) =>
         this.baseClient.get<BasicResponse<types.FindingAssetsResponse>>(`/api/v2/findings/${key}`, options);
+
+    getFindingGroups = (options?: RequestOptions) =>
+        this.baseClient.get<FindingGroupsResponse>('/api/v2/attack-paths/finding-groups', options);
 
     getUnifiedFindings = (options?: RequestOptions) =>
         this.baseClient.get<UnifiedFindingResponse>('/api/v2/attack-paths/findings', options);

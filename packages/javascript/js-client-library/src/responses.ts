@@ -537,6 +537,14 @@ export type UnifiedFinding = {
     is_cross_platform?: boolean;
 };
 
+export type FindingGroup = {
+    finding: string;
+    title: string;
+    count: number;
+};
+
+export type FindingGroupsResponse = BasicResponse<FindingGroup[]>;
+
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
 
 export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;

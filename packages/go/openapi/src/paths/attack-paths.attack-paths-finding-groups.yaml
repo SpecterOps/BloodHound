@@ -1,0 +1,186 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+parameters:
+  - $ref: "./../parameters/header.prefer.yaml"
+get:
+  operationId: ListAttackPathFindingGroups
+  summary: Count matching findings by attack path definition
+  description: |
+    Returns one group per stable `finding` name, with a display title and total count.
+    Uses the same filter predicates, default active statuses, OpenGraph feature flag,
+    and environment access restrictions as the findings endpoint. Groups are ordered
+    by title and finding name. Counts cover all matching findings without pagination.
+    Expand a group by requesting the findings endpoint with `finding=eq:<name>`,
+    `limit=10`, and the desired `skip` offset, together with the same filters.
+  tags:
+    - Attack Paths
+    - Enterprise
+  parameters:
+    - name: severity
+      description: Filter by severity level.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: finding_type
+      description: Filter by finding type. When not provided, both types are returned.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: finding
+      description: Filter by finding name.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: title
+      description: Filter by human-readable finding title.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: platform
+      description: Filter by platform.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: environment_id
+      description: |
+        Filter by one or more environment identifiers. Repeat the parameter to include multiple environments — results are the union of all specified values.
+      in: query
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+    - name: environment_name
+      description: Filter by environment display name.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: asset_group_tag_id
+      description: Filter by asset group tag identifier.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: zone_name
+      description: Filter by zone name (e.g. "Tier Zero").
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: source_principal_id
+      description: Filter by source principal identifier.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: source_principal_kind
+      description: Filter by source principal kind.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: source_principal_name
+      description: Filter by source principal display name.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: target_principal_id
+      description: Filter by target principal identifier.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: target_principal_kind
+      description: Filter by target principal kind.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: target_principal_name
+      description: Filter by target principal display name.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: principal_object_id
+      description: Filter by one principal object identifier. A finding matches when the object id is either its source (starting) principal or its target principal. The supported predicate is `eq` or `neq`.
+      in: query
+      schema:
+        type: string
+        pattern: "^(eq|neq):[^:]+$"
+    - name: status
+      description: Filter by finding status.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: first_seen
+      description: Filter by first seen timestamp.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: last_seen
+      description: Filter by last seen timestamp.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: is_cross_platform
+      description: Filter findings by whether source and target principals belong to different platforms.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.boolean.yaml"
+    - name: prioritization_score
+      description: Filter by prioritization score using the findings endpoint predicates.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: prioritization_rank
+      description: Filter by prioritization rank using the findings endpoint predicates.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+    - name: id
+      description: Filter by id using the findings endpoint predicates.
+      in: query
+      schema:
+        $ref: "./../schemas/api.params.predicate.filter.string.yaml"
+  responses:
+    200:
+      description: Matching groups, or an empty array when no findings match.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [data]
+            properties:
+              data:
+                type: array
+                items:
+                  type: object
+                  required: [finding, title, count]
+                  properties:
+                    finding:
+                      type: string
+                    title:
+                      type: string
+                    count:
+                      type: integer
+                      format: int64
+                      minimum: 1
+    400:
+      $ref: "./../responses/bad-request.yaml"
+    401:
+      $ref: "./../responses/unauthorized.yaml"
+    403:
+      $ref: "./../responses/forbidden.yaml"
+    429:
+      $ref: "./../responses/too-many-requests.yaml"
+    500:
+      $ref: "./../responses/internal-server-error.yaml"
