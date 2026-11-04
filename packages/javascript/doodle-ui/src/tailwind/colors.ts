@@ -382,6 +382,7 @@ export const text = {
     placeholder: '#6D6D6D',
     primary: light.primary.main,
     secondary: light.secondary.main,
+    faint: '#707070',
 };
 
 export const dark = {
@@ -401,6 +402,7 @@ export const dark = {
     disabled: '#A6A6A6',
     text: {
         disabled: '#A6A6A6',
+        faint: '#919191',
     },
     input: {
         border: '#515151',

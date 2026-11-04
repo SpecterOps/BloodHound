@@ -18,7 +18,6 @@ package database
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -26,10 +25,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/pgerrors"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
@@ -67,15 +66,12 @@ func checkAssetGroupTagSelectorMutationError(result *gorm.DB) error {
 		return nil
 	}
 
-	var pgErr *pgconn.PgError
-	if errors.As(result.Error, &pgErr) && pgErr.Code == PostgresUniqueViolationCode {
-		// Prefer structured Postgres fields when available. The switch maps exact constraint names.
-		switch pgErr.ConstraintName {
-		case "asset_group_tag_selectors_unique_name_asset_group_tag":
-			return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorName, result.Error)
-		case "idx_asset_group_tag_selectors_rule_key":
-			return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorRuleKey, result.Error)
-		}
+	// Prefer structured Postgres fields when available.
+	if pgerrors.IsUniqueViolation(result.Error, "asset_group_tag_selectors_unique_name_asset_group_tag") {
+		return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorName, result.Error)
+	}
+	if pgerrors.IsUniqueViolation(result.Error, "idx_asset_group_tag_selectors_rule_key") {
+		return fmt.Errorf("%w: %v", ErrDuplicateAGTagSelectorRuleKey, result.Error)
 	}
 
 	// Fall back to the existing string-match style that only have formatted errors.
@@ -593,10 +589,7 @@ func (s *BloodhoundDB) UpdateAssetGroupTag(ctx context.Context, user model.User,
 			user.ID.String(),
 			tag.ID,
 		); result.Error != nil {
-			var pgErr *pgconn.PgError
-			if errors.As(result.Error, &pgErr) &&
-				pgErr.Code == PostgresUniqueViolationCode &&
-				pgErr.ConstraintName == "agl_name_unique_index" {
+			if pgerrors.IsUniqueViolation(result.Error, "agl_name_unique_index") {
 				return fmt.Errorf("tag name must be unique: %w: %v", ErrDuplicateAGName, result.Error)
 			} else if strings.Contains(result.Error.Error(), "duplicate key value violates unique constraint \"asset_group_tags_glyph_key\"") {
 				return fmt.Errorf("%w: %v", ErrDuplicateGlyph, result.Error)

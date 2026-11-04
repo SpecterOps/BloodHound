@@ -38,7 +38,7 @@ func TestSavedQueries_IsSortable(t *testing.T) {
 func TestSavedQueries_ValidFilters(t *testing.T) {
 	savedQueries := model.SavedQueries{}
 	validFilters := savedQueries.ValidFilters()
-	require.Equal(t, 4, len(validFilters))
+	require.Equal(t, 6, len(validFilters))
 
 	for _, column := range []string{"user_id", "query"} {
 		operators, ok := validFilters[column]

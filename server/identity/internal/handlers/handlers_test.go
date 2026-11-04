@@ -17,15 +17,21 @@
 package handlers_test
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
+	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	testutils "github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
@@ -474,4 +480,584 @@ func TestPermissionListView_DeletedAtIsNotQueryable(t *testing.T) {
 	handler.ServeHTTP(recorder, request)
 
 	assert.Equal(t, http.StatusBadRequest, recorder.Code)
+}
+
+func TestHandlers_ListUsers(t *testing.T) {
+	type mock struct {
+		identity *mocks.MockIdentity
+	}
+
+	type expected struct {
+		responseCode   int
+		responseBody   func(t *testing.T, body []byte)
+		responseHeader http.Header
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(mock *mock)
+		expected     expected
+	}
+
+	var (
+		unexpectedErr = errors.New("unexpected database failure")
+		filters       = params.Filters{
+			"email_address": {{Field: "email_address", Operator: params.Equals, Value: "ada@example.com", IsStringData: true}},
+		}
+		sortItems = params.SortItems{{Field: "last_login", Direction: params.Descending}}
+		userID    = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		lastLogin = time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+		populated = []services.User{
+			{
+				ID:              userID,
+				SSOProviderID:   sql.NullInt32{Int32: 7, Valid: true},
+				FirstName:       sql.NullString{String: "Ada", Valid: true},
+				LastName:        sql.NullString{Valid: false},
+				EmailAddress:    sql.NullString{String: "ada@example.com", Valid: true},
+				PrincipalName:   "ada",
+				LastLogin:       lastLogin,
+				AllEnvironments: true,
+				EULAAccepted:    true,
+				Roles: []services.Role{
+					{ID: 3, Name: "Administrator", Permissions: []services.Permission{{ID: 1, Authority: "app", Name: "ManageProviders"}}},
+				},
+				EnvironmentTargetedAccessControl: []services.EnvironmentAccessControl{
+					{ID: 5, UserID: userID.String(), EnvironmentID: "env-1"},
+				},
+				AuthSecret: &services.AuthSecret{ID: 9, DigestMethod: "argon2", TOTPActivated: true},
+			},
+		}
+		bare = []services.User{{ID: userID, PrincipalName: "guest"}}
+	)
+
+	buildRequest := func() *http.Request {
+		request := httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users", nil)
+		return bhctx.SetRequestContext(request, &bhctx.Context{Filters: filters, Sort: sortItems})
+	}
+
+	tt := []testData{
+		{
+			name:         "Success: legacy user JSON contract is reproduced - 200",
+			buildRequest: buildRequest,
+			setupMocks: func(mock *mock) {
+				mock.identity.EXPECT().ListUsers(testifyMock.Anything, filters, sortItems).Return(populated, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody: func(t *testing.T, body []byte) {
+					var envelope struct {
+						Data struct {
+							Users []json.RawMessage `json:"users"`
+						} `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					require.Len(t, envelope.Data.Users, 1)
+
+					var fields map[string]json.RawMessage
+					require.NoError(t, json.Unmarshal(envelope.Data.Users[0], &fields))
+
+					// Nullable fields marshal to a bare value or null (legacy null.String/null.Int32 contract).
+					assert.JSONEq(t, `7`, string(fields["sso_provider_id"]))
+					assert.JSONEq(t, `"Ada"`, string(fields["first_name"]))
+					assert.JSONEq(t, `null`, string(fields["last_name"]))
+					assert.JSONEq(t, `"ada@example.com"`, string(fields["email_address"]))
+
+					// AuthSecret retains its legacy capitalized key and omits secret material.
+					require.Contains(t, fields, "AuthSecret")
+					var authSecret map[string]json.RawMessage
+					require.NoError(t, json.Unmarshal(fields["AuthSecret"], &authSecret))
+					assert.JSONEq(t, `"argon2"`, string(authSecret["digest_method"]))
+					assert.NotContains(t, authSecret, "digest")
+					assert.NotContains(t, authSecret, "totp_secret")
+
+					// deleted_at retains the sql.NullTime object shape used by the legacy model.
+					assert.JSONEq(t, `{"Time":"0001-01-01T00:00:00Z","Valid":false}`, string(fields["deleted_at"]))
+
+					// Associations are always present as arrays.
+					assert.Contains(t, fields, "roles")
+					assert.Contains(t, fields, "environment_targeted_access_control")
+				},
+			},
+		},
+		{
+			name:         "Success: nullable fields and AuthSecret render null when unset - 200",
+			buildRequest: buildRequest,
+			setupMocks: func(mock *mock) {
+				mock.identity.EXPECT().ListUsers(testifyMock.Anything, filters, sortItems).Return(bare, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody: func(t *testing.T, body []byte) {
+					var envelope struct {
+						Data struct {
+							Users []json.RawMessage `json:"users"`
+						} `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					require.Len(t, envelope.Data.Users, 1)
+
+					var fields map[string]json.RawMessage
+					require.NoError(t, json.Unmarshal(envelope.Data.Users[0], &fields))
+					assert.JSONEq(t, `null`, string(fields["sso_provider_id"]))
+					assert.JSONEq(t, `null`, string(fields["first_name"]))
+					assert.JSONEq(t, `null`, string(fields["AuthSecret"]))
+				},
+			},
+		},
+		{
+			name:         "Success: no users match - 200",
+			buildRequest: buildRequest,
+			setupMocks: func(mock *mock) {
+				mock.identity.EXPECT().ListUsers(testifyMock.Anything, filters, sortItems).Return([]services.User{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody: func(t *testing.T, body []byte) {
+					var envelope struct {
+						Data handlers.UserListView `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					assert.Empty(t, envelope.Data.Users)
+				},
+			},
+		},
+		{
+			name:         "Error: service fails - 500",
+			buildRequest: buildRequest,
+			setupMocks: func(mock *mock) {
+				mock.identity.EXPECT().ListUsers(testifyMock.Anything, filters, sortItems).Return(nil, unexpectedErr)
+			},
+			expected: expected{responseCode: http.StatusInternalServerError, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				identityMock = mocks.NewMockIdentity(t)
+				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				muxRouter    = mux.NewRouter()
+				recorder     = httptest.NewRecorder()
+			)
+
+			muxRouter.HandleFunc("/api/v2/bloodhound-users", handlerSet.ListUsers).Methods(http.MethodGet)
+			testCase.setupMocks(&mock{identity: identityMock})
+
+			muxRouter.ServeHTTP(recorder, testCase.buildRequest())
+
+			status, header, body := testutils.ProcessResponse(t, recorder)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.responseBody != nil {
+				testCase.expected.responseBody(t, []byte(body))
+			}
+		})
+	}
+}
+
+func TestHandlers_ListActiveUsersMinimal(t *testing.T) {
+	type mock struct {
+		identity *mocks.MockIdentity
+	}
+
+	type expected struct {
+		responseCode   int
+		responseBody   string
+		responseHeader http.Header
+	}
+
+	type testData struct {
+		name       string
+		setupMocks func(mock *mock, request *http.Request)
+		expected   expected
+	}
+
+	var (
+		unexpectedErr = errors.New("unexpected database failure")
+		filters       = params.Filters{
+			"first_name": {{Field: "first_name", Operator: params.ApproximatelyEquals, Value: "ad", IsStringData: true}},
+		}
+		sortItems = params.SortItems{{Field: "email_address", Direction: params.Ascending}}
+		users     = []services.UserMinimal{
+			{
+				ID:           uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111"),
+				EmailAddress: sql.NullString{String: "ada@example.com", Valid: true},
+				FirstName:    sql.NullString{String: "Ada", Valid: true},
+				LastName:     sql.NullString{String: "Lovelace", Valid: true},
+			},
+			{ID: uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222")},
+		}
+		jsonHeader = http.Header{"Content-Type": []string{"application/json"}}
+	)
+
+	tt := []testData{
+		{
+			name: "Success: active users are returned with NULL columns as empty strings - 200",
+			setupMocks: func(mock *mock, request *http.Request) {
+				mock.identity.EXPECT().ListActiveUsersMinimal(request.Context(), filters, sortItems).Return(users, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: jsonHeader,
+				responseBody: `{"data":{"users":[` +
+					`{"id":"11111111-1111-1111-1111-111111111111","email_address":"ada@example.com","first_name":"Ada","last_name":"Lovelace"},` +
+					`{"id":"22222222-2222-2222-2222-222222222222","email_address":"","first_name":"","last_name":""}]}}`,
+			},
+		},
+		{
+			name: "Success: no users match - 200",
+			setupMocks: func(mock *mock, request *http.Request) {
+				mock.identity.EXPECT().ListActiveUsersMinimal(request.Context(), filters, sortItems).Return(nil, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: jsonHeader,
+				responseBody:   `{"data":{"users":[]}}`,
+			},
+		},
+		{
+			name: "Error: service times out - 500",
+			setupMocks: func(mock *mock, request *http.Request) {
+				mock.identity.EXPECT().ListActiveUsersMinimal(request.Context(), filters, sortItems).Return(nil, context.DeadlineExceeded)
+			},
+			expected: expected{responseCode: http.StatusInternalServerError, responseHeader: jsonHeader},
+		},
+		{
+			name: "Error: service fails - 500",
+			setupMocks: func(mock *mock, request *http.Request) {
+				mock.identity.EXPECT().ListActiveUsersMinimal(request.Context(), filters, sortItems).Return(nil, unexpectedErr)
+			},
+			expected: expected{responseCode: http.StatusInternalServerError, responseHeader: jsonHeader},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				identityMock = mocks.NewMockIdentity(t)
+				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				recorder     = httptest.NewRecorder()
+				request      = bhctx.SetRequestContext(
+					httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users-minimal", nil),
+					&bhctx.Context{Filters: filters, Sort: sortItems},
+				)
+			)
+
+			testCase.setupMocks(&mock{identity: identityMock}, request)
+
+			handlerSet.ListActiveUsersMinimal(recorder, request)
+
+			status, header, body := testutils.ProcessResponse(t, recorder)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.responseBody != "" {
+				assert.JSONEq(t, testCase.expected.responseBody, body)
+			}
+		})
+	}
+}
+
+func TestUserListView_IsSortable(t *testing.T) {
+	tests := []struct {
+		name  string
+		field string
+		want  bool
+	}{
+		{name: "first_name is sortable", field: "first_name", want: true},
+		{name: "last_name is sortable", field: "last_name", want: true},
+		{name: "email_address is sortable", field: "email_address", want: true},
+		{name: "principal_name is sortable", field: "principal_name", want: true},
+		{name: "last_login is sortable", field: "last_login", want: true},
+		{name: "created_at is sortable", field: "created_at", want: true},
+		{name: "updated_at is sortable", field: "updated_at", want: true},
+		{name: "deleted_at is not sortable", field: "deleted_at", want: false},
+		{name: "unknown field is not sortable", field: "nope", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, handlers.UserListView{}.IsSortable(tt.field))
+		})
+	}
+}
+
+func TestUserListView_ValidFilters(t *testing.T) {
+	var validFilters = handlers.UserListView{}.ValidFilters()
+
+	tests := []struct {
+		name         string
+		field        string
+		wantPresent  bool
+		wantString   bool
+		wantOperator params.FilterOperator
+	}{
+		{name: "first_name filterable as string data", field: "first_name", wantPresent: true, wantString: true, wantOperator: params.Equals},
+		{name: "principal_name filterable as string data", field: "principal_name", wantPresent: true, wantString: true, wantOperator: params.NotEquals},
+		{name: "id filterable as non-string data", field: "id", wantPresent: true, wantString: false, wantOperator: params.Equals},
+		{name: "last_login supports range operators", field: "last_login", wantPresent: true, wantString: false, wantOperator: params.GreaterThan},
+		{name: "created_at supports range operators", field: "created_at", wantPresent: true, wantString: false, wantOperator: params.LessThanOrEquals},
+		{name: "deleted_at is not filterable", field: "deleted_at", wantPresent: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			field, present := validFilters[tt.field]
+			require.Equal(t, tt.wantPresent, present)
+			if !tt.wantPresent {
+				return
+			}
+			assert.Equal(t, tt.wantString, field.IsStringData)
+			assert.Contains(t, field.Operators, tt.wantOperator)
+		})
+	}
+}
+
+func TestBuildUserMinimalListView(t *testing.T) {
+	var userID = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+
+	tests := []struct {
+		name     string
+		users    []services.UserMinimal
+		wantJSON string
+	}{
+		{
+			name: "populated columns are rendered as strings",
+			users: []services.UserMinimal{{
+				ID:           userID,
+				EmailAddress: sql.NullString{String: "ada@example.com", Valid: true},
+				FirstName:    sql.NullString{String: "Ada", Valid: true},
+				LastName:     sql.NullString{String: "Lovelace", Valid: true},
+			}},
+			wantJSON: `{"users":[{"id":"11111111-1111-1111-1111-111111111111","email_address":"ada@example.com","first_name":"Ada","last_name":"Lovelace"}]}`,
+		},
+		{
+			name:     "NULL columns are rendered as empty strings",
+			users:    []services.UserMinimal{{ID: userID}},
+			wantJSON: `{"users":[{"id":"11111111-1111-1111-1111-111111111111","email_address":"","first_name":"","last_name":""}]}`,
+		},
+		{
+			name:     "nil users are rendered as an empty array",
+			users:    nil,
+			wantJSON: `{"users":[]}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := handlers.BuildUserMinimalListView(tt.users).JSONView()
+			require.NoError(t, err)
+			assert.JSONEq(t, tt.wantJSON, string(got))
+		})
+	}
+}
+
+func TestUserMinimalListView_IsSortable(t *testing.T) {
+	tests := []struct {
+		name  string
+		field string
+		want  bool
+	}{
+		{name: "first_name is sortable", field: "first_name", want: true},
+		{name: "last_name is sortable", field: "last_name", want: true},
+		{name: "email_address is sortable", field: "email_address", want: true},
+		{name: "id is sortable", field: "id", want: true},
+		{name: "principal_name is not sortable", field: "principal_name", want: false},
+		{name: "created_at is not sortable", field: "created_at", want: false},
+		{name: "unknown field is not sortable", field: "nope", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, handlers.UserMinimalListView{}.IsSortable(tt.field))
+		})
+	}
+}
+
+func TestUserMinimalListView_ValidFilters(t *testing.T) {
+	var validFilters = handlers.UserMinimalListView{}.ValidFilters()
+
+	tests := []struct {
+		name          string
+		field         string
+		wantPresent   bool
+		wantString    bool
+		wantOperators []params.FilterOperator
+	}{
+		{name: "first_name supports approximate equality", field: "first_name", wantPresent: true, wantString: true, wantOperators: []params.FilterOperator{params.Equals, params.NotEquals, params.ApproximatelyEquals}},
+		{name: "last_name supports approximate equality", field: "last_name", wantPresent: true, wantString: true, wantOperators: []params.FilterOperator{params.Equals, params.NotEquals, params.ApproximatelyEquals}},
+		{name: "email_address supports approximate equality", field: "email_address", wantPresent: true, wantString: true, wantOperators: []params.FilterOperator{params.Equals, params.NotEquals, params.ApproximatelyEquals}},
+		{name: "id supports equality only", field: "id", wantPresent: true, wantString: false, wantOperators: []params.FilterOperator{params.Equals, params.NotEquals}},
+		{name: "principal_name is not filterable", field: "principal_name", wantPresent: false},
+		{name: "support_account is not filterable", field: "support_account", wantPresent: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			field, present := validFilters[tt.field]
+			require.Equal(t, tt.wantPresent, present)
+			if !tt.wantPresent {
+				return
+			}
+			assert.Equal(t, tt.wantString, field.IsStringData)
+			assert.ElementsMatch(t, tt.wantOperators, field.Operators)
+		})
+	}
+}
+
+// TestUserMinimalListView_FilterParsingContract compares the legacy regex-based
+// filter parser with the FilterMiddleware parser used by the migrated route.
+// Cases where the two differ are intentional: the new parser keeps the full
+// value after the first colon and rejects malformed operators instead of
+// searching the value for one.
+func TestUserMinimalListView_FilterParsingContract(t *testing.T) {
+	type expected struct {
+		legacyFiltered bool
+		legacyValue    string
+		responseCode   int
+		filters        params.Filters
+	}
+
+	type testData struct {
+		name     string
+		field    string
+		value    string
+		expected expected
+	}
+
+	stringFilter := func(field string, operator params.FilterOperator, value string) params.Filters {
+		return params.Filters{field: {{Field: field, Operator: operator, Value: value, SetOperator: params.FilterAnd, IsStringData: true}}}
+	}
+
+	tt := []testData{
+		{
+			name:  "Unchanged: simple value",
+			field: "first_name",
+			value: "eq:Ada",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Ada",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "Ada"),
+			},
+		},
+		{
+			name:  "Unchanged: value containing a space",
+			field: "first_name",
+			value: "eq:Ada Lovelace",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Ada Lovelace",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "Ada Lovelace"),
+			},
+		},
+		{
+			name:  "Unchanged: value containing a colon",
+			field: "first_name",
+			value: "eq:a:b",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "a:b",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "a:b"),
+			},
+		},
+		{
+			name:     "Unchanged: value without an operator is ignored",
+			field:    "first_name",
+			value:    "Ada",
+			expected: expected{responseCode: http.StatusOK, filters: params.Filters{}},
+		},
+		{
+			name:     "Changed: empty eq value was ignored and now filters for an empty string",
+			field:    "first_name",
+			value:    "eq:",
+			expected: expected{responseCode: http.StatusOK, filters: stringFilter("first_name", params.Equals, "")},
+		},
+		{
+			name:     "Changed: empty ~eq value was ignored and now matches every non-NULL value",
+			field:    "first_name",
+			value:    "~eq:",
+			expected: expected{responseCode: http.StatusOK, filters: stringFilter("first_name", params.ApproximatelyEquals, "")},
+		},
+		{
+			name:  "Changed: apostrophe was truncated and is now kept",
+			field: "email_address",
+			value: "eq:o'brien@example.com",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "o",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("email_address", params.Equals, "o'brien@example.com"),
+			},
+		},
+		{
+			name:  "Changed: comma was truncated and is now kept",
+			field: "first_name",
+			value: "eq:Ann,Marie",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Ann",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "Ann,Marie"),
+			},
+		},
+		{
+			name:  "Changed: non-ASCII character was truncated and is now kept",
+			field: "first_name",
+			value: "eq:José",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Jos",
+				responseCode:   http.StatusOK,
+				filters:        stringFilter("first_name", params.Equals, "José"),
+			},
+		},
+		{
+			name:  "Changed: operator after leading text was found and is now rejected",
+			field: "first_name",
+			value: "x eq:Ada",
+			expected: expected{
+				legacyFiltered: true,
+				legacyValue:    "Ada",
+				responseCode:   http.StatusBadRequest,
+			},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				legacyParser = model.NewQueryParameterFilterParser()
+				parsed       params.Filters
+				recorder     = httptest.NewRecorder()
+				query        = url.Values{testCase.field: {testCase.value}}.Encode()
+				request      = bhctx.SetRequestContext(httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users-minimal?"+query, nil), &bhctx.Context{})
+				next         = http.HandlerFunc(func(_ http.ResponseWriter, request *http.Request) {
+					parsed = bhctx.Get(request.Context()).Filters
+				})
+			)
+
+			legacyFilter, err := legacyParser.ParseQueryParameterFilter(testCase.field, testCase.value)
+			if testCase.expected.legacyFiltered {
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expected.legacyValue, legacyFilter.Value)
+			} else {
+				assert.ErrorIs(t, err, model.ErrNotFiltered)
+			}
+
+			middleware.FilterMiddleware(handlers.UserMinimalListView{})(next).ServeHTTP(recorder, request)
+
+			assert.Equal(t, testCase.expected.responseCode, recorder.Code)
+			assert.Equal(t, testCase.expected.filters, parsed)
+		})
+	}
 }

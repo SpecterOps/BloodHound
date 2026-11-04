@@ -96,7 +96,9 @@ const SelectorListItemContent: React.FC<{
                     </TooltipPortal>
                 </TooltipRoot>
             </TooltipProvider>
-            <FontAwesomeIcon icon={displayIcon} size='sm' />
+            <span className='flex w-4 shrink-0 items-center justify-center'>
+                <FontAwesomeIcon icon={displayIcon} size='sm' />
+            </span>
         </TextButton>
     );
 };

@@ -26,6 +26,7 @@
       "mode": "remote",
       "port": 3456,
       "request": "attach",
+      "debugAdapter": "legacy",
       "substitutePath": [
         {
           "from": "${workspaceFolder}",
@@ -40,6 +41,7 @@
       "mode": "debug",
       "program": "github.com/specterops/bloodhound/cmd/api/src",
       "cwd": "${workspaceFolder}",
+      "debugAdapter": "legacy",
       "args": [
         "-configfile",
         "${workspaceFolder}/local-harnesses/build.config.json",

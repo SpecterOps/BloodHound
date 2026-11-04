@@ -22,12 +22,13 @@ parameters:
     schema:
       type: integer
       format: int32
+      minimum: 1
 
 get:
   operationId: GetCollectorJobType
   summary: Get a collector job type
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:

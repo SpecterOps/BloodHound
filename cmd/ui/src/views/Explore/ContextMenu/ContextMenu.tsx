@@ -14,10 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Menu, MenuItem } from '@mui/material';
-
 import {
     CopyMenuItem,
+    GraphContextMenu,
     Permission,
     isNodeResponse,
     useExploreParams,
@@ -25,6 +24,7 @@ import {
     useFeatureFlag,
     usePermissions,
 } from 'bh-shared-ui';
+import { MenuItem } from 'doodle-ui';
 import { FC } from 'react';
 import { selectOwnedAssetGroupId, selectTierZeroAssetGroupId } from 'src/ducks/assetgroups/reducer';
 import { useAppSelector } from 'src/store';
@@ -68,30 +68,27 @@ const ContextMenu: FC<{
     };
 
     return (
-        <Menu
-            open={contextMenu !== null}
-            anchorPosition={{ left: contextMenu?.mouseX || 0 + 10, top: contextMenu?.mouseY || 0 }}
-            anchorReference='anchorPosition'
-            onClose={handleClose}
-            onClick={handleClose}>
-            <MenuItem onClick={handleSetStartingNode}>Set as starting node</MenuItem>
-            <MenuItem onClick={handleSetEndingNode}>Set as ending node</MenuItem>
+        <GraphContextMenu contextMenu={contextMenu} onClose={handleClose}>
+            <MenuItem onSelect={handleSetStartingNode}>Set as starting node</MenuItem>
+            <MenuItem onSelect={handleSetEndingNode}>Set as ending node</MenuItem>
 
             {!tierFlag?.enabled &&
                 checkPermission(Permission.GRAPH_DB_WRITE) && [
                     <AssetGroupMenuItem
+                        onClose={handleClose}
                         key={tierZeroAssetGroupId}
                         assetGroupId={tierZeroAssetGroupId}
                         assetGroupName='High Value'
                     />,
                     <AssetGroupMenuItem
+                        onClose={handleClose}
                         key={ownedAssetGroupId}
                         assetGroupId={ownedAssetGroupId}
                         assetGroupName='Owned'
                     />,
                 ]}
             <CopyMenuItem />
-        </Menu>
+        </GraphContextMenu>
     );
 };
 

@@ -19,11 +19,15 @@ import { SchemaUploadDialog } from '../../components/SchemaUploadDialog/SchemaUp
 export const SchemaUploadCard = () => {
     return (
         <Card className='flex flex-col p-6 gap-4'>
-            <h2 className='text-xl font-bold'>Custom Schema Upload</h2>
-            <p>
-                Upload custom schema JSON files to introduce new node and edge types. Then apply and validate schema
-                updates to tailor the attack graph model to specific environments, workflows, or needs.
-            </p>
+            <h2 className='text-xl font-bold'>Extension Installation</h2>
+            <div>
+                <p>Install an OpenGraph Extension Bundle or JSON files to expand platform functionality, including:</p>
+                <ul className='list-disc pl-6 mt-2'>
+                    <li>Introducing new types of nodes and relationships</li>
+                    <li>Adding rich contextual information to the attack graph</li>
+                    <li>Modeling your specific technologies, environments, and workflows</li>
+                </ul>
+            </div>
             <SchemaUploadDialog />
         </Card>
     );

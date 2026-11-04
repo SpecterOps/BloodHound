@@ -96,8 +96,8 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
             <DialogTrigger asChild>
                 <IconButton
                     aria-label='Open file ingest filters'
-                    variant='secondary'
                     size={24}
+                    variant='secondary'
                     data-testid='file_ingest_log-open_filter_dialog'>
                     <AppIcon.FilterOutline />
                 </IconButton>
@@ -110,7 +110,7 @@ export const FileIngestFilterDialog: React.FC<Props> = ({ onConfirm }) => {
                     }}>
                     <DialogTitle className='flex justify-between items-center'>
                         Filter
-                        <TextButton fontColor='primary' className='font-bold p-0 h-fit text-sm' onClick={clearFilters}>
+                        <TextButton fontColor='primary' className='font-bold h-fit text-sm' onClick={clearFilters}>
                             Clear All
                         </TextButton>
                     </DialogTitle>

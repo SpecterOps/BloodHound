@@ -9,4 +9,11 @@
 **/.yarnrc.yml               @SpecterOps/security-champions @SpecterOps/engineering-admins
 **/yarn.lock                 @SpecterOps/security-champions @SpecterOps/engineering-admins
 **/yarn-workspaces.json      @SpecterOps/security-champions @SpecterOps/engineering-admins
+
+# Golang files
+**/go.mod                    @SpecterOps/security-champions @SpecterOps/engineering-admins
+**/go.sum                    @SpecterOps/security-champions @SpecterOps/engineering-admins
+**/go.work                   @SpecterOps/security-champions @SpecterOps/engineering-admins
+**/go.work.sum               @SpecterOps/security-champions @SpecterOps/engineering-admins
+
 **/CODEOWNERS                @SpecterOps/engineering-admins

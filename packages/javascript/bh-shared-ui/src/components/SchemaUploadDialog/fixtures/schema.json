@@ -1,0 +1,20 @@
+{
+    "schema": {
+        "name": "TestExtension",
+        "display_name": "Test Extension",
+        "version": "v1.0.0",
+        "namespace": "test"
+    },
+    "node_kinds": [
+        {
+            "name": "test_Asset",
+            "display_name": "Test Asset",
+            "description": "An extension asset",
+            "is_display_kind": true,
+            "icon": "cube",
+            "color": "#388E3C"
+        }
+    ],
+    "relationship_kinds": [],
+    "environments": []
+}

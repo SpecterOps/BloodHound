@@ -17,10 +17,11 @@
 import userEvent from '@testing-library/user-event';
 import { apiClient } from 'bh-shared-ui';
 import { mockGetConfigurationHandler } from 'bh-shared-ui/testing';
+import { Menu, MenuContent } from 'doodle-ui';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { act } from 'react-dom/test-utils';
-import { render, screen } from 'src/test-utils';
+import { render, screen, waitFor } from 'src/test-utils';
 import AssetGroupMenuItem from './AssetGroupMenuItem';
 
 const tierZeroAssetGroup = { id: 1, name: 'high value' };
@@ -115,10 +116,14 @@ describe('AssetGroupMenuItem', async () => {
         it('handles adding to tier zero asset group', async () => {
             await act(async () => {
                 render(
-                    <AssetGroupMenuItem
-                        assetGroupId={tierZeroAssetGroup.id}
-                        assetGroupName={tierZeroAssetGroup.name}
-                    />,
+                    <Menu open modal={false}>
+                        <MenuContent>
+                            <AssetGroupMenuItem
+                                assetGroupId={tierZeroAssetGroup.id}
+                                assetGroupName={tierZeroAssetGroup.name}
+                            />
+                        </MenuContent>
+                    </Menu>,
                     {
                         initialState: {
                             ...getAssetGroupTestProps({ isTierZero: true }),
@@ -141,6 +146,7 @@ describe('AssetGroupMenuItem', async () => {
 
             const applyButton = screen.getByRole('button', { name: /ok/i });
             await user.click(applyButton);
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
             expect(addToHighValueSpy).toHaveBeenCalledTimes(1);
             expect(addToHighValueSpy).toHaveBeenCalledWith(tierZeroAssetGroup.id, [
@@ -154,12 +160,22 @@ describe('AssetGroupMenuItem', async () => {
 
         it('handles adding to non-tier-zero asset group', async () => {
             await act(async () => {
-                render(<AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />, {
-                    initialState: {
-                        ...getAssetGroupTestProps({ isTierZero: false }),
-                    },
-                    route: ROUTE_WITH_SELECTED_ITEM_PARAM,
-                });
+                render(
+                    <Menu open modal={false}>
+                        <MenuContent>
+                            <AssetGroupMenuItem
+                                assetGroupId={ownedAssetGroup.id}
+                                assetGroupName={ownedAssetGroup.name}
+                            />
+                        </MenuContent>
+                    </Menu>,
+                    {
+                        initialState: {
+                            ...getAssetGroupTestProps({ isTierZero: false }),
+                        },
+                        route: ROUTE_WITH_SELECTED_ITEM_PARAM,
+                    }
+                );
             });
 
             const user = userEvent.setup();
@@ -181,9 +197,23 @@ describe('AssetGroupMenuItem', async () => {
         });
 
         it('renders null if network fails to return valid asset group membership list', async () => {
-            const { container } = render(<AssetGroupMenuItem assetGroupId={3} assetGroupName={'blah'} />, {});
+            const membershipRequest = vi.spyOn(apiClient, 'listAssetGroupMembers').mockResolvedValueOnce({
+                data: { data: { members: null } },
+            } as any);
+            await act(async () => {
+                render(
+                    <Menu open modal={false}>
+                        <MenuContent>
+                            <AssetGroupMenuItem assetGroupId={3} assetGroupName='blah' />
+                        </MenuContent>
+                    </Menu>,
+                    {}
+                );
+            });
 
-            expect(container.textContent).toBe('');
+            expect(membershipRequest).toHaveBeenCalled();
+            expect(screen.queryByRole('menuitem')).not.toBeInTheDocument();
+            membershipRequest.mockRestore();
         });
     });
 
@@ -254,10 +284,14 @@ describe('AssetGroupMenuItem', async () => {
         it('handles removing from a tier zero asset group', async () => {
             await act(async () => {
                 await render(
-                    <AssetGroupMenuItem
-                        assetGroupId={tierZeroAssetGroup.id}
-                        assetGroupName={tierZeroAssetGroup.name}
-                    />,
+                    <Menu open modal={false}>
+                        <MenuContent>
+                            <AssetGroupMenuItem
+                                assetGroupId={tierZeroAssetGroup.id}
+                                assetGroupName={tierZeroAssetGroup.name}
+                            />
+                        </MenuContent>
+                    </Menu>,
                     {
                         initialState: {
                             ...getAssetGroupTestProps({ isTierZero: true }),
@@ -280,6 +314,7 @@ describe('AssetGroupMenuItem', async () => {
 
             const applyButton = screen.getByRole('button', { name: /ok/i });
             await user.click(applyButton);
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
             expect(removeFromAssetGroupSpy).toHaveBeenCalledTimes(1);
             expect(removeFromAssetGroupSpy).toHaveBeenCalledWith(tierZeroAssetGroup.id, [
@@ -294,7 +329,14 @@ describe('AssetGroupMenuItem', async () => {
         it('handles removing from a non-tier-zero asset group', async () => {
             await act(async () => {
                 await render(
-                    <AssetGroupMenuItem assetGroupId={ownedAssetGroup.id} assetGroupName={ownedAssetGroup.name} />,
+                    <Menu open modal={false}>
+                        <MenuContent>
+                            <AssetGroupMenuItem
+                                assetGroupId={ownedAssetGroup.id}
+                                assetGroupName={ownedAssetGroup.name}
+                            />
+                        </MenuContent>
+                    </Menu>,
                     {
                         initialState: {
                             ...getAssetGroupTestProps({ isTierZero: false }),

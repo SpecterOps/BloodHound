@@ -21,10 +21,10 @@ parameters:
 post:
   operationId: EndCollectorJob
   summary: End a collector job
-  description: Succeeded and failed outcomes create immutable history; requeue
+  description: Succeeded, partially-succeeded, and failed outcomes create immutable history; requeue
     returns the job to ready with backoff and consumes an attempt.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   requestBody:
     required: true
@@ -40,7 +40,9 @@ post:
               type: string
               enum:
                 - succeeded
+                - partially-succeeded
                 - failed
+                - cancelled
                 - requeue
             failure_message:
               type: string
@@ -59,5 +61,7 @@ post:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'

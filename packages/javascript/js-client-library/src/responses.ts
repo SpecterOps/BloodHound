@@ -31,6 +31,7 @@ import {
     CollectorJobProfile,
     CollectorJobSchedule,
     CollectorJobSecret,
+    CollectorJobType,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -53,7 +54,7 @@ import {
     Webhook,
     WebhookSecret,
 } from './types';
-import { ConfigurationPayload } from './utils/config';
+import { type ConfigurationPayload } from './utils';
 
 export interface BasicResponse<T> {
     data: T;
@@ -83,7 +84,7 @@ export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
 export type Environment = {
     // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
     // Needed because environment types can be provided by the user
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // oxlint-disable-next-line typescript/ban-types
     type: KnownEnvironmentType | (string & {});
     impactValue: number;
     name: string;
@@ -320,6 +321,8 @@ export type SavedQuery = {
     description: string;
     query: string;
     user_id: string;
+    category?: string;
+    extension_id?: number | null;
 };
 
 export type SavedQueryPermissionsResponse = {
@@ -382,11 +385,17 @@ export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobP
 // ---------------------------------------------------------------------------
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
 
+export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJobType[] }>;
+
+export type GetCollectorJobSchedulesResponse = PaginatedResponse<{ schedules: CollectorJobSchedule[] }>;
+
 export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
 
-export type GetLatestCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+export type GetCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
 
 export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
+
+export type GetCollectorJobSecretsResponse = PaginatedResponse<{ secrets: CollectorJobSecret[] }>;
 
 export type GetCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
 

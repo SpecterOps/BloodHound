@@ -150,7 +150,7 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, 0, 10, false)
+			results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, testCase.inputArguments, testCase.queryString, 0, 10, false, nil)
 			require.Nil(t, err)
 			require.Equal(t, testCase.expectedResults, len(results), testCase.expectedResultExplanation)
 			if testCase.shouldMatchUser {
@@ -164,6 +164,166 @@ func TestSearchNodesByNameOrObjectId(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSearchNodesByNameOrObjectId_ExactAndFuzzyMatch(t *testing.T) {
+	type testNode struct {
+		name     string
+		objectID string
+	}
+
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		domainNode = testNode{
+			name:     "TEST.LOCAL",
+			objectID: "S-1-5-21-1000-1032",
+		}
+		nodes = []testNode{
+			{name: "ZOE@TEST.LOCAL", objectID: "S-1-5-21-1000-1008"},
+			{name: "DAVE@TEST.LOCAL", objectID: "S-1-5-21-1000-1009"},
+			{name: "KALVIN@TEST.LOCAL", objectID: "S-1-5-21-1000-1011"},
+			{name: "JUDY@TEST.LOCAL", objectID: "S-1-5-21-1000-1006"},
+			{name: "FRANK@TEST.LOCAL", objectID: "S-1-5-21-1000-1012"},
+			{name: "CAROL@TEST.LOCAL", objectID: "S-1-5-21-1000-1004"},
+			{name: "IVAN@TEST.LOCAL", objectID: "S-1-5-21-1000-1010"},
+			{name: "HENRY@TEST.LOCAL", objectID: "S-1-5-21-1000-1007"},
+			{name: "MALLORY@TEST.LOCAL", objectID: "S-1-5-21-1000-1003"},
+			{name: "GRACE@TEST.LOCAL", objectID: "S-1-5-21-1000-1005"},
+			{name: "ERIN@TEST.LOCAL", objectID: "S-1-5-21-1000-1002"},
+			{name: "HEIDI@TEST.LOCAL", objectID: "S-1-5-21-1000-1001"},
+			{name: "JEFF@TEST.LOCAL", objectID: "S-1-5-21-1000-1021"},
+			{name: "JAKE@TEST.LOCAL", objectID: "S-1-5-21-1000-10028"},
+			{name: "ARNOLD@TEST.LOCAL", objectID: "S-1-5-21-1000-1022"},
+		}
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	err := testSuite.GraphDB.WriteTransaction(testSuite.Context, func(tx graph.Transaction) error {
+
+		// Write all nodes to db
+		for _, node := range nodes {
+			if _, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+				common.Name:     node.name,
+				common.ObjectID: node.objectID,
+			}), ad.Entity, ad.User); err != nil {
+				return err
+			}
+		}
+
+		// Write exact node match into db as domain
+		if _, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     domainNode.name,
+			common.ObjectID: domainNode.objectID,
+		}), ad.Entity, ad.Domain); err != nil {
+			return err
+		}
+		return nil
+	})
+	require.NoError(t, err)
+
+	t.Run("exact match is returned first, followed by fuzzy matches sorted by name", func(t *testing.T) {
+		var (
+			limit         = 10
+			expectedNames = []string{
+				"TEST.LOCAL",
+				"ARNOLD@TEST.LOCAL",
+				"CAROL@TEST.LOCAL",
+				"DAVE@TEST.LOCAL",
+				"ERIN@TEST.LOCAL",
+				"FRANK@TEST.LOCAL",
+				"GRACE@TEST.LOCAL",
+				"HEIDI@TEST.LOCAL",
+				"HENRY@TEST.LOCAL",
+				"IVAN@TEST.LOCAL",
+			}
+		)
+
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "TEST.LOCAL", 0, limit, false, nil)
+		require.NoError(t, err)
+		require.Len(t, results, limit)
+		require.Equal(t, expectedNames, collectNames(t, results))
+	})
+
+	t.Run("limit is enforced across exact and fuzzy matches less than the default of 10", func(t *testing.T) {
+		var (
+			limit         = 5
+			expectedNames = []string{
+				"TEST.LOCAL",
+				"ARNOLD@TEST.LOCAL",
+				"CAROL@TEST.LOCAL",
+				"DAVE@TEST.LOCAL",
+				"ERIN@TEST.LOCAL",
+			}
+		)
+
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "TEST.LOCAL", 0, limit, false, nil)
+		require.NoError(t, err)
+		require.Len(t, results, limit)
+		require.Equal(t, expectedNames, collectNames(t, results))
+	})
+
+	t.Run("limit is enforced across exact and fuzzy matches greater than the default of 10", func(t *testing.T) {
+		var (
+			limit         = 13
+			expectedNames = []string{
+				"TEST.LOCAL",
+				"ARNOLD@TEST.LOCAL",
+				"CAROL@TEST.LOCAL",
+				"DAVE@TEST.LOCAL",
+				"ERIN@TEST.LOCAL",
+				"FRANK@TEST.LOCAL",
+				"GRACE@TEST.LOCAL",
+				"HEIDI@TEST.LOCAL",
+				"HENRY@TEST.LOCAL",
+				"IVAN@TEST.LOCAL",
+				"JAKE@TEST.LOCAL",
+				"JEFF@TEST.LOCAL",
+				"JUDY@TEST.LOCAL",
+			}
+		)
+
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "TEST.LOCAL", 0, limit, false, nil)
+		require.NoError(t, err)
+		require.Len(t, results, limit)
+		require.Equal(t, expectedNames, collectNames(t, results))
+	})
+
+	t.Run("Test offset less than limit", func(t *testing.T) {
+		var (
+			limit         = 5
+			offset        = 2
+			expectedNames = []string{
+				"TEST.LOCAL",
+				"DAVE@TEST.LOCAL",
+				"ERIN@TEST.LOCAL",
+				"FRANK@TEST.LOCAL",
+				"GRACE@TEST.LOCAL",
+			}
+		)
+
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "TEST.LOCAL", offset, limit, false, nil)
+		require.NoError(t, err)
+		require.Len(t, results, limit)
+		require.Equal(t, expectedNames, collectNames(t, results))
+	})
+
+	t.Run("Test offset greater than limit", func(t *testing.T) {
+		var (
+			limit         = 3
+			offset        = 8
+			expectedNames = []string{
+				"TEST.LOCAL",
+				"IVAN@TEST.LOCAL",
+				"JAKE@TEST.LOCAL",
+			}
+		)
+
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "TEST.LOCAL", offset, limit, false, nil)
+		require.NoError(t, err)
+		require.Len(t, results, limit)
+		require.Equal(t, expectedNames, collectNames(t, results))
+	})
 }
 
 func TestSearchByNameOrObjectId(t *testing.T) {
@@ -347,7 +507,7 @@ func TestSearchNodesByNameOrObjectId_UseRawObjectID(t *testing.T) {
 	seedCaseSensitiveObjectIDNodes(t, testSuite)
 
 	t.Run("flag off: search term is uppercased and only matches the uppercase-stored objectid", func(t *testing.T) {
-		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "caseuser1", 0, 10, false)
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "caseuser1", 0, 10, false, nil)
 		require.NoError(t, err)
 		require.Len(t, results, 1)
 		objectID, err := results[0].Properties.Get(common.ObjectID.String()).String()
@@ -355,18 +515,22 @@ func TestSearchNodesByNameOrObjectId_UseRawObjectID(t *testing.T) {
 		require.Equal(t, "CASEUSER1", objectID)
 	})
 
-	t.Run("flag on: exact-cased term matches that node exactly, and the other-cased node surfaces via case-insensitive fuzzy search", func(t *testing.T) {
-		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "CaseUser1", 0, 10, true)
+	t.Run("flag on: mixed-case term matches the as-typed and uppercase objectid variants", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "CaseUser1", 0, 10, true, nil)
 		require.NoError(t, err)
-		require.Len(t, results, 2)
 		require.ElementsMatch(t, []string{"CaseUser1", "CASEUSER1"}, collectObjectIDs(t, results))
 	})
 
-	t.Run("flag on: mismatched-case term matches neither node exactly, but both surface via case-insensitive fuzzy search", func(t *testing.T) {
-		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "caseuser1", 0, 10, true)
+	t.Run("flag on: lowercase term matches the uppercase objectid variant but not a mixed-case objectid", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "caseuser1", 0, 10, true, nil)
 		require.NoError(t, err)
-		require.Len(t, results, 2)
-		require.ElementsMatch(t, []string{"CaseUser1", "CASEUSER1"}, collectObjectIDs(t, results))
+		require.Equal(t, []string{"CASEUSER1"}, collectObjectIDs(t, results))
+	})
+
+	t.Run("partial objectid term matches no nodes", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "CASEUSER", 0, 10, false, nil)
+		require.NoError(t, err)
+		require.Empty(t, results)
 	})
 }
 
@@ -380,7 +544,7 @@ func TestSearchNodesByNameOrObjectId_UseRawObjectID_NameCasing(t *testing.T) {
 	seedCaseSensitiveNameNodes(t, testSuite)
 
 	t.Run("flag off: search term is uppercased and only matches the uppercase-stored name", func(t *testing.T) {
-		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "casename1", 0, 10, false)
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "casename1", 0, 10, false, nil)
 		require.NoError(t, err)
 		require.Len(t, results, 1)
 		name, err := results[0].Properties.Get(common.Name.String()).String()
@@ -389,17 +553,129 @@ func TestSearchNodesByNameOrObjectId_UseRawObjectID_NameCasing(t *testing.T) {
 	})
 
 	t.Run("flag on: exact-cased term matches that node exactly, and the other-cased node surfaces via case-insensitive fuzzy search", func(t *testing.T) {
-		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "CaseName1", 0, 10, true)
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "CaseName1", 0, 10, true, nil)
 		require.NoError(t, err)
 		require.Len(t, results, 2)
 		require.ElementsMatch(t, []string{"CaseName1", "CASENAME1"}, collectNames(t, results))
 	})
 
 	t.Run("flag on: mismatched-case term matches neither node exactly, but both surface via case-insensitive fuzzy search", func(t *testing.T) {
-		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "casename1", 0, 10, true)
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "casename1", 0, 10, true, nil)
 		require.NoError(t, err)
 		require.Len(t, results, 2)
 		require.ElementsMatch(t, []string{"CaseName1", "CASENAME1"}, collectNames(t, results))
+	})
+}
+
+func TestSearchNodesByNameOrObjectId_ETAC(t *testing.T) {
+	var (
+		testSuite       = setupGraphDb(t)
+		graphQuery      = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+		etacAllowedList = []string{"S-ALLOWED", "T-ALLOWED", "OG-ALLOWED"}
+		openGraphKind   = graph.StringKind("ETACPerson")
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	err := testSuite.GraphDB.WriteTransaction(testSuite.Context, func(tx graph.Transaction) error {
+		testNodes := []struct {
+			properties map[string]any
+			kinds      graph.Kinds
+		}{
+			{properties: map[string]any{common.Name.String(): "ETAC@ALLOWED.LOCAL", common.ObjectID.String(): "ETAC-1", ad.DomainSID.String(): "S-ALLOWED"}, kinds: graph.Kinds{ad.Entity, ad.User}},
+			{properties: map[string]any{common.Name.String(): "ETAC@DENIED.LOCAL", common.ObjectID.String(): "ETAC-2", ad.DomainSID.String(): "S-DENIED"}, kinds: graph.Kinds{ad.Entity, ad.User}},
+			{properties: map[string]any{common.Name.String(): "ETAC@MISSING.LOCAL", common.ObjectID.String(): "ETAC-3"}, kinds: graph.Kinds{ad.Entity, ad.User}},
+			{properties: map[string]any{common.Name.String(): "ETAC@ALLOWEDTENANT", common.ObjectID.String(): "ETAC-4", azure.TenantID.String(): "T-ALLOWED"}, kinds: graph.Kinds{azure.Entity, azure.User}},
+			{properties: map[string]any{common.Name.String(): "ETAC@DENIEDTENANT", common.ObjectID.String(): "ETAC-5", azure.TenantID.String(): "T-DENIED", ad.DomainSID.String(): "S-ALLOWED"}, kinds: graph.Kinds{azure.Entity, azure.User}},
+			{properties: map[string]any{common.Name.String(): "ETAC@OPENGRAPH", common.ObjectID.String(): "ETAC-6", schema.EnvironmentIDKey: "OG-ALLOWED"}, kinds: graph.Kinds{openGraphKind}},
+			{properties: map[string]any{common.Name.String(): "ETAC@OPENGRAPHDENIED", common.ObjectID.String(): "ETAC-7", schema.EnvironmentIDKey: "OG-DENIED"}, kinds: graph.Kinds{openGraphKind}},
+		}
+
+		for _, testNode := range testNodes {
+			if _, err := tx.CreateNode(graph.AsProperties(testNode.properties), testNode.kinds...); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	require.NoError(t, err)
+
+	t.Run("nil allowed list does not filter by environment", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, "ETAC@", 0, 10, false, nil)
+		require.NoError(t, err)
+		require.Len(t, results, 7)
+	})
+
+	t.Run("allowed list filters by domain SID, tenant ID and environment ID", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, "ETAC@", 0, 10, false, etacAllowedList)
+		require.NoError(t, err)
+		require.Equal(t, []string{"ETAC@ALLOWED.LOCAL", "ETAC@ALLOWEDTENANT", "ETAC@OPENGRAPH"}, collectNames(t, results))
+	})
+
+	t.Run("limit is applied after environment filtering", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, "ETAC@", 0, 2, false, etacAllowedList)
+		require.NoError(t, err)
+		require.Equal(t, []string{"ETAC@ALLOWED.LOCAL", "ETAC@ALLOWEDTENANT"}, collectNames(t, results))
+	})
+
+	t.Run("exact matches are filtered by environment", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, "ETAC@DENIED.LOCAL", 0, 10, false, etacAllowedList)
+		require.NoError(t, err)
+		require.Empty(t, results)
+	})
+
+	t.Run("empty allowed list returns no nodes", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, nil, "ETAC@", 0, 10, false, []string{})
+		require.NoError(t, err)
+		require.Empty(t, results)
+	})
+}
+
+func TestSearchNodesByNameOrObjectId_ExactMatchLimit(t *testing.T) {
+	var (
+		testSuite  = setupGraphDb(t)
+		graphQuery = queries.NewGraphQuery(testSuite.GraphDB, cache.Cache{}, config.Configuration{})
+	)
+	defer teardownIntegrationTestSuite(t, &testSuite)
+
+	err := testSuite.GraphDB.WriteTransaction(testSuite.Context, func(tx graph.Transaction) error {
+		for _, objectID := range []string{"DUPLICATE-3", "DUPLICATE-1", "DUPLICATE-2"} {
+			if _, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+				common.Name:     "DUPLICATE",
+				common.ObjectID: objectID,
+			}), ad.Entity, ad.User); err != nil {
+				return err
+			}
+		}
+		_, err := tx.CreateNode(graph.AsProperties(graph.PropertyMap{
+			common.Name:     "DUPLICATE FUZZY",
+			common.ObjectID: "DUPLICATE-FUZZY",
+		}), ad.Entity, ad.User)
+		return err
+	})
+	require.NoError(t, err)
+
+	t.Run("exact matches are limited and ordered by name and object ID", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "DUPLICATE", 0, 2, false, nil)
+		require.NoError(t, err)
+		require.Equal(t, []string{"DUPLICATE-1", "DUPLICATE-2"}, collectObjectIDs(t, results))
+	})
+
+	t.Run("fuzzy matches follow exact matches when the limit allows", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "DUPLICATE", 0, 10, false, nil)
+		require.NoError(t, err)
+		require.Equal(t, []string{"DUPLICATE-1", "DUPLICATE-2", "DUPLICATE-3", "DUPLICATE-FUZZY"}, collectObjectIDs(t, results))
+	})
+
+	t.Run("zero limit returns all exact and fuzzy matches", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "DUPLICATE", 0, 0, false, nil)
+		require.NoError(t, err)
+		require.Equal(t, []string{"DUPLICATE-1", "DUPLICATE-2", "DUPLICATE-3", "DUPLICATE-FUZZY"}, collectObjectIDs(t, results))
+	})
+
+	t.Run("negative limit returns all exact and fuzzy matches", func(t *testing.T) {
+		results, err := graphQuery.SearchNodesByNameOrObjectId(testSuite.Context, graph.Kinds{ad.Entity}, "DUPLICATE", 0, -1, false, nil)
+		require.NoError(t, err)
+		require.Equal(t, []string{"DUPLICATE-1", "DUPLICATE-2", "DUPLICATE-3", "DUPLICATE-FUZZY"}, collectObjectIDs(t, results))
 	})
 }
 
@@ -461,7 +737,7 @@ func TestSearchByNameOrObjectID_UseRawObjectID_NameCasing(t *testing.T) {
 
 // seedStartsWithCaseSensitiveObjectIDNodes creates two nodes whose ObjectID values differ only by
 // case, with Name values that deliberately do not share the search prefix used in the starts-with
-// case-insensitivity tests, so that matches can be unambiguously attributed to the ObjectID field.
+// tests, so that any match would have to come from the ObjectID field.
 func seedStartsWithCaseSensitiveObjectIDNodes(t *testing.T, testSuite IntegrationTestSuite) {
 	t.Helper()
 
@@ -494,18 +770,16 @@ func TestSearchByNameOrObjectID_UseRawObjectID_StartsWith(t *testing.T) {
 
 	seedStartsWithCaseSensitiveObjectIDNodes(t, testSuite)
 
-	t.Run("flag off: starts-with search term is uppercased and only matches the uppercase-stored objectid", func(t *testing.T) {
+	t.Run("flag off: starts-with search term does not match objectid prefixes", func(t *testing.T) {
 		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, false, false, "casestart", queries.SearchTypeFuzzy)
 		require.NoError(t, err)
-		require.Len(t, results, 1)
-		require.Equal(t, []string{"CASESTARTUSER1"}, collectObjectIDs(t, results.Slice()))
+		require.Empty(t, results)
 	})
 
-	t.Run("flag on: starts-with search term is case-insensitive and matches both differently-cased objectids", func(t *testing.T) {
+	t.Run("flag on: starts-with search term does not match objectid prefixes", func(t *testing.T) {
 		results, err := graphQuery.SearchByNameOrObjectID(testSuite.Context, false, true, "casestart", queries.SearchTypeFuzzy)
 		require.NoError(t, err)
-		require.Len(t, results, 2)
-		require.ElementsMatch(t, []string{"CaseStartUser1", "CASESTARTUSER1"}, collectObjectIDs(t, results.Slice()))
+		require.Empty(t, results)
 	})
 }
 

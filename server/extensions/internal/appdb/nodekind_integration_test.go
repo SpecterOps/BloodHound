@@ -25,12 +25,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/extensions/internal/appdb"
 	"github.com/specterops/bloodhound/server/extensions/internal/services"
 	"github.com/stretchr/testify/assert"
@@ -152,6 +154,374 @@ func TestStore_GetNodeKind_Integration(t *testing.T) {
 			}
 			require.NoError(t, err)
 			testCase.assert(t, nodeKind, data)
+		})
+	}
+}
+
+func TestStore_CreateGraphSchemaNodeKind_Integration(t *testing.T) {
+	type testSetupData struct {
+		extensionID int32
+		input       services.NodeInput
+		wantErr     error
+	}
+
+	type testCase struct {
+		name     string
+		setup    func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData
+		assert   func(t *testing.T, data testSetupData, created services.NodeKind, err error)
+		teardown func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData)
+	}
+
+	var (
+		ctx   = context.Background()
+		input = services.NodeInput{
+			Name:          "Test_Kind_1",
+			DisplayName:   "Test_Kind_1",
+			Description:   "A test kind",
+			IsDisplayKind: false,
+			Icon:          "test_icon",
+			IconColor:     "blue",
+		}
+		teardown = func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData) {
+			t.Helper()
+			_, err := pool.Exec(ctx, `DELETE FROM kind WHERE name = $1`, data.input.Name)
+			require.NoError(t, err)
+		}
+	)
+
+	tests := []testCase{
+		{
+			name: "success_-_creates_node_kind",
+			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+				t.Helper()
+				seeded := seedNodeKind(t, ctx, pool)
+				return testSetupData{extensionID: seeded.extensionID, input: input}
+			},
+			assert: func(t *testing.T, data testSetupData, created services.NodeKind, err error) {
+				t.Helper()
+				assert.NoError(t, err)
+				assert.Positive(t, created.ID)
+				assert.Positive(t, created.KindID)
+				assert.Equal(t, data.extensionID, created.SchemaExtensionID)
+				assert.Equal(t, data.input.Name, created.Name)
+				assert.Equal(t, data.input.DisplayName, created.DisplayName)
+				assert.Equal(t, data.input.Description, created.Description)
+				assert.Equal(t, data.input.IsDisplayKind, created.IsDisplayKind)
+				assert.Equal(t, data.input.Icon, created.Icon)
+				assert.Equal(t, data.input.IconColor, created.Color)
+				assert.False(t, created.CreatedAt.IsZero())
+				assert.False(t, created.UpdatedAt.IsZero())
+				assert.Nil(t, created.DeletedAt)
+			},
+			teardown: teardown,
+		},
+		{
+			name: "error_-_duplicate_node_kind_name",
+			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+				t.Helper()
+				seeded := seedNodeKind(t, ctx, pool)
+				duplicateInput := input
+				duplicateInput.Name = "TestNodeKind"
+				return testSetupData{
+					extensionID: seeded.extensionID,
+					input:       duplicateInput,
+					wantErr:     services.ErrDuplicateSchemaNodeKindName,
+				}
+			},
+			assert: func(t *testing.T, data testSetupData, created services.NodeKind, err error) {
+				t.Helper()
+				assert.ErrorIs(t, err, data.wantErr)
+				assert.Equal(t, services.NodeKind{}, created)
+			},
+			teardown: teardown,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				store, pool = setupStore(t)
+				data        = test.setup(t, ctx, pool)
+			)
+
+			t.Cleanup(func() {
+				test.teardown(t, ctx, pool, data)
+			})
+
+			created, err := store.CreateGraphSchemaNodeKind(ctx, data.extensionID, data.input)
+			test.assert(t, data, created, err)
+		})
+	}
+}
+
+func TestStore_GetGraphSchemaNodeKinds_Integration(t *testing.T) {
+	type testSetupData struct {
+		filters      params.Filters
+		sort         params.SortItems
+		skip         int
+		limit        int
+		wantNodeKind services.NodeKind
+		wantCount    int
+	}
+
+	type testCase struct {
+		name   string
+		setup  func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData
+		assert func(t *testing.T, data testSetupData, nodeKinds []services.NodeKind, count int, err error)
+	}
+
+	var (
+		ctx   = context.Background()
+		tests = []testCase{
+			{
+				name: "success_-_filters_sorts_and_paginates_node_kinds",
+				setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					seeded := seedNodeKind(t, ctx, pool)
+					_, err := pool.Exec(ctx, `
+						WITH inserted_kind AS (INSERT INTO kind (name) VALUES ('TestNodeKind_Z') RETURNING id)
+						INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color)
+						SELECT $1, id, 'Test Node Kind Z', 'a test node kind Z', true, 'user', '#fff' FROM inserted_kind`, seeded.extensionID)
+					require.NoError(t, err)
+					t.Cleanup(func() {
+						_, err := pool.Exec(ctx, `DELETE FROM kind WHERE name = $1`, "TestNodeKind_Z")
+						require.NoError(t, err)
+					})
+					return testSetupData{
+						filters: params.Filters{
+							"schema_extension_id": {
+								{Operator: params.Equals, Value: fmt.Sprint(seeded.extensionID)},
+							},
+						},
+						sort: params.SortItems{
+							{Field: "name", Direction: params.Descending},
+						},
+						skip:         1,
+						limit:        1,
+						wantNodeKind: services.NodeKind{ID: seeded.nodeKindID, Name: "TestNodeKind"},
+						wantCount:    2,
+					}
+				},
+				assert: func(t *testing.T, data testSetupData, nodeKinds []services.NodeKind, count int, err error) {
+					t.Helper()
+					assert.NoError(t, err)
+					require.Len(t, nodeKinds, 1)
+					assert.Equal(t, data.wantNodeKind.ID, nodeKinds[0].ID)
+					assert.Equal(t, data.wantNodeKind.Name, nodeKinds[0].Name)
+					assert.Equal(t, data.wantCount, count)
+				},
+			},
+			{
+				name: "error_-_invalid_node_kind_id",
+				setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					return testSetupData{
+						filters: params.Filters{
+							"id": {
+								{Operator: params.Equals, Value: "invalid"},
+							},
+						},
+					}
+				},
+				assert: func(t *testing.T, data testSetupData, nodeKinds []services.NodeKind, count int, err error) {
+					var postgresError *pgconn.PgError
+
+					t.Helper()
+					if assert.ErrorAs(t, err, &postgresError) {
+						assert.Equal(t, "22P02", postgresError.Code)
+					}
+					assert.Nil(t, nodeKinds)
+					assert.Zero(t, count)
+				},
+			},
+			{
+				name: "success_-_returns_all_node_kinds_without_filters_or_pagination",
+				setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					// Built-in extensions add node kinds, so remove them to isolate this test.
+					_, err := pool.Exec(ctx, "DELETE FROM schema_extensions WHERE is_builtin = true")
+					require.NoError(t, err)
+					seeded := seedNodeKind(t, ctx, pool)
+					return testSetupData{wantNodeKind: services.NodeKind{ID: seeded.nodeKindID, Name: "TestNodeKind"}, wantCount: 1}
+				},
+				assert: func(t *testing.T, data testSetupData, nodeKinds []services.NodeKind, count int, err error) {
+					t.Helper()
+					assert.NoError(t, err)
+					require.Len(t, nodeKinds, data.wantCount)
+					assert.Equal(t, data.wantCount, count)
+					assert.Equal(t, data.wantNodeKind.ID, nodeKinds[0].ID)
+					assert.Equal(t, data.wantNodeKind.Name, nodeKinds[0].Name)
+				},
+			},
+		}
+	)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				store, pool = setupStore(t)
+				data        = test.setup(t, ctx, pool)
+			)
+
+			nodeKinds, count, err := store.GetGraphSchemaNodeKinds(
+				ctx, data.filters, data.sort, data.skip, data.limit,
+			)
+			test.assert(t, data, nodeKinds, count, err)
+		})
+	}
+}
+
+func TestStore_UpdateGraphSchemaNodeKind_Integration(t *testing.T) {
+	type testSetupData struct {
+		nodeKind     services.NodeKind
+		wantNodeKind services.NodeKind
+		wantErr      error
+	}
+
+	type testCase struct {
+		name   string
+		setup  func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData
+		assert func(t *testing.T, data testSetupData, updated services.NodeKind, err error)
+	}
+
+	var (
+		ctx   = context.Background()
+		tests = []testCase{
+			{
+				name: "error_-_returns_node_kind_not_found",
+				setup: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					return testSetupData{
+						nodeKind:     services.NodeKind{ID: -1},
+						wantNodeKind: services.NodeKind{},
+						wantErr:      services.ErrNodeKindNotFound,
+					}
+				},
+				assert: func(t *testing.T, data testSetupData, updated services.NodeKind, err error) {
+					t.Helper()
+					assert.Equal(t, data.wantNodeKind, updated)
+					assert.ErrorIs(t, err, data.wantErr)
+				},
+			},
+			{
+				name: "success_-_updates_node_kind_fields",
+				setup: func(t *testing.T, ctx context.Context, store *appdb.Store, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					seeded := seedNodeKind(t, ctx, pool)
+					nodeKind, err := store.GetNodeKind(ctx, seeded.nodeKindID)
+					require.NoError(t, err)
+					nodeKind.DisplayName = "Updated Node Kind"
+					nodeKind.Description = "updated description"
+					nodeKind.IsDisplayKind = false
+					nodeKind.Icon = "updated_icon"
+					nodeKind.Color = "blue"
+					return testSetupData{
+						nodeKind:     nodeKind,
+						wantNodeKind: nodeKind,
+					}
+				},
+				assert: func(t *testing.T, data testSetupData, updated services.NodeKind, err error) {
+					t.Helper()
+					assert.NoError(t, err)
+					assert.Equal(t, data.wantNodeKind.ID, updated.ID)
+					assert.Equal(t, data.wantNodeKind.SchemaExtensionID, updated.SchemaExtensionID)
+					assert.Equal(t, data.wantNodeKind.KindID, updated.KindID)
+					assert.Equal(t, data.wantNodeKind.Name, updated.Name)
+					assert.Equal(t, data.wantNodeKind.DisplayName, updated.DisplayName)
+					assert.Equal(t, data.wantNodeKind.Description, updated.Description)
+					assert.Equal(t, data.wantNodeKind.IsDisplayKind, updated.IsDisplayKind)
+					assert.Equal(t, data.wantNodeKind.Icon, updated.Icon)
+					assert.Equal(t, data.wantNodeKind.Color, updated.Color)
+					assert.Equal(t, data.wantNodeKind.CreatedAt, updated.CreatedAt)
+					assert.False(t, updated.UpdatedAt.IsZero())
+					assert.Equal(t, data.wantNodeKind.DeletedAt, updated.DeletedAt)
+				},
+			},
+		}
+	)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				store, pool = setupStore(t)
+				data        = test.setup(t, ctx, store, pool)
+			)
+
+			updated, err := store.UpdateGraphSchemaNodeKind(ctx, data.nodeKind)
+			test.assert(t, data, updated, err)
+		})
+	}
+}
+
+func TestStore_DeleteGraphSchemaNodeKind_Integration(t *testing.T) {
+	type testSetupData struct {
+		nodeKindID       int32
+		storedNodeKindID int32
+		wantCount        int
+		wantErr          error
+	}
+
+	type testCase struct {
+		name   string
+		setup  func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData
+		assert func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, err error)
+	}
+
+	var (
+		ctx   = context.Background()
+		tests = []testCase{
+			{
+				name: "success_-_deletes_node_kind",
+				setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					seeded := seedNodeKind(t, ctx, pool)
+					return testSetupData{
+						nodeKindID:       seeded.nodeKindID,
+						storedNodeKindID: seeded.nodeKindID,
+					}
+				},
+				assert: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, err error) {
+					var rowCount int
+
+					t.Helper()
+					assert.ErrorIs(t, err, data.wantErr)
+					require.NoError(t, pool.QueryRow(ctx, `SELECT count(*) FROM schema_node_kinds WHERE id = $1`, data.storedNodeKindID).Scan(&rowCount))
+					assert.Equal(t, data.wantCount, rowCount)
+				},
+			},
+			{
+				name: "error_-_node_kind_not_found",
+				setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+					t.Helper()
+					seeded := seedNodeKind(t, ctx, pool)
+					return testSetupData{
+						nodeKindID:       -1,
+						storedNodeKindID: seeded.nodeKindID,
+						wantCount:        1,
+						wantErr:          services.ErrNodeKindNotFound,
+					}
+				},
+				assert: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool, data testSetupData, err error) {
+					var rowCount int
+
+					t.Helper()
+					assert.ErrorIs(t, err, data.wantErr)
+					require.NoError(t, pool.QueryRow(ctx, `SELECT count(*) FROM schema_node_kinds WHERE id = $1`, data.storedNodeKindID).Scan(&rowCount))
+					assert.Equal(t, data.wantCount, rowCount)
+				},
+			},
+		}
+	)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				store, pool = setupStore(t)
+				data        = test.setup(t, ctx, pool)
+			)
+
+			err := store.DeleteGraphSchemaNodeKind(ctx, data.nodeKindID)
+			test.assert(t, ctx, pool, data, err)
 		})
 	}
 }

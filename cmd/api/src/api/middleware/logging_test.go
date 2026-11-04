@@ -128,6 +128,27 @@ func TestLoggingMiddleware_QueryParameters(t *testing.T) {
 			url:         testURL2 + "?q=abcd&limit=1000&type=Computer&type=User&type=Group",
 			logContains: []string{"HTTP request", `"query_parameters":"q=abcd&limit=1000&type=Computer&type=User&type=Group"`},
 		},
+		{
+			name:        "request_path field contains only the path without query parameters",
+			url:         testURL2 + "?q=abcd&limit=1000",
+			logContains: []string{"HTTP request", `"request_path":"/api/v2/search"`},
+		},
+		{
+			name:        "request_path field is logged for /api/v2 path with no query params",
+			url:         testURL1,
+			logContains: []string{"HTTP request", `"request_path":"/api/v2/bloodhound-users"`},
+		},
+		{
+			name:              "request_path field is logged without query params for excluded paths",
+			url:               ssoCallbackURL + "?code=abc123&state=xyz789",
+			logContains:       []string{"HTTP request", `"request_path":"/api/v2/sso/abcd/callback"`},
+			logDoesNotContain: []string{`"query_parameters":"`},
+		},
+		{
+			name:        "request_path field is logged for non /api/v2 paths",
+			url:         healthURL + "?randomparam=123",
+			logContains: []string{"HTTP request", `"request_path":"/health"`},
+		},
 	}
 
 	for _, testCase := range testCases {

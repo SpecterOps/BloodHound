@@ -130,6 +130,20 @@ export const Disabled: Story = {
     ),
 };
 
+/**
+ * Set `isLoading` on `SelectTrigger` to replace the caret with a spinner and disable the trigger.
+ * Supply the loading message through `SelectValue`.
+ */
+export const Loading: Story = {
+    render: () => (
+        <Select>
+            <SelectTrigger aria-label='Color' isLoading className='w-60'>
+                <SelectValue placeholder={<span role='status'>Loading colors...</span>} />
+            </SelectTrigger>
+        </Select>
+    ),
+};
+
 export const Required: Story = {
     render: () => (
         <Select required>

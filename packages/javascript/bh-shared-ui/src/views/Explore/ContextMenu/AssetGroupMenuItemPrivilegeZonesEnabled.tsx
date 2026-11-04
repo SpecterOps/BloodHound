@@ -14,8 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { MenuItem } from '@mui/material';
-import { Button, Dialog, DialogActions, DialogContent, DialogDescription, DialogPortal, DialogTitle } from 'doodle-ui';
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogDescription,
+    DialogPortal,
+    DialogTitle,
+    MenuItem,
+} from 'doodle-ui';
 import { FC, useState } from 'react';
 import { useMutation } from 'react-query';
 import { Link } from 'react-router-dom';
@@ -56,8 +64,9 @@ export const AssetGroupMenuItem: FC<{
     addNodePayload: CreateSelectorRequest;
     removeNodePathFn: (tag: AssetGroupTag) => string;
     showConfirmationOnAdd?: boolean;
+    onClose?: () => void;
     tagIdentifierFn: (tags: AssetGroupTag[]) => AssetGroupTag | undefined;
-}> = ({ addNodePayload, removeNodePathFn, showConfirmationOnAdd = false, tagIdentifierFn }) => {
+}> = ({ addNodePayload, removeNodePathFn, showConfirmationOnAdd = false, tagIdentifierFn, onClose }) => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const { addNotification } = useNotifications();
     const { selectedItemQuery } = useExploreSelectedItem();
@@ -65,7 +74,10 @@ export const AssetGroupMenuItem: FC<{
     const { data: tags, isLoading, isError } = useTagsQuery();
     const assetGroupTag = tags ? tagIdentifierFn(tags) : undefined;
 
-    const closeDialog = () => setDialogOpen(false);
+    const closeDialog = () => {
+        setDialogOpen(false);
+        onClose?.();
+    };
     const openDialog = () => setDialogOpen(true);
 
     const { mutate: createRule, isLoading: isMutationLoading } = useMutation({
@@ -113,15 +125,21 @@ export const AssetGroupMenuItem: FC<{
     // If selected node is already a member, navigate to the asset group details page for removal
     if (isCurrentMember) {
         return (
-            <MenuItem component={Link} to={removeNodePathFn(assetGroupTag)}>
-                Remove from {assetGroupTag.name}
+            <MenuItem asChild>
+                <Link to={removeNodePathFn(assetGroupTag)}>Remove from {assetGroupTag.name}</Link>
             </MenuItem>
         );
     }
 
     return (
         <>
-            <MenuItem onClick={createRuleAction}>Add to {assetGroupTag.name}</MenuItem>
+            <MenuItem
+                onSelect={(event) => {
+                    if (showConfirmationOnAdd) event.preventDefault();
+                    createRuleAction();
+                }}>
+                Add to {assetGroupTag.name}
+            </MenuItem>
 
             {showConfirmationOnAdd && (
                 <ConfirmNodeChangesDialog

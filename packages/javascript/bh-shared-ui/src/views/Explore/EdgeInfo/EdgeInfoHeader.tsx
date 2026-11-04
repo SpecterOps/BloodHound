@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faAngleDoubleUp, faRemove } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { IconButton } from 'doodle-ui';
 import React from 'react';
 import HiddenEntityIcon from '../../../components/HiddenEntityIcon';
-import Icon from '../../../components/Icon';
 import { useExploreParams, useExploreSelectedItem } from '../../../hooks';
 import { useObjectInfoPanelContext } from '../providers';
 
@@ -38,24 +38,23 @@ const Header: React.FC<HeaderProps> = ({ name = 'None Selected' }) => {
     };
 
     return (
-        <div className='flex justify-between items-center text-sm font-bold'>
-            <Icon
-                tip='Collapse All'
+        <div className='flex justify-between items-center text-sm font-bold mx-2 gap-2'>
+            <IconButton
+                aria-label='Collapse All'
                 onClick={handleCollapseAll}
-                className='h-10 box-border text-contrast px-4'
                 data-testid='explore_edge-information-pane_button-collapse-all'>
                 <FontAwesomeIcon icon={faAngleDoubleUp} />
-            </Icon>
+            </IconButton>
 
             {isHidden && <HiddenEntityIcon />}
 
-            <h2 data-testid='explore_edge-information-pane_header-text' className='text-nowrap leading-10 grow'>
+            <h2 data-testid='explore_edge-information-pane_header-text' className='truncate pl-2 pr-4 leading-10 grow'>
                 {name}
             </h2>
 
-            <Icon className='h-10 box-border px-4 text-contrast' onClick={clearSelectedItem} tip='Clear selected item'>
+            <IconButton aria-label='Clear selected item' onClick={clearSelectedItem}>
                 <FontAwesomeIcon icon={faRemove} />
-            </Icon>
+            </IconButton>
         </div>
     );
 };

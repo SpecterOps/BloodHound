@@ -53,7 +53,7 @@ export const EarlyAccessFeatureToggle: React.FC<{
     };
 
     return (
-        <div className='bg-neutral-2 shadow-outer-1'>
+        <div className='bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'>
             <div className='p-4 flex justify-between gap-4'>
                 <div className='overflow-hidden'>
                     <Typography variant='h6' component='h2'>
@@ -67,7 +67,7 @@ export const EarlyAccessFeatureToggle: React.FC<{
                             {flag.enabled ? (
                                 <FontAwesomeIcon style={{ marginRight: '8px' }} icon={faCheckCircle} fixedWidth />
                             ) : null}
-                            <Typography>{flag.enabled ? 'Enabled' : 'Disabled'}</Typography>
+                            <span>{flag.enabled ? 'Enabled' : 'Disabled'}</span>
                         </div>
                     </Button>
                 </div>

@@ -1,0 +1,157 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+package ingest
+
+type OpengraphMetadata struct {
+	SourceKind string `json:"source_kind"`
+}
+
+type OriginalMetadata struct {
+	Type    DataType         `json:"type"`
+	Methods CollectionMethod `json:"methods"`
+	Version int              `json:"version"`
+}
+
+type DataType string
+
+const (
+	DataTypeSession        DataType = "sessions"
+	DataTypeUser           DataType = "users"
+	DataTypeGroup          DataType = "groups"
+	DataTypeComputer       DataType = "computers"
+	DataTypeGPO            DataType = "gpos"
+	DataTypeOU             DataType = "ous"
+	DataTypeDomain         DataType = "domains"
+	DataTypeRemoved        DataType = "deleted"
+	DataTypeContainer      DataType = "containers"
+	DataTypeLocalGroups    DataType = "localgroups"
+	DataTypeAIACA          DataType = "aiacas"
+	DataTypeRootCA         DataType = "rootcas"
+	DataTypeEnterpriseCA   DataType = "enterprisecas"
+	DataTypeNTAuthStore    DataType = "ntauthstores"
+	DataTypeCertTemplate   DataType = "certtemplates"
+	DataTypeAzure          DataType = "azure"
+	DataTypeIssuancePolicy DataType = "issuancepolicies"
+	DataTypeOpenGraph      DataType = "opengraph"
+	DataTypeSite           DataType = "sites"
+	DataTypeSiteServer     DataType = "siteservers"
+	DataTypeSiteSubnet     DataType = "sitesubnets"
+)
+
+func AllOriginalIngestDataTypes() []DataType {
+	return []DataType{
+		DataTypeSession,
+		DataTypeUser,
+		DataTypeGroup,
+		DataTypeComputer,
+		DataTypeGPO,
+		DataTypeOU,
+		DataTypeDomain,
+		DataTypeRemoved,
+		DataTypeContainer,
+		DataTypeLocalGroups,
+		DataTypeAIACA,
+		DataTypeRootCA,
+		DataTypeEnterpriseCA,
+		DataTypeNTAuthStore,
+		DataTypeCertTemplate,
+		DataTypeAzure,
+		DataTypeIssuancePolicy,
+		DataTypeSite,
+		DataTypeSiteServer,
+		DataTypeSiteSubnet,
+	}
+}
+
+func (s DataType) IsValidOriginalType() bool {
+	for _, method := range AllOriginalIngestDataTypes() {
+		if s == method {
+			return true
+		}
+	}
+
+	return false
+}
+
+type CollectionMethod uint64
+
+const (
+	CollectionMethodGroup CollectionMethod = 1 << iota
+	CollectionMethodLocalAdmin
+	CollectionMethodGPOLocalGroup
+	CollectionMethodSession
+	CollectionMethodLoggedOn
+	CollectionMethodTrusts
+	CollectionMethodACL
+	CollectionMethodContainer
+	CollectionMethodRDP
+	CollectionMethodObjectProps
+	CollectionMethodSessionLoop
+	CollectionMethodLoggedOnLoop
+	CollectionMethodDCOM
+	CollectionMethodSPNTargets
+	CollectionMethodPSRemote
+	CollectionMethodUserRights
+	CollectionMethodCARegistry
+	CollectionMethodDCRegistry
+	CollectionMethodCertServices
+)
+
+func AllCollectionMethods() []CollectionMethod {
+	return []CollectionMethod{
+		CollectionMethodGroup,
+		CollectionMethodLocalAdmin,
+		CollectionMethodGPOLocalGroup,
+		CollectionMethodSession,
+		CollectionMethodLoggedOn,
+		CollectionMethodTrusts,
+		CollectionMethodACL,
+		CollectionMethodContainer,
+		CollectionMethodRDP,
+		CollectionMethodObjectProps,
+		CollectionMethodSessionLoop,
+		CollectionMethodLoggedOnLoop,
+		CollectionMethodDCOM,
+		CollectionMethodSPNTargets,
+		CollectionMethodPSRemote,
+		CollectionMethodUserRights,
+		CollectionMethodCARegistry,
+		CollectionMethodDCRegistry,
+		CollectionMethodCertServices,
+	}
+}
+
+func (s CollectionMethod) IsValid() bool {
+	for _, method := range AllCollectionMethods() {
+		if s.Has(method) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s CollectionMethod) Has(flag CollectionMethod) bool {
+	return s.And(flag) != 0
+}
+
+func (s CollectionMethod) And(flag CollectionMethod) CollectionMethod {
+	return s & flag
+}
+
+func (s CollectionMethod) Or(flag CollectionMethod) CollectionMethod {
+	return s | flag
+}

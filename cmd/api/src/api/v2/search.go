@@ -65,7 +65,7 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.HandleDatabaseError(request, response, err)
 	} else if searchableNodeKinds, err := getSearchableNodeKinds(openGraphSearchFeatureFlag.Enabled, primaryDisplayKinds, graph.StringsToKinds(nodeTypes)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
-	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit, useRawObjectIDFeatureFlag.Enabled); err != nil {
+	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit, useRawObjectIDFeatureFlag.Enabled, etacAllowedList); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
 		result := filterAndFormatSearchResults(nodes, etacAllowedList, primaryDisplayKinds)

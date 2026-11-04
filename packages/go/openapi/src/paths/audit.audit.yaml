@@ -46,7 +46,7 @@ get:
     - name: after
       description: Return logs created after the specified time. Value should be in
         the RFC-3339 format. If not supplied, this will default to 1
-        year before the current time.
+        year before the current time. Must not be later than `before`.
       in: query
       schema:
         type: string

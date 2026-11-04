@@ -39,7 +39,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	bhUtils "github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -371,7 +370,7 @@ func (s Resources) ImportSavedQueries(response http.ResponseWriter, request *htt
 		switch {
 		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), mediatypes.ApplicationJson.String()):
 			extractQueriesFromFileFunc = extractImportQueriesFromJsonFile
-		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), ingest.AllowedZipFileUploadTypes...):
+		case bhUtils.HeaderMatches(request.Header, headers.ContentType.String(), upload.AllowedZipFileUploadTypes()...):
 			extractQueriesFromFileFunc = extractImportQueriesFromZipFile
 		default:
 			err = fmt.Errorf("invalid content-type: %s", request.Header[headers.ContentType.String()])
@@ -488,6 +487,32 @@ func (s Resources) CreateSavedQuery(response http.ResponseWriter, request *http.
 	}
 }
 
+var (
+	errNotModifiable    = errors.New("query is not modifiable")
+	errUserHasNotAccess = errors.New("user does not have access")
+)
+
+// Checks if the update or delete operation is allowed based on query scope,
+// user permissions, and extension usage.
+// Returns an error or nil if allowed.
+func (s Resources) checkModifyPermissions(ctx context.Context, savedQueryID int64, user model.User) error {
+	scopes, err := s.DB.GetScopeForSavedQuery(ctx, savedQueryID, user.ID)
+	if err != nil {
+		return err
+	}
+
+	if scopes.ReadOnly {
+		return errNotModifiable
+	} else if !scopes.Owned {
+		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+			return errUserHasNotAccess
+		} else if !scopes.Public {
+			return errUserHasNotAccess
+		}
+	}
+	return nil
+}
+
 func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.Request) {
 	var (
 		rawSavedQueryID = mux.Vars(request)[api.URIPathVariableSavedQueryID]
@@ -506,21 +531,17 @@ func (s Resources) UpdateSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
 		return
 	} else if savedQuery, err = s.DB.GetSavedQuery(request.Context(), savedQueryID); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
+		api.HandleDatabaseError(request, response, err)
 		return
-	} else if savedQuery.UserID != user.ID.String() {
-		if !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+	} else if err = s.checkModifyPermissions(request.Context(), savedQuery.ID, user); err != nil {
+		if errors.Is(err, errNotModifiable) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "extension query cannot be modified", request), response)
+		} else if errors.Is(err, errUserHasNotAccess) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
-			return
 		} else {
-			if isPublic, err := s.DB.IsSavedQueryPublic(request.Context(), savedQuery.ID); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)
-				return
-			} else if !isPublic {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
-				return
-			}
+			api.HandleDatabaseError(request, response, err)
 		}
+		return
 	}
 
 	if updateRequest.Query != "" {
@@ -549,24 +570,15 @@ func (s Resources) DeleteSavedQuery(response http.ResponseWriter, request *http.
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "No associated user found", request), response)
 	} else if savedQueryID, err := strconv.ParseInt(rawSavedQueryID, 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, request), response)
-	} else if savedQueryBelongsToUser, err := s.DB.SavedQueryBelongsToUser(request.Context(), user.ID, savedQueryID); errors.Is(err, database.ErrNotFound) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "query does not exist", request), response)
-	} else if err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else {
-		if !savedQueryBelongsToUser {
-			if _, isAdmin := user.Roles.FindByName(auth.RoleAdministrator); !isAdmin {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
-				return
-			} else if isPublicQuery, err := s.DB.IsSavedQueryPublic(request.Context(), savedQueryID); err != nil {
-				api.HandleDatabaseError(request, response, err)
-				return
-			} else if !isPublicQuery {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
-				return
-			}
+	} else if err = s.checkModifyPermissions(request.Context(), savedQueryID, user); err != nil {
+		if errors.Is(err, errNotModifiable) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "extension query cannot be deleted", request), response)
+		} else if errors.Is(err, errUserHasNotAccess) {
+			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "User does not have permission to delete this query", request), response)
+		} else {
+			api.HandleDatabaseError(request, response, err)
 		}
-
+	} else {
 		if err := s.DB.DeleteSavedQuery(request.Context(), savedQueryID); errors.Is(err, database.ErrNotFound) {
 			// This is an edge case and can only occur if the database has a concurrent operation that deletes the saved query
 			// after the check at s.DB.SavedQueryBelongsToUser but before getting here.

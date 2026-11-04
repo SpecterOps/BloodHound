@@ -33,6 +33,7 @@ import {
 import { useMountEffect, usePermissions, useToggle } from '../../hooks';
 import { useBloodHoundUsers, useSelf } from '../../hooks/useBloodHoundUsers';
 import { useNotifications } from '../../providers';
+import { LEGACY_MUI_TABLE_CLASS } from '../../styles';
 import { Permission, apiClient } from '../../utils';
 import UsersTable from './UsersTable';
 import { mapUserResponseToRequest } from './utils';
@@ -180,7 +181,10 @@ const Users: FC<{ showEnvironmentAccessControls?: boolean }> = ({ showEnvironmen
                         showEnvironmentAccessControls={showEnvironmentAccessControls}
                     />
                 </Box>
-                <Paper data-testid='manage-users_table'>
+                <Paper
+                    className={`${LEGACY_MUI_TABLE_CLASS} overflow-hidden`}
+                    data-testid='manage-users_table'
+                    elevation={0}>
                     <UsersTable
                         onDeleteUser={toggleDeleteUserDialog}
                         onDisabledUser={toggleDisableUserDialog}

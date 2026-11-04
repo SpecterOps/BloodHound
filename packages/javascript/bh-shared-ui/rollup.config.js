@@ -43,7 +43,6 @@ export default {
     ],
     external: [
         'doodle-ui',
-        '@date-io/luxon',
         '@emotion/react',
         '@emotion/styled',
         '@faker-js/faker',

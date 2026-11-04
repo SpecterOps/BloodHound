@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Tooltip } from 'doodle-ui';
+import { Tooltip, type TooltipPosition } from 'doodle-ui';
 import { ReactNode } from 'react';
 
 type Props = {
     children: ReactNode;
     condition: boolean;
-    side?: 'top' | 'right' | 'bottom' | 'left';
+    side?: TooltipPosition;
     tooltip: string;
 };
 
@@ -33,9 +33,9 @@ type Props = {
  * @param tooltip - The tooltip text to display
  * @param side - The side to display the tooltip on
  */
-export function ConditionalTooltip({ children, condition, tooltip, side }: Props) {
+export function ConditionalTooltip({ children, condition, side, tooltip }: Props) {
     return condition ? (
-        <Tooltip tooltip={tooltip} contentProps={{ className: 'z-navToggle', side }}>
+        <Tooltip contentProps={{ className: 'z-navToggle' }} tooltip={tooltip} tooltipPosition={side}>
             {children}
         </Tooltip>
     ) : (

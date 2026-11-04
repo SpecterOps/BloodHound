@@ -24,7 +24,7 @@ post:
   description: Moves a claimed job to running and renews `claim_expires_at`.
     Duplicate starts are idempotent.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:
@@ -43,5 +43,7 @@ post:
         application/json:
           schema:
             $ref: './../schemas/api.error-wrapper.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'

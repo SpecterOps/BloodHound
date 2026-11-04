@@ -33,7 +33,7 @@ import {
     CommonKindPropertiesToDisplay,
 } from '../graphSchema';
 import { MappedStringLiteral } from '../types';
-import { EntityKinds } from './content';
+import { EntityKinds, ZoneNodeKind } from './content';
 import { LuxonFormat } from './datetime';
 
 export const formatPotentiallyUnknownLabel = (propKey: string) => {
@@ -343,6 +343,11 @@ export const getNodeSource = (kinds: string[]): string | undefined => {
     if (kinds.includes(AzureNodeKind.Entity)) return 'Azure';
     if (kinds.includes(ActiveDirectoryNodeKind.Entity)) return 'Active Directory';
     return 'OpenGraph';
+};
+
+export const formatGraphNodeSublabel = (source: string | undefined, nodeType: string | undefined): string => {
+    if (nodeType === ZoneNodeKind) return ZoneNodeKind;
+    return `${source} | ${nodeType}`;
 };
 
 export function getEntityQueryCount<T>(

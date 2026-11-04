@@ -24,3 +24,5 @@ properties:
     format: int64
   public:
     type: boolean
+  readonly:
+    type: boolean

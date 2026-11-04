@@ -26,7 +26,13 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	waitTimeout      = 5 * time.Second
+	waitPollInterval = 10 * time.Millisecond
 )
 
 // testChangelogConfig provides consistent changelog configuration for tests
@@ -49,6 +55,7 @@ type changelogHarness struct {
 	suite     *IntegrationTestSuite
 	changelog *Changelog
 	ctx       context.Context
+	cancel    context.CancelFunc
 	t         *testing.T
 }
 
@@ -62,10 +69,13 @@ func setupChangelogTest(t *testing.T, config testChangelogConfig) *changelogHarn
 		RetryConfig:   DefaultRetryConfig(),
 	})
 
+	ctx, cancel := context.WithCancel(suite.Context)
+
 	return &changelogHarness{
 		suite:     &suite,
 		changelog: changelog,
-		ctx:       suite.Context,
+		ctx:       ctx,
+		cancel:    cancel,
 		t:         t,
 	}
 }
@@ -75,7 +85,22 @@ func (s *changelogHarness) enableAndStart() {
 	s.changelog.Start(s.ctx)
 }
 
-func (s *changelogHarness) waitForCacheInit() {
+// waitForCacheEnabled blocks until the flag manager has polled and created the cache
+func (s *changelogHarness) waitForCacheEnabled() {
+	require.Eventually(s.t, func() bool {
+		return s.changelog.flagManager.getCache() != nil
+	}, waitTimeout, waitPollInterval, "flag manager did not enable the cache")
+}
+
+// waitForCacheDisabled blocks until the flag manager has polled and removed the cache
+func (s *changelogHarness) waitForCacheDisabled() {
+	require.Eventually(s.t, func() bool {
+		return s.changelog.flagManager.getCache() == nil
+	}, waitTimeout, waitPollInterval, "flag manager did not disable the cache")
+}
+
+// waitForPolls gives the flag manager time to run several polls when there is no state change to wait for
+func (s *changelogHarness) waitForPolls() {
 	time.Sleep(200 * time.Millisecond)
 }
 
@@ -88,6 +113,7 @@ func (s *changelogHarness) disableChangelog() {
 }
 
 func (s *changelogHarness) close() {
+	s.cancel()
 	s.changelog.Stop(context.Background())
 	teardownIntegrationTest(s.t, s.suite)
 }
@@ -121,26 +147,28 @@ func (s *changelogHarness) submitChange(change Change) {
 	require.True(s.t, submitted, "Change submission was rejected")
 }
 
-// assertNodesExistInDB verifies that nodes with the given objectIDs exist in the database
+// assertNodesExistInDB waits until nodes with the given objectIDs have been flushed to the database
 func (s *changelogHarness) assertNodesExistInDB(objectIDs []string, expectedCount int) {
-	var nodeCount int
-	err := s.suite.GraphDB.ReadTransaction(s.ctx, func(tx graph.Transaction) error {
-		criteria := make([]graph.Criteria, len(objectIDs))
-		for i, id := range objectIDs {
-			criteria[i] = query.Equals(query.NodeProperty("objectid"), id)
-		}
-
-		return tx.Nodes().Filterf(func() graph.Criteria {
-			return query.Or(criteria...)
-		}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
-			for range cursor.Chan() {
-				nodeCount++
+	require.EventuallyWithT(s.t, func(collect *assert.CollectT) {
+		var nodeCount int
+		err := s.suite.GraphDB.ReadTransaction(s.ctx, func(tx graph.Transaction) error {
+			criteria := make([]graph.Criteria, len(objectIDs))
+			for i, id := range objectIDs {
+				criteria[i] = query.Equals(query.NodeProperty("objectid"), id)
 			}
-			return cursor.Error()
+
+			return tx.Nodes().Filterf(func() graph.Criteria {
+				return query.Or(criteria...)
+			}).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
+				for range cursor.Chan() {
+					nodeCount++
+				}
+				return cursor.Error()
+			})
 		})
-	})
-	require.NoError(s.t, err, "Database query failed")
-	require.Equal(s.t, expectedCount, nodeCount, "Unexpected number of nodes in database")
+		assert.NoError(collect, err, "Database query failed")
+		assert.Equal(collect, expectedCount, nodeCount, "Unexpected number of nodes in database")
+	}, waitTimeout, waitPollInterval)
 }
 
 func TestChangelogIntegration(t *testing.T) {
@@ -155,7 +183,7 @@ func TestChangelogIntegration(t *testing.T) {
 		harness.assertChangeSubmission(change1, true, "initial change before cache init")
 
 		// Wait for flag manager to initialize cache
-		harness.waitForCacheInit()
+		harness.waitForCacheEnabled()
 
 		// Now cache should be available and working
 		change2 := createTestChange("test2", "User", nil)
@@ -170,7 +198,7 @@ func TestChangelogIntegration(t *testing.T) {
 		defer harness.close()
 
 		harness.enableAndStart()
-		harness.waitForCacheInit()
+		harness.waitForCacheEnabled()
 
 		change := createTestChange("toggle-test", "User", nil)
 
@@ -182,14 +210,14 @@ func TestChangelogIntegration(t *testing.T) {
 
 		// Disable feature flag
 		harness.disableChangelog()
-		harness.waitForCacheInit() // Wait for flag manager to poll and disable cache
+		harness.waitForCacheDisabled()
 
 		// With cache disabled, should pass-through (always true)
 		harness.assertChangeSubmission(change, true, "submission with cache disabled")
 
 		// Re-enable feature flag
 		harness.enableChangelog()
-		harness.waitForCacheInit() // Wait for flag manager to poll and re-enable cache
+		harness.waitForCacheEnabled()
 
 		// Cache should be fresh after re-enabling, so same change should be submittable again
 		harness.assertChangeSubmission(change, true, "submission after cache re-enabled")
@@ -205,7 +233,7 @@ func TestChangelogIntegration(t *testing.T) {
 		defer harness.close()
 
 		harness.enableAndStart()
-		harness.waitForCacheInit()
+		harness.waitForCacheEnabled()
 
 		// Create changes with different node kinds
 		change1 := createTestChange("e2e-1", "NK1", map[string]any{"name": "End to End User 1"})
@@ -217,9 +245,6 @@ func TestChangelogIntegration(t *testing.T) {
 
 		harness.assertChangeSubmission(change2, true, "second change resolution")
 		harness.submitChange(change2)
-
-		// Wait for batch processing
-		harness.waitForCacheInit()
 
 		// Verify nodes were created in database
 		harness.assertNodesExistInDB([]string{"e2e-1", "e2e-2"}, 2)
@@ -236,7 +261,7 @@ func TestCacheClearFunctionality(t *testing.T) {
 		defer harness.close()
 
 		harness.enableAndStart()
-		harness.waitForCacheInit()
+		harness.waitForCacheEnabled()
 
 		// Add some data to the cache
 		change1 := createTestChange("clear-test-1", "User", nil)
@@ -268,7 +293,7 @@ func TestCacheClearFunctionality(t *testing.T) {
 
 		// Don't enable changelog - it should remain disabled
 		harness.changelog.Start(harness.ctx)
-		harness.waitForCacheInit()
+		harness.waitForPolls()
 
 		// Clearing cache when disabled should not panic or error
 		require.NotPanics(t, func() {
@@ -291,7 +316,7 @@ func TestCacheClearFunctionality(t *testing.T) {
 		defer harness.close()
 
 		harness.enableAndStart()
-		harness.waitForCacheInit()
+		harness.waitForCacheEnabled()
 
 		// Get the cache and verify it has the expected capacity
 		cache := harness.changelog.flagManager.getCache()

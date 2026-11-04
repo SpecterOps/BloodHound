@@ -91,7 +91,7 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
                     edgeLabelRenderer: drawEdgeLabel,
                     edgeLabelSize: 12,
                     labelSize: 12,
-                    labelFont: 'Roboto',
+                    labelFont: 'Figtree',
                     labelColor: { color: theme.contrast },
                     labelRenderer: drawLabel,
                     maxCameraRatio: MAX_CAMERA_RATIO,

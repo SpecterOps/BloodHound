@@ -25,8 +25,8 @@ required:
   - secret_id
 properties:
   id:
-    type: integer
-    format: int64
+    type: string
+    format: uuid
   name:
     type: string
   job_type_id:

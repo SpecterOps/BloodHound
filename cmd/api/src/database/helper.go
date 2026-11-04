@@ -163,11 +163,11 @@ func buildSQLFilter(filters model.Filters) (sqlFilter, error) {
 	}
 
 	if whereClauseFragment != nil {
-		if sqlFragment, err := format.SyntaxNode(whereClauseFragment); err != nil {
+		if sqlFragment, err := format.SyntaxNodeWithBuilder(whereClauseFragment, format.NewOutputBuilder().WithMaterializedParameters(map[string]any{})); err != nil {
 			return filter, fmt.Errorf("failed formatting SQL filter: %w", err)
 		} else {
 			filter = sqlFilter{
-				sqlString: sqlFragment,
+				sqlString: sqlFragment.Statement,
 			}
 		}
 	}

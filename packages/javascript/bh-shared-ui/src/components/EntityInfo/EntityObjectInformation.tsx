@@ -16,7 +16,7 @@
 import { NodeDetails, NodeDetailsWithInfo } from 'js-client-library';
 import { useEffect } from 'react';
 import { kindObjectsToKindNames, useExploreParams, usePreviousValue, usePrimaryKind, useTagsQuery } from '../../hooks';
-import { getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
+import { getLabelNamesFromKinds, getZoneNameFromKinds } from '../../hooks/useAssetGroupTags';
 import { EntityField, formatObjectInfoFields } from '../../utils';
 import { BasicObjectInfoFields } from '../../views/Explore/BasicObjectInfoFields';
 import { SearchValue } from '../../views/Explore/ExploreSearch';
@@ -40,6 +40,7 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
 
     const tagsQuery = useTagsQuery();
     const zoneName = getZoneNameFromKinds(tagsQuery?.data, kindNames);
+    const labelNames = getLabelNamesFromKinds(tagsQuery?.data, kindNames);
 
     useEffect(() => {
         if (!previousEntity || !selectedNode.node_id || previousEntity !== selectedNode.node_id) {
@@ -58,13 +59,18 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
     };
 
     return (
-        <EntityInfoCollapsibleSection onChange={handleOnChange} isExpanded={isObjectInfoPanelOpen} label={sectionLabel}>
-            <FieldsContainer>
+        <EntityInfoCollapsibleSection
+            onChange={handleOnChange}
+            isExpanded={isObjectInfoPanelOpen}
+            label={sectionLabel}
+            className='pt-2 [&_.MuiAccordionSummary-content]:my-2 [&_.MuiAccordionSummary-content.Mui-expanded]:my-2 [&_.MuiAccordionSummary-root]:min-h-0 [&_.MuiAccordionSummary-root.Mui-expanded]:min-h-0 [&_.typography-h6]:leading-[1.125rem] [&_.MuiAccordionDetails-root]:pt-0'>
+            <FieldsContainer className='mt-2'>
                 <BasicObjectInfoFields
                     properties={selectedNode.properties}
                     handleSourceNodeSelected={handleSourceNodeSelected}
                     nodeType={primaryKind}
                     zone={zoneName}
+                    labels={labelNames}
                 />
                 <ObjectInfoFields fields={formattedObjectFields} />
             </FieldsContainer>

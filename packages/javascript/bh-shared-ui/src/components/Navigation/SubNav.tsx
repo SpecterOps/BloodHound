@@ -14,28 +14,40 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Typography, TypographyVariants } from 'doodle-ui';
 import { FC, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useOnClickOutside } from '../../hooks';
 import { SubNavItem, SubNavSection } from '../../types';
 import { cn } from '../../utils';
 import { AppLink } from './AppLink';
+import { isRouteActive } from './utils';
 
 const SubNavListItem: FC<{ item: Pick<SubNavItem, 'label' | 'path'> }> = ({ item }) => {
     const location = useLocation();
     const { label, path } = item;
-    const isActiveRoute = path ? location.pathname.includes(path.replace(/\*/g, '')) : false;
+    const isActiveRoute = isRouteActive(location.pathname, path);
 
     return (
         <li
-            className={cn('mx-2 rounded', {
-                'text-primary dark:text-[#8D8BF8] bg-neutral-4': isActiveRoute,
-                'hover:text-primary-variant hover:dark:text-[#7B78FD] hover:bg-neutral-3 dark:hover:bg-[#1A1A1A]':
-                    !isActiveRoute,
-            })}>
+            className={cn(
+                'min-h-7 rounded focus-within:focus-ring-inset focus-within:[--focus-ring:var(--common-white)]',
+                {
+                    'text-common-white bg-primary dark:text-primary-variant dark:bg-neutral-4': isActiveRoute,
+                    'hover:text-common-white hover:bg-secondary dark:hover:text-[#7B78FD] dark:hover:bg-neutral-200':
+                        !isActiveRoute,
+                }
+            )}>
             {/* Full width ensures that even clicking white space activates the link */}
             {/* Anchor uses block display instead of inline so full width works */}
-            <AppLink className='w-full block px-2 py-0.5' to={path}>
+            <AppLink
+                aria-current={isActiveRoute ? 'page' : undefined}
+                className={cn(
+                    'w-full block px-2 py-0.5 outline-none',
+                    TypographyVariants({ variant: 'body2' }),
+                    'truncate !text-inherit'
+                )}
+                to={path}>
                 {label}
             </AppLink>
         </li>
@@ -77,9 +89,9 @@ const SubNav: React.FC<{
     return (
         <nav
             className={cn(
-                'bottom-2 py-2 rounded-lg cursor-default z-subNav',
-                'flex flex-col gap-8 absolute shadow-md',
-                'bg-[#F2F2F2] dark:bg-[#1F1F1F]',
+                'bottom-2 w-[264px] p-2 rounded cursor-default z-subNav',
+                'flex flex-col gap-8 absolute',
+                'text-common-white bg-primary-variant dark:text-main dark:bg-neutral-300',
                 'transform-gpu translate-z-[0px]', // This line addresses a Safari hardware rendering bug
                 'transition-all duration-300 ease-out',
                 {
@@ -93,10 +105,11 @@ const SubNav: React.FC<{
             ref={ref}
             onMouseLeave={close}>
             {sections.map((section, sectionIndex) => (
-                <ul key={sectionIndex} className='flex flex-col gap-1'>
+                <ul key={sectionIndex} className='flex flex-col gap-2'>
                     {/* Section title */}
-                    <li className='px-4 text-lg font-medium'>{section.title}</li>
-
+                    <Typography className='px-2 !text-inherit' component='li' variant='h6'>
+                        {section.title}
+                    </Typography>
                     {/* Section items */}
                     {section.items.map((item, itemIndex) => (
                         <SubNavListItem key={itemIndex} item={item} />

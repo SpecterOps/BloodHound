@@ -16,7 +16,6 @@
 
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Link, Paper } from '@mui/material';
 import { Button, Typography } from 'doodle-ui';
 import { CommunityCollectorType } from 'js-client-library';
 
@@ -53,25 +52,24 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
     };
 
     return (
-        <Paper>
-            <Box p={2} display='flex' justifyContent='space-between' flexWrap='wrap' style={{ rowGap: '1rem' }}>
-                <Box overflow='hidden'>
+        <div className='rounded bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'>
+            <div className='p-4 flex justify-between flex-wrap gap-y-4'>
+                <div className='overflow-hidden'>
                     <Typography variant='h3'>
                         {`${COLLECTOR_TYPE[collectorType]} ${version} ${getLabel(isLatest, isDeprecated)}`.trim()}
                     </Typography>
                     <Typography variant='body1'>
                         {'SHA-256: '}
-                        <Link
-                            component='button'
-                            variant='body1'
+                        <button
+                            type='button'
                             onClick={handleOnClickDownloadChecksum}
                             title='Download Checksum'
-                            style={{ verticalAlign: 'baseline' }}>
+                            className='align-baseline text-primary underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2'>
                             {checksum}
-                        </Link>
+                        </button>
                     </Typography>
-                </Box>
-                <Box>
+                </div>
+                <div>
                     <Button
                         aria-label={`Download ${COLLECTOR_TYPE[collectorType]} ${version} (.zip)`}
                         variant='secondary'
@@ -85,9 +83,9 @@ const CollectorCard: React.FC<CollectorCardProps> = ({
                         />{' '}
                         {`Download ${COLLECTOR_TYPE[collectorType]} ${version} (.zip)`}
                     </Button>
-                </Box>
-            </Box>
-        </Paper>
+                </div>
+            </div>
+        </div>
     );
 };
 

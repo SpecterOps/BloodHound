@@ -11,10 +11,10 @@ goose_migrations_dir := "cmd/api/src/database/migration/migrations"
 _goose-populate-descriptions:
   #!/usr/bin/env bash
   set -euo pipefail
-  
+
   # Ensure description column exists
   psql -q "{{goose_db}}" -c "SET client_min_messages TO WARNING; ALTER TABLE goose_db_version ADD COLUMN IF NOT EXISTS description TEXT;"
-  
+
   # Loop through migration files and update descriptions
   for f in {{goose_migrations_dir}}/*.sql; do
     [[ -f "$f" ]] || continue
@@ -26,7 +26,7 @@ _goose-populate-descriptions:
     desc="${desc//_/ }"
     # Escape single quotes to prevent SQL injection
     desc="${desc//\'/\'\'}"
-    
+
     psql -q "{{goose_db}}" -c "UPDATE goose_db_version SET description = '$desc' WHERE version_id = $version AND (description IS NULL OR description = '');"
   done
 
@@ -149,6 +149,27 @@ prune-my-branches nuclear='no':
 bh-dev *ARGS='up':
   @docker compose --profile dev -f docker-compose.dev.yml {{ARGS}}
 
+# run docker compose commands for the Dev Portal, building its docs first on up (Default: up)
+dev-portal *ARGS='up':
+  #!/usr/bin/env bash
+  set -euo pipefail
+  if [[ "{{ARGS}}" == "up" || "{{ARGS}}" == "up "* ]]; then
+    doodle_ui=packages/javascript/doodle-ui
+    storybook_marker="$doodle_ui/storybook-static/index.json"
+    storybook_reason=""
+    if [[ ! -f "$storybook_marker" ]]; then
+      storybook_reason="no build found"
+    elif [[ -n "$(find "$doodle_ui" \( -name node_modules -o -name dist -o -name coverage -o -name storybook-static \) -prune -o -type f -newer "$storybook_marker" -print -quit)" ]]; then
+      storybook_reason="Doodle UI changed since the last build"
+    fi
+    if [[ -n "$storybook_reason" ]]; then
+      echo "Building Doodle UI Storybook: $storybook_reason"
+      yarn workspace doodle-ui build:storybook
+    fi
+    yarn workspace dev-portal build
+  fi
+  docker compose -f docker-compose.dev-portal.yml {{ARGS}}
+
 # run docker compose commands for the BH debug profile (Default: up)
 bh-debug *ARGS='up':
   @docker compose --profile debug-api -f docker-compose.dev.yml {{ARGS}}
@@ -264,17 +285,6 @@ init wipe="":
     echo "Backing up existing environment file"
     mv ./.env ./.env.bak
   fi
-
-  if [[ -f "./go.work" ]]; then
-    echo "Backing up existing go.work file"
-    mv ./go.work ./go.work.bak
-  fi
-
-  echo "Removing go.work.sum file"
-  rm -f ./go.work.sum
-
-  echo "Copying go.work template"
-  cp ./go.work.template ./go.work
 
   echo "Run modsync to ensure workspace is up to date"
   just modsync

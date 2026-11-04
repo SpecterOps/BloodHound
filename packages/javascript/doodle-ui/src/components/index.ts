@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+export * from './AccessibleIcon';
 export * from './Accordion';
 export * from './Alert';
 export * from './Badge';
@@ -27,20 +28,26 @@ export * from './ComboBadge';
 export * from './DataTable';
 export * from './DatePicker';
 export * from './Dialog';
+export * from './Drawer';
 export * from './Form';
+export * from './IconButton';
 export * from './Input';
 export * from './Label';
 export * from './Link';
+export * from './LoadingSpinner';
 export * from './Menu';
 export * from './MultiSelect';
 export * from './Pagination';
 export * from './Popover';
+export * from './ProgressBar';
 export * from './RadialGauge';
 export * from './RadioGroup';
 export * from './RiskBadge';
 export * from './ScrollArea';
 export * from './Select';
 export * from './Skeleton';
+export * from './Slider';
+export * from './Stepper';
 export * from './Switch';
 export * from './Table';
 export * from './Tabs';

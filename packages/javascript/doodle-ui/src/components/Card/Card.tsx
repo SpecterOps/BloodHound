@@ -14,17 +14,19 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import * as React from 'react';
+import { Typography } from '../Typography';
 import { cn } from '../utils';
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => {
-    return (
-        <div
-            ref={ref}
-            className={cn('rounded-lg shadow-outer-1 bg-neutral-light-2 dark:bg-neutral-dark-2 text-main', className)}
-            {...props}
-        />
-    );
-});
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+    <div
+        ref={ref}
+        className={cn(
+            'rounded-lg text-main bg-neutral-1 border border-solid border-[color:var(--card-border)]',
+            className
+        )}
+        {...props}
+    />
+));
 Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -34,19 +36,15 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 CardHeader.displayName = 'CardHeader';
 
-const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
-    ({ className, ...props }, ref) => (
-        <h3 ref={ref} className={cn('text-xl font-bold leading-6', className)} {...props}>
-            {props.children}
-        </h3>
-    )
-);
+const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>((props, ref) => (
+    <Typography ref={ref} variant='h3' {...props}>
+        {props.children}
+    </Typography>
+));
 CardTitle.displayName = 'CardTitle';
 
 const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
-    ({ className, ...props }, ref) => (
-        <p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
-    )
+    (props, ref) => <Typography ref={ref} variant='body2' {...props} />
 );
 CardDescription.displayName = 'CardDescription';
 

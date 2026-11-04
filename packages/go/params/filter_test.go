@@ -35,7 +35,7 @@ func (s fakeFilterable) ValidFilters() map[string]params.FilterableField {
 }
 
 func TestParseFilterOperator(t *testing.T) {
-	for _, raw := range []string{"gt", "gte", "lt", "lte", "eq", "neq", "~eq"} {
+	for _, raw := range []string{"gt", "gte", "lt", "lte", "eq", "neq", "~eq", "eqnull", "neqnull"} {
 		t.Run("parses "+raw, func(t *testing.T) {
 			operator, err := params.ParseFilterOperator(raw)
 			require.NoError(t, err)

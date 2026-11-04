@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/specterops/bloodhound/packages/go/stbernard/analyzers/codeclimate"
@@ -81,6 +82,11 @@ func golangCILintArgs(modPath string, fix bool) []string {
 }
 
 func buildCustomGolangCILint(cwd string, env environment.Environment) error {
+	// Overwriting the binary in place causes macOS to kill it with an invalid code signature
+	if err := os.Remove(customGolangCILintPath(cwd)); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("removing previous custom golangci-lint: %w", err)
+	}
+
 	executionPlan := cmdrunner.ExecutionPlan{
 		Command: "go",
 		Args:    []string{"tool", "golangci-lint", "custom"},

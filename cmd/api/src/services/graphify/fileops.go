@@ -21,8 +21,19 @@ import (
 	"errors"
 	"fmt"
 	"io"
+)
 
-	"github.com/specterops/bloodhound/cmd/api/src/model/ingest"
+const (
+	delimOpenObject  = json.Delim('{')
+	delimCloseObject = json.Delim('}')
+	delimOpenArray   = json.Delim('[')
+	delimCloseArray  = json.Delim(']')
+)
+
+var (
+	ErrDataTagNotFound     = errors.New("no data tag found")
+	ErrInvalidDataTag      = errors.New("invalid data tag found")
+	ErrJSONDecoderInternal = errors.New("json decoder internal error")
 )
 
 // SeekToKey positions the JSON decoder at the value of the given key,
@@ -39,18 +50,18 @@ func SeekToKey(decoder *json.Decoder, key string, targetDepth int) error {
 	for {
 		if token, err := decoder.Token(); err != nil {
 			if errors.Is(err, io.EOF) {
-				return ingest.ErrDataTagNotFound
+				return ErrDataTagNotFound
 			}
 
-			return fmt.Errorf("%w: %w", ingest.ErrJSONDecoderInternal, err)
+			return fmt.Errorf("%w: %w", ErrJSONDecoderInternal, err)
 		} else {
 			//Break here to allow for one more token read, which should take us to the "[" token, exactly where we need to be
 			if keyFound {
 				//Do some extra checks
 				if typed, ok := token.(json.Delim); !ok {
-					return ingest.ErrInvalidDataTag
-				} else if typed != ingest.DelimOpenSquareBracket {
-					return ingest.ErrInvalidDataTag
+					return ErrInvalidDataTag
+				} else if typed != delimOpenArray {
+					return ErrInvalidDataTag
 				}
 				//Break out of our loop if we're in a good spot
 				return nil
@@ -58,9 +69,9 @@ func SeekToKey(decoder *json.Decoder, key string, targetDepth int) error {
 			switch typed := token.(type) {
 			case json.Delim:
 				switch typed {
-				case ingest.DelimCloseBracket, ingest.DelimCloseSquareBracket:
+				case delimCloseObject, delimCloseArray:
 					depth--
-				case ingest.DelimOpenBracket, ingest.DelimOpenSquareBracket:
+				case delimOpenObject, delimOpenArray:
 					depth++
 				}
 			case string:

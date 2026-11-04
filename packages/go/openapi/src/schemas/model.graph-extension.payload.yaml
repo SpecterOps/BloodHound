@@ -117,31 +117,47 @@ properties:
             long_remediation:
               type: string
   pz_rules:
-    type: object
-    description: Optional privilege-zone rules component.
-    required:
-      - rules
-    properties:
-      rules:
-        type: array
-        items:
-          type: object
-          properties:
-            name:
-              type: string
-            description:
-              type: string
-            auto_certify:
-              type: boolean
-            seeds:
-              type: array
-              items:
-                type: object
-                properties:
-                  type:
-                    type: integer
-                  value:
-                    type: string
+    type: array
+    description: |
+      Declares the extension's desired privilege zones. Omitting this property or
+      providing an empty array removes existing privilege zones associated with the extension.
+    items:
+      type: object
+      required:
+        - key
+        - name
+        - seeds
+      properties:
+        key:
+          type: string
+          description: A stable identifier for reconciling rules between extension upserts.
+        name:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+          description: Whether the privilege zone rule is enabled. Defaults to true when omitted.
+        allow_disable:
+          type: boolean
+          description: Whether users may disable the privilege zone rule. Defaults to true when omitted.
+        seeds:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            type: object
+            required:
+              - type
+              - value
+            properties:
+              type:
+                type: integer
+                enum: [2]
+                description: The selector type. Privilege-zone rules only support Cypher (2).
+              value:
+                type: string
+                description: A valid Cypher query used to seed the privilege zone.
   queries:
     type: array
     description: |

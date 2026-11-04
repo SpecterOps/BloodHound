@@ -111,7 +111,7 @@ describe('ObjectsAccordion', () => {
         const sortButton = screen.getByRole('button', { name: 'Sort by User' });
 
         expect(sortButton).toBeDisabled();
-        expect(sortButton).toHaveClass('disabled:!text-text-main');
+        expect(sortButton).toHaveClass('disabled:!text-main');
 
         await userEvent.click(screen.getByTestId('privilege-zones_details_User-accordion_open-toggle-button'));
 

@@ -24,8 +24,8 @@ required:
   - priority
 properties:
   id:
-    type: integer
-    format: int64
+    type: string
+    format: uuid
   name:
     type: string
   rrule:

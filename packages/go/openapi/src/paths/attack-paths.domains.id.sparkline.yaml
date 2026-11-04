@@ -34,7 +34,7 @@ get:
   parameters:
     - name: sort_by
       description: Sortable columns are `CompositeRisk`, `FindingCount`, `ImpactedAssetCount`,
-        `domain_sid`, `id`, `created_at`, `updated_at`, `deleted_at`.
+        `domain_sid`, `id`, `created_at`, and `updated_at`.
       in: query
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'

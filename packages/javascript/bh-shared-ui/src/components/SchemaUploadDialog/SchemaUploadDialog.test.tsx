@@ -16,13 +16,27 @@
 import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { QueryClient } from 'react-query';
 import { customNodeKindsKeys, extensionsKeys } from '../../hooks';
 import { withoutErrorLogging } from '../../mocks';
-import { render, waitFor } from '../../test-utils';
+import { fireEvent, render, waitFor } from '../../test-utils';
 import { SchemaUploadDialog } from './SchemaUploadDialog';
 
-const testFile = new File([JSON.stringify({ value: 'test' })], 'test.json', { type: 'application/json' });
+const testFile = new File([readFileSync(join(__dirname, 'fixtures/schema.json'), 'utf8')], 'test.json', {
+    type: 'application/json',
+});
+const extensionBundle = Uint8Array.from(readFileSync(join(__dirname, 'fixtures/extension.zip')));
+const extensionFiles = [
+    testFile,
+    new File([readFileSync(join(__dirname, 'fixtures/schema.json'), 'utf8')], 'extension-without-mime.json'),
+    new File([extensionBundle], 'extension.zip', { type: 'application/zip' }),
+    new File([extensionBundle], 'windows-extension.zip', { type: 'application/x-zip-compressed' }),
+    new File([extensionBundle], 'compressed-extension.zip', { type: 'application/zip-compressed' }),
+    new File([extensionBundle], 'extension-without-mime.ZIP'),
+    new File([extensionBundle], 'binary-extension.zip', { type: 'application/octet-stream' }),
+];
 
 const addNotificationMock = vi.fn();
 const checkPermissionMock = vi.fn().mockReturnValue(true);
@@ -129,7 +143,7 @@ describe('SchemaUploadDialog', () => {
         expect(screen.getByRole('button', { name: 'Upload File' })).toBeDisabled();
 
         await user.click(screen.getByRole('button', { name: 'Upload File' }));
-        expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('dialog', { name: 'Upload Extension' })).not.toBeInTheDocument();
     });
 
     it('does not open the Schema Upload dialog via drag when the Quick Upload dialog is already open', async () => {
@@ -144,17 +158,21 @@ describe('SchemaUploadDialog', () => {
         };
         document.dispatchEvent(dragEvent);
 
-        expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('dialog', { name: 'Upload Extension' })).not.toBeInTheDocument();
     });
 
     it('opens the dialog when the button is clicked', async () => {
         const screen = render(<SchemaUploadDialog />);
         const user = userEvent.setup();
 
-        expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('dialog', { name: 'Upload Extension' })).not.toBeInTheDocument();
 
         await user.click(screen.getByRole('button', { name: 'Upload File' }));
-        expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).toBeInTheDocument();
+        expect(screen.queryByRole('dialog', { name: 'Upload Extension' })).toBeInTheDocument();
+        expect(screen.getByText('Click here or drag and drop to upload an OpenGraph Extension')).toBeVisible();
+        expect(
+            screen.getByText('Only a single Extension Bundle (zip) / JSON file supported at this time')
+        ).toBeVisible();
     });
 
     it('closes the dialog when the "Cancel" button is clicked', async () => {
@@ -163,7 +181,45 @@ describe('SchemaUploadDialog', () => {
 
         await user.click(screen.getByRole('button', { name: 'Upload File' }));
         await user.click(screen.getByRole('button', { name: 'Cancel' }));
-        expect(screen.queryByRole('dialog', { name: 'Upload Schema Files' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('dialog', { name: 'Upload Extension' })).not.toBeInTheDocument();
+    });
+
+    it.each(extensionFiles)('uploads $name from the file picker', async (file) => {
+        const screen = render(<SchemaUploadDialog />);
+        const user = userEvent.setup();
+        const expectedContentType = file.name.toLowerCase().endsWith('.zip') ? 'application/zip' : 'application/json';
+        const receivedContentType = vi.fn();
+        server.use(
+            rest.put('/api/v2/extensions', (req, res, ctx) => {
+                receivedContentType(req.headers.get('content-type'));
+                return res(ctx.status(201), ctx.json({ data: '' }));
+            })
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Upload File' }));
+        await user.upload(screen.getByTestId('ingest-file-upload'), file);
+        expect(screen.getByText(file.name)).toBeVisible();
+        await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+        expect(await screen.findByRole('button', { name: 'Complete' })).toBeVisible();
+        expect(receivedContentType).toHaveBeenCalledWith(expectedContentType);
+    });
+
+    it.each(extensionFiles)('opens the dialog and uploads $name via drag-and-drop', async (file) => {
+        const screen = render(<SchemaUploadDialog />);
+        const user = userEvent.setup();
+
+        fireEvent.dragEnter(document, {
+            dataTransfer: { types: ['Files'], items: [{ kind: 'file', type: file.type }] },
+        });
+        expect(screen.getByRole('dialog', { name: 'Upload Extension' })).toBeVisible();
+        fireEvent.drop(screen.getByRole('button', { name: 'Choose an OpenGraph Extension to upload' }), {
+            dataTransfer: { files: [file] },
+        });
+        expect(screen.getByText(file.name)).toBeVisible();
+        await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+        expect(await screen.findByRole('button', { name: 'Complete' })).toBeVisible();
     });
 
     it('allows a user to upload a single file and displays its name in the dialog', async () => {

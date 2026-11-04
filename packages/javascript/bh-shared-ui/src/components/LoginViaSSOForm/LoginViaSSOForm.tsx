@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { FormControl, Grid, InputLabel, MenuItem, Select } from '@mui/material';
-import { Button } from 'doodle-ui';
+import { Grid } from '@mui/material';
+import { Button, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from 'doodle-ui';
 import { SSOProvider } from 'js-client-library';
 import React from 'react';
 
@@ -45,22 +45,21 @@ const LoginViaSSOForm: React.FC<LoginViaSSOFormProps> = ({ providers, onSubmit, 
         <form onSubmit={handleSubmit}>
             <Grid container spacing={4} justifyContent='center'>
                 <Grid item xs={12}>
-                    <FormControl variant='outlined'>
-                        <InputLabel id='selected-saml-provider-label'>Choose your SSO Provider</InputLabel>
-                        <Select
-                            labelId='selected-saml-provider-label'
-                            id='selected-saml-provider'
-                            value={selectedProviderSlug}
-                            label='Choose your SSO Provider'
-                            onChange={(e) => setSelectedProviderSlug(e.target.value as string)}
-                            fullWidth>
-                            {providers?.map((provider) => (
-                                <MenuItem key={provider.id} value={provider.slug}>
-                                    {provider.name}
-                                </MenuItem>
-                            ))}
+                    <div className='w-full'>
+                        <Label htmlFor='selected-saml-provider'>Choose your SSO Provider</Label>
+                        <Select value={selectedProviderSlug} onValueChange={setSelectedProviderSlug}>
+                            <SelectTrigger id='selected-saml-provider'>
+                                <SelectValue placeholder='Choose your SSO Provider' />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {providers?.map((provider) => (
+                                    <SelectItem key={provider.id} value={provider.slug}>
+                                        {provider.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
                         </Select>
-                    </FormControl>
+                    </div>
                 </Grid>
                 <Grid item xs={8}>
                     <Button size='large' type='submit' className='w-full' disabled={selectedProviderSlug === ''}>

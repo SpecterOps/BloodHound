@@ -25,6 +25,7 @@ cmd/api/src/cmd/bhapi/bhapi
 # ui builds
 **/build/*
 **/dist/*
+**/storybook-static/*
 
 # tmp directories
 work
@@ -80,9 +81,6 @@ cmd/api/src/api/static/assets/*
 .DS_Store
 .AppleDouble
 .LSOverride
-
-# Icon must end with two \r
-Icon
 
 # Thumbnails
 ._*

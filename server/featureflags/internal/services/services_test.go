@@ -344,11 +344,12 @@ func TestService_ToggleFlag(t *testing.T) {
 			want: want{flag: enabledFindingsPrioritizationFlag},
 		},
 		{
-			name: "Success: does not request analysis when findings prioritization is disabled",
+			name: "Success: requests no-post-processing analysis when findings prioritization is disabled",
 			args: args{ctx: ctx, featureID: enabledFindingsPrioritizationFlag.ID},
 			setupMocks: func(m serviceMocks) {
 				m.database.EXPECT().GetFlagByID(ctx, enabledFindingsPrioritizationFlag.ID).Return(enabledFindingsPrioritizationFlag, nil)
 				m.database.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
+				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
 			},
 			want: want{flag: findingsPrioritizationFlag},
 		},

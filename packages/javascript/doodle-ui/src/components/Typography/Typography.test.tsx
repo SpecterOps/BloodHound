@@ -15,10 +15,52 @@
 // SPDX-License-Identifier: Apache-2.0
 import { screen } from '@testing-library/react';
 import { render } from '../../utils';
-import { Typography } from './Typography';
+import { Typography, TypographyVariants } from './Typography';
 import { DEFAULT_VARIANT, variantMapping } from './utils';
 
 describe('Typography', () => {
+    const expectedVariantClasses = {
+        h1: ['font-heading', 'text-2xl', 'font-bold', 'leading-7', 'tracking-normal', 'text-main'],
+        h2: ['font-heading', 'text-[1.375rem]', 'font-bold', 'leading-6', 'tracking-normal', 'text-main'],
+        h3: ['font-heading', 'text-xl', 'font-bold', 'leading-[1.375rem]', 'tracking-normal', 'text-main'],
+        h4: ['font-heading', 'text-xl', 'font-semibold', 'leading-[1.375rem]', 'tracking-normal', 'text-main'],
+        h5: ['font-heading', 'text-lg', 'font-bold', 'leading-5', 'tracking-[.25px]', 'text-main'],
+        h6: ['font-heading', 'text-base', 'font-semibold', 'leading-[1.125rem]', 'tracking-[.25px]', 'text-main'],
+        body1: [
+            'font-sans',
+            'text-base',
+            'font-normal',
+            'leading-6',
+            'tracking-normal',
+            'text-[color:var(--typography-body-text)]',
+        ],
+        body2: [
+            'font-sans',
+            'text-sm',
+            'font-normal',
+            'leading-[1.375rem]',
+            'tracking-normal',
+            'text-[color:var(--typography-body-text)]',
+        ],
+        subtitle1: ['font-sans', 'text-[.9375rem]', 'font-medium', 'leading-6', 'tracking-[.25px]', 'text-main'],
+        subtitle2: [
+            'font-sans',
+            'text-[.8125rem]',
+            'font-medium',
+            'leading-[1.375rem]',
+            'tracking-[.25px]',
+            'text-main',
+        ],
+        caption: [
+            'font-sans',
+            'text-xs',
+            'font-normal',
+            'leading-5',
+            'tracking-[.25px]',
+            'text-[color:var(--typography-body-text)]',
+        ],
+    } as const;
+
     describe('default rendering', () => {
         it('renders children', () => {
             render(<Typography>Hello world</Typography>);
@@ -36,6 +78,28 @@ describe('Typography', () => {
             render(<Typography variant={variant as keyof typeof variantMapping}>{variant}</Typography>);
             expect(screen.getByText(variant).tagName.toLowerCase()).toBe(expectedTag);
         });
+    });
+
+    describe('visual language mappings', () => {
+        it.each(Object.entries(expectedVariantClasses))(
+            'variant "%s" applies the expected typography classes',
+            (variant, expectedClasses) => {
+                expect(
+                    TypographyVariants({ variant: variant as keyof typeof expectedVariantClasses }).split(' ')
+                ).toEqual(['break-words', ...expectedClasses]);
+            }
+        );
+
+        it.each(['body1', 'body2', 'caption'] as const)(
+            'variant "%s" uses the theme-aware body text token',
+            (variant) => {
+                const classes = TypographyVariants({ variant }).split(' ');
+
+                expect(classes).toContain('text-[color:var(--typography-body-text)]');
+                expect(classes).not.toContain('dark:text-main');
+                expect(classes).not.toContain('text-[#505050]');
+            }
+        );
     });
 
     describe('component prop', () => {

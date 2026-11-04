@@ -49,6 +49,8 @@ func IngestNodes(ingestCtx *IngestContext, baseKind graph.Kind, nodes []ein.Inge
 }
 
 func IngestNode(ic *IngestContext, baseKind graph.Kind, nextNode ein.IngestibleNode) error {
+	ic.Stats.NodesAttempted.Add(1)
+
 	var (
 		nodeKinds            = MergeNodeKinds(baseKind, nextNode.Labels...)
 		normalizedProperties = normalizeEinNodeProperties(nextNode.PropertyMap, nextNode.ObjectID, ic.IngestTime, ic.UseRawObjectIDs)

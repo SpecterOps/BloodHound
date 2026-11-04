@@ -13,4 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-export const disabledStylesOverride = 'disabled:!text-text-main disabled:dark:!text-common-white disabled:!opacity-100';
+export const disabledStylesOverride = 'disabled:!text-main disabled:dark:!text-common-white disabled:!opacity-100';
