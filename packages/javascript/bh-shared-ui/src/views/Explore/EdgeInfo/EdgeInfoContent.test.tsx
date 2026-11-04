@@ -208,13 +208,13 @@ describe('EdgeInfoContent', () => {
     test('Trying to view the edge info does not crash the app when selecting an unrecognized edge', async () => {
         render(<EdgeInfoContentWithProvider selectedEdge={selectedEdge} />);
 
-        expect(await screen.findByText(/Source Node:/)).toBeInTheDocument();
+        expect(await screen.findByText(/Source Node/)).toBeInTheDocument();
 
         //The general object information is still available even though there is no contextual information available for the edge
-        expect(screen.getByText(/Source Node:/)).toBeInTheDocument();
-        expect(screen.getByText(/Target Node:/)).toBeInTheDocument();
-        expect(screen.getByText(/Is ACL:/)).toBeInTheDocument();
-        expect(screen.getByText(/Last Seen by BloodHound:/)).toBeInTheDocument();
+        expect(screen.getByText(/Source Node/)).toBeInTheDocument();
+        expect(screen.getByText(/Target Node/)).toBeInTheDocument();
+        expect(screen.getByText(/Is ACL/)).toBeInTheDocument();
+        expect(screen.getByText(/Last Seen by BloodHound/)).toBeInTheDocument();
 
         //The whole app does not crash and require a refresh
         expect(

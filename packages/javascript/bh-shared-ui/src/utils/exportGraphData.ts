@@ -17,6 +17,17 @@
 import { DateTime } from 'luxon';
 import { LuxonFormat } from './datetime';
 
+export type GraphImageFormat = 'png' | 'jpeg' | 'svg';
+export type GraphImageScope = 'view' | 'graph';
+
+export interface GraphImageExportOption {
+    format: GraphImageFormat;
+    scope: GraphImageScope;
+}
+
+export const getGraphExportFileBaseName = (exportedAt: DateTime<boolean> = DateTime.local()) =>
+    `bh-graph-${exportedAt.toFormat(LuxonFormat.DATETIME_FILESYSTEM_SAFE)}`;
+
 export const downloadFile = ({ data, fileName, fileType }: { data: any; fileName: string; fileType: string }) => {
     const blob = new Blob([data], { type: fileType });
     // create an anchor tag and dispatch a click event on it to trigger download
@@ -33,7 +44,7 @@ export const downloadFile = ({ data, fileName, fileType }: { data: any; fileName
 };
 
 export const getDefaultGraphExportFileName = () => {
-    return `bh-graph-${DateTime.local().toFormat(LuxonFormat.DATETIME_FILESYSTEM_SAFE)}.json`;
+    return `${getGraphExportFileBaseName()}.json`;
 };
 
 export const exportToJson = (data: any) => {

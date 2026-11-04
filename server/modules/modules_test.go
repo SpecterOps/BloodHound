@@ -17,6 +17,7 @@
 package modules_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -26,11 +27,23 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 )
+
+// No-op mock for ConfigUpdateSideEffects
+type mockConfigUpdateSideEffecter struct{}
+
+func (mockConfigUpdateSideEffecter) SetNextScheduledAnalysisStartTime(context.Context, null.Time) error {
+	return nil
+}
+
+func (mockConfigUpdateSideEffecter) UpdateAuthTokenExpiration(ctx context.Context) error {
+	return nil
+}
 
 func dogTagsService(etacEnabled bool) dogtags.Service {
 	return dogtags.NewTestService(dogtags.TestOverrides{
@@ -113,10 +126,11 @@ func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
 
 	assert.PanicsWithValue(t, "modules: Register requires a non-nil RateLimitMiddleware", func() {
 		modules.Register(modules.Deps{
-			Router:  &routerInst,
-			Pool:    new(pgxpool.Pool),
-			Graph:   &graph.DatabaseSwitch{},
-			DogTags: dogTagsService(false),
+			Router:                  &routerInst,
+			Pool:                    new(pgxpool.Pool),
+			Graph:                   &graph.DatabaseSwitch{},
+			DogTags:                 dogTagsService(false),
+			ConfigUpdateSideEffects: mockConfigUpdateSideEffecter{},
 		})
 	})
 }
@@ -132,10 +146,11 @@ func TestRegister_PanicsWhenRateLimitMiddlewareFactoryReturnsNil(t *testing.T) {
 
 	assert.PanicsWithValue(t, "modules: failed to install RateLimitMiddleware: rate limit middleware factory returned nil", func() {
 		modules.Register(modules.Deps{
-			Router:  &routerInst,
-			Pool:    new(pgxpool.Pool),
-			Graph:   &graph.DatabaseSwitch{},
-			DogTags: dogTagsService(false),
+			Router:                  &routerInst,
+			Pool:                    new(pgxpool.Pool),
+			Graph:                   &graph.DatabaseSwitch{},
+			DogTags:                 dogTagsService(false),
+			ConfigUpdateSideEffects: mockConfigUpdateSideEffecter{},
 			RateLimitMiddleware: func() mux.MiddlewareFunc {
 				return nil
 			},
@@ -155,10 +170,11 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 		rateLimitFactoryCalls int
 		rateLimitRequestCalls int
 		deps                  = modules.Deps{
-			Router:  &routerInst,
-			Pool:    new(pgxpool.Pool),
-			Graph:   &graph.DatabaseSwitch{},
-			DogTags: dogTagsService(false),
+			Router:                  &routerInst,
+			Pool:                    new(pgxpool.Pool),
+			Graph:                   &graph.DatabaseSwitch{},
+			DogTags:                 dogTagsService(false),
+			ConfigUpdateSideEffects: mockConfigUpdateSideEffecter{},
 			RateLimitMiddleware: func() mux.MiddlewareFunc {
 				rateLimitFactoryCalls++
 				return func(next http.Handler) http.Handler {

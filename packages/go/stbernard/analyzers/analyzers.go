@@ -55,14 +55,14 @@ func outputSeverityMap(results codeclimate.SeverityMap, outputAllSeverity bool) 
 func Run(paths workspace.WorkspacePaths, env environment.Environment, fix bool, outputAllSeverity bool) error {
 	if golintResults, err := golang.Run(paths.Root, paths.GoModule, env, fix); err != nil {
 		return fmt.Errorf("golangci-lint: %w", err)
-	} else if eslintResults, err := js.Run(paths.YarnWorkspaces, env); err != nil {
-		return fmt.Errorf("eslint: %w", err)
+	} else if lintResults, err := js.Run(paths.YarnWorkspaces, env); err != nil {
+		return fmt.Errorf("javascript lint: %w", err)
 	} else {
 		outputSeverityMap(golintResults, outputAllSeverity)
-		outputSeverityMap(eslintResults, outputAllSeverity)
+		outputSeverityMap(lintResults, outputAllSeverity)
 
 		// Check to see if any high severity issues were identified after output
-		combinedResults := codeclimate.CombineSeverityMaps(golintResults, eslintResults)
+		combinedResults := codeclimate.CombineSeverityMaps(golintResults, lintResults)
 
 		// Any finding with a priority greater than Minor is considered a high severity finding
 		if combinedResults.HasGreaterSeverity(codeclimate.SeverityMinor) {

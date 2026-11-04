@@ -105,9 +105,9 @@ The persistence layer uses [go-sqlbuilder](https://github.com/huandu/go-sqlbuild
 
 View types decouple the wire format from the domain model.
 
--   [ ] Create a `XxxView` struct with `json:` tags for every response shape
--   [ ] Add a `BuildXxxView(domain services.Xxx) XxxView` function that projects the domain type to the view
--   [ ] Implement `JSONView() ([]byte, error)` on each view type to satisfy `responses.JSONViewer`
+-   [ ] Create a `XxxView` struct with `json:` tags for every request body or response shape
+-   [ ] For response types, add a `BuildXxxView(domain services.Xxx) XxxView` function that projects the domain type to the view
+-   [ ] Implement `JSONView() ([]byte, error)` on each response view type to satisfy `responses.JSONViewer`
 -   [ ] **For list/collection endpoints that accept sort or filter query parameters**, declare the query-parameter contract here by implementing `params.Sortable` (`IsSortable(field string) bool`) and/or `params.Filterable` (`ValidFilters() map[string]params.FilterableField`) on the list view (or a dedicated `XxxSchema` struct). Step 7 wires these into the route.
 -   [ ] List only the columns that are actually sortable/filterable against the underlying table. **Do not expose a field just because the domain or `Serial`/`Basic` model embeds it** — see [Handling `deleted_at` and other phantom columns](#handling-deleted_at-and-other-phantom-columns).
 
@@ -668,6 +668,13 @@ func BuildMyRecordView(r services.MyRecord) MyRecordView {
 func (s MyRecordView) JSONView() ([]byte, error) {
     return json.Marshal(s)
 }
+
+// MyRecordInputView is the JSON shape of the request body read by the <feature> handlers.
+// It is decoupled from services.MyRecord so the wire format can evolve
+// independently of the domain model.
+type MyRecordInputView struct {
+    Name string `json:"name"`
+}
 ```
 
 ## Handlers Layer Pattern
@@ -697,6 +704,7 @@ package handlers
 
 import (
     "context"
+    "encoding/json"
     "errors"
     "net/http"
 
@@ -709,6 +717,7 @@ import (
 // Defined here (consumer side) to allow tests to swap in MockMyFeature.
 type MyFeature interface {
     GetMyRecord(ctx context.Context, id string) (services.MyRecord, error)
+    CreateMyRecord(ctx context.Context, name string) (services.MyRecord, error)
 }
 
 // Handlers is a dependency injection container for <feature> handlers
@@ -730,6 +739,25 @@ func (s Handlers) GetMyRecord(response http.ResponseWriter, request *http.Reques
     )
 
     record, err := s.feature.GetMyRecord(ctx, id)
+    if err != nil {
+        handleMyFeatureError(ctx, err, response)
+        return
+    }
+
+    responses.WriteBasic(ctx, BuildMyRecordView(record), http.StatusOK, response)
+}
+
+func (s Handlers) CreateMyRecord(response http.ResponseWriter, request *http.Request) {
+    var ctx = request.Context()
+
+	var myRecordBody MyRecordInputView
+	err := json.NewDecoder(request.Body).Decode(&myRecordBody)
+	if err != nil {
+		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, response)
+		return
+	}
+
+    record, err := s.feature.CreateMyRecord(ctx, myRecordBody.Name) // (not implemented in example)
     if err != nil {
         handleMyFeatureError(ctx, err, response)
         return
@@ -820,6 +848,8 @@ func TestHandlers_GetMyRecord(t *testing.T) {
         require.Equal(t, http.StatusNotFound, rec.Code)
     })
 }
+
+// test CreateMyRecord ...
 ```
 
 ## Routes Pattern
@@ -857,6 +887,8 @@ func Register(routerInst *router.Router, handlers *handlers.Handlers) {
 
     routerInst.GET("/api/v2/<feature>/:id", handlers.GetMyRecord).
         RequirePermissions(permissions.AppReadApplicationConfiguration)
+    routerInst.POST("/api/v2/<feature>", handlers.CreateMyRecord).
+        RequirePermissions(permissions.AppWriteApplicationConfiguration)
 }
 ```
 
@@ -923,6 +955,8 @@ func TestRegister(t *testing.T) {
 
         require.Equal(t, http.StatusUnauthorized, rec.Code)
     })
+
+    // test POST /api/v2/<feature> ...
 }
 ```
 

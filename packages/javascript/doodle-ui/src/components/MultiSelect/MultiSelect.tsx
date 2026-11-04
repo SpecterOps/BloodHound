@@ -55,10 +55,6 @@ const CaretDown = ({ className, size = 12 }: { className?: string; size?: number
 
 type MultiSelectVariant = 'outlined' | 'filled';
 
-// Override Checkbox hover styles because the entire MultiSelect row owns the hover state.
-
-// Controls the default, unhovered partial-selection appearance.
-
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
     variant?: MultiSelectVariant;
@@ -127,10 +123,10 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
                 multiSelectRowStyles,
                 'text-base font-normal leading-4',
                 option.disabled
-                    ? 'cursor-not-allowed bg-btn-disabled-fill text-disabled'
+                    ? 'cursor-not-allowed bg-[color:var(--button-disabled-fill)] text-disabled'
                     : multiSelectInteractiveRowStyles
             )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
+            labelClassName='min-w-0 flex-1 truncate text-inherit'
         />
     </div>
 );
@@ -147,7 +143,7 @@ const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOp
                 multiSelectInteractiveRowStyles,
                 'text-base font-normal leading-4'
             )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
+            labelClassName='min-w-0 flex-1 truncate text-inherit'
         />
     </div>
 );
