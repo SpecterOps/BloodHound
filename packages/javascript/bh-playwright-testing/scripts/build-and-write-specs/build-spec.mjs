@@ -27,11 +27,11 @@ function checkIsBoilerplate(parsedCodeChunk, parsed) {
     const isHarRoutingCall =
         isAwaitedCall && parsedCodeChunk.expression.expression.expression.getText(parsed).endsWith('.routeFromHAR');
 
-    return (
-        isImportDeclaration ||
-        (isExpressionStatement && isCallExpression && isTestConfiguration) ||
-        (isExpressionStatement && isAwaitExpression && isAwaitedCall && isHarRoutingCall)
-    );
+    const isTestConfigurationStatement = isExpressionStatement && isCallExpression && isTestConfiguration;
+    const isHarRoutingStatement = isExpressionStatement && isAwaitExpression && isAwaitedCall && isHarRoutingCall;
+    const isBoilerplate = isImportDeclaration || isTestConfigurationStatement || isHarRoutingStatement;
+
+    return isBoilerplate;
 }
 
 function makeRelativePageUrlNode(parsedCodeChunk, parsed, origin) {
@@ -39,8 +39,9 @@ function makeRelativePageUrlNode(parsedCodeChunk, parsed, origin) {
     const hasMatchingOrigin = isStringLiteral && parsedCodeChunk.text.startsWith(`${origin}/`);
     const isCallArgument = hasMatchingOrigin && ts.isCallExpression(parsedCodeChunk.parent);
     const isPageNavigation = isCallArgument && parsedCodeChunk.parent.expression.getText(parsed).endsWith('.goto');
+    const isMatchingPageUrl = isStringLiteral && hasMatchingOrigin && isCallArgument && isPageNavigation;
 
-    if (isStringLiteral && hasMatchingOrigin && isCallArgument && isPageNavigation) {
+    if (isMatchingPageUrl) {
         const relativeUrl = parsedCodeChunk.text.slice(origin.length);
         const relativePageUrlNode = ts.factory.createStringLiteral(relativeUrl);
 
@@ -53,8 +54,9 @@ function makeRenamedSpecCall(parsedCodeChunk, parsed, name, visit) {
     const isTestCall = isCallExpression && parsedCodeChunk.expression.getText(parsed) === 'test';
     const hasFirstArgument = isTestCall && parsedCodeChunk.arguments[0] !== undefined;
     const hasStringName = hasFirstArgument && ts.isStringLiteral(parsedCodeChunk.arguments[0]);
+    const isNamedTestCall = isCallExpression && isTestCall && hasFirstArgument && hasStringName;
 
-    if (isCallExpression && isTestCall && hasFirstArgument && hasStringName) {
+    if (isNamedTestCall) {
         const renamedSpecCall = ts.factory.updateCallExpression(
             parsedCodeChunk,
             parsedCodeChunk.expression,
