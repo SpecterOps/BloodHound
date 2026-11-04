@@ -18,23 +18,38 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-function recordedSpec(directory, name) {
+export function makeRecordedSpec(directory, name) {
     const spec = path.join(directory, `${name}.spec.ts`);
     const har = path.join(directory, `${name}.har`);
-    if (!existsSync(spec) || !existsSync(har)) throw new Error(`Missing spec or HAR for ${name}.`);
+
     return { name, spec, har };
 }
 
-export async function listRecordedSpecs(directory) {
-    const names = (await readdir(directory))
-        .filter((name) => name.endsWith('.spec.ts'))
-        .map((name) => name.slice(0, -8));
+export function selectRecordedSpecNames(fileNames) {
+    return fileNames.filter((name) => name.endsWith('.spec.ts')).map((name) => name.slice(0, -8));
+}
 
-    if (!names.length) {
+function validateRecordedSpec(recordedSpec) {
+    if (!existsSync(recordedSpec.spec) || !existsSync(recordedSpec.har)) {
+        throw new Error(`Missing spec or HAR for ${recordedSpec.name}.`);
+    }
+}
+
+export async function listRecordedSpecs(directory) {
+    const fileNames = await readdir(directory);
+    const specNames = selectRecordedSpecNames(fileNames);
+
+    if (!specNames.length) {
         throw new Error('No recorded specs found.');
     }
 
-    return names.map((name) => recordedSpec(directory, name));
+    const recordedSpecs = specNames.map((name) => makeRecordedSpec(directory, name));
+
+    for (const recordedSpec of recordedSpecs) {
+        validateRecordedSpec(recordedSpec);
+    }
+
+    return recordedSpecs;
 }
 
 export async function selectRecordedSpecs(directory, args) {
@@ -42,5 +57,8 @@ export async function selectRecordedSpecs(directory, args) {
         throw new Error('Usage: yarn test:e2e:update-mocks <name>');
     }
 
-    return [recordedSpec(directory, args[0])];
+    const recordedSpec = makeRecordedSpec(directory, args[0]);
+    validateRecordedSpec(recordedSpec);
+
+    return [recordedSpec];
 }

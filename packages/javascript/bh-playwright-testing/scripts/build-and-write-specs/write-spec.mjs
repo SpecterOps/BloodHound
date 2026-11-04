@@ -25,10 +25,15 @@ export async function writeSpec(file, spec) {
     await writeFile(file, spec, { flag: 'wx' });
 }
 
+export function extractLicenseHeader(source) {
+    return source.split('\n\n')[0];
+}
+
 export async function buildAndWriteSpec(recordingSession, baseUrl) {
     const source = await readFile(recordingSession.rawSource, 'utf8');
-    const rawHeader = await readFile(fileURLToPath(import.meta.url));
-    const licenseHeader = (rawHeader, 'utf8').split('\n\n')[0];
+    const sourceFilePath = fileURLToPath(import.meta.url);
+    const sourceFile = await readFile(sourceFilePath, 'utf8');
+    const licenseHeader = extractLicenseHeader(sourceFile);
     const mockedSpec = makeMockedSpec(source, recordingSession.name, baseUrl, licenseHeader);
     const prettierConfig = await prettier.resolveConfig(recordingSession.files.spec);
 

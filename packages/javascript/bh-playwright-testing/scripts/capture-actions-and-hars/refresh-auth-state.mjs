@@ -22,9 +22,11 @@ import { makeAuthSetupArguments } from './prepare-arguments.mjs';
 const uiDirectory = process.cwd();
 
 export async function refreshAuthState(playwrightCli, storageState) {
+    const authSetupArguments = makeAuthSetupArguments();
+
     console.log(`Refreshing authentication state at ${path.relative(uiDirectory, storageState)}.`);
 
-    const result = spawnSync(process.execPath, [playwrightCli, ...makeAuthSetupArguments()], {
+    const result = spawnSync(process.execPath, [playwrightCli, ...authSetupArguments], {
         cwd: uiDirectory,
         env: process.env,
         stdio: 'inherit',

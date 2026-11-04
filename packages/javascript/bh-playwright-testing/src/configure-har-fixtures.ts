@@ -17,25 +17,20 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { BrowserContext, TestInfo } from '@playwright/test';
+import { rebaseHarUrls } from './rebase-har-urls';
 
-export async function configureHarReplay(context: BrowserContext, baseURL: string, replayHar: URL, testInfo: TestInfo) {
+async function writeReplayHar(baseUrl: string, replayHar: URL, replayPath: string) {
     // Rebase recorded API URLs so the fixture also works on another developer's port/host.
     const harSource = await readFile(replayHar, 'utf8');
     const har = JSON.parse(harSource);
 
-    for (const entry of har.log.entries) {
-        const url = new URL(entry.request.url);
-        entry.request.url = new URL(url.pathname + url.search, baseURL).href;
-    }
+    const rebasedHar = rebaseHarUrls(har, baseUrl);
+    const replaySource = JSON.stringify(rebasedHar);
 
-    const replay = testInfo.outputPath('recording.har');
+    await writeFile(replayPath, replaySource);
+}
 
-    const replaySource = JSON.stringify(har);
-
-    await writeFile(replay, replaySource);
-
-    await context.routeFromHAR(replay, { url: /\/api(?:\/|$)/, notFound: 'abort' });
-
+async function initializeReplaySession(context: BrowserContext) {
     // A fake local session keeps replay independent of a live login or expiring credentials.
     await context.addInitScript(() => {
         if (!localStorage.getItem('persistedState')) {
@@ -45,6 +40,14 @@ export async function configureHarReplay(context: BrowserContext, baseURL: strin
             );
         }
     });
+}
+
+export async function configureHarReplay(context: BrowserContext, baseURL: string, replayHar: URL, testInfo: TestInfo) {
+    const replayPath = testInfo.outputPath('recording.har');
+
+    await writeReplayHar(baseURL, replayHar, replayPath);
+    await context.routeFromHAR(replayPath, { url: /\/api(?:\/|$)/, notFound: 'abort' });
+    await initializeReplaySession(context);
 }
 
 export async function configureHarCapture(context: BrowserContext, captureDirectory: string, testInfo: TestInfo) {

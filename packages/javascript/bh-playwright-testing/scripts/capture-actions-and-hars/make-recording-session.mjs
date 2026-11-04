@@ -20,25 +20,18 @@ import path from 'node:path';
 import { checkForDuplicateSpecName } from './manage-files.mjs';
 import { parseRecordingSessionArguments } from './prepare-arguments.mjs';
 
-export async function makeCodegenRecordingSessionObject(args) {
-    const uiDirectory = process.cwd();
-
-    const { name, requestedUrl } = parseRecordingSessionArguments(args);
-    if (!process.env.A11Y_TEST_URL) throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
-    const files = {
+export function makeRecordingFilePaths(uiDirectory, name) {
+    return {
         spec: path.join(uiDirectory, 'tests', 'e2e', `${name}.spec.ts`),
         har: path.join(uiDirectory, 'tests', 'e2e', `${name}.har`),
     };
-    checkForDuplicateSpecName(files);
-    const homeUrl = new URL(requestedUrl, process.env.A11Y_TEST_URL).toString();
-    if (new URL(homeUrl).origin !== new URL(process.env.A11Y_TEST_URL).origin) {
-        throw new Error('--url must use the configured A11Y_TEST_URL origin.');
-    }
-    const packageJsonPath = path.join(uiDirectory, 'package.json');
-    const requireFromUi = createRequire(packageJsonPath);
-    const playwrightCli = requireFromUi.resolve('@playwright/test/cli');
-    await mkdir(path.join(uiDirectory, 'playwright'), { recursive: true });
-    const temporaryDirectory = await mkdtemp(path.join(uiDirectory, 'playwright', 'codegen-'));
+}
+
+export function checkHasSameOrigin(homeUrl, baseUrl) {
+    return new URL(homeUrl).origin === new URL(baseUrl).origin;
+}
+
+export function makeRecordingSession({ name, files, homeUrl, playwrightCli, temporaryDirectory, uiDirectory }) {
     return {
         name,
         files,
@@ -49,4 +42,43 @@ export async function makeCodegenRecordingSessionObject(args) {
         rawSource: path.join(temporaryDirectory, 'recordingSession.ts'),
         rawHar: path.join(temporaryDirectory, 'capture.har'),
     };
+}
+
+export async function prepareCodegenRecordingSession(args) {
+    const uiDirectory = process.cwd();
+    const baseUrl = process.env.A11Y_TEST_URL;
+    const { name, requestedUrl } = parseRecordingSessionArguments(args);
+
+    if (!baseUrl) {
+        throw new Error('Set A11Y_TEST_URL in cmd/ui/.env.');
+    }
+
+    const recordingFiles = makeRecordingFilePaths(uiDirectory, name);
+    checkForDuplicateSpecName(recordingFiles);
+
+    const homeUrl = new URL(requestedUrl, baseUrl).toString();
+    const sameOrigin = checkHasSameOrigin(homeUrl, baseUrl);
+
+    if (!sameOrigin) {
+        throw new Error('--url must use the configured A11Y_TEST_URL origin.');
+    }
+
+    const packageJsonPath = path.join(uiDirectory, 'package.json');
+    const requireFromUi = createRequire(packageJsonPath);
+    const playwrightCli = requireFromUi.resolve('@playwright/test/cli');
+    const playwrightDirectory = path.join(uiDirectory, 'playwright');
+    const temporaryDirectoryPrefix = path.join(playwrightDirectory, 'codegen-');
+
+    await mkdir(playwrightDirectory, { recursive: true });
+    const temporaryDirectory = await mkdtemp(temporaryDirectoryPrefix);
+    const recordingSession = makeRecordingSession({
+        name,
+        files: recordingFiles,
+        homeUrl,
+        playwrightCli,
+        temporaryDirectory,
+        uiDirectory,
+    });
+
+    return recordingSession;
 }

@@ -18,6 +18,7 @@ import { access, mkdir, readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { runPlaywright } from '../run-specs/run-playwright.mjs';
+import { makeAuthSetupArguments } from '../capture-actions-and-hars/prepare-arguments.mjs';
 
 const uiDirectory = process.cwd();
 
@@ -29,7 +30,9 @@ export async function authenticateForUpdate() {
 
     await mkdir(path.dirname(storageState), { recursive: true });
 
-    runPlaywright(playwrightCli, ['test', '-c', 'playwright.a11y.config.ts', '--project=setup']);
+    const authSetupArguments = makeAuthSetupArguments();
+
+    runPlaywright(playwrightCli, authSetupArguments);
 
     await access(storageState);
 

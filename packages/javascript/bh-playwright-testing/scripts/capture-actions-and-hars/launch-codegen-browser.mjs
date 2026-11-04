@@ -20,30 +20,30 @@ import { makeDevServerArguments, makeRecorderArguments } from './prepare-argumen
 const uiDirectory = process.cwd();
 
 export async function launchCodegenBrowser(recordingSession) {
+    const recorderArguments = makeRecorderArguments(
+        recordingSession.storageState,
+        recordingSession.rawSource,
+        recordingSession.rawHar,
+        recordingSession.homeUrl
+    );
+
     console.log(`Opening the Playwright browser at ${recordingSession.homeUrl}; this may take a few seconds...`);
     console.log('Record the flow, add assertions, then close the browser to save.');
     const result = await new Promise((resolve, reject) => {
-        const child = spawn(
-            process.execPath,
-            [
-                recordingSession.playwrightCli,
-                ...makeRecorderArguments(
-                    recordingSession.storageState,
-                    recordingSession.rawSource,
-                    recordingSession.rawHar,
-                    recordingSession.homeUrl
-                ),
-            ],
-            { cwd: uiDirectory, env: process.env, stdio: 'inherit' }
-        );
+        const child = spawn(process.execPath, [recordingSession.playwrightCli, ...recorderArguments], {
+            cwd: uiDirectory,
+            env: process.env,
+            stdio: 'inherit',
+        });
         child.on('error', reject);
         child.on('exit', (code, signal) => resolve({ code, signal }));
     });
 
-    if (result.signal || result.code !== 0)
+    if (result.signal || result.code !== 0) {
         throw new Error(
             `Browser action capture did not finish successfully. Temporary files remain in ${recordingSession.temporaryDirectory}.`
         );
+    }
 }
 
 async function isReachable(url) {

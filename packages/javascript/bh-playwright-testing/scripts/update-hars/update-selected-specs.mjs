@@ -26,10 +26,10 @@ export async function updateSelectedSpecs(specs) {
     const { playwrightCli, authState } = await authenticateForUpdate();
 
     for (const spec of specs) {
-        const { captures, temporaryDirectory } = await captureForUpdate(playwrightCli, spec);
+        const { capturesPath, temporaryDirectory } = await captureForUpdate(playwrightCli, spec);
 
         try {
-            await writeUpdatedHar(captures, authState, spec);
+            await writeUpdatedHar(capturesPath, authState, spec);
             console.log(`Updated ${path.relative(uiDirectory, spec.har)}.`);
         } finally {
             await rm(temporaryDirectory, { recursive: true, force: true });

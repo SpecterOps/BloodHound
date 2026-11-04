@@ -24,7 +24,18 @@ import test from 'node:test';
 import { makeMockedSpec } from '../build-and-write-specs/build-spec.mjs';
 import { buildAndWriteSpec, writeSpec } from '../build-and-write-specs/write-spec.mjs';
 import { sanitizeHar } from '../transform-and-write-hars/sanitize-har.mjs';
-import { writeNewHar, writeRecordedHar, writeUpdatedHar } from '../transform-and-write-hars/write-har.mjs';
+import {
+    mergeHarCaptures,
+    writeNewHar,
+    writeRecordedHar,
+    writeUpdatedHar,
+} from '../transform-and-write-hars/write-har.mjs';
+import { captureForUpdate } from '../capture-actions-and-hars/capture-hars.mjs';
+import {
+    checkHasSameOrigin,
+    makeRecordingFilePaths,
+    makeRecordingSession,
+} from '../capture-actions-and-hars/make-recording-session.mjs';
 import { listRecordedSpecs, selectRecordedSpecs } from '../update-hars/select-specs.mjs';
 import {
     makeDevServerArguments,
@@ -281,6 +292,8 @@ test('recordingSession writers save a sanitized HAR and generated spec', async (
         await buildAndWriteSpec(recordingSession, 'http://old-host:3000');
         assert.ok(!(await readFile(recordingSession.files.har, 'utf8')).includes('secret'));
         const spec = await readFile(recordingSession.files.spec, 'utf8');
+        assert.ok(spec.startsWith('// Copyright 2026 Specter Ops, Inc.'));
+        assert.ok(spec.includes('// SPDX-License-Identifier: Apache-2.0'));
         assert.ok(spec.includes('feature.har'));
         assert.ok(spec.includes('replayHar'));
         assert.ok(!spec.includes('private-auth.json'));
@@ -328,6 +341,8 @@ test('builds the default Vite server command from the configured URL', () => {
 });
 
 test('removes credentials without mutating the original capture', () => {
+    const originalCapture = structuredClone(secretCapture);
+    const originalState = structuredClone(secretState);
     const clean = sanitizeHar(secretCapture, secretState);
     assert.ok(!JSON.stringify(clean).includes('secret'));
     assert.deepEqual(clean.log.entries[0].request.headers, [
@@ -335,6 +350,73 @@ test('removes credentials without mutating the original capture', () => {
     ]);
     assert.equal(secretCapture.log.entries[0].request.headers.length, 1);
     assert.equal(secretCapture.log.entries[0].request.headers[0].value, 'Bearer secret');
+    assert.deepEqual(secretCapture, originalCapture);
+    assert.deepEqual(secretState, originalState);
+});
+
+test('merges every HAR capture without changing inputs or sharing mutable entries', () => {
+    const capturedHars = [sampleCapture(), sampleCapture()];
+    const originalCaptures = structuredClone(capturedHars);
+    const combinedHar = mergeHarCaptures(capturedHars);
+
+    assert.deepEqual(
+        combinedHar.log.entries,
+        originalCaptures.flatMap((har) => har.log.entries)
+    );
+    assert.deepEqual(capturedHars, originalCaptures);
+
+    combinedHar.log.entries[0].request.url = '/changed';
+
+    assert.deepEqual(capturedHars, originalCaptures);
+});
+
+test('builds recording paths from supplied directories and rejects cross-origin URLs', () => {
+    const recordingFiles = makeRecordingFilePaths('/workspace/ui', 'feature');
+    const recordingSession = makeRecordingSession({
+        name: 'feature',
+        files: recordingFiles,
+        homeUrl: 'http://localhost:3000/ui/',
+        playwrightCli: '/tools/playwright',
+        temporaryDirectory: '/temporary/recording',
+        uiDirectory: '/workspace/ui',
+    });
+
+    assert.deepEqual(recordingFiles, {
+        spec: '/workspace/ui/tests/e2e/feature.spec.ts',
+        har: '/workspace/ui/tests/e2e/feature.har',
+    });
+    assert.equal(recordingSession.rawHar, '/temporary/recording/capture.har');
+    assert.equal(recordingSession.storageState, '/workspace/ui/playwright/.auth/user-light.json');
+    assert.equal(checkHasSameOrigin('http://localhost:3000/ui/explore', 'http://localhost:3000'), true);
+    assert.equal(checkHasSameOrigin('http://other-host/ui/', 'http://localhost:3000'), false);
+});
+
+test('successful capture returns the directory containing the recorded HAR', async () => {
+    const directory = await mkdtemp(path.join(process.env.TMPDIR || '/tmp', 'bh-capture-result-'));
+    const playwrightCli = path.join(directory, 'playwright-cli.cjs');
+    let temporaryDirectory;
+
+    try {
+        await mkdir(path.join(process.cwd(), 'playwright'), { recursive: true });
+        await writeFile(
+            playwrightCli,
+            `const fs = require('node:fs');
+const path = require('node:path');
+fs.writeFileSync(path.join(process.env.HAR_UPDATE_CAPTURE_DIRECTORY, 'capture.har'), '{"log":{"entries":[]}}');`
+        );
+
+        const captureResult = await captureForUpdate(playwrightCli, { spec: path.join(directory, 'feature.spec.ts') });
+        temporaryDirectory = captureResult.temporaryDirectory;
+        const captureFiles = await readdir(captureResult.capturesPath);
+
+        assert.deepEqual(captureFiles, ['capture.har']);
+    } finally {
+        if (temporaryDirectory) {
+            await rm(temporaryDirectory, { recursive: true, force: true });
+        }
+
+        await rm(directory, { recursive: true, force: true });
+    }
 });
 
 test('generated spec replays GET and POST APIs on a different host without login or backend', async () => {

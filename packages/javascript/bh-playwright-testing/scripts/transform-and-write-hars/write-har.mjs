@@ -18,41 +18,70 @@ import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { sanitizeHar } from './sanitize-har.mjs';
 
+export function mergeHarCaptures(capturedHars) {
+    const combinedHar = structuredClone(capturedHars[0]);
+    const combinedEntries = capturedHars.flatMap((har) => har.log.entries);
+
+    combinedHar.log.entries = structuredClone(combinedEntries);
+
+    return combinedHar;
+}
+
+function serializeHar(har) {
+    return `${JSON.stringify(har, null, 2)}\n`;
+}
+
+async function readHarFile(filePath) {
+    const harSource = await readFile(filePath, 'utf8');
+    const har = JSON.parse(harSource);
+
+    return har;
+}
+
+async function replaceHarFile(filePath, temporaryFilePath, harSource) {
+    await writeFile(temporaryFilePath, harSource);
+    await rename(temporaryFilePath, filePath);
+}
+
 export async function writeNewHar(file, har) {
+    const harSource = serializeHar(har);
+
     await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, `${JSON.stringify(har, null, 2)}\n`, { flag: 'wx' });
+    await writeFile(file, harSource, { flag: 'wx' });
 }
 
 export async function writeRecordedHar(recordingSession) {
-    const rawHar = JSON.parse(await readFile(recordingSession.rawHar, 'utf8'));
-    const authState = JSON.parse(await readFile(recordingSession.storageState, 'utf8'));
-    const har = sanitizeHar(rawHar, authState);
-    if (!har.log.entries.length) {
+    const rawHar = await readHarFile(recordingSession.rawHar);
+    const authStateSource = await readFile(recordingSession.storageState, 'utf8');
+    const authState = JSON.parse(authStateSource);
+    const sanitizedHar = sanitizeHar(rawHar, authState);
+
+    if (!sanitizedHar.log.entries.length) {
         throw new Error('No API responses captured. Visit your feature before closing codegen.');
     }
-    await writeNewHar(recordingSession.files.har, har);
+
+    await writeNewHar(recordingSession.files.har, sanitizedHar);
 }
 
-export async function writeUpdatedHar(captures, authState, spec) {
-    const files = (await readdir(captures)).filter((name) => name.endsWith('.har'));
+export async function writeUpdatedHar(capturesPath, authState, spec) {
+    const directoryFiles = await readdir(capturesPath);
+    const captureFiles = directoryFiles.filter((name) => name.endsWith('.har'));
 
-    if (!files.length) {
+    if (!captureFiles.length) {
         throw new Error(`No HAR files captured for ${spec.name}.`);
     }
 
-    const hars = await Promise.all(
-        files.map(async (name) => JSON.parse(await readFile(path.join(captures, name), 'utf8')))
-    );
-    const combined = hars[0];
-    combined.log.entries = hars.flatMap((har) => har.log.entries);
+    const capturePaths = captureFiles.map((name) => path.join(capturesPath, name));
+    const capturedHars = await Promise.all(capturePaths.map(readHarFile));
+    const combinedHar = mergeHarCaptures(capturedHars);
+    const sanitizedHar = sanitizeHar(combinedHar, authState);
 
-    const har = sanitizeHar(combined, authState);
-
-    if (!har.log.entries.length) {
+    if (!sanitizedHar.log.entries.length) {
         throw new Error(`No API responses captured for ${spec.name}.`);
     }
 
-    const temporaryFile = path.join(path.dirname(captures), 'sanitized.har');
-    await writeFile(temporaryFile, `${JSON.stringify(har, null, 2)}\n`);
-    await rename(temporaryFile, spec.har);
+    const harSource = serializeHar(sanitizedHar);
+    const temporaryFilePath = path.join(path.dirname(capturesPath), 'sanitized.har');
+
+    await replaceHarFile(spec.har, temporaryFilePath, harSource);
 }

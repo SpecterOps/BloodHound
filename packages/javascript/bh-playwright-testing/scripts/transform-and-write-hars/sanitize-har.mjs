@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-function sessionTokens(storageState) {
+function extractSessionTokens(storageState) {
     return storageState.origins.flatMap(({ localStorage }) =>
         localStorage.flatMap(({ name, value }) => {
             if (name !== 'persistedState') {
@@ -28,30 +28,40 @@ function sessionTokens(storageState) {
 }
 
 function stripCredentials(entry) {
-    entry.request.headers = (entry.request.headers ?? []).map((header) =>
+    const sanitizedEntry = structuredClone(entry);
+    const requestHeaders = (entry.request.headers ?? []).map((header) =>
         /^authorization$/i.test(header.name) ? { ...header, value: 'Bearer playwright-mock-session' } : header
     );
+    const sanitizedRequestHeaders = requestHeaders.filter(({ name }) => !/^(cookie|set-cookie)$/i.test(name));
+    const sanitizedResponseHeaders = (entry.response.headers ?? []).filter(
+        ({ name }) => !/^(cookie|set-cookie|authorization)$/i.test(name)
+    );
 
-    for (const message of [entry.request, entry.response]) {
-        message.headers = (message.headers ?? []).filter(
-            ({ name }) =>
-                !/^(cookie|set-cookie)$/i.test(name) && (message === entry.request || !/^authorization$/i.test(name))
-        );
-        message.cookies = [];
+    sanitizedEntry.request.headers = sanitizedRequestHeaders;
+    sanitizedEntry.request.cookies = [];
+    sanitizedEntry.response.headers = sanitizedResponseHeaders;
+    sanitizedEntry.response.cookies = [];
+
+    return sanitizedEntry;
+}
+
+function replaceSessionTokens(source, sessionTokens) {
+    let sanitizedSource = source;
+
+    for (const token of sessionTokens) {
+        sanitizedSource = sanitizedSource.replaceAll(token, 'playwright-mock-session');
     }
+
+    return sanitizedSource;
 }
 
 export function sanitizeHar(har, storageState) {
-    const document = structuredClone(har);
-    for (const entry of document.log.entries) {
-        stripCredentials(entry);
-    }
+    const sanitizedEntries = har.log.entries.map(stripCredentials);
+    const sanitizedHar = { ...har, log: { ...har.log, entries: sanitizedEntries } };
+    const sessionTokens = extractSessionTokens(storageState);
+    const harSource = JSON.stringify(sanitizedHar);
+    const sanitizedSource = replaceSessionTokens(harSource, sessionTokens);
+    const sanitizedDocument = JSON.parse(sanitizedSource);
 
-    let json = JSON.stringify(document);
-
-    for (const secret of sessionTokens(storageState)) {
-        json = json.replaceAll(secret, 'playwright-mock-session');
-    }
-
-    return JSON.parse(json);
+    return sanitizedDocument;
 }
