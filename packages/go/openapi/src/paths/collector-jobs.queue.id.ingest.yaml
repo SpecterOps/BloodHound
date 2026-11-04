@@ -24,7 +24,7 @@ post:
   description: Streams a collected data file for ingestion and renews the job
     claim. Ingest requests must complete before the job is ended.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     202:
@@ -43,5 +43,7 @@ post:
         application/json:
           schema:
             $ref: './../schemas/api.error-wrapper.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'

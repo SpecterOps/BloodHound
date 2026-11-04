@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"slices"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -124,11 +125,20 @@ var (
 	ErrAuthTokenUserIDOperatorNotAllowed = errors.New("non-admin users may only apply the eq operator when filtering by user_id")
 )
 
+// UserMinimal is the minimal, non-sensitive representation of an active BloodHound user.
+type UserMinimal struct {
+	ID           uuid.UUID
+	EmailAddress sql.NullString
+	FirstName    sql.NullString
+	LastName     sql.NullString
+}
+
 type Database interface {
 	GetRole(ctx context.Context, id int32) (Role, error)
 	GetPermission(ctx context.Context, id int) (Permission, error)
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Role, error)
 	ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]User, error)
+	ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]UserMinimal, error)
 	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error)
 	ListAuthTokens(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]AuthToken, error)
 }
@@ -155,6 +165,21 @@ func (s *Service) ListRoles(ctx context.Context, queryFilters params.Filters, so
 
 func (s *Service) ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]User, error) {
 	return s.db.ListUsers(ctx, queryFilters, sortItems)
+}
+
+// ListActiveUsersMinimal returns active, non-support users. When no sort is requested,
+// results are sorted by email_address ascending.
+func (s *Service) ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]UserMinimal, error) {
+	var (
+		defaultSortField = "email_address"
+		orderedSort      = slices.Clone(sortItems)
+	)
+
+	if !slices.ContainsFunc(orderedSort, func(sortItem params.SortItem) bool { return sortItem.Field == defaultSortField }) {
+		orderedSort = append(orderedSort, params.SortItem{Field: defaultSortField, Direction: params.Ascending})
+	}
+
+	return s.db.ListActiveUsersMinimal(ctx, queryFilters, orderedSort)
 }
 
 func (s *Service) ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]Permission, error) {

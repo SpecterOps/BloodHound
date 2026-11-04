@@ -21,10 +21,9 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/extensions/internal/services"
 )
@@ -100,15 +99,12 @@ func (s NodeKindView) JSONView() ([]byte, error) {
 // row id. Returns 400 when the id is malformed, 404 when the node kind cannot be found,
 // and 200 with the node kind details otherwise.
 func (s Handlers) GetNodeKindByID(response http.ResponseWriter, request *http.Request) {
-	var (
-		ctx = request.Context()
-		raw = mux.Vars(request)[URIPathVariableNodeKindID]
-	)
+	var ctx = request.Context()
 
-	if id, err := strconv.ParseInt(raw, 10, 32); err != nil {
+	if id, err := params.PathInt32(request, URIPathVariableNodeKindID); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "node kind id is malformed", response)
 		return
-	} else if nodeKind, err := s.extensions.GetNodeKind(ctx, int32(id)); errors.Is(err, services.ErrNodeKindNotFound) {
+	} else if nodeKind, err := s.extensions.GetNodeKind(ctx, id); errors.Is(err, services.ErrNodeKindNotFound) {
 		responses.WriteError(ctx, http.StatusNotFound, "node kind not found", response)
 		return
 	} else if err != nil {

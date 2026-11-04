@@ -108,9 +108,12 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
         () => [
             {
                 accessorKey: 'id',
+                size: 32,
+                minSize: 32,
+                maxSize: 32,
                 header: () => {
                     return (
-                        <div>
+                        <div className='flex w-full justify-center'>
                             <CheckboxWithLabel
                                 label='Select All'
                                 labelClassName='sr-only'
@@ -141,7 +144,7 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                     return (
                         <div className='dark:text-neutral-light-1 text-nowrap text-black w-full'>
                             <p className='underline mb-0.5'>{name}</p>
-                            <p className='text-neutral-600 dark:!text-neutral-300'>{email}</p>
+                            <p className='text-muted'>{email}</p>
                         </div>
                     );
                 },
@@ -185,14 +188,17 @@ const SavedQueryPermissions: React.FC<SavedQueryPermissionsProps> = (props: Save
                             onChange={(event: React.ChangeEvent<HTMLInputElement>) => handleInput(event.target.value)}
                         />
                     </div>
-                    <div className='h-[335px] overflow-auto'>
+                    <div className='h-[335px] overflow-auto border border-solid border-neutral-light-4 dark:border-neutral-900'>
                         {filteredUsers?.length ? (
                             <DataTable
+                                className='border-0'
                                 TableHeadProps={{
-                                    className: 'text-s first:!w-8 pl-3 first:pl-0 first:text-center',
+                                    className: 'text-s pl-3 first:pl-0 first:text-center',
                                 }}
                                 TableBodyProps={{ className: 'text-s' }}
-                                TableCellProps={{ className: 'first:!w-8 pl-3 first:pl-0 first:text-center' }}
+                                TableCellProps={{
+                                    className: 'pl-3 first:pl-0 first:text-center',
+                                }}
                                 columns={columns}
                                 data={filteredUsers}
                             />

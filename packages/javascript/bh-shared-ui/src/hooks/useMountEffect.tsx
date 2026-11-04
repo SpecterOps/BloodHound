@@ -16,5 +16,5 @@
 
 import { useEffect } from 'react';
 
-// eslint-disable-next-line react-hooks/exhaustive-deps
+// oxlint-disable-next-line hooks-compat/exhaustive-deps
 export const useMountEffect = (cb: React.EffectCallback) => useEffect(cb, []);

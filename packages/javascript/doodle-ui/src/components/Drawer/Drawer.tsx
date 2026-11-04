@@ -218,7 +218,7 @@ function DrawerDescription({ className, ...props }: DrawerPrimitive.Description.
     return (
         <DrawerPrimitive.Description
             data-slot='drawer-description'
-            className={cnWithState('cn-drawer-description text-balance text-text-muted', className)}
+            className={cnWithState('cn-drawer-description text-balance text-muted', className)}
             {...props}
         />
     );
@@ -228,7 +228,7 @@ function DrawerBody({ className, ...props }: ComponentProps<'div'>) {
     return (
         <div
             data-slot='drawer-body'
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            // oxlint-disable-next-line a11y-compat/no-noninteractive-tabindex
             tabIndex={0} // Make the body focusable to allow keyboard scrolling
             className={cn('min-h-0 flex-1 overflow-y-auto pr-3 -mr-3', className)}
             {...props}

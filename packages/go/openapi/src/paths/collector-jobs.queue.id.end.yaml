@@ -24,7 +24,7 @@ post:
   description: Succeeded, partially-succeeded, and failed outcomes create immutable history; requeue
     returns the job to ready with backoff and consumes an attempt.
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   requestBody:
     required: true
@@ -61,11 +61,7 @@ post:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
-    409:
-      description: The job is not running.
-      content:
-        application/json:
-          schema:
-            $ref: './../schemas/api.error-wrapper.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'

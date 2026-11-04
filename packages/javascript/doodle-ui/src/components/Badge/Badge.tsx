@@ -13,114 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { cva, type VariantProps } from 'class-variance-authority';
+import { type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
-
-const BadgeVariants = cva('inline-flex items-center justify-center rounded text-main text-base px-2 py-1 min-w-16', {
-    variants: {
-        variant: {
-            fill: '',
-            outline: 'border bg-badge-grey-fill',
-        },
-        color: {
-            primary: '',
-            secondary: '',
-            grey: '',
-            red: '',
-            orange: '',
-            green: '',
-            blue: '',
-            error: '',
-            warning: '',
-            success: '',
-            disabled: '',
-        },
-        iconPosition: {
-            left: 'flex-row',
-            right: 'flex-row-reverse',
-        },
-        hasIcon: {
-            true: 'gap-2',
-            false: '',
-        },
-    },
-    compoundVariants: [
-        // Fill variants
-        { variant: 'fill', color: 'primary', className: 'bg-badge-primary-fill' },
-        { variant: 'fill', color: 'secondary', className: 'bg-badge-secondary-fill' },
-        { variant: 'fill', color: 'grey', className: 'bg-badge-grey-fill' },
-        { variant: 'fill', color: 'red', className: 'bg-badge-red-fill' },
-        { variant: 'fill', color: 'orange', className: 'bg-badge-orange-fill' },
-        { variant: 'fill', color: 'green', className: 'bg-badge-green-fill' },
-        { variant: 'fill', color: 'blue', className: 'bg-badge-blue-fill' },
-        { variant: 'fill', color: 'error', className: 'bg-status-error-main dark:bg-status-error-fill' },
-        { variant: 'fill', color: 'warning', className: 'bg-status-warning-main dark:bg-status-warning-fill' },
-        { variant: 'fill', color: 'success', className: 'bg-status-success-main dark:bg-status-success-fill' },
-        { variant: 'fill', color: 'disabled', className: 'bg-neutral-500' },
-
-        // Outline variants
-        {
-            variant: 'outline',
-            color: 'primary',
-            className: 'border-badge-primary-outline [&>span>svg]:text-badge-primary-outline',
-        },
-        {
-            variant: 'outline',
-            color: 'secondary',
-            className: 'border-badge-secondary-outline [&>span>svg]:text-badge-secondary-outline',
-        },
-        {
-            variant: 'outline',
-            color: 'grey',
-            className: 'border-badge-grey-outline [&>span>svg]:text-badge-main',
-        },
-        {
-            variant: 'outline',
-            color: 'red',
-            className: 'border-badge-red-outline [&>span>svg]:text-badge-red-outline',
-        },
-        {
-            variant: 'outline',
-            color: 'orange',
-            className: 'border-badge-orange-outline [&>span>svg]:text-badge-orange-outline',
-        },
-        {
-            variant: 'outline',
-            color: 'green',
-            className: 'border-badge-green-outline [&>span>svg]:text-badge-green-outline',
-        },
-        {
-            variant: 'outline',
-            color: 'blue',
-            className: 'border-badge-blue-outline [&>span>svg]:text-badge-blue-outline',
-        },
-        {
-            variant: 'outline',
-            color: 'error',
-            className: 'border-status-error-main [&>span>svg]:text-status-error-main',
-        },
-        {
-            variant: 'outline',
-            color: 'warning',
-            className: 'border-status-warning-main [&>span>svg]:text-status-warning-main',
-        },
-        {
-            variant: 'outline',
-            color: 'success',
-            className: 'border-status-success-main [&>span>svg]:text-status-success-main',
-        },
-        {
-            variant: 'outline',
-            color: 'disabled',
-            className: 'border-neutral-500 [&>span>svg]:text-neutral-500',
-        },
-    ],
-    defaultVariants: {
-        variant: 'outline',
-        color: 'grey',
-    },
-});
+import { badgeIconClasses, badgeLabelClasses, BadgeVariants } from './Badge.styles';
 
 type NamedColor = NonNullable<VariantProps<typeof BadgeVariants>['color']>;
 
@@ -148,14 +44,11 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
                 )}>
                 {icon && (
                     // badge-icon does not have actual properties, if you want to leverage it, you would have to target the className and define the properties via the Badge component instance in the parent
-                    <span
-                        className={cn('flex shrink-0 items-center [&>svg]:h-3 [&>svg]:w-3 badge-icon', iconClassName)}>
-                        {icon}
-                    </span>
+                    <span className={cn(badgeIconClasses, iconClassName)}>{icon}</span>
                 )}
                 {/* badge-label does not have actual properties, if you want to leverage it, you would have to target the
                 className and define the properties via the Badge component instance in the parent */}
-                <span className='translate-y-[1px] badge-label'>{label}</span>
+                <span className={badgeLabelClasses}>{label}</span>
             </div>
         );
     }

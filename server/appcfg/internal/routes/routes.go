@@ -30,4 +30,5 @@ func Register(routerInst *router.Router, handlerSet *handlers.Handlers) {
 	)
 	routerInst.GET("/api/v2/datapipe/status", handlerSet.GetDatapipeStatus).RequireAuth()
 	routerInst.GET("/api/v2/config", handlerSet.GetApplicationConfiguration).RequirePermissions(permissions.AppReadApplicationConfiguration).WithFilters(parameterList)
+	routerInst.PUT("/api/v2/config", handlerSet.SetApplicationConfiguration).RequirePermissions(permissions.AppWriteApplicationConfiguration)
 }

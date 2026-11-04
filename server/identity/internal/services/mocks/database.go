@@ -187,6 +187,7 @@ func (_c *MockDatabase_GetRole_Call) RunAndReturn(run func(ctx context.Context, 
 	return _c
 }
 
+<<<<<<< HEAD
 // ListAuthTokens provides a mock function for the type MockDatabase
 func (_mock *MockDatabase) ListAuthTokens(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.AuthToken, error) {
 	ret := _mock.Called(ctx, queryFilters, sortItems)
@@ -205,6 +206,26 @@ func (_mock *MockDatabase) ListAuthTokens(ctx context.Context, queryFilters para
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]services.AuthToken)
+=======
+// ListActiveUsersMinimal provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.UserMinimal, error) {
+	ret := _mock.Called(ctx, queryFilters, sortItems)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListActiveUsersMinimal")
+	}
+
+	var r0 []services.UserMinimal
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, params.Filters, params.SortItems) ([]services.UserMinimal, error)); ok {
+		return returnFunc(ctx, queryFilters, sortItems)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, params.Filters, params.SortItems) []services.UserMinimal); ok {
+		r0 = returnFunc(ctx, queryFilters, sortItems)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]services.UserMinimal)
+>>>>>>> main
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, params.Filters, params.SortItems) error); ok {
@@ -215,6 +236,7 @@ func (_mock *MockDatabase) ListAuthTokens(ctx context.Context, queryFilters para
 	return r0, r1
 }
 
+<<<<<<< HEAD
 // MockDatabase_ListAuthTokens_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListAuthTokens'
 type MockDatabase_ListAuthTokens_Call struct {
 	*mock.Call
@@ -229,6 +251,22 @@ func (_e *MockDatabase_Expecter) ListAuthTokens(ctx interface{}, queryFilters in
 }
 
 func (_c *MockDatabase_ListAuthTokens_Call) Run(run func(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems)) *MockDatabase_ListAuthTokens_Call {
+=======
+// MockDatabase_ListActiveUsersMinimal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListActiveUsersMinimal'
+type MockDatabase_ListActiveUsersMinimal_Call struct {
+	*mock.Call
+}
+
+// ListActiveUsersMinimal is a helper method to define mock.On call
+//   - ctx context.Context
+//   - queryFilters params.Filters
+//   - sortItems params.SortItems
+func (_e *MockDatabase_Expecter) ListActiveUsersMinimal(ctx interface{}, queryFilters interface{}, sortItems interface{}) *MockDatabase_ListActiveUsersMinimal_Call {
+	return &MockDatabase_ListActiveUsersMinimal_Call{Call: _e.mock.On("ListActiveUsersMinimal", ctx, queryFilters, sortItems)}
+}
+
+func (_c *MockDatabase_ListActiveUsersMinimal_Call) Run(run func(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems)) *MockDatabase_ListActiveUsersMinimal_Call {
+>>>>>>> main
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -251,12 +289,21 @@ func (_c *MockDatabase_ListAuthTokens_Call) Run(run func(ctx context.Context, qu
 	return _c
 }
 
+<<<<<<< HEAD
 func (_c *MockDatabase_ListAuthTokens_Call) Return(authTokens []services.AuthToken, err error) *MockDatabase_ListAuthTokens_Call {
 	_c.Call.Return(authTokens, err)
 	return _c
 }
 
 func (_c *MockDatabase_ListAuthTokens_Call) RunAndReturn(run func(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.AuthToken, error)) *MockDatabase_ListAuthTokens_Call {
+=======
+func (_c *MockDatabase_ListActiveUsersMinimal_Call) Return(userMinimals []services.UserMinimal, err error) *MockDatabase_ListActiveUsersMinimal_Call {
+	_c.Call.Return(userMinimals, err)
+	return _c
+}
+
+func (_c *MockDatabase_ListActiveUsersMinimal_Call) RunAndReturn(run func(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.UserMinimal, error)) *MockDatabase_ListActiveUsersMinimal_Call {
+>>>>>>> main
 	_c.Call.Return(run)
 	return _c
 }

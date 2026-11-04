@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
@@ -87,10 +89,11 @@ func TestGetDatapipeStatus(t *testing.T) {
 		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
 			// Register the appcfg module using the new architecture
 			modules.Register(modules.Deps{
-				Router:  routerInst,
-				Pool:    db.Pool(),
-				Graph:   &graph.DatabaseSwitch{},
-				DogTags: testDogTags(),
+				Router:                  routerInst,
+				Pool:                    db.Pool(),
+				Graph:                   &graph.DatabaseSwitch{},
+				DogTags:                 testDogTags(),
+				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
 				},
@@ -264,10 +267,11 @@ func TestGetAppConfigs(t *testing.T) {
 		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
 			// Register the appcfg module using the new architecture
 			modules.Register(modules.Deps{
-				Router:  routerInst,
-				Pool:    db.Pool(),
-				Graph:   &graph.DatabaseSwitch{},
-				DogTags: testDogTags(),
+				Router:                  routerInst,
+				Pool:                    db.Pool(),
+				Graph:                   &graph.DatabaseSwitch{},
+				DogTags:                 testDogTags(),
+				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
 				},
@@ -411,4 +415,187 @@ func TestGetAppConfigs(t *testing.T) {
 			assert.NotEmpty(t, envelope.Errors)
 		})
 	}
+}
+
+type setConfigsResponseEnvelope struct {
+	Data appcfg.Parameter `json:"data"`
+}
+
+func TestSetAppConfigs(t *testing.T) {
+	var (
+		ctx     = context.Background()
+		harness = servertest.NewHarness(t, func(routerInst *router.Router, db *database.BloodhoundDB) {
+			// Register the appcfg module using the new architecture
+			modules.Register(modules.Deps{
+				Router:                  routerInst,
+				Pool:                    db.Pool(),
+				Graph:                   &graph.DatabaseSwitch{},
+				DogTags:                 testDogTags(),
+				ConfigUpdateSideEffects: db,
+				RateLimitMiddleware: func() mux.MiddlewareFunc {
+					return middleware.DefaultRateLimitMiddleware(db)
+				},
+			})
+		})
+		db     = harness.DB
+		server = harness.Server
+	)
+
+	// Create a test user and get a valid JWT token for authentication
+	var (
+		user = model.User{
+			PrincipalName: "test-admin@example.com",
+			EmailAddress:  null.StringFrom("test-admin@example.com"),
+			EULAAccepted:  true, // Required for permission checks to work
+			Roles:         model.Roles{servertest.AdminRole(t, ctx, db)},
+		}
+		token                  = servertest.MintJWT(t, ctx, db, harness.Auther, user)
+		lackingPermissionsUser = model.User{
+			PrincipalName: "test-user@example.com",
+			EmailAddress:  null.StringFrom("test-user@example.com"),
+		}
+		lackingPermissionsToken = servertest.MintJWT(t, ctx, db, harness.Auther, lackingPermissionsUser)
+	)
+
+	var testBody = `{
+			"key":"auth.password_expiration_window",
+			"value":{"duration":"P45D"}
+		}`
+
+	t.Run("returns 200 OK updating a config", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBody))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		require.Equal(t, http.StatusOK, resp.StatusCode)
+
+		var envelope setConfigsResponseEnvelope
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+
+		// Minimal assertions to avoid live data changes breaking tests
+		assert.Equal(t, "auth.password_expiration_window", string(envelope.Data.Key))
+		expectedval, err := types.NewJSONBObject(map[string]any{"duration": "P45D"})
+		require.NoError(t, err)
+		assert.Equal(t, expectedval.Object,
+			envelope.Data.Value.Object)
+	})
+
+	t.Run("returns 401 Unauthorized when an invalid token is provided", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBody))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer invalid-token-that-is-not-valid")
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusUnauthorized, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("returns 401 Unauthorized when no auth token is provided", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBody))
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusUnauthorized, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("returns 403 Unauthorized when user hasn't sufficient permissions", func(t *testing.T) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBody))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+lackingPermissionsToken)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusForbidden, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("returns 400 on bad json", func(t *testing.T) {
+		testBodyInvalid := `{
+			blahblah
+		}`
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBodyInvalid))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
+
+	t.Run("Fails if key doesn't exist", func(t *testing.T) {
+		testBodyNoKey := `{
+			"key":"nonexistant",
+			"value":{"duration":"P45D"}
+		}`
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBodyNoKey))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusBadRequest, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("cannot update not allowed key", func(t *testing.T) {
+		testBodyProtectedKey := `{
+			"key":"http.trusted_proxies",
+			"value":{"trusted_proxies": 2}
+		}`
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBodyProtectedKey))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusBadRequest, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
+
+	t.Run("Fails type validation", func(t *testing.T) {
+		testBodyBadValue := `{
+			"key":"auth.password_expiration_window",
+			"value":{"duration":"P15D", "wololo":"P45D"}
+		}`
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBodyBadValue))
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+		var envelope api.ErrorWrapper
+		require.NoError(t, json.NewDecoder(resp.Body).Decode(&envelope))
+		assert.Equal(t, http.StatusBadRequest, envelope.HTTPStatus)
+		assert.NotEmpty(t, envelope.Errors)
+	})
 }

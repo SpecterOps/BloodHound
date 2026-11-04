@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
+import { Accordion, AccordionContent, AccordionHeader, AccordionItem, Typography } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
+import { cn } from '../../../utils';
 import { useCollapsibleSectionStyles } from '../InfoStyles';
-import { SubHeader } from '../fragments';
 
 export const EdgeInfoCollapsibleSection: React.FC<
     PropsWithChildren<{
@@ -31,23 +31,28 @@ export const EdgeInfoCollapsibleSection: React.FC<
 
     return (
         <Accordion
-            expanded={isExpanded}
-            onChange={(_e, expanded) => {
-                onChange(expanded);
-            }}
-            TransitionProps={{ unmountOnExit: true }}
-            className={styles.accordionRoot}>
-            <AccordionSummary
-                data-testid={`${label.toLocaleLowerCase()}-accordion`}
-                expandIcon={<FontAwesomeIcon icon={faChevronDown} />}
-                className={'accordion-summary'}
-                classes={{
-                    root: styles.accordionSummary,
-                    expandIconWrapper: styles.expandIcon,
-                }}>
-                <SubHeader label={label} />
-            </AccordionSummary>
-            <AccordionDetails className={styles.edgeAccordionDetails}>{children}</AccordionDetails>
+            type='single'
+            collapsible
+            value={isExpanded ? 'section' : ''}
+            onValueChange={(value) => onChange(value === 'section')}>
+            <AccordionItem value='section' className='mb-0 bg-transparent'>
+                <AccordionHeader
+                    aria-label={label}
+                    data-testid={`${label.toLocaleLowerCase()}-accordion`}
+                    className='px-0 py-2 hover:no-underline'>
+                    <FontAwesomeIcon icon={faChevronDown} aria-hidden className='mr-2 size-3 text-text-muted' />
+                    <Typography component='span' variant='h6' className='text-sm'>
+                        {label}
+                    </Typography>
+                </AccordionHeader>
+                <AccordionContent
+                    className={cn(
+                        styles.edgeAccordionDetails,
+                        '[&&]:px-0 [&&]:pb-3 [&&]:pt-0 [&_.typography-body2]:text-body-2'
+                    )}>
+                    {children}
+                </AccordionContent>
+            </AccordionItem>
         </Accordion>
     );
 };

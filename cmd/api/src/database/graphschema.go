@@ -23,11 +23,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/lib/pq"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/pgerrors"
 	"github.com/specterops/dawgs/graph"
 	"gorm.io/gorm"
 )
@@ -1547,17 +1547,14 @@ func (s *BloodhoundDB) DeleteKindInfo(ctx context.Context, kindInfoID int32) err
 }
 
 func checkKindInfoError(result *gorm.DB) error {
-	var pgErr *pgconn.PgError
-
-	if errors.As(result.Error, &pgErr) {
-		switch pgErr.ConstraintName {
-		case graphSchemaKindInfoConstraintKindIDFKey:
-			return fmt.Errorf("%w: %w", model.ErrKindInfoKindNotFound, result.Error)
-		case graphSchemaKindInfoConstraintUniquePosition:
-			return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicatePosition, result.Error)
-		case graphSchemaKindInfoConstraintUniqueInfoKey:
-			return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicateInfoKey, result.Error)
-		}
+	if pgerrors.IsForeignKeyViolation(result.Error, graphSchemaKindInfoConstraintKindIDFKey) {
+		return fmt.Errorf("%w: %w", model.ErrKindInfoKindNotFound, result.Error)
+	}
+	if pgerrors.IsUniqueViolation(result.Error, graphSchemaKindInfoConstraintUniquePosition) {
+		return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicatePosition, result.Error)
+	}
+	if pgerrors.IsUniqueViolation(result.Error, graphSchemaKindInfoConstraintUniqueInfoKey) {
+		return fmt.Errorf("%w: %w", model.ErrKindInfoDuplicateInfoKey, result.Error)
 	}
 
 	return CheckError(result)

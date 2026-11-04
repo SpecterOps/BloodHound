@@ -97,6 +97,22 @@ const expectedListUsersFilteredNullSQL = `SELECT id, sso_provider_id, first_name
 // filter, which must render IS NOT NULL rather than binding "null".
 const expectedListUsersFilteredNotNullSQL = `SELECT id, sso_provider_id, first_name, last_name, email_address, principal_name, last_login, is_disabled, all_environments, eula_accepted, created_at, updated_at FROM users WHERE support_account = $1 AND (last_login IS NOT NULL)`
 
+// expectedListActiveUsersMinimalSQL is the literal SQL the Store issues for
+// ListActiveUsersMinimal when no filters or sorts are supplied.
+const expectedListActiveUsersMinimalSQL = `SELECT id, email_address, first_name, last_name FROM users WHERE support_account = $1 AND is_disabled IS NOT TRUE`
+
+// expectedListActiveUsersMinimalSortedSQL is the literal SQL issued when a
+// single ascending sort on email_address is supplied.
+const expectedListActiveUsersMinimalSortedSQL = expectedListActiveUsersMinimalSQL + ` ORDER BY email_address ASC`
+
+// expectedListActiveUsersMinimalApproxSQL is the literal SQL issued for a ~eq
+// filter on first_name, which must render a case-insensitive ILIKE.
+const expectedListActiveUsersMinimalApproxSQL = expectedListActiveUsersMinimalSQL + ` AND (first_name ILIKE $2)`
+
+// expectedListActiveUsersMinimalNotEqualSQL is the literal SQL issued for a neq
+// filter on email_address.
+const expectedListActiveUsersMinimalNotEqualSQL = expectedListActiveUsersMinimalSQL + ` AND (email_address <> $2)`
+
 // expectedRolesForUsersOneSQL / TwoSQL are the batched roles query for one and
 // two listed users respectively.
 const expectedRolesForUsersOneSQL = `SELECT ur.user_id, r.id, r.name, r.description, r.created_at, r.updated_at FROM roles r JOIN users_roles ur ON ur.role_id = r.id WHERE ur.user_id IN ($1)`
@@ -169,6 +185,15 @@ func TestStore_GetPermission(t *testing.T) {
 				)
 			},
 			expected: expected{permission: expectedPermission},
+		},
+		{
+			name: "Success: NULL columns scan as zero values - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedGetPermissionSQL).WithArgs(permissionID, 1).WillReturnRows(
+					mock.pool.NewRows(permissionRowColumns()).AddRow(nil, nil, int32(permissionID), nil, nil),
+				)
+			},
+			expected: expected{permission: services.Permission{ID: int32(permissionID)}},
 		},
 		{
 			name: "Error: missing permission maps to ErrNoPermissionFound - 404",
@@ -293,6 +318,18 @@ func TestStore_GetRole(t *testing.T) {
 				)
 			},
 			expected: expected{role: expectedRole},
+		},
+		{
+			name: "Success: NULL columns on role and permissions scan as zero values - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedGetRoleSQL).WithArgs(roleID, 1).WillReturnRows(
+					mock.pool.NewRows(roleRowColumns()).AddRow(roleID, nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedGetRolePermissionsSQL).WithArgs(roleID).WillReturnRows(
+					mock.pool.NewRows(rolePermissionRowColumns()).AddRow(int32(1), nil, nil, nil, nil),
+				)
+			},
+			expected: expected{role: services.Role{ID: roleID, Permissions: []services.Permission{{ID: 1}}}},
 		},
 		{
 			name: "Error: missing role maps to ErrNoRoleFound - 404",
@@ -447,6 +484,18 @@ func TestStore_ListRoles(t *testing.T) {
 			expected: expected{roles: []services.Role{readOnly}},
 		},
 		{
+			name: "Success: NULL columns on roles and permissions scan as zero values - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListRolesSQL).WithArgs().WillReturnRows(
+					mock.pool.NewRows(roleRowColumns()).AddRow(int32(9), nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedListRolePermissionsSQL).WithArgs(int32(9)).WillReturnRows(
+					mock.pool.NewRows(listRolePermissionRowColumns()).AddRow(int32(9), int32(8), nil, nil, nil, nil),
+				)
+			},
+			expected: expected{roles: []services.Role{{ID: 9, Permissions: []services.Permission{{ID: 8}}}}},
+		},
+		{
 			name:    "Error: filter field is unknown - 400",
 			filters: params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
 			setupMocks: func(mock mock) {
@@ -586,6 +635,15 @@ func TestStore_ListPermissions(t *testing.T) {
 			expected: expected{permissions: []services.Permission{}},
 		},
 		{
+			name: "Success: NULL columns scan as zero values",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListPermissionsSQL).WithArgs().WillReturnRows(
+					mock.pool.NewRows(permissionRowColumns()).AddRow(nil, nil, int32(7), nil, nil),
+				)
+			},
+			expected: expected{permissions: []services.Permission{{ID: 7}}},
+		},
+		{
 			name:       "Error: filter field is unknown",
 			filters:    params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
 			setupMocks: func(mock) {},
@@ -673,14 +731,15 @@ func TestStore_ListUsers(t *testing.T) {
 	}
 
 	var (
-		ctx       = context.Background()
-		dbErr     = errors.New("connection refused")
-		createdAt = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-		updatedAt = time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
-		lastLogin = time.Date(2026, 1, 3, 0, 0, 0, 0, time.UTC)
-		expiresAt = time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
-		user1ID   = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
-		user2ID   = uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222")
+		ctx        = context.Background()
+		dbErr      = errors.New("connection refused")
+		createdAt  = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		updatedAt  = time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
+		lastLogin  = time.Date(2026, 1, 3, 0, 0, 0, 0, time.UTC)
+		expiresAt  = time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
+		user1ID    = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		user2ID    = uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222")
+		nullUserID = uuid.FromStringOrNil("33333333-3333-3333-3333-333333333333")
 
 		permission1 = services.Permission{ID: 1, Authority: "auth", Name: "ManageProviders", CreatedAt: createdAt, UpdatedAt: updatedAt}
 		role1       = services.Role{ID: 1, Name: "Administrator", Description: "Can manage the application", Permissions: []services.Permission{permission1}, CreatedAt: createdAt, UpdatedAt: updatedAt}
@@ -828,6 +887,32 @@ func TestStore_ListUsers(t *testing.T) {
 			expected: expected{users: []services.User{}},
 		},
 		{
+			name: "Success: NULL columns on users and associations scan as zero values - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListUsersSQL).WithArgs(false).WillReturnRows(
+					mock.pool.NewRows(userRowColumns()).AddRow(nullUserID, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedRolesForUsersOneSQL).WithArgs(nullUserID.String()).WillReturnRows(
+					mock.pool.NewRows(userRoleRowColumns()).AddRow(nullUserID, int32(9), nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedListRolePermissionsSQL).WithArgs(int32(9)).WillReturnRows(
+					mock.pool.NewRows(listRolePermissionRowColumns()).AddRow(int32(9), int32(8), nil, nil, nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedETACForUsersOneSQL).WithArgs(nullUserID.String()).WillReturnRows(
+					mock.pool.NewRows(userETACRowColumns()).AddRow(int64(11), nullUserID, "env-1", nil, nil),
+				)
+				mock.pool.ExpectQuery(expectedAuthSecretsForUsersOneSQL).WithArgs(nullUserID.String()).WillReturnRows(
+					mock.pool.NewRows(userAuthSecretRowColumns()).AddRow(int32(101), nullUserID, nil, nil, nil, nil, nil),
+				)
+			},
+			expected: expected{users: []services.User{{
+				ID:                               nullUserID,
+				Roles:                            []services.Role{{ID: 9, Permissions: []services.Permission{{ID: 8}}}},
+				EnvironmentTargetedAccessControl: []services.EnvironmentAccessControl{{ID: 11, UserID: nullUserID.String(), EnvironmentID: "env-1"}},
+				AuthSecret:                       &services.AuthSecret{ID: 101},
+			}}},
+		},
+		{
 			name:       "Error: filter field is unknown - 400",
 			filters:    params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
 			setupMocks: func(mock) {},
@@ -866,6 +951,153 @@ func TestStore_ListUsers(t *testing.T) {
 			testCase.setupMocks(mock{pool: pool})
 
 			result, err := store.ListUsers(ctx, testCase.filters, testCase.sortItems)
+			switch {
+			case testCase.expected.err != nil || testCase.expected.errContains != "":
+				if testCase.expected.err != nil {
+					assert.ErrorIs(t, err, testCase.expected.err)
+				}
+				if testCase.expected.errContains != "" {
+					assert.ErrorContains(t, err, testCase.expected.errContains)
+				}
+			default:
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expected.users, result)
+			}
+			require.NoError(t, pool.ExpectationsWereMet())
+		})
+	}
+}
+
+func userMinimalRowColumns() []string {
+	return []string{"id", "email_address", "first_name", "last_name"}
+}
+
+func TestStore_ListActiveUsersMinimal(t *testing.T) {
+	type mock struct {
+		pool pgxmock.PgxPoolIface
+	}
+
+	type expected struct {
+		users       []services.UserMinimal
+		err         error
+		errContains string
+	}
+
+	type testData struct {
+		name       string
+		filters    params.Filters
+		sortItems  params.SortItems
+		setupMocks func(mock mock)
+		expected   expected
+	}
+
+	var (
+		ctx   = context.Background()
+		dbErr = errors.New("connection refused")
+		user1 = services.UserMinimal{
+			ID:           uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111"),
+			EmailAddress: sql.NullString{String: "ada@example.com", Valid: true},
+			FirstName:    sql.NullString{String: "Ada", Valid: true},
+			LastName:     sql.NullString{String: "Lovelace", Valid: true},
+		}
+		user2 = services.UserMinimal{
+			ID: uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222"),
+		}
+	)
+
+	addUserMinimalRow := func(rows *pgxmock.Rows, user services.UserMinimal) {
+		rows.AddRow(user.ID, user.EmailAddress, user.FirstName, user.LastName)
+	}
+
+	tt := []testData{
+		{
+			name: "Success: active users are returned with NULL columns preserved - 200",
+			setupMocks: func(mock mock) {
+				userRows := mock.pool.NewRows(userMinimalRowColumns())
+				addUserMinimalRow(userRows, user1)
+				addUserMinimalRow(userRows, user2)
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSQL).WithArgs(false).WillReturnRows(userRows)
+			},
+			expected: expected{users: []services.UserMinimal{user1, user2}},
+		},
+		{
+			name:      "Success: users are sorted by email_address - 200",
+			sortItems: params.SortItems{{Field: "email_address", Direction: params.Ascending}},
+			setupMocks: func(mock mock) {
+				userRows := mock.pool.NewRows(userMinimalRowColumns())
+				addUserMinimalRow(userRows, user1)
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSortedSQL).WithArgs(false).WillReturnRows(userRows)
+			},
+			expected: expected{users: []services.UserMinimal{user1}},
+		},
+		{
+			name:    "Success: approximate equality uses ILIKE with wildcards - 200",
+			filters: params.Filters{"first_name": {{Field: "first_name", Operator: params.ApproximatelyEquals, Value: "aD", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				userRows := mock.pool.NewRows(userMinimalRowColumns())
+				addUserMinimalRow(userRows, user1)
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalApproxSQL).WithArgs(false, "%aD%").WillReturnRows(userRows)
+			},
+			expected: expected{users: []services.UserMinimal{user1}},
+		},
+		{
+			name:    "Success: approximate equality with null compares against NULL - 200",
+			filters: params.Filters{"first_name": {{Field: "first_name", Operator: params.ApproximatelyEquals, Value: "null", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalApproxSQL).WithArgs(false, nil).WillReturnRows(mock.pool.NewRows(userMinimalRowColumns()))
+			},
+			expected: expected{users: []services.UserMinimal{}},
+		},
+		{
+			name:    "Success: users are filtered by email_address neq - 200",
+			filters: params.Filters{"email_address": {{Field: "email_address", Operator: params.NotEquals, Value: "ada@example.com", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalNotEqualSQL).WithArgs(false, "ada@example.com").WillReturnRows(mock.pool.NewRows(userMinimalRowColumns()))
+			},
+			expected: expected{users: []services.UserMinimal{}},
+		},
+		{
+			name: "Success: no users match - 200",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSQL).WithArgs(false).WillReturnRows(mock.pool.NewRows(userMinimalRowColumns()))
+			},
+			expected: expected{users: []services.UserMinimal{}},
+		},
+		{
+			name:       "Error: filter field is unknown - 400",
+			filters:    params.Filters{"nope": {{Field: "nope", Operator: params.Equals, Value: "x", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: "unknown field"},
+		},
+		{
+			name:       "Error: filter operator is unsupported - 400",
+			filters:    params.Filters{"first_name": {{Field: "first_name", Operator: params.IsNull, Value: "", SetOperator: params.FilterAnd}}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: "unsupported operator"},
+		},
+		{
+			name:       "Error: sort field is unknown - 400",
+			sortItems:  params.SortItems{{Field: "nope", Direction: params.Ascending}},
+			setupMocks: func(mock) {},
+			expected:   expected{errContains: "unknown field"},
+		},
+		{
+			name: "Error: users query fails - 500",
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectQuery(expectedListActiveUsersMinimalSQL).WithArgs(false).WillReturnError(dbErr)
+			},
+			expected: expected{err: dbErr},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			store, pool := newTestStore(t)
+			testCase.setupMocks(mock{pool: pool})
+
+			result, err := store.ListActiveUsersMinimal(ctx, testCase.filters, testCase.sortItems)
 			switch {
 			case testCase.expected.err != nil || testCase.expected.errContains != "":
 				if testCase.expected.err != nil {

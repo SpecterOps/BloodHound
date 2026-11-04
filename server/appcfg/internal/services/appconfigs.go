@@ -21,11 +21,15 @@ package services
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
+	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
 
@@ -46,6 +50,35 @@ type Parameter struct {
 	DeletedAt sql.NullTime
 }
 
+func (s Service) ValidateValue(key ParameterKey, value types.JSONBObject) utils.Errors {
+	var (
+		objMap map[string]any
+		ok     bool
+	)
+	if objMap, ok = value.Object.(map[string]any); !ok || len(objMap) == 0 {
+		return utils.Errors{errors.New("missing or invalid property: value")}
+	}
+
+	// validate the specific parameter value
+	paramdef, ok := ParamTypeDefinitions[key]
+	if !ok {
+		return utils.Errors{errors.New("invalid key")}
+	}
+	paramTypeInstance := paramdef.GetType()
+	paramTypePointer := reflect.New(reflect.TypeOf(paramTypeInstance))
+
+	// numField panics when val is not a struct, so we need both checks
+	if val := paramTypePointer.Elem(); val.Kind() != reflect.Struct || val.NumField() != len(objMap) {
+		return utils.Errors{errors.New("value property contains an invalid field")}
+	} else if err := value.Map(paramTypePointer.Interface()); err != nil {
+		return utils.Errors{err}
+	} else if errs := validation.Validate(paramTypePointer.Interface()); errs != nil {
+		return errs
+	}
+
+	return nil
+}
+
 func (s Service) IsAPIAllowedKey(key ParameterKey) bool {
 	paramdef, ok := ParamTypeDefinitions[key]
 	return ok && paramdef.AllowAPIAccess
@@ -60,6 +93,10 @@ func (s Service) GetApplicationConfiguration(ctx context.Context, parameterKey P
 
 func (s Service) GetAllApplicationConfigurations(ctx context.Context) (Parameters, error) {
 	return s.db.GetAllConfigurationParameters(ctx)
+}
+
+func (s Service) UpsertApplicationConfiguration(ctx context.Context, parameterKey ParameterKey, value types.JSONBObject) error {
+	return s.db.UpsertConfigurationParameter(ctx, parameterKey, value)
 }
 
 type GetConfigError struct {

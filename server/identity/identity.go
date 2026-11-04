@@ -37,10 +37,8 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	routes.Register(routerInst, handlerSet)
 }
 
-// RegisterUserListAlias builds the identity store -> service -> handler chain and
-// registers the list-users endpoint at the provided path. It supports
-// enterprise backwards-compatibility aliases (e.g. /api/v2/bhe-users) without leaking
-// enterprise-specific paths into the shared identity route table.
+// RegisterUserListAlias registers the list-users endpoint at an enterprise
+// backwards-compatibility path (e.g. /api/v2/bhe-users).
 func RegisterUserListAlias(routerInst *router.Router, pool *pgxpool.Pool, path string) {
 	var (
 		store      = appdb.NewStore(pool)

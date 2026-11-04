@@ -35,10 +35,8 @@ describe('Button', () => {
 
         const button = screen.getByRole('button', { name: 'Primary' });
 
-        expect(button.classList.contains('text-common-white')).toBe(true);
-        expect(button.classList.contains('dark:text-common-dark')).toBe(true);
-        expect(button.classList.contains('active:bg-[#0D0A30]')).toBe(true);
-        expect(button.classList.contains('dark:active:bg-[#8D8BF8]')).toBe(true);
+        expect(button.classList.contains('text-[color:var(--button-primary-text)]')).toBe(true);
+        expect(button.classList.contains('active:bg-[color:var(--button-primary-active-fill)]')).toBe(true);
     });
 
     it('preserves the secondary variant colors and active state without default opacity', () => {
@@ -46,11 +44,9 @@ describe('Button', () => {
 
         const button = screen.getByRole('button', { name: 'Secondary' });
 
-        expect(button.classList.contains('text-common-dark')).toBe(true);
-        expect(button.classList.contains('dark:text-common-white')).toBe(true);
-        expect(button.classList.contains('active:bg-secondary-btn-active-fill')).toBe(true);
-        expect(button.classList.contains('active:text-common-dark')).toBe(true);
-        expect(button.classList.contains('dark:active:text-common-white')).toBe(true);
+        expect(button.classList.contains('text-[color:var(--button-secondary-text)]')).toBe(true);
+        expect(button.classList.contains('active:bg-[color:var(--button-secondary-active-fill)]')).toBe(true);
+        expect(button.classList.contains('active:text-[color:var(--button-secondary-text)]')).toBe(true);
         expect(button.classList.contains('disabled:opacity-50')).toBe(true);
         expect(button.classList.contains('opacity-50')).toBe(false);
     });

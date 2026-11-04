@@ -207,7 +207,6 @@ describe('IconButton', () => {
         expect(button.classList.contains('hover:text-primary')).toBe(true);
         expect(button.classList.contains('active:bg-transparent')).toBe(true);
         expect(button.classList.contains('bg-primary')).toBe(false);
-        expect(button.classList.contains('bg-secondary-btn-fill')).toBe(false);
         expect(button.classList.contains('shadow-outer-1')).toBe(false);
     });
 

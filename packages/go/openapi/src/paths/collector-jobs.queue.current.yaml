@@ -21,7 +21,7 @@ get:
   operationId: GetCurrentCollectorJob
   summary: Get the authenticated collector's current job
   tags:
-    - Collector Jobs
+    - Collector Jobs (Experimental)
     - Enterprise
   responses:
     200:
@@ -46,5 +46,7 @@ get:
       $ref: './../responses/forbidden.yaml'
     404:
       $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'

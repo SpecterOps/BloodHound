@@ -67,7 +67,6 @@ properties:
   unclaimed_ttl:
     type: string
     format: duration
-    nullable: true
   claim_ttl:
     type: string
     format: duration

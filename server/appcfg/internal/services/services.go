@@ -18,6 +18,8 @@ package services
 import (
 	"context"
 	"errors"
+
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 )
 
 var (
@@ -28,6 +30,7 @@ type Database interface {
 	GetDatapipeStatus(ctx context.Context) (DatapipeStatus, error)
 	GetConfigurationParameter(ctx context.Context, parameterKey ParameterKey) (Parameter, error)
 	GetAllConfigurationParameters(ctx context.Context) (Parameters, error)
+	UpsertConfigurationParameter(ctx context.Context, parameterKey ParameterKey, value types.JSONBObject) error
 }
 
 type Service struct {

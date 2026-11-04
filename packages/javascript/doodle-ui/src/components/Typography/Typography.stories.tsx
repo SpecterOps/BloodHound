@@ -75,7 +75,7 @@ export const Variants: Story = {
         <div className='w-[40rem] max-w-full space-y-6'>
             {(Object.keys(variantMapping) as Variant[]).map((variant) => (
                 <div className='grid grid-cols-[10rem_1fr] items-baseline gap-6' key={variant}>
-                    <Typography variant='caption' className='text-text-muted'>
+                    <Typography variant='caption' className='text-muted'>
                         {variant} · &lt;{variantMapping[variant]}&gt;
                     </Typography>
                     <Typography variant={variant}>The quick brown fox jumps over the lazy dog</Typography>

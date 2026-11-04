@@ -68,7 +68,6 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 	routerInst.GET(fmt.Sprintf("/api/v2/sso/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata)
 	// User management for all BloodHound users
 	routerInst.POST("/api/v2/bloodhound-users", managementResource.CreateUser).RequirePermissions(permissions.AuthManageUsers)
-	routerInst.GET("/api/v2/bloodhound-users-minimal", managementResource.ListActiveUsersMinimal).RequirePermissions(permissions.AuthReadUsersMinimal)
 	routerInst.GET(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), managementResource.GetUser).RequirePermissions(permissions.AuthManageUsers)
 	routerInst.PATCH(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), managementResource.UpdateUser).RequirePermissions(permissions.AuthManageUsers)
 	routerInst.DELETE(fmt.Sprintf("/api/v2/bloodhound-users/{%s}", api.URIPathVariableUserID), managementResource.DeleteUser).RequirePermissions(permissions.AuthManageUsers)
@@ -115,7 +114,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	// Audit API
 	routerInst.GET("/api/v2/audit", resources.ListAuditLogs).RequirePermissions(permissions.AuditLogRead)
 	// App Config API
-	routerInst.PUT("/api/v2/config", resources.SetApplicationConfiguration).RequirePermissions(permissions.AppWriteApplicationConfiguration)
 	routerInst.POST("/api/v2/clear-database", resources.HandleDatabaseWipe).RequirePermissions(permissions.WipeDB)
 	// Asset Groups API
 	routerInst.GET("/api/v2/asset-groups", resources.ListAssetGroups).RequirePermissions(permissions.GraphDBRead)

@@ -18,6 +18,7 @@ export * from './BasicObjectInfoFields';
 export * from './ContextMenu/AssetGroupMenuItemPrivilegeZonesEnabled';
 export { default as ContextMenuPrivilegeZonesEnabled } from './ContextMenu/ContextMenuPrivilegeZonesEnabled';
 export { default as CopyMenuItem } from './ContextMenu/CopyMenuItem';
+export { default as GraphContextMenu } from './ContextMenu/GraphContextMenu';
 export * from './ExploreSearch';
 export * from './fragments';
 export { default as GraphItemInformationPanel } from './GraphItemInformationPanel';

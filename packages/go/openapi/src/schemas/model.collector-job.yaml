@@ -26,6 +26,7 @@ required:
   - version
   - params
   - scope_client_id
+  - external_secret_key_id
   - secret_key_id
   - priority
   - status
@@ -65,6 +66,8 @@ properties:
     type: string
     format: uuid
     nullable: true
+  external_secret_key_id:
+    $ref: './null.string.response.yaml'
   secret_key_id:
     allOf:
       - $ref: './null.string.response.yaml'
