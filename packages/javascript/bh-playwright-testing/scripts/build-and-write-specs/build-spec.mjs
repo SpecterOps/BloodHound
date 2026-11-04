@@ -71,29 +71,33 @@ function makeRenamedSpecCall(parsedCodeChunk, parsed, name, visit) {
     }
 }
 
+// Returns a TypeScript transformation result containing syntax trees; the caller must dispose it after use.
 function makeTransformedSpec(parsedSpecFile, originUrl, fileName) {
     const transformedSpec = ts.transform(parsedSpecFile, [
         (context) => {
             const visit = (parsedCodeChunk) => {
                 const isBoilerplate = checkIsBoilerplate(parsedCodeChunk, parsedSpecFile);
 
+                // Omit recorded imports, test configuration, and HAR routing replaced by the generated spec.
                 if (isBoilerplate) {
-                    // do not pack boilerplate into new spec
                     return undefined;
                 }
 
                 const relativePageUrlNode = makeRelativePageUrlNode(parsedCodeChunk, parsedSpecFile, originUrl);
 
+                // Replace a matching navigation URL with a relative URL so replay can use a different host.
                 if (relativePageUrlNode !== undefined) {
                     return relativePageUrlNode;
                 }
 
                 const renamedSpecCall = makeRenamedSpecCall(parsedCodeChunk, parsedSpecFile, fileName, visit);
 
+                // Use the requested spec name and the recursively transformed test arguments.
                 if (renamedSpecCall !== undefined) {
                     return renamedSpecCall;
                 }
 
+                // Otherwise, preserve this chunk while applying the same checks to its children.
                 const transformedCodeChunk = ts.visitEachChild(parsedCodeChunk, visit, context);
 
                 return transformedCodeChunk;
