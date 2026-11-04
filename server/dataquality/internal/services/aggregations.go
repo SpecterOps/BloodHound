@@ -50,7 +50,7 @@ func (s *Service) ListAggregations(ctx context.Context, queryFilters params.Filt
 		if err != nil || filter.Operator != params.Equals || (filter.SetOperator != "" && filter.SetOperator != params.FilterAnd) {
 			return nil, 0, ErrInvalidQuery
 		}
-		if _, err := s.extensions.GetExtension(ctx, int32(extensionID)); errors.Is(err, opengraphschema.ErrExtensionNotFound) {
+		if _, err := s.openGraphSchema.GetExtension(ctx, int32(extensionID)); errors.Is(err, opengraphschema.ErrExtensionNotFound) {
 			return nil, 0, ErrExtensionNotFound
 		} else if err != nil {
 			return nil, 0, err

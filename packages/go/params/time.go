@@ -14,10 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// This file provides a storage-agnostic model for parsing and validating sort query parameters.
-// It intentionally carries no knowledge of how the resulting order is ultimately applied (SQL, graph,
-// etc.) so that it can be reused across the API without coupling to any particular persistence layer.
-
 package params
 
 import (

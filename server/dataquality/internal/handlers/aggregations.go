@@ -92,26 +92,26 @@ func (s AggregationsView) JSONView() ([]byte, error) { return json.Marshal(s) }
 
 func (s *Handlers) ListAggregations(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx                      = request.Context()
-		queryParams              = request.URL.Query()
-		bhCtx                    = bhctx.Get(ctx)
-		defaultEnd, defaultStart = params.DefaultTimeRange()
-		queryFilters             = make(params.Filters)
-		start, end               time.Time
-		rawKindID                string
-		kindID                   int64
-		err                      error
+		ctx                        = request.Context()
+		queryParams                = request.URL.Query()
+		bhCtx                      = bhctx.Get(ctx)
+		defaultEnd, defaultStart   = params.DefaultTimeRange()
+		queryFilters               = make(params.Filters)
+		start, end                 time.Time
+		rawSchemaEnvironmentKindID string
+		schemaEnvironmentKindID    int64
+		err                        error
 	)
-	if rawKindID = queryParams.Get(queryParamSchemaEnvironmentKindID); rawKindID == "" {
+	if rawSchemaEnvironmentKindID = queryParams.Get(queryParamSchemaEnvironmentKindID); rawSchemaEnvironmentKindID == "" {
 		responses.WriteError(ctx, http.StatusBadRequest, "missing required query parameter: schema_environment_kind_id", response)
 		return
 	}
-	if kindID, err = strconv.ParseInt(rawKindID, 10, 32); err != nil {
+	if schemaEnvironmentKindID, err = strconv.ParseInt(rawSchemaEnvironmentKindID, 10, 32); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "query parameter must be an integer: schema_environment_kind_id", response)
 		return
 	}
 
-	queryFilters[queryParamSchemaEnvironmentKindID] = []params.Filter{{Field: queryParamSchemaEnvironmentKindID, Operator: params.Equals, Value: strconv.FormatInt(kindID, 10)}}
+	queryFilters[queryParamSchemaEnvironmentKindID] = []params.Filter{{Field: queryParamSchemaEnvironmentKindID, Operator: params.Equals, Value: strconv.FormatInt(schemaEnvironmentKindID, 10)}}
 
 	if start, err = params.ParseTimeQueryParameter(queryParams, queryParamStart, defaultStart); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, fmt.Sprintf(errorInvalidRFC3339, queryParams[queryParamStart]), response)

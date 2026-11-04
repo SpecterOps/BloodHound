@@ -29,18 +29,18 @@ type Database interface {
 	ListAggregations(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems, skip, limit int) ([]Aggregation, int, error)
 }
 
-type Extensions interface {
+type OpenGraphSchema interface {
 	GetExtension(ctx context.Context, id int32) (opengraphschema.Extension, error)
 }
 
 type Service struct {
-	database   Database
-	extensions Extensions
+	database        Database
+	openGraphSchema OpenGraphSchema
 }
 
-func NewService(databaseInterface Database, extensions Extensions) *Service {
-	if databaseInterface == nil || extensions == nil {
-		panic("dataquality: service requires database and extensions")
+func NewService(databaseInterface Database, openGraphSchema OpenGraphSchema) *Service {
+	if databaseInterface == nil || openGraphSchema == nil {
+		panic("dataquality: service requires database and opengraph schema")
 	}
-	return &Service{database: databaseInterface, extensions: extensions}
+	return &Service{database: databaseInterface, openGraphSchema: openGraphSchema}
 }
