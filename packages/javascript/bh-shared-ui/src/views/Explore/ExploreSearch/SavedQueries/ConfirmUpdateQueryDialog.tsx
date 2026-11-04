@@ -34,7 +34,7 @@ const ConfirmUpdateQueryDialog: FC<{
     return (
         <Dialog open={open} modal={true} onOpenChange={(open) => !open && handleCancel()}>
             <DialogPortal>
-                <DialogOverlay className='z-[1500]' />
+                <DialogOverlay className='z-[1599]' />
                 <DialogContent className='z-[1600]'>
                     <DialogTitle className='px-0'>Update Query</DialogTitle>
                     <DialogDescription className='text-neutral-dark-5 dark:text-neutral-light-5'>
