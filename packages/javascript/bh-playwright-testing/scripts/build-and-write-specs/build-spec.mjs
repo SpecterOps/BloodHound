@@ -16,42 +16,46 @@
 
 import ts from 'typescript';
 
-function shouldRemoveBoilerplate(parsedCodeChunk, parsed) {
-    if (ts.isImportDeclaration(parsedCodeChunk)) return true;
-    if (
-        ts.isExpressionStatement(parsedCodeChunk) &&
-        ts.isCallExpression(parsedCodeChunk.expression) &&
-        parsedCodeChunk.expression.expression.getText(parsed) === 'test.use'
-    )
-        return true;
+function checkIsBoilerplate(parsedCodeChunk, parsed) {
+    const isImportDeclaration = ts.isImportDeclaration(parsedCodeChunk);
+    const isExpressionStatement = ts.isExpressionStatement(parsedCodeChunk);
+    const isCallExpression = isExpressionStatement && ts.isCallExpression(parsedCodeChunk.expression);
+    const isTestConfiguration =
+        isCallExpression && parsedCodeChunk.expression.expression.getText(parsed) === 'test.use';
+    const isAwaitExpression = isExpressionStatement && ts.isAwaitExpression(parsedCodeChunk.expression);
+    const isAwaitedCall = isAwaitExpression && ts.isCallExpression(parsedCodeChunk.expression.expression);
+    const isHarRoutingCall =
+        isAwaitedCall && parsedCodeChunk.expression.expression.expression.getText(parsed).endsWith('.routeFromHAR');
+
     return (
-        ts.isExpressionStatement(parsedCodeChunk) &&
-        ts.isAwaitExpression(parsedCodeChunk.expression) &&
-        ts.isCallExpression(parsedCodeChunk.expression.expression) &&
-        parsedCodeChunk.expression.expression.expression.getText(parsed).endsWith('.routeFromHAR')
+        isImportDeclaration ||
+        (isExpressionStatement && isCallExpression && isTestConfiguration) ||
+        (isExpressionStatement && isAwaitExpression && isAwaitedCall && isHarRoutingCall)
     );
 }
 
 function makeRelativePageUrlNode(parsedCodeChunk, parsed, origin) {
-    if (
-        ts.isStringLiteral(parsedCodeChunk) &&
-        parsedCodeChunk.text.startsWith(`${origin}/`) &&
-        ts.isCallExpression(parsedCodeChunk.parent) &&
-        parsedCodeChunk.parent.expression.getText(parsed).endsWith('.goto')
-    ) {
+    const isStringLiteral = ts.isStringLiteral(parsedCodeChunk);
+    const hasMatchingOrigin = isStringLiteral && parsedCodeChunk.text.startsWith(`${origin}/`);
+    const isCallArgument = hasMatchingOrigin && ts.isCallExpression(parsedCodeChunk.parent);
+    const isPageNavigation = isCallArgument && parsedCodeChunk.parent.expression.getText(parsed).endsWith('.goto');
+
+    if (isStringLiteral && hasMatchingOrigin && isCallArgument && isPageNavigation) {
         const relativeUrl = parsedCodeChunk.text.slice(origin.length);
-        return ts.factory.createStringLiteral(relativeUrl);
+        const relativePageUrlNode = ts.factory.createStringLiteral(relativeUrl);
+
+        return relativePageUrlNode;
     }
 }
 
 function makeRenamedSpecCall(parsedCodeChunk, parsed, name, visit) {
-    if (
-        ts.isCallExpression(parsedCodeChunk) &&
-        parsedCodeChunk.expression.getText(parsed) === 'test' &&
-        parsedCodeChunk.arguments[0] &&
-        ts.isStringLiteral(parsedCodeChunk.arguments[0])
-    ) {
-        return ts.factory.updateCallExpression(
+    const isCallExpression = ts.isCallExpression(parsedCodeChunk);
+    const isTestCall = isCallExpression && parsedCodeChunk.expression.getText(parsed) === 'test';
+    const hasFirstArgument = isTestCall && parsedCodeChunk.arguments[0] !== undefined;
+    const hasStringName = hasFirstArgument && ts.isStringLiteral(parsedCodeChunk.arguments[0]);
+
+    if (isCallExpression && isTestCall && hasFirstArgument && hasStringName) {
+        const renamedSpecCall = ts.factory.updateCallExpression(
             parsedCodeChunk,
             parsedCodeChunk.expression,
             parsedCodeChunk.typeArguments,
@@ -60,6 +64,8 @@ function makeRenamedSpecCall(parsedCodeChunk, parsed, name, visit) {
                 ...parsedCodeChunk.arguments.slice(1).map((argument) => ts.visitNode(argument, visit)),
             ]
         );
+
+        return renamedSpecCall;
     }
 }
 
@@ -67,12 +73,28 @@ function makeTransformedSpec(parsedSpecFile, originUrl, fileName) {
     const transformedSpec = ts.transform(parsedSpecFile, [
         (context) => {
             const visit = (parsedCodeChunk) => {
-                if (shouldRemoveBoilerplate(parsedCodeChunk, parsedSpecFile)) return undefined;
-                return (
-                    makeRelativePageUrlNode(parsedCodeChunk, parsedSpecFile, originUrl) ??
-                    makeRenamedSpecCall(parsedCodeChunk, parsedSpecFile, fileName, visit) ??
-                    ts.visitEachChild(parsedCodeChunk, visit, context)
-                );
+                const isBoilerplate = checkIsBoilerplate(parsedCodeChunk, parsedSpecFile);
+
+                if (isBoilerplate) {
+                    // do not pack boilerplate into new spec
+                    return undefined;
+                }
+
+                const relativePageUrlNode = makeRelativePageUrlNode(parsedCodeChunk, parsedSpecFile, originUrl);
+
+                if (relativePageUrlNode !== undefined) {
+                    return relativePageUrlNode;
+                }
+
+                const renamedSpecCall = makeRenamedSpecCall(parsedCodeChunk, parsedSpecFile, fileName, visit);
+
+                if (renamedSpecCall !== undefined) {
+                    return renamedSpecCall;
+                }
+
+                const transformedCodeChunk = ts.visitEachChild(parsedCodeChunk, visit, context);
+
+                return transformedCodeChunk;
             };
             return (parsedCodeChunk) => ts.visitNode(parsedCodeChunk, visit);
         },
