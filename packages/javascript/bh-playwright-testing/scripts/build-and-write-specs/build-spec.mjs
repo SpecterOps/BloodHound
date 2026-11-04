@@ -49,7 +49,7 @@ function makeRelativePageUrlNode(parsedCodeChunk, parsed, origin) {
     }
 }
 
-function makeRenamedSpecCall(parsedCodeChunk, parsed, name, visit) {
+function makeRenamedSpecCall(parsedCodeChunk, parsed, name, transformCodeChunk) {
     const isCallExpression = ts.isCallExpression(parsedCodeChunk);
     const isTestCall = isCallExpression && parsedCodeChunk.expression.getText(parsed) === 'test';
     const hasFirstArgument = isTestCall && parsedCodeChunk.arguments[0] !== undefined;
@@ -63,7 +63,7 @@ function makeRenamedSpecCall(parsedCodeChunk, parsed, name, visit) {
             parsedCodeChunk.typeArguments,
             [
                 ts.factory.createStringLiteral(name),
-                ...parsedCodeChunk.arguments.slice(1).map((argument) => ts.visitNode(argument, visit)),
+                ...parsedCodeChunk.arguments.slice(1).map((argument) => ts.visitNode(argument, transformCodeChunk)),
             ]
         );
 
@@ -73,38 +73,49 @@ function makeRenamedSpecCall(parsedCodeChunk, parsed, name, visit) {
 
 // Returns a TypeScript transformation result containing syntax trees; the caller must dispose it after use.
 function makeTransformedSpec(parsedSpecFile, originUrl, fileName) {
-    const transformedSpec = ts.transform(parsedSpecFile, [
-        (context) => {
-            const visit = (parsedCodeChunk) => {
-                const isBoilerplate = checkIsBoilerplate(parsedCodeChunk, parsedSpecFile);
+    const makeTransformer = (context) => (parsedCodeChunk) => {
+        const isBoilerplate = checkIsBoilerplate(parsedCodeChunk, parsedSpecFile);
 
-                // Omit recorded imports, test configuration, and HAR routing replaced by the generated spec.
-                if (isBoilerplate) {
-                    return undefined;
-                }
+        // Omit recorded imports, test configuration, and HAR routing replaced by the generated spec.
+        if (isBoilerplate) {
+            return undefined;
+        }
 
-                const relativePageUrlNode = makeRelativePageUrlNode(parsedCodeChunk, parsedSpecFile, originUrl);
+        const relativePageUrlNode = makeRelativePageUrlNode(parsedCodeChunk, parsedSpecFile, originUrl);
 
-                // Replace a matching navigation URL with a relative URL so replay can use a different host.
-                if (relativePageUrlNode !== undefined) {
-                    return relativePageUrlNode;
-                }
+        // Replace a matching navigation URL with a relative URL so replay can use a different host.
+        if (relativePageUrlNode !== undefined) {
+            return relativePageUrlNode;
+        }
 
-                const renamedSpecCall = makeRenamedSpecCall(parsedCodeChunk, parsedSpecFile, fileName, visit);
+        const transformCodeChunkWithContext = makeTransformer(context);
 
-                // Use the requested spec name and the recursively transformed test arguments.
-                if (renamedSpecCall !== undefined) {
-                    return renamedSpecCall;
-                }
+        const renamedSpecCall = makeRenamedSpecCall(
+            parsedCodeChunk,
+            parsedSpecFile,
+            fileName,
+            transformCodeChunkWithContext
+        );
 
-                // Otherwise, preserve this chunk while applying the same checks to its children.
-                const transformedCodeChunk = ts.visitEachChild(parsedCodeChunk, visit, context);
+        // Use the requested spec name and the recursively transformed test arguments.
+        if (renamedSpecCall !== undefined) {
+            return renamedSpecCall;
+        }
 
-                return transformedCodeChunk;
-            };
-            return (parsedCodeChunk) => ts.visitNode(parsedCodeChunk, visit);
-        },
-    ]);
+        // Otherwise, preserve this chunk while applying the same checks to its children.
+        const transformedCodeChunk = ts.visitEachChild(parsedCodeChunk, transformCodeChunkWithContext, context);
+
+        return transformedCodeChunk;
+    };
+
+    const transformerFactory = (context) => {
+        const transformCodeChunk = makeTransformer(context);
+
+        return (parsedCodeChunk) => ts.visitNode(parsedCodeChunk, transformCodeChunk);
+    };
+
+    const transformerFactoryArray = [transformerFactory];
+    const transformedSpec = ts.transform(parsedSpecFile, transformerFactoryArray);
 
     return transformedSpec;
 }
