@@ -79,7 +79,11 @@ type Edge struct {
 // of the nodes as the local identifier and then maps them to database IDs,
 // meaning that the `ID` given in the Graph will not be preserved.
 func WriteGraphToDatabase(db graph.Database, g *Graph) error {
-	var nodeMap = make(map[string]graph.ID)
+	var (
+		nodeMap        = make(map[string]graph.ID)
+		adNodeKinds    = ad.NodeKinds()
+		azureNodeKinds = azure.NodeKinds()
+	)
 	if err := db.WriteTransaction(context.Background(), func(tx graph.Transaction) error {
 
 		//#region Write nodes
@@ -93,13 +97,17 @@ func WriteGraphToDatabase(db graph.Database, g *Graph) error {
 
 			// Determine node kinds and add Base and AZBase
 			nodeKinds := graph.StringsToKinds(node.Labels)
-			isAD := slices.ContainsFunc(nodeKinds, func(k graph.Kind) bool { return slices.Contains(ad.NodeKinds(), k) })
-			isAzure := slices.ContainsFunc(nodeKinds, func(k graph.Kind) bool { return slices.Contains(azure.NodeKinds(), k) })
+			isAD := slices.ContainsFunc(nodeKinds, func(kind graph.Kind) bool {
+				return slices.Contains(adNodeKinds, kind)
+			})
+			isAzure := slices.ContainsFunc(nodeKinds, func(kind graph.Kind) bool {
+				return slices.Contains(azureNodeKinds, kind)
+			})
 			if isAD {
-				nodeKinds = append(nodeKinds, ad.Entity)
+				nodeKinds = nodeKinds.Add(ad.Entity)
 			}
 			if isAzure {
-				nodeKinds = append(nodeKinds, azure.Entity)
+				nodeKinds = nodeKinds.Add(azure.Entity)
 			}
 
 			if dbNode, err := tx.CreateNode(props, nodeKinds...); err != nil {

@@ -57,7 +57,7 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database) (*post.AtomicP
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostTrustedForNTAuth", db, trustedForNTAuthTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	for _, node := range ntAuthStoreNodes {
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -93,11 +93,11 @@ func PostTrustedForNTAuth(ctx context.Context, db graph.Database) (*post.AtomicP
 			}
 			return nil
 		}); err != nil {
-			return sink.Stats(), err
+			return sink.Stats(), errors.Join(err, sink.Abort())
 		}
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 var issuedSignedByPostProcessedEdges = graph.Kinds{
@@ -117,7 +117,7 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostIssuedSignedBy", db, issuedSignedByTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, node := range slices.Concat(enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities) {
@@ -136,10 +136,10 @@ func PostIssuedSignedBy(ctx context.Context, db graph.Database, enterpriseCertAu
 
 		return nil
 	}); err != nil {
-		return sink.Stats(), err
+		return sink.Stats(), errors.Join(err, sink.Abort())
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 var enterpriseCAForPostProcessedEdges = graph.Kinds{
@@ -159,7 +159,7 @@ func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertA
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostEnterpriseCAFor", db, enterpriseCAForTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, ecaNode := range enterpriseCertAuthorities {
@@ -199,10 +199,10 @@ func PostEnterpriseCAFor(ctx context.Context, db graph.Database, enterpriseCertA
 		}
 		return nil
 	}); err != nil {
-		return sink.Stats(), err
+		return sink.Stats(), errors.Join(err, sink.Abort())
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 func PostGoldenCert(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, certChains *EnterpriseCAChainedDomains) error {
@@ -334,7 +334,7 @@ func PostExtendedByPolicyBinding(ctx context.Context, db graph.Database, certTem
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostExtendedByPolicyBinding", db, extendedByPolicyTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if allIssuancePolicies, err := fetchAllIssuancePolicies(tx); err != nil {
@@ -373,10 +373,10 @@ func PostExtendedByPolicyBinding(ctx context.Context, db graph.Database, certTem
 			return nil
 		}
 	}); err != nil {
-		return sink.Stats(), err
+		return sink.Stats(), errors.Join(err, sink.Abort())
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 func fetchAllIssuancePolicies(tx graph.Transaction) (graph.NodeSet, error) {
