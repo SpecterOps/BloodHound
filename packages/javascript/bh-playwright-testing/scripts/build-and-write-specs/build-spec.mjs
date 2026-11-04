@@ -63,8 +63,8 @@ function rewriteSpecName(parsedCodeChunk, parsed, name, visit) {
     }
 }
 
-function transformSpecFile(parsedSpecFile, originUrl, fileName) {
-    const transformed = ts.transform(parsedSpecFile, [
+function transformSpecSyntaxTree(parsedSpecFile, originUrl, fileName) {
+    const specTransformation = ts.transform(parsedSpecFile, [
         (context) => {
             const visit = (parsedCodeChunk) => {
                 if (shouldRemoveBoilerplate(parsedCodeChunk, parsedSpecFile)) return undefined;
@@ -77,19 +77,42 @@ function transformSpecFile(parsedSpecFile, originUrl, fileName) {
             return (parsedCodeChunk) => ts.visitNode(parsedCodeChunk, visit);
         },
     ]);
-    const actions = ts.createPrinter().printFile(transformed.transformed[0]);
-    transformed.dispose();
-    return actions;
+
+    return specTransformation;
 }
 
-export function makeMockedSpec(source, name, baseUrl, licenseHeader) {
-    const parsed = ts.createSourceFile('browserActions.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+function printSpecString(specSyntaxTree) {
+    const specPrinter = ts.createPrinter();
+    const specString = specPrinter.printFile(specSyntaxTree);
+
+    return specString;
+}
+
+export function makeMockedSpecString(source, name, baseUrl, licenseHeader) {
+    const parsedSpecSyntaxTree = ts.createSourceFile(
+        'browserActions.ts',
+        source,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TS
+    );
     const origin = new URL(baseUrl).origin;
-    const actions = transformSpecFile(parsed, origin, name);
-    return `${licenseHeader}
-import { test, expect } from 'bh-playwright-testing/har';
+    const specTransformation = transformSpecSyntaxTree(parsedSpecSyntaxTree, origin, name);
 
-test.use({ replayHar: new URL('./${name}.har', import.meta.url) });
+    try {
+        const transformedSpecSyntaxTree = specTransformation.transformed[0];
+        const specActionsString = printSpecString(transformedSpecSyntaxTree);
+        const mockedSpecString = [
+            licenseHeader,
+            "import { test, expect } from 'bh-playwright-testing/har';",
+            '',
+            `test.use({ replayHar: new URL('./${name}.har', import.meta.url) });`,
+            '',
+            specActionsString,
+        ].join('\n');
 
-${actions}`;
+        return mockedSpecString;
+    } finally {
+        specTransformation.dispose();
+    }
 }

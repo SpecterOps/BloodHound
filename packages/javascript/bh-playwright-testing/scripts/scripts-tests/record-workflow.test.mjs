@@ -21,7 +21,7 @@ import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import test from 'node:test';
-import { makeMockedSpec } from '../build-and-write-specs/build-spec.mjs';
+import { makeMockedSpecString } from '../build-and-write-specs/build-spec.mjs';
 import { buildAndWriteSpec, writeSpec } from '../build-and-write-specs/write-spec.mjs';
 import { sanitizeHar } from '../transform-and-write-hars/sanitize-har.mjs';
 import {
@@ -174,7 +174,7 @@ async function createReplayFixture() {
     const server = await startTestServer();
     const capture = sampleCapture();
     await writeFile(path.join(directory, 'example.har'), JSON.stringify(capture));
-    const generated = makeMockedSpec(recordingSessionSource, 'example', 'http://old-host:3000', '// Generated');
+    const generated = makeMockedSpecString(recordingSessionSource, 'example', 'http://old-host:3000', '// Generated');
     assert.ok(!generated.includes('private-auth.json'));
     assert.ok(!generated.includes('/private/temporary/capture.har'));
     await writeFile(path.join(directory, 'example.spec.ts'), generated);
