@@ -1,9 +1,9 @@
 # Create a spec with HAR mocks
 
--   Run commands from the repository root.
+-   Run commands from the repository root. For first-time setup, install dependencies (`yarn install`) and Playwright browsers (`yarn playwright:install`).
 -   Start a backend with data for your feature.
--   Set `A11Y_TEST_USERNAME` and `A11Y_TEST_PASSWORD` in `cmd/ui/.env`.
--   Record your spec:
+-   Set `A11Y_TEST_URL`, `A11Y_TEST_USERNAME`, and `A11Y_TEST_PASSWORD` in `cmd/ui/.env` (use `.env.example` as a starting point).
+-   Record your spec (replace the name and route). Codegen logs in automatically; a separate `test:a11y` run is unnecessary:
 
 ```sh
 A11Y_TEST_SERVE=true yarn codegen my-feature --url '/ui/your-feature'
@@ -21,10 +21,11 @@ cmd/ui/tests/e2e/my-feature.har
 -   Run it again:
 
 ```sh
-A11Y_TEST_SERVE=true yarn test:e2e tests/e2e/my-feature.spec.ts
+yarn test:e2e tests/e2e/my-feature.spec.ts
 ```
 
--   Replay needs a UI server; it does not need a backend or login.
+-   These examples use a local UI. `A11Y_TEST_SERVE=true` starts its server if needed; the `test:e2e` scripts already enable it.
+-   HAR replay needs the UI and captured API responses; it does not need a backend or login.
 -   To edit the generated test, keep its HAR reference:
 
 ```ts
@@ -52,5 +53,6 @@ A11Y_TEST_SERVE=true yarn test:e2e:update-mocks my-feature
 yarn test:e2e:update-failing-mocks
 ```
 
--   The command logs in, runs existing specs against the live backend, and replaces their HARs after passing specs. It never runs codegen or changes specs.
+-   Each updater logs in and replaces a spec's HAR only after that spec passes against the live backend. Neither updater runs codegen or changes specs.
+-   `update-failing-mocks` first replays the suite, updates only failing specs, then replays those specs again. The single-spec updater captures live responses without a separate replay afterward; use `yarn test:e2e tests/e2e/my-feature.spec.ts` to verify replay.
 -   Review captured data before committing. Delete a spec and its HAR together when removing a flow.

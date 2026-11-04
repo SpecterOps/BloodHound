@@ -13,7 +13,7 @@ Shared Playwright testing utilities for BloodHound UI workspaces.
 
 The package intentionally does **not** own:
 
--   Playwright configs (browsers, projects, reporters, web server).
+-   App-specific accessibility configs (browsers, projects, reporters, web server). The HAR workflow supplies a shared e2e config.
 -   The pages, routes, or DOM subtrees that get scanned or asserted against.
 -   App-specific environment variables (e.g. `*_TEST_URL`, credentials).
 -   Suite-specific orchestration (which selectors to wait on, which routes to scope).
