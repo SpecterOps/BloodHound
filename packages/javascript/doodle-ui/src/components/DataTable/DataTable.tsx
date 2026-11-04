@@ -54,11 +54,9 @@ import {
     dataTableCellClasses,
     dataTableClasses,
     dataTableClickableRowClasses,
-    dataTableEvenRowClasses,
     dataTableHeadClasses,
     dataTableHeaderClasses,
     dataTableHeaderRowClasses,
-    dataTableOddRowClasses,
     dataTableRowClasses,
     dataTableSelectedRowClasses,
     dataTableWrapperClasses,
@@ -612,8 +610,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                             className={cn(
                                                 dataTableRowClasses,
                                                 {
-                                                    [dataTableEvenRowClasses]: virtualRow.index % 2 === 0,
-                                                    [dataTableOddRowClasses]: virtualRow.index % 2 !== 0,
                                                     // Border is tricky on <tr> https://github.com/TanStack/virtual/issues/620
                                                     [dataTableSelectedRowClasses]: row.getIsSelected(),
                                                     'cursor-pointer': onRowClick,

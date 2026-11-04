@@ -20,9 +20,7 @@ export const dataTableClasses = 'after:block after:h-[var(--prevent-vanishing-st
 export const dataTableHeaderClasses = '[&_tr]:border-0';
 export const dataTableHeaderRowClasses = 'border-0';
 export const dataTableHeadClasses = 'bg-neutral-2 text-main text-nowrap group relative z-10 overflow-x-clip';
-export const dataTableRowClasses = 'hover:bg-[color:var(--data-table-row-hover-fill)]';
-export const dataTableEvenRowClasses = 'bg-[color:var(--data-table-row-even-fill)]';
-export const dataTableOddRowClasses = 'bg-[color:var(--data-table-row-odd-fill)]';
+export const dataTableRowClasses = 'bg-neutral-1 hover:bg-[color:var(--data-table-row-hover-fill)]';
 export const dataTableSelectedRowClasses = 'shadow-[shadow:var(--data-table-row-selected)]';
 export const dataTableClickableRowClasses =
     'focus:outline-none focus-visible:focus-ring focus-visible:bg-[color:var(--data-table-row-hover-fill)]';

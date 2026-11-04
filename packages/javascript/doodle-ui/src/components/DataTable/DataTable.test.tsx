@@ -43,7 +43,7 @@ const columns: ColumnDef<Person>[] = [
 ];
 
 describe('DataTable', () => {
-    it('uses themed styling for the table surface, header, and rows', () => {
+    it('uses outlined canvas styling for the table surface, header, and rows', () => {
         const { container } = render(<DataTable columns={columns} data={[{ name: 'Ada Lovelace' }]} />);
 
         expect(container.firstChild).toHaveClass(
@@ -57,8 +57,13 @@ describe('DataTable', () => {
         expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveClass('bg-neutral-2');
 
         expect(screen.getByRole('row', { name: 'Ada Lovelace' })).toHaveClass(
-            'bg-[color:var(--data-table-row-even-fill)]',
+            'bg-neutral-1',
             'hover:bg-[color:var(--data-table-row-hover-fill)]'
+        );
+
+        expect(screen.getByRole('row', { name: 'Ada Lovelace' })).not.toHaveClass(
+            'bg-[color:var(--data-table-row-even-fill)]',
+            'bg-[color:var(--data-table-row-odd-fill)]'
         );
     });
 });
