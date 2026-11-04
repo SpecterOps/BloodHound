@@ -1,0 +1,80 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+get:
+  summary: Inventory all API-key metadata without credential secrets
+  description: Requires an authenticated user with the ManageUsers permission.
+    Includes user and collection-client keys, including service-managed keys and
+    keys with missing or deleted owners. Credential secrets are never returned.
+    Empty eligibility_reasons means no known authentication blocker, not proof
+    that a key works. Last access is initialized at creation and may not
+    indicate actual use.
+  parameters:
+    - in: query
+      name: skip
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    - in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+  responses:
+    "200":
+      description: Secret-free paginated inventory ordered by creation descending and ID
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+              - count
+              - skip
+              - limit
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: ./../schemas/model.admin-api-key.yaml
+              count:
+                type: integer
+              skip:
+                type: integer
+              limit:
+                type: integer
+      headers:
+        Cache-Control:
+          description: Prevents storage of the inventory response.
+          schema:
+            type: string
+            enum:
+              - no-store
+    "400":
+      $ref: ./../responses/bad-request.yaml
+    "401":
+      $ref: ./../responses/unauthorized.yaml
+    "403":
+      $ref: ./../responses/forbidden.yaml
+    "500":
+      $ref: ./../responses/internal-server-error.yaml
+  operationId: ListAdminAPIKeys
+  tags:
+    - API Tokens
+    - Enterprise

@@ -1,0 +1,48 @@
+# Copyright 2024 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+delete:
+  summary: Revoke a token and atomically record its audit event
+  description: Requires an authenticated user with both the ManageUsers and
+    CreateToken permissions. Missing ownership does not prevent revocation.
+    Service-managed OpenHound credentials remain protected. Deletion and the
+    database success audit commit atomically. After commit, new signed
+    authentication attempts using the credential fail; requests already
+    authenticated may complete.
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "204":
+      description: Token removed; no response body
+    "400":
+      $ref: ./../responses/bad-request.yaml
+    "401":
+      $ref: ./../responses/unauthorized.yaml
+    "403":
+      $ref: ./../responses/forbidden.yaml
+    "404":
+      $ref: ./../responses/not-found.yaml
+    "500":
+      $ref: ./../responses/internal-server-error.yaml
+  operationId: RevokeAdminAPIKey
+  tags:
+    - API Tokens
+    - Enterprise

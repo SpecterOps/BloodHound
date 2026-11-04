@@ -249,6 +249,10 @@ paths:
     $ref: './paths/roles.roles.id.yaml'
 
   # api tokens
+  /api/v2/admin/api-keys:
+    $ref: './paths/admin.api-keys.yaml'
+  /api/v2/admin/api-keys/{id}:
+    $ref: './paths/admin.api-keys.id.yaml'
   /api/v2/tokens:
     $ref: './paths/tokens.tokens.yaml'
   /api/v2/tokens/{token_id}:
