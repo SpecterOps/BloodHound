@@ -17,14 +17,14 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { BrowserContext, TestInfo } from '@playwright/test';
-import { rebaseHarUrls } from './rebase-har-urls';
+import { makeRebasedHar } from './rebase-har-urls';
 
 async function writeReplayHar(baseUrl: string, replayHar: URL, replayPath: string) {
     // Rebase recorded API URLs so the fixture also works on another developer's port/host.
     const harSource = await readFile(replayHar, 'utf8');
     const har = JSON.parse(harSource);
 
-    const rebasedHar = rebaseHarUrls(har, baseUrl);
+    const rebasedHar = makeRebasedHar(har, baseUrl);
     const replaySource = JSON.stringify(rebasedHar);
 
     await writeFile(replayPath, replaySource);

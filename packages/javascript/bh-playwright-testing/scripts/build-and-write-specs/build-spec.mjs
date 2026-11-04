@@ -32,7 +32,7 @@ function shouldRemoveBoilerplate(parsedCodeChunk, parsed) {
     );
 }
 
-function rewritePageUrl(parsedCodeChunk, parsed, origin) {
+function makeRelativePageUrlNode(parsedCodeChunk, parsed, origin) {
     if (
         ts.isStringLiteral(parsedCodeChunk) &&
         parsedCodeChunk.text.startsWith(`${origin}/`) &&
@@ -44,7 +44,7 @@ function rewritePageUrl(parsedCodeChunk, parsed, origin) {
     }
 }
 
-function rewriteSpecName(parsedCodeChunk, parsed, name, visit) {
+function makeRenamedSpecCall(parsedCodeChunk, parsed, name, visit) {
     if (
         ts.isCallExpression(parsedCodeChunk) &&
         parsedCodeChunk.expression.getText(parsed) === 'test' &&
@@ -69,8 +69,8 @@ function transformSpecSyntaxTree(parsedSpecFile, originUrl, fileName) {
             const visit = (parsedCodeChunk) => {
                 if (shouldRemoveBoilerplate(parsedCodeChunk, parsedSpecFile)) return undefined;
                 return (
-                    rewritePageUrl(parsedCodeChunk, parsedSpecFile, originUrl) ??
-                    rewriteSpecName(parsedCodeChunk, parsedSpecFile, fileName, visit) ??
+                    makeRelativePageUrlNode(parsedCodeChunk, parsedSpecFile, originUrl) ??
+                    makeRenamedSpecCall(parsedCodeChunk, parsedSpecFile, fileName, visit) ??
                     ts.visitEachChild(parsedCodeChunk, visit, context)
                 );
             };
@@ -81,7 +81,7 @@ function transformSpecSyntaxTree(parsedSpecFile, originUrl, fileName) {
     return specTransformation;
 }
 
-function printSpecString(specSyntaxTree) {
+function makeSpecString(specSyntaxTree) {
     const specPrinter = ts.createPrinter();
     const specString = specPrinter.printFile(specSyntaxTree);
 
@@ -101,7 +101,7 @@ export function makeMockedSpecString(source, name, baseUrl, licenseHeader) {
 
     try {
         const transformedSpecSyntaxTree = specTransformation.transformed[0];
-        const specActionsString = printSpecString(transformedSpecSyntaxTree);
+        const specActionsString = makeSpecString(transformedSpecSyntaxTree);
         const mockedSpecString = [
             licenseHeader,
             "import { test, expect } from 'bh-playwright-testing/har';",

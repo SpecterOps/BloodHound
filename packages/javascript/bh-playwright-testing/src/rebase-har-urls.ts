@@ -20,7 +20,7 @@ type HarDocument = {
     };
 };
 
-export function rebaseHarUrls<Document extends HarDocument>(har: Document, baseUrl: string): Document {
+export function makeRebasedHar<Document extends HarDocument>(har: Document, baseUrl: string): Document {
     const rebasedHar = structuredClone(har);
 
     for (const entry of rebasedHar.log.entries) {

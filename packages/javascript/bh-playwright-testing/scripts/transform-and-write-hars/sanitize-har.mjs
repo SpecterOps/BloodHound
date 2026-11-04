@@ -27,7 +27,7 @@ function extractSessionTokens(storageState) {
     );
 }
 
-function stripCredentials(entry) {
+function makeSanitizedHarEntry(entry) {
     const sanitizedEntry = structuredClone(entry);
     const requestHeaders = (entry.request.headers ?? []).map((header) =>
         /^authorization$/i.test(header.name) ? { ...header, value: 'Bearer playwright-mock-session' } : header
@@ -45,7 +45,7 @@ function stripCredentials(entry) {
     return sanitizedEntry;
 }
 
-function replaceSessionTokens(source, sessionTokens) {
+function makeRedactedHarString(source, sessionTokens) {
     let sanitizedSource = source;
 
     for (const token of sessionTokens) {
@@ -56,11 +56,11 @@ function replaceSessionTokens(source, sessionTokens) {
 }
 
 export function sanitizeHar(har, storageState) {
-    const sanitizedEntries = har.log.entries.map(stripCredentials);
+    const sanitizedEntries = har.log.entries.map(makeSanitizedHarEntry);
     const sanitizedHar = { ...har, log: { ...har.log, entries: sanitizedEntries } };
     const sessionTokens = extractSessionTokens(storageState);
     const harSource = JSON.stringify(sanitizedHar);
-    const sanitizedSource = replaceSessionTokens(harSource, sessionTokens);
+    const sanitizedSource = makeRedactedHarString(harSource, sessionTokens);
     const sanitizedDocument = JSON.parse(sanitizedSource);
 
     return sanitizedDocument;
