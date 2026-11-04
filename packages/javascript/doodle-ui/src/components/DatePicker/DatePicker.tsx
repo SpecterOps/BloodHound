@@ -66,7 +66,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                 <PopoverContent
                     align='end'
                     alignOffset={-7}
-                    className='w-auto p-3 border border-[color:var(--date-picker-content-border)] z-[1503]'>
+                    className='w-auto p-3 border border-[color:var(--date-picker-content-border)] z-[1500]'>
                     <Calendar classNames={{ day_selected: 'bg-primary text-neutral-light-1' }} {...calendarProps} />
                 </PopoverContent>
             </Popover>

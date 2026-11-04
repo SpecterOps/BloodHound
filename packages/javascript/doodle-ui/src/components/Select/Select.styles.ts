@@ -61,8 +61,7 @@ export const selectIconClasses = 'h-3 w-3';
 export const selectScrollButtonClasses = 'flex cursor-default items-center justify-center py-1';
 
 export const selectContentClasses = [
-    // Above dialog content (1502).
-    'relative z-[1503] max-h-96 overflow-hidden rounded-lg border',
+    'relative z-[1500] max-h-96 overflow-hidden rounded-lg border',
     'border-[color:var(--select-content-border)] bg-[color:var(--select-content-fill)] text-main shadow-outer-2',
     'data-[state=open]:animate-in data-[state=closed]:animate-out',
     'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
