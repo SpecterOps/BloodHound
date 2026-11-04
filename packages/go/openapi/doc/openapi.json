@@ -1347,7 +1347,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are `user_id`, `client_id`, `name`, `last_access`, `created_at`, `updated_at`, `deleted_at`.\n",
+            "description": "Sortable columns are `name`, `last_access`, `created_at`, `updated_at`, `expires_at`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -1361,10 +1361,17 @@
             }
           },
           {
-            "name": "key",
+            "name": "created_by",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
+            }
+          },
+          {
+            "name": "expires_at",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
             }
           },
           {
@@ -1393,9 +1400,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
