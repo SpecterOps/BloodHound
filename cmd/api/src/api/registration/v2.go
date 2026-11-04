@@ -44,7 +44,6 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 
 	// Login resources
 	routerInst.GET("/api/v2/self", managementResource.GetSelf)
-	routerInst.POST("/api/v2/logout", loginResource.Logout)
 	// Login path prefix matcher for SAML providers, order matters here due to PathPrefix
 	routerInst.POST(fmt.Sprintf("/api/{version}/login/saml/{%s}/acs", api.URIPathVariableSSOProviderSlug), managementResource.SAMLCallbackRedirect)
 	routerInst.GET(fmt.Sprintf("/api/{version}/login/saml/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata)
