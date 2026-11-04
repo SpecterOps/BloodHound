@@ -15,10 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import animate from 'tailwindcss-animate';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 export default {
     theme: {
         fontFamily: {
+            mono: defaultTheme.fontFamily.mono,
             sans: ['Figtree', '"Segoe UI"', 'Helvetica', 'Arial', 'sans-serif'],
             heading: ['"Nunito Sans"', '"Avenir Next"', '"Segoe UI"', 'Helvetica', 'Arial', 'sans-serif'],
         },

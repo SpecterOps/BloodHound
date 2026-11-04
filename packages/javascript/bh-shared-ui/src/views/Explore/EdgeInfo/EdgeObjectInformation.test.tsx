@@ -51,12 +51,12 @@ describe('EdgeObjectInformation', () => {
         expect(await screen.findByText(/source_node/)).toBeInTheDocument();
 
         //Display the information obtained from the relationship endpoint for all edge properties
-        expect(screen.getByText(/Source Node:/)).toBeInTheDocument();
+        expect(screen.getByText(/Source Node/)).toBeInTheDocument();
         expect(screen.getByText(/source_node/)).toBeInTheDocument();
-        expect(screen.getByText(/Target Node:/)).toBeInTheDocument();
+        expect(screen.getByText(/Target Node/)).toBeInTheDocument();
         expect(screen.getByText(/target_node/)).toBeInTheDocument();
-        expect(screen.getByText(/Is ACL:/)).toBeInTheDocument();
+        expect(screen.getByText(/Is ACL/)).toBeInTheDocument();
         expect(screen.getByText(/FALSE/)).toBeInTheDocument();
-        expect(screen.getByText(/Last Seen by BloodHound:/)).toBeInTheDocument();
+        expect(screen.getByText(/Last Seen by BloodHound/)).toBeInTheDocument();
     });
 });
