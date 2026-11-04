@@ -1297,9 +1297,9 @@ func TestStore_ListAuthTokens(t *testing.T) {
 		},
 		{
 			name:       "Error: filter operator is unsupported",
-			filters:    params.Filters{"name": {{Field: "name", Operator: params.ApproximatelyEquals, Value: "token"}}},
+			filters:    params.Filters{"name": {{Field: "name", Operator: params.FilterOperator("invalid"), Value: "token"}}},
 			setupMocks: func(mock) {},
-			expected:   expected{errContains: `auth token filter uses unsupported operator "~eq"`},
+			expected:   expected{errContains: `auth token filter uses unsupported operator "invalid"`},
 		},
 		{
 			name: "Error: auth token row cannot be scanned",
