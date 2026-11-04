@@ -219,7 +219,7 @@ const MultiSelect = ({
     const handleOpenChange = (shouldOpen: boolean) => {
         setOpen(shouldOpen);
 
-        if (!shouldOpen) {
+        if (!shouldOpen && searchValue !== '') {
             handleSearchChange('');
         }
     };
