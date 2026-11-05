@@ -118,6 +118,35 @@ func TestConvertOUToNode_InheritanceHashes(t *testing.T) {
 	assert.Contains(t, result.PropertyMap[ad.InheritanceHashes.String()], testHash)
 }
 
+func TestParseDMSAMiscData(t *testing.T) {
+	dmsa := ein.DMSA{
+		IngestBase: ein.IngestBase{ObjectIdentifier: "S-1-5-21-1-2-3-1000"},
+		PrecededBy: ein.TypedPrincipal{
+			ObjectIdentifier: "S-1-5-21-1-2-3-1100",
+			ObjectType:       ad.User.String(),
+		},
+	}
+
+	result := ein.ParseDMSAMiscData(dmsa)
+
+	require.Len(t, result, 1)
+	relationship := result[0]
+	assert.Equal(t, dmsa.ObjectIdentifier, relationship.Source.Value)
+	assert.Equal(t, ad.DMSA, relationship.Source.Kind)
+	assert.Equal(t, dmsa.PrecededBy.ObjectIdentifier, relationship.Target.Value)
+	assert.Equal(t, ad.User, relationship.Target.Kind)
+	assert.Equal(t, ad.DMSAPrecededBy, relationship.RelType)
+	assert.Equal(t, false, relationship.RelProps[ad.IsACL.String()])
+}
+
+func TestParseDMSAMiscData_WithoutPredecessor(t *testing.T) {
+	result := ein.ParseDMSAMiscData(ein.DMSA{
+		IngestBase: ein.IngestBase{ObjectIdentifier: "S-1-5-21-1-2-3-1000"},
+	})
+
+	assert.Empty(t, result)
+}
+
 func TestParseDCRegistryData_WindowsBuildVersion(t *testing.T) {
 	computer := ein.Computer{
 		IngestBase: ein.IngestBase{ObjectIdentifier: "S-1-5-21-1-2-3-1000"},
@@ -156,8 +185,9 @@ func TestParseDCRegistryData_InvalidWindowsBuildNumber(t *testing.T) {
 
 	result := ein.ParseDCRegistryData(computer)
 
-	require.Equal(t, true, result.PropertyMap[ad.WindowsBuildCollected.String()])
+	require.Equal(t, false, result.PropertyMap[ad.WindowsBuildCollected.String()])
 	require.NotContains(t, result.PropertyMap, ad.WindowsBuildNumber.String())
+	require.NotContains(t, result.PropertyMap, ad.WindowsBuildRevision.String())
 }
 
 func TestParseDCRegistryData_IncompleteWindowsBuildVersion(t *testing.T) {
