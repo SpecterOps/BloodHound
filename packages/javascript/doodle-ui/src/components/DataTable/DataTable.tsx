@@ -67,7 +67,10 @@ interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElem
     onRowClick?: (row: TData) => void;
     selectedRow?: string;
     noResultsFallback?: string | React.ReactNode;
-    /** Fill the available height in a flex-column parent and center the empty state. */
+    /**
+     * Fill the available height in a flex-column parent and center the empty state.
+     * Scroll internally unless virtualizationOptions.getScrollElement supplies a scroll owner.
+     */
     shouldFillHeight?: boolean;
     growLastColumn?: boolean;
     virtualizationOptions?: Partial<Parameters<typeof useVirtualizer>[0]>;
@@ -320,6 +323,11 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     const tableRows = table.getRowModel().rows;
     const shouldFillEmptyState = shouldFillHeight && tableRows.length === 0;
+    // The virtualizer measures body rows; filled tables must also fit their header.
+    const heightContainerStyle: React.CSSProperties =
+        shouldFillHeight && !shouldFillEmptyState
+            ? { minHeight: `${virtualizer.getTotalSize()}px` }
+            : { height: shouldFillEmptyState ? '100%' : `${virtualizer.getTotalSize()}px` };
     const haveLeftPinnedColumns = (columnPinning?.left?.length || 0) > 0;
     const tableWidth = enableResizing && !growLastColumn ? table.getCenterTotalSize() : '100%';
 
@@ -454,17 +462,14 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             <div
                 className={cn(
                     'w-full border border-solid border-[color:var(--data-table-wrapper-border)] bg-neutral-1 shadow-none',
-                    shouldFillHeight && 'flex-1 min-h-0',
+                    shouldFillHeight &&
+                        (virtualizationOptionsProp.getScrollElement ? 'flex-auto' : 'flex-1 min-h-0 overflow-auto'),
                     className,
                     shouldFillEmptyState && 'pb-0'
                 )}
                 {...wrapperRest}
                 ref={parentRef}>
-                <div
-                    style={{
-                        height: shouldFillEmptyState ? '100%' : `${virtualizer.getTotalSize()}px`,
-                    }}
-                    className={cn(heightContainerClassName)}>
+                <div style={heightContainerStyle} className={cn(heightContainerClassName)}>
                     <Table
                         {...restTableProps}
                         tableContainerClassName={cn(shouldFillEmptyState && 'h-full', tableContainerClassName)}

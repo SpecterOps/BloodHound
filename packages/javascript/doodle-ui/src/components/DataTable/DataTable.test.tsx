@@ -24,9 +24,9 @@ import { DataTable } from './DataTable';
 expect.extend(matchers);
 
 vi.mock('@tanstack/react-virtual', () => ({
-    useVirtualizer: () => ({
-        getTotalSize: () => 57,
-        getVirtualItems: () => [{ index: 0, size: 57, start: 0 }],
+    useVirtualizer: ({ count }: { count: number }) => ({
+        getTotalSize: () => count * 57,
+        getVirtualItems: () => Array.from({ length: count }, (_, index) => ({ index, size: 57, start: index * 57 })),
         scrollToIndex: vi.fn(),
     }),
 }));
@@ -43,6 +43,63 @@ const columns: ColumnDef<Person>[] = [
 ];
 
 describe('DataTable', () => {
+    it('keeps the default empty table content-sized', () => {
+        render(<DataTable columns={columns} data={[]} />);
+
+        const table = screen.getByRole('table');
+        expect(screen.getByText('No results.')).toBeVisible();
+        expect(table).not.toHaveClass('h-full', 'after:hidden');
+        expect(table.parentElement?.parentElement).toHaveStyle({ height: '0px' });
+    });
+
+    it('restores virtualized sizing after a full-height empty table receives rows', () => {
+        const { container, rerender } = render(<DataTable shouldFillHeight columns={columns} data={[]} />);
+
+        const table = screen.getByRole('table');
+        const heightContainer = table.parentElement?.parentElement;
+        expect(container.firstChild).toHaveClass('overflow-auto');
+        expect(table).toHaveClass('h-full', 'after:hidden');
+        expect(heightContainer).toHaveStyle({ height: '100%' });
+        expect(table.querySelector('thead')).toHaveClass('h-px');
+
+        rerender(<DataTable shouldFillHeight columns={columns} data={[{ name: 'Ada Lovelace' }]} />);
+
+        expect(screen.queryByText('No results.')).not.toBeInTheDocument();
+        expect(screen.getByRole('row', { name: 'Ada Lovelace' })).toBeVisible();
+        expect(table).not.toHaveClass('h-full', 'after:hidden');
+        expect(heightContainer).toHaveStyle({ minHeight: '57px' });
+        expect(heightContainer?.style.height).toBe('');
+        expect(table.querySelector('thead')).not.toHaveClass('h-px');
+        expect(container.firstChild).toHaveClass('overflow-auto');
+    });
+
+    it('preserves caller-owned scrolling while transitioning between populated and empty states', () => {
+        const scrollElement = document.createElement('div');
+        const virtualizationOptions = { getScrollElement: () => scrollElement };
+        const { container, rerender } = render(
+            <DataTable
+                shouldFillHeight
+                columns={columns}
+                data={[{ name: 'Ada Lovelace' }]}
+                virtualizationOptions={virtualizationOptions}
+            />
+        );
+
+        expect(container.firstChild).toHaveClass('flex-auto');
+        expect(screen.getByRole('table').parentElement?.parentElement).toHaveStyle({ minHeight: '57px' });
+        expect(container.firstChild).not.toHaveClass('overflow-auto');
+        expect(container.firstChild).not.toHaveClass('min-h-0');
+
+        rerender(
+            <DataTable shouldFillHeight columns={columns} data={[]} virtualizationOptions={virtualizationOptions} />
+        );
+
+        expect(screen.getByRole('table')).toHaveClass('h-full', 'after:hidden');
+        expect(container.firstChild).not.toHaveClass('overflow-auto');
+        expect(container.firstChild).not.toHaveClass('min-h-0');
+        expect(screen.getByText('No results.')).toBeVisible();
+    });
+
     it('uses outlined canvas styling for the table surface, header, and rows', () => {
         const { container } = render(<DataTable columns={columns} data={[{ name: 'Ada Lovelace' }]} />);
 
