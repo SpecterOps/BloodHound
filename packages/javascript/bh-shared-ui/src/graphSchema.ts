@@ -374,6 +374,16 @@ export const EdgeCompositionRelationships = [
     'CanApplyGPO',
 ];
 export enum ActiveDirectoryKindProperties {
+    UserPassword = 'userpassword',
+    UnixPassword = 'unixpassword',
+    UnicodePassword = 'unicodepassword',
+    SFUPassword = 'sfupassword',
+    SIDHistory = 'sidhistory',
+    LogonScript = 'logonscript',
+    ProfilePath = 'profilepath',
+    GPCPath = 'gpcpath',
+    AllowedDelegationTargets = 'allowedtodelegate',
+    OIDGroupLinkTarget = 'oidgrouplink',
     AdminCount = 'admincount',
     CASecurityCollected = 'casecuritycollected',
     CAName = 'caname',
@@ -522,6 +532,26 @@ export enum ActiveDirectoryKindProperties {
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
+        case ActiveDirectoryKindProperties.UserPassword:
+            return 'User Password';
+        case ActiveDirectoryKindProperties.UnixPassword:
+            return 'UNIX Password';
+        case ActiveDirectoryKindProperties.UnicodePassword:
+            return 'Unicode Password';
+        case ActiveDirectoryKindProperties.SFUPassword:
+            return 'Services for UNIX Password';
+        case ActiveDirectoryKindProperties.SIDHistory:
+            return 'SID History';
+        case ActiveDirectoryKindProperties.LogonScript:
+            return 'Logon Script';
+        case ActiveDirectoryKindProperties.ProfilePath:
+            return 'Profile Path';
+        case ActiveDirectoryKindProperties.GPCPath:
+            return 'GPO File System Path';
+        case ActiveDirectoryKindProperties.AllowedDelegationTargets:
+            return 'Allowed Delegation Targets';
+        case ActiveDirectoryKindProperties.OIDGroupLinkTarget:
+            return 'OID Group Link';
         case ActiveDirectoryKindProperties.AdminCount:
             return 'Admin Count';
         case ActiveDirectoryKindProperties.CASecurityCollected:

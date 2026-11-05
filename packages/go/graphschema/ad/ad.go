@@ -138,6 +138,16 @@ var (
 type Property string
 
 const (
+	UserPassword                                  Property = "userpassword"
+	UnixPassword                                  Property = "unixpassword"
+	UnicodePassword                               Property = "unicodepassword"
+	SFUPassword                                   Property = "sfupassword"
+	SIDHistory                                    Property = "sidhistory"
+	LogonScript                                   Property = "logonscript"
+	ProfilePath                                   Property = "profilepath"
+	GPCPath                                       Property = "gpcpath"
+	AllowedDelegationTargets                      Property = "allowedtodelegate"
+	OIDGroupLinkTarget                            Property = "oidgrouplink"
 	AdminCount                                    Property = "admincount"
 	CASecurityCollected                           Property = "casecuritycollected"
 	CAName                                        Property = "caname"
@@ -286,10 +296,30 @@ const (
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, InheritanceHash, InheritanceHashes, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SpoofSIDHistoryBlocked, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, VulnerableNetlogonSecurityDescriptor, VulnerableNetlogonSecurityDescriptorCollected, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegation, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributesInbound, TrustAttributesOutbound, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, CustomExplicitDenyAcesCount, CustomInheritedDenyAcesCount, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPAvailable, LDAPSAvailable, LDAPSEPA, IsDC, IsReadOnlyDC, HTTPEnrollmentEndpoints, HTTPSEnrollmentEndpoints, HasVulnerableEndpoint, RequireSecuritySignature, EnableSecuritySignature, RestrictReceivingNTLMTraffic, NTLMMinServerSec, NTLMMinClientSec, LMCompatibilityLevel, UseMachineID, ClientAllowedNTLMServers, Transitive, GroupScope, NetBIOS, AdminSDHolderProtected, ServicePrincipalNames, ServerReference, SiteObject, ObjectClass, GPOStatusRaw, GPOStatus}
+	return []Property{UserPassword, UnixPassword, UnicodePassword, SFUPassword, SIDHistory, LogonScript, ProfilePath, GPCPath, AllowedDelegationTargets, OIDGroupLinkTarget, AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, InheritanceHash, InheritanceHashes, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SpoofSIDHistoryBlocked, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, VulnerableNetlogonSecurityDescriptor, VulnerableNetlogonSecurityDescriptorCollected, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegation, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributesInbound, TrustAttributesOutbound, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, CustomExplicitDenyAcesCount, CustomInheritedDenyAcesCount, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPAvailable, LDAPSAvailable, LDAPSEPA, IsDC, IsReadOnlyDC, HTTPEnrollmentEndpoints, HTTPSEnrollmentEndpoints, HasVulnerableEndpoint, RequireSecuritySignature, EnableSecuritySignature, RestrictReceivingNTLMTraffic, NTLMMinServerSec, NTLMMinClientSec, LMCompatibilityLevel, UseMachineID, ClientAllowedNTLMServers, Transitive, GroupScope, NetBIOS, AdminSDHolderProtected, ServicePrincipalNames, ServerReference, SiteObject, ObjectClass, GPOStatusRaw, GPOStatus}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
+	case "userpassword":
+		return UserPassword, nil
+	case "unixpassword":
+		return UnixPassword, nil
+	case "unicodepassword":
+		return UnicodePassword, nil
+	case "sfupassword":
+		return SFUPassword, nil
+	case "sidhistory":
+		return SIDHistory, nil
+	case "logonscript":
+		return LogonScript, nil
+	case "profilepath":
+		return ProfilePath, nil
+	case "gpcpath":
+		return GPCPath, nil
+	case "allowedtodelegate":
+		return AllowedDelegationTargets, nil
+	case "oidgrouplink":
+		return OIDGroupLinkTarget, nil
 	case "admincount":
 		return AdminCount, nil
 	case "casecuritycollected":
@@ -586,6 +616,26 @@ func ParseProperty(source string) (Property, error) {
 }
 func (s Property) String() string {
 	switch s {
+	case UserPassword:
+		return string(UserPassword)
+	case UnixPassword:
+		return string(UnixPassword)
+	case UnicodePassword:
+		return string(UnicodePassword)
+	case SFUPassword:
+		return string(SFUPassword)
+	case SIDHistory:
+		return string(SIDHistory)
+	case LogonScript:
+		return string(LogonScript)
+	case ProfilePath:
+		return string(ProfilePath)
+	case GPCPath:
+		return string(GPCPath)
+	case AllowedDelegationTargets:
+		return string(AllowedDelegationTargets)
+	case OIDGroupLinkTarget:
+		return string(OIDGroupLinkTarget)
 	case AdminCount:
 		return string(AdminCount)
 	case CASecurityCollected:
@@ -882,6 +932,26 @@ func (s Property) String() string {
 }
 func (s Property) Name() string {
 	switch s {
+	case UserPassword:
+		return "User Password"
+	case UnixPassword:
+		return "UNIX Password"
+	case UnicodePassword:
+		return "Unicode Password"
+	case SFUPassword:
+		return "Services for UNIX Password"
+	case SIDHistory:
+		return "SID History"
+	case LogonScript:
+		return "Logon Script"
+	case ProfilePath:
+		return "Profile Path"
+	case GPCPath:
+		return "GPO File System Path"
+	case AllowedDelegationTargets:
+		return "Allowed Delegation Targets"
+	case OIDGroupLinkTarget:
+		return "OID Group Link"
 	case AdminCount:
 		return "Admin Count"
 	case CASecurityCollected:
