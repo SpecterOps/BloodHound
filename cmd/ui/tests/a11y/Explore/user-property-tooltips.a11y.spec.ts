@@ -65,6 +65,13 @@ test('User property help is discoverable by hover and keyboard without changing 
     await adminCount.press('Escape');
     await expect(tooltip).toBeHidden();
 
+    await sensitive.hover();
+    await expect(tooltip).toContainText('prevents delegation');
+    await tooltip.hover();
+    await page.keyboard.press('Escape');
+    await expect(tooltip).toBeHidden();
+    await page.mouse.move(0, 0);
+    await adminCount.focus();
     await adminCount.press('Tab');
     await expect(sensitive).toBeFocused();
     await expect(tooltip).toContainText('prevents delegation');

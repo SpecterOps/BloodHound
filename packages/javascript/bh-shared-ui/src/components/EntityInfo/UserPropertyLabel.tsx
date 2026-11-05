@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Tooltip } from 'doodle-ui';
+import { useState } from 'react';
 import { ActiveDirectoryKindProperties } from '../../graphSchema';
 import { AppIcon } from '../AppIcon';
 
@@ -37,6 +38,7 @@ const propertyHelp: Partial<Record<ActiveDirectoryKindProperties, { description:
 };
 
 export const UserPropertyLabel = ({ property, label }: { property?: string; label: string }) => {
+    const [open, setOpen] = useState(false);
     const help =
         property && Object.hasOwn(propertyHelp, property)
             ? propertyHelp[property as ActiveDirectoryKindProperties]
@@ -46,9 +48,19 @@ export const UserPropertyLabel = ({ property, label }: { property?: string; labe
 
     return (
         <Tooltip
+            open={open}
+            onOpenChange={setOpen}
             contentWidth='lg'
             tooltipPosition='left'
-            triggerProps={{ asChild: false, 'aria-label': `About ${label}`, className: 'text-left' }}
+            triggerProps={{
+                asChild: false,
+                'aria-label': `About ${label}`,
+                className: 'text-left',
+                onFocus: (event) => {
+                    // Restore keyboard help after hover help was dismissed with Escape.
+                    if (event.currentTarget.matches(':focus-visible')) setOpen(true);
+                },
+            }}
             tooltip={
                 <>
                     <span className='block'>{help.description}</span>
