@@ -16,13 +16,8 @@
 
 import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
-import { UserPropertyLabel } from '../../components/EntityInfo/UserPropertyLabel';
-import {
-    ActiveDirectoryKindProperties,
-    ActiveDirectoryNodeKind,
-    AzureKindProperties,
-    CommonKindProperties,
-} from '../../graphSchema';
+import { EntityPropertyLabel } from '../../components/EntityInfo/EntityPropertyLabel';
+import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
 
@@ -159,8 +154,8 @@ export const Field: React.FC<EntityField & { nodeType?: string }> = (entityField
 
     const formattedLabel = typeof label === 'string' ? label.replace(/:$/, '') : label;
     const labelContent =
-        nodeType === ActiveDirectoryNodeKind.User && typeof formattedLabel === 'string' ? (
-            <UserPropertyLabel property={keyprop} label={formattedLabel} />
+        typeof formattedLabel === 'string' ? (
+            <EntityPropertyLabel property={keyprop} label={formattedLabel} nodeType={nodeType} />
         ) : (
             formattedLabel
         );

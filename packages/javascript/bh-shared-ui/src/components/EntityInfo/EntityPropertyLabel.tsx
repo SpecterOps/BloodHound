@@ -16,35 +16,25 @@
 
 import { Tooltip } from 'doodle-ui';
 import { useState } from 'react';
-import { ActiveDirectoryKindProperties } from '../../graphSchema';
 import { AppIcon } from '../AppIcon';
+import { entityPropertyHelp } from './entityPropertyHelp';
 
-const propertyHelp: Partial<Record<ActiveDirectoryKindProperties, { description: string; location: string }>> = {
-    [ActiveDirectoryKindProperties.AdminCount]: {
-        description:
-            'Indicates whether Active Directory has marked this account for protected-account handling. The flag can remain after privileged group membership is removed.',
-        location: 'Enable View → Advanced Features, then open the user’s Properties → Attribute Editor → adminCount.',
-    },
-    [ActiveDirectoryKindProperties.Sensitive]: {
-        description: 'Marks the account as sensitive and prevents delegation of its security context.',
-        location:
-            'Open the user’s Properties → Account → Account options → “Account is sensitive and cannot be delegated.”',
-    },
-    [ActiveDirectoryKindProperties.PasswordNotRequired]: {
-        description: 'Indicates a password-length policy exemption; it does not establish that the password is blank.',
-        location:
-            'Enable View → Advanced Features, then open the user’s Properties → Attribute Editor → userAccountControl. Inspect the PASSWD_NOTREQD flag (0x20 / 32).',
-    },
-};
-
-export const UserPropertyLabel = ({ property, label }: { property?: string; label: string }) => {
+export const EntityPropertyLabel = ({
+    property,
+    label,
+    nodeType,
+}: {
+    property?: string;
+    label: string;
+    nodeType?: string;
+}) => {
     const [open, setOpen] = useState(false);
     const help =
-        property && Object.hasOwn(propertyHelp, property)
-            ? propertyHelp[property as ActiveDirectoryKindProperties]
+        property && Object.hasOwn(entityPropertyHelp, property)
+            ? entityPropertyHelp[property as keyof typeof entityPropertyHelp]
             : undefined;
 
-    if (!help) return <>{label}</>;
+    if (!help || !help.nodeTypes.some((kind) => kind === nodeType)) return <>{label}</>;
 
     return (
         <Tooltip
@@ -64,9 +54,7 @@ export const UserPropertyLabel = ({ property, label }: { property?: string; labe
             tooltip={
                 <>
                     <span className='block'>{help.description}</span>
-                    <span className='mt-2 block'>
-                        Find this in Active Directory Users and Computers: {help.location}
-                    </span>
+                    <span className='mt-2 block'>{help.location}</span>
                 </>
             }>
             <span className='inline-flex items-center gap-1'>

@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 import { render, screen } from '../../test-utils';
 import { EntityField } from '../../utils';
 import { Field, ObjectInfoFields, exclusionList } from './fragments';
@@ -37,6 +37,30 @@ describe('Field', () => {
         expect(tooltip).toHaveTextContent('Find this in Active Directory Users and Computers:');
         expect(tooltip).toHaveTextContent(source);
         expect(tooltip.querySelector('a')).toBeNull();
+    });
+
+    it.each([
+        { nodeType: ActiveDirectoryNodeKind.Computer, property: 'trustedtoauth', source: 'protocol transition' },
+        { nodeType: AzureNodeKind.Group, property: 'onpremid', source: 'onPremisesSecurityIdentifier' },
+    ])('explains $property on a $nodeType even when its value is null', async ({ nodeType, property, source }) => {
+        const user = userEvent.setup();
+        render(<Field label='Property' value={null} keyprop={property} nodeType={nodeType} />);
+
+        await user.hover(screen.getByRole('button', { name: 'About Property' }));
+
+        const tooltip = await screen.findByRole('tooltip');
+        expect(tooltip).toHaveTextContent(source);
+        expect(tooltip.querySelector('a')).toBeNull();
+        expect(screen.getByText('Null value')).toBeInTheDocument();
+    });
+
+    it.each([
+        { nodeType: undefined, property: 'admincount' },
+        { nodeType: 'CustomUser', property: 'sensitive' },
+    ])('does not attach $property help to an inapplicable $nodeType', ({ nodeType, property }) => {
+        render(<Field label='Property' value={false} keyprop={property} nodeType={nodeType} />);
+        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+        expect(screen.getByText('FALSE')).toHaveAttribute('title', 'FALSE');
     });
 
     it('opens help on keyboard focus and dismisses it with Escape', async () => {

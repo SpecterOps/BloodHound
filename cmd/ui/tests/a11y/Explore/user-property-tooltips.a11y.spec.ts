@@ -17,7 +17,12 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from 'bh-playwright-testing';
 
-const mockNode = async (page: Page, id: number, kind: 'User' | 'Computer') => {
+const mockNode = async (
+    page: Page,
+    id: number,
+    kind: 'User' | 'Computer' | 'AZDevice',
+    properties: Record<string, unknown> = { admincount: true, sensitive: false, passwordnotreqd: false }
+) => {
     await page.route(`**/api/v2/nodes/${id}*`, (route) =>
         route.fulfill({
             json: {
@@ -27,17 +32,17 @@ const mockNode = async (page: Page, id: number, kind: 'User' | 'Computer') => {
                     properties: {
                         objectid: `playwright-tooltip-${id}`,
                         name: `TOOLTIP_${kind.toUpperCase()}@PLAYWRIGHT.LOCAL`,
-                        admincount: true,
-                        sensitive: false,
-                        passwordnotreqd: false,
+                        ...properties,
                     },
                 },
             },
         })
     );
-    await page.route(`**/api/v2/${kind === 'User' ? 'users' : 'computers'}/playwright-tooltip-${id}/*`, (route) =>
-        route.fulfill({ json: { count: 0, data: [] } })
-    );
+    const endpoint =
+        kind === 'AZDevice'
+            ? '**/api/v2/azure/devices*'
+            : `**/api/v2/${kind === 'User' ? 'users' : 'computers'}/playwright-tooltip-${id}/*`;
+    await page.route(endpoint, (route) => route.fulfill({ json: { count: 0, data: [] } }));
 };
 
 test('User property help is discoverable by hover and keyboard without changing values or Computer labels', async ({
@@ -100,4 +105,25 @@ test('User property help is discoverable by hover and keyboard without changing 
     );
     await expect(panel.getByText('Admin Count', { exact: true })).toBeVisible();
     await expect(panel.getByRole('button', { name: /^About / })).toHaveCount(0);
+});
+
+test('Entra device help stays scoped to its entity kind when a property key appears on an AD User', async ({
+    page,
+}) => {
+    await mockNode(page, 44, 'AZDevice', { trustype: 'ServerAd' });
+    await page.goto('/ui/explore?selectedItem=44');
+    const panel = page.getByTestId('explore_entity-information-panel');
+    const trustType = panel.getByRole('button', { name: 'About Trust Type', exact: true });
+    await expect(trustType).toBeVisible();
+    await trustType.hover();
+    await expect(page.getByRole('tooltip')).toContainText('join relationship with Microsoft Entra ID');
+    await expect(page.getByRole('tooltip')).toContainText('All devices → Join type');
+
+    await mockNode(page, 45, 'User', { trustype: 'ServerAd' });
+    await page.goto('/ui/explore?selectedItem=45');
+    await expect(page.getByTestId('explore_entity-information-panel_header-text')).toHaveText(
+        'TOOLTIP_USER@PLAYWRIGHT.LOCAL'
+    );
+    await expect(panel.getByText('Trust Type', { exact: true })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'About Trust Type', exact: true })).toHaveCount(0);
 });
