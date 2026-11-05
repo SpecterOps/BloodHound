@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package ad
+package ad_test
 
 import (
 	"testing"
@@ -39,14 +39,30 @@ func kindsContain(kinds []graph.Kind, target graph.Kind) bool {
 func TestDMSASchemaRegistration(t *testing.T) {
 	require.True(t, kindsContain(adSchema.NodeKinds(), adSchema.DMSA), "DMSA must be a registered node kind")
 
-	for _, edge := range []graph.Kind{adSchema.DMSAPrecededBy, adSchema.CreateDMSA, adSchema.BadSuccessor, adSchema.OuroborosSelfEnroll} {
+	for _, edge := range []graph.Kind{
+		adSchema.DMSAPrecededBy,
+		adSchema.CreateDMSA,
+		adSchema.BadSuccessor,
+		adSchema.OuroborosSelfEnroll,
+		adSchema.WriteSupersededManagedAccountLink,
+		adSchema.WriteSupersededServiceAccountState,
+	} {
 		require.Truef(t, kindsContain(adSchema.Relationships(), edge), "%s must be a registered relationship kind", edge)
+	}
+
+	for _, edge := range []graph.Kind{adSchema.DMSAPrecededBy, adSchema.CreateDMSA, adSchema.BadSuccessor, adSchema.OuroborosSelfEnroll} {
 		require.Truef(t, kindsContain(adSchema.PathfindingRelationships(), edge), "%s must be pathfinding-traversable", edge)
 	}
 
-	// CreateDMSA is an ingest-time ACL edge (routed by ein.ParseACEData); BadSuccessor and OuroborosSelfEnroll are
-	// ACL edges produced by post-processing. All three must be recognized as ACL kinds.
-	for _, acl := range []graph.Kind{adSchema.CreateDMSA, adSchema.BadSuccessor, adSchema.OuroborosSelfEnroll} {
+	// CreateDMSA and the attribute write permissions are ingest-time ACL edges routed by ein.ParseACEData;
+	// BadSuccessor and OuroborosSelfEnroll are ACL edges produced by post-processing.
+	for _, acl := range []graph.Kind{
+		adSchema.CreateDMSA,
+		adSchema.BadSuccessor,
+		adSchema.OuroborosSelfEnroll,
+		adSchema.WriteSupersededManagedAccountLink,
+		adSchema.WriteSupersededServiceAccountState,
+	} {
 		require.Truef(t, kindsContain(adSchema.ACLRelationships(), acl), "%s must be an ACL relationship", acl)
 		require.Truef(t, adSchema.IsACLKind(acl), "%s must be recognized by IsACLKind", acl)
 	}

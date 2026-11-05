@@ -127,6 +127,15 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                 ],
             },
             {
+                name: 'Delegated Managed Service Accounts',
+                edgeTypes: [
+                    ActiveDirectoryRelationshipKind.DMSAPrecededBy,
+                    ActiveDirectoryRelationshipKind.CreateDMSA,
+                    ActiveDirectoryRelationshipKind.BadSuccessor,
+                    ActiveDirectoryRelationshipKind.OuroborosSelfEnroll,
+                ],
+            },
+            {
                 name: 'Cross Forest Trust Abuse',
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.SpoofSIDHistory,

@@ -147,6 +147,8 @@ type DCRegistryData struct {
 	CertificateMappingMethods            CertificateMappingMethods
 	StrongCertificateBindingEnforcement  StrongCertificateBindingEnforcement
 	VulnerableNetlogonSecurityDescriptor VulnerableNetlogonSecurityDescriptor
+	CurrentBuildNumber                   CurrentBuildNumber
+	CurrentBuildRevision                 CurrentBuildRevision
 }
 
 type CertificateMappingMethods struct {
@@ -162,6 +164,16 @@ type StrongCertificateBindingEnforcement struct {
 type VulnerableNetlogonSecurityDescriptor struct {
 	APIResult
 	Value string
+}
+
+type CurrentBuildNumber struct {
+	APIResult
+	Value string
+}
+
+type CurrentBuildRevision struct {
+	APIResult
+	Value int
 }
 
 type GPO IngestBase

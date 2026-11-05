@@ -38,14 +38,25 @@ var ouroborosSelfEnrollPostProcessedEdges = graph.Kinds{
 	ad.OuroborosSelfEnroll,
 }
 
-// PostBadSuccessor creates BadSuccessor edges from any principal that can create a delegated Managed Service Account
-// (a CreateDMSA edge, i.e. CreateChild for the dMSA object class on a container in the domain) to that Domain node.
-//
-// A principal who can create a dMSA controls it as its creator/owner, can set the new dMSA's
-// msDS-ManagedAccountPrecededByLink to any victim account together with msDS-DelegatedMSAState=2, and the KDC will then
-// release the victim's keys to the dMSA via S4U2self (KERB-DMSA-KEY-PACKAGE). Because the victim can be any account in
-// the domain (including Tier-0 principals) and requires no ACE on the victim itself, the capability is modeled as a
-// domain-compromise edge to the Domain node rather than fanning out an edge to every account. (CVE-2025-53779.)
+const (
+	windowsServer2025Build           = 26100
+	badSuccessorPatchedBuildRevision = 4946
+)
+
+type windowsBuildVersion struct {
+	Build    int
+	Revision int
+}
+
+type badSuccessorTarget struct {
+	CreatorID graph.ID
+	VictimID  graph.ID
+}
+
+// PostBadSuccessor creates a domain-level BadSuccessor edge for each CreateDMSA principal when collected registry data
+// confirms at least one Windows Server 2025 domain controller predates build 26100.4946. Otherwise it emits a
+// target-specific edge only when the same principal has GenericAll, GenericWrite, or both attribute-specific write
+// permissions required by the patched KDC over a user or computer in that domain.
 func PostBadSuccessor(ctx context.Context, db graph.Database) (*post.AtomicPostProcessingStats, error) {
 	defer measure.ContextLogAndMeasure(
 		ctx,
@@ -85,32 +96,178 @@ func PostBadSuccessor(ctx context.Context, db graph.Database) (*post.AtomicPostP
 			)
 			continue
 		} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-			if creators, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
-				return query.And(
-					query.Kind(query.Relationship(), ad.CreateDMSA),
-					query.Equals(query.EndProperty(ad.DomainSID.String()), domainSID),
-				)
-			})); err != nil {
-				return err
-			} else {
-				for _, creator := range creators {
-					if !sink.Submit(ctx, post.EnsureRelationshipJob{
-						FromID: creator.ID,
-						ToID:   domain.ID,
-						Kind:   ad.BadSuccessor,
-					}) {
-						return fmt.Errorf("unable to submit to channel in PostBadSuccessor")
-					}
-				}
-
-				return nil
-			}
+			return postBadSuccessorForDomain(ctx, tx, sink, domain, domainSID)
 		}); err != nil {
 			return sink.Stats(), fmt.Errorf("error creating BadSuccessor edges: %w", err)
 		}
 	}
 
 	return sink.Stats(), nil
+}
+
+// postBadSuccessorForDomain applies the patch-aware edge model to one domain.
+func postBadSuccessorForDomain(
+	ctx context.Context,
+	tx graph.Transaction,
+	sink *post.FilteredRelationshipSink,
+	domain *graph.Node,
+	domainSID string,
+) error {
+	creators, err := fetchDMSACreators(tx, domainSID)
+	if err != nil {
+		return err
+	}
+	if len(creators) == 0 {
+		return nil
+	}
+
+	builds, err := fetchDomainControllerBuilds(tx, domain.ID)
+	if err != nil {
+		return err
+	}
+
+	if domainHasUnpatchedDMSAKDC(builds) {
+		for _, creator := range creators {
+			if err := submitBadSuccessor(ctx, sink, creator.ID, domain.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	targets, err := fetchBadSuccessorTargets(tx, creators, domainSID)
+	if err != nil {
+		return err
+	}
+
+	for target, rights := range targets {
+		if qualifiesBadSuccessorVictim(rights) {
+			if err := submitBadSuccessor(ctx, sink, target.CreatorID, target.VictimID); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// fetchDMSACreators returns principals with CreateDMSA rights scoped to a domain.
+func fetchDMSACreators(tx graph.Transaction, domainSID string) (graph.NodeSet, error) {
+	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Relationship(), ad.CreateDMSA),
+			query.Equals(query.EndProperty(ad.DomainSID.String()), domainSID),
+		)
+	}))
+}
+
+// fetchDomainControllerBuilds returns complete registry-backed build versions for domain controllers in a domain.
+func fetchDomainControllerBuilds(tx graph.Transaction, domainID graph.ID) ([]windowsBuildVersion, error) {
+	domainControllers, err := ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.Kind(query.Relationship(), ad.DCFor),
+			query.Equals(query.EndID(), domainID),
+		)
+	}))
+	if err != nil {
+		return nil, err
+	}
+
+	builds := make([]windowsBuildVersion, 0, len(domainControllers))
+	for _, domainController := range domainControllers {
+		collected, collectedErr := domainController.Properties.Get(ad.WindowsBuildCollected.String()).Bool()
+		build, buildErr := domainController.Properties.Get(ad.WindowsBuildNumber.String()).Int()
+		revision, revisionErr := domainController.Properties.Get(ad.WindowsBuildRevision.String()).Int()
+		if collectedErr == nil && collected && buildErr == nil && revisionErr == nil {
+			builds = append(builds, windowsBuildVersion{Build: build, Revision: revision})
+		}
+	}
+
+	return builds, nil
+}
+
+// fetchBadSuccessorTargets groups qualifying victim rights by creator and target.
+func fetchBadSuccessorTargets(tx graph.Transaction, creators graph.NodeSet, domainSID string) (map[badSuccessorTarget]graph.Kinds, error) {
+	if len(creators) == 0 {
+		return map[badSuccessorTarget]graph.Kinds{}, nil
+	}
+
+	creatorIDs := make([]graph.ID, 0, len(creators))
+	for _, creator := range creators {
+		creatorIDs = append(creatorIDs, creator.ID)
+	}
+
+	relationships, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+		return query.And(
+			query.InIDs(query.StartID(), creatorIDs...),
+			query.KindIn(
+				query.Relationship(),
+				ad.GenericAll,
+				ad.GenericWrite,
+				ad.WriteSupersededManagedAccountLink,
+				ad.WriteSupersededServiceAccountState,
+			),
+			query.KindIn(query.End(), ad.User, ad.Computer),
+			query.Equals(query.EndProperty(ad.DomainSID.String()), domainSID),
+		)
+	}))
+	if err != nil {
+		return nil, err
+	}
+
+	targets := make(map[badSuccessorTarget]graph.Kinds)
+	for _, relationship := range relationships {
+		target := badSuccessorTarget{CreatorID: relationship.StartID, VictimID: relationship.EndID}
+		targets[target] = append(targets[target], relationship.Kind)
+	}
+
+	return targets, nil
+}
+
+// domainHasUnpatchedDMSAKDC reports whether any collected Windows Server 2025 build predates the KDC fix.
+func domainHasUnpatchedDMSAKDC(builds []windowsBuildVersion) bool {
+	for _, build := range builds {
+		if build.Build == windowsServer2025Build && build.Revision < badSuccessorPatchedBuildRevision {
+			return true
+		}
+	}
+
+	return false
+}
+
+// qualifiesBadSuccessorVictim reports whether a right set can update both victim attributes required by the patched KDC.
+func qualifiesBadSuccessorVictim(rights graph.Kinds) bool {
+	var (
+		canWriteManagedAccountLink  bool
+		canWriteServiceAccountState bool
+	)
+
+	for _, right := range rights {
+		switch {
+		case right.Is(ad.GenericAll), right.Is(ad.GenericWrite):
+			return true
+		case right.Is(ad.WriteSupersededManagedAccountLink):
+			canWriteManagedAccountLink = true
+		case right.Is(ad.WriteSupersededServiceAccountState):
+			canWriteServiceAccountState = true
+		}
+	}
+
+	return canWriteManagedAccountLink && canWriteServiceAccountState
+}
+
+// submitBadSuccessor queues a derived edge for the post-processing sink.
+func submitBadSuccessor(ctx context.Context, sink *post.FilteredRelationshipSink, creatorID, targetID graph.ID) error {
+	if !sink.Submit(ctx, post.EnsureRelationshipJob{
+		FromID: creatorID,
+		ToID:   targetID,
+		Kind:   ad.BadSuccessor,
+	}) {
+		return fmt.Errorf("unable to submit to channel in PostBadSuccessor")
+	}
+
+	return nil
 }
 
 // PostOuroborosSelfEnroll creates OuroborosSelfEnroll edges from any principal that owns or holds GenericAll over a

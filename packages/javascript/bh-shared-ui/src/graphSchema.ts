@@ -170,6 +170,8 @@ export enum ActiveDirectoryRelationshipKind {
     HasTrustKeys = 'HasTrustKeys',
     WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
     WritePublicInformation = 'WritePublicInformation',
+    WriteSupersededManagedAccountLink = 'WriteSupersededManagedAccountLink',
+    WriteSupersededServiceAccountState = 'WriteSupersededServiceAccountState',
     ProtectAdminGroups = 'ProtectAdminGroups',
     DMSAPrecededBy = 'DMSAPrecededBy',
     CreateDMSA = 'CreateDMSA',
@@ -354,6 +356,10 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'WriteAltSecurityIdentities';
         case ActiveDirectoryRelationshipKind.WritePublicInformation:
             return 'WritePublicInformation';
+        case ActiveDirectoryRelationshipKind.WriteSupersededManagedAccountLink:
+            return 'WriteSupersededManagedAccountLink';
+        case ActiveDirectoryRelationshipKind.WriteSupersededServiceAccountState:
+            return 'WriteSupersededServiceAccountState';
         case ActiveDirectoryRelationshipKind.ProtectAdminGroups:
             return 'ProtectAdminGroups';
         case ActiveDirectoryRelationshipKind.DMSAPrecededBy:
@@ -442,6 +448,9 @@ export enum ActiveDirectoryKindProperties {
     StrongCertificateBindingEnforcement = 'strongcertificatebindingenforcement',
     VulnerableNetlogonSecurityDescriptor = 'vulnerablenetlogonsecuritydescriptor',
     VulnerableNetlogonSecurityDescriptorCollected = 'vulnerablenetlogonsecuritydescriptorcollected',
+    WindowsBuildNumber = 'windowsbuildnumber',
+    WindowsBuildCollected = 'windowsbuildcollected',
+    WindowsBuildRevision = 'windowsbuildrevision',
     EKUs = 'ekus',
     SubjectAltRequireUPN = 'subjectaltrequireupn',
     SubjectAltRequireDNS = 'subjectaltrequiredns',
@@ -643,6 +652,12 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Vulnerable Netlogon Security Descriptor';
         case ActiveDirectoryKindProperties.VulnerableNetlogonSecurityDescriptorCollected:
             return 'Vulnerable Netlogon Security Descriptor Collected';
+        case ActiveDirectoryKindProperties.WindowsBuildNumber:
+            return 'Windows Build Number';
+        case ActiveDirectoryKindProperties.WindowsBuildCollected:
+            return 'Windows Build Collected';
+        case ActiveDirectoryKindProperties.WindowsBuildRevision:
+            return 'Windows Build Revision';
         case ActiveDirectoryKindProperties.EKUs:
             return 'Enhanced Key Usage';
         case ActiveDirectoryKindProperties.SubjectAltRequireUPN:
