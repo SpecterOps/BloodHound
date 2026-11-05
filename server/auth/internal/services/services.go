@@ -33,6 +33,10 @@ type Service struct {
 
 // NewService constructs a Service backed by the supplied Database implementation.
 func NewService(databaseInterface Database) *Service {
+	if databaseInterface == nil {
+		panic("auth: service requires a non-nil Database")
+	}
+
 	return &Service{db: databaseInterface}
 }
 

@@ -44,7 +44,7 @@ func (s *Store) Logout(ctx context.Context, sessionID int64) error {
 	sqlQuery, args := updateBuilder.Build()
 
 	if _, err := s.db.Exec(ctx, sqlQuery, args...); err != nil {
-		return fmt.Errorf("ending user session: %w", err)
+		return fmt.Errorf("ending user session: %s", err)
 	}
 
 	return nil

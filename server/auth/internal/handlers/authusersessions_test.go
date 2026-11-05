@@ -29,6 +29,8 @@ import (
 )
 
 func TestHandlers_Logout(t *testing.T) {
+	t.Parallel()
+
 	var (
 		sessionID       = int64(42)
 		host            = &url.URL{Scheme: "https", Host: "bloodhound.example.com"}
@@ -58,6 +60,8 @@ func TestHandlers_Logout(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var (
 				authMock   = mocks.NewMockAuth(t)
 				handlerSet = handlers.NewHandlersContainer(authMock)

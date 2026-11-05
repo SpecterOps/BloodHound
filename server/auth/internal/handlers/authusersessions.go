@@ -31,7 +31,7 @@ func (s *Handlers) Logout(response http.ResponseWriter, request *http.Request) {
 		bhCtx = bhctx.Get(ctx)
 	)
 
-	if err := s.auth.Logout(ctx, bhCtx.AuthCtx.Session.ID); err != nil {
+	if err := s.service.Logout(ctx, bhCtx.AuthCtx.Session.ID); err != nil {
 		slog.ErrorContext(ctx, "Error ending user session during logout", attr.Error(err))
 	}
 

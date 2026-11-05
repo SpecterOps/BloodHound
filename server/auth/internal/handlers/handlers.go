@@ -31,12 +31,12 @@ type Auth interface {
 
 // Handlers is a dependency injection container for auth handlers
 type Handlers struct {
-	auth Auth
+	service Auth
 }
 
 // NewHandlersContainer initializes the Handlers dependency injection container
 func NewHandlersContainer(auth Auth) *Handlers {
 	return &Handlers{
-		auth: auth,
+		service: auth,
 	}
 }

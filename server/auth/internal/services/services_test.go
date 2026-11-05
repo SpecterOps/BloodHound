@@ -27,6 +27,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestNewService_PanicsOnNilDatabase(t *testing.T) {
+	assert.PanicsWithValue(t, "auth: service requires a non-nil Database", func() {
+		services.NewService(nil)
+	})
+}
+
 func TestService_Logout(t *testing.T) {
 	var (
 		ctx           = context.Background()

@@ -37,9 +37,9 @@ func TestStore_Logout_SQL(t *testing.T) {
 	)
 
 	testCases := []struct {
-		name      string
-		setupMock func(pool pgxmock.PgxPoolIface)
-		wantErr   error
+		name         string
+		setupMock    func(pool pgxmock.PgxPoolIface)
+		expectStrErr string
 	}{
 		{
 			name: "Expires the session by id",
@@ -58,7 +58,7 @@ func TestStore_Logout_SQL(t *testing.T) {
 			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectExec(expectedLogoutSQL).WithArgs(sessionID).WillReturnError(execErr)
 			},
-			wantErr: execErr,
+			expectStrErr: "ending user session: " + execErr.Error(),
 		},
 	}
 
@@ -69,9 +69,8 @@ func TestStore_Logout_SQL(t *testing.T) {
 
 			err := store.Logout(ctx, sessionID)
 
-			if testCase.wantErr != nil {
-				assert.ErrorIs(t, err, testCase.wantErr)
-				assert.ErrorContains(t, err, "ending user session")
+			if testCase.expectStrErr != "" {
+				assert.EqualError(t, err, testCase.expectStrErr)
 			} else {
 				require.NoError(t, err)
 			}
