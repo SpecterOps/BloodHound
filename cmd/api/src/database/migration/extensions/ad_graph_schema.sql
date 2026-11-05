@@ -292,7 +292,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'Site', 'Site', '', true, 'map-signs', '#2DD4BF');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteServer', 'SiteServer', '', true, 'map-marker', '#60A5FA');
 	PERFORM genscript_upsert_schema_node_kind(extension_id, 'SiteSubnet', 'SiteSubnet', '', true, 'map', '#F59E0B');
-	PERFORM genscript_upsert_schema_node_kind(extension_id, 'DMSA', 'DMSA', '', false, '', '');
+	PERFORM genscript_upsert_schema_node_kind(extension_id, 'DMSA', 'DMSA', '', true, '', '');
 
 	-- Keep custom_node_kinds in sync with node kinds
 	PERFORM genscript_upsert_custom_node_kind('User', '{"icon": {"name": "user", "type": "font-awesome", "color": "#17E625"}}');
@@ -311,6 +311,7 @@ BEGIN
 	PERFORM genscript_upsert_custom_node_kind('Site', '{"icon": {"name": "map-signs", "type": "font-awesome", "color": "#2DD4BF"}}');
 	PERFORM genscript_upsert_custom_node_kind('SiteServer', '{"icon": {"name": "map-marker", "type": "font-awesome", "color": "#60A5FA"}}');
 	PERFORM genscript_upsert_custom_node_kind('SiteSubnet', '{"icon": {"name": "map", "type": "font-awesome", "color": "#F59E0B"}}');
+	PERFORM genscript_upsert_custom_node_kind('DMSA', '{"icon": {"name": "", "type": "font-awesome", "color": ""}}');
 
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'Owns', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'GenericAll', '', true);
