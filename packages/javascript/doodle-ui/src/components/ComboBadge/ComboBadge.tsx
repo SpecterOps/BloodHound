@@ -84,7 +84,7 @@ const ComboBadge = (props: ComboBadgeProps) => {
         <div role='status' aria-label={ariaLabel} className={cn(ComboBadgeVariants({ type }), className)} {...rest}>
             <div
                 className={cn(
-                    'bg-neutral-light-5 text-primary dark:bg-neutral-dark-5 dark:text-neutral-light-1 rounded inline-block px-4 py-2 relative z-20',
+                    'bg-[color:var(--combo-badge-fill)] text-[color:var(--combo-badge-text)] rounded inline-block px-4 py-2 relative z-20',
                     { peer: !disableAdornment }
                 )}>
                 {label}

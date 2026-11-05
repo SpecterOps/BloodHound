@@ -33,7 +33,11 @@ const PaginationNav = ({ className, ...props }: React.ComponentProps<'nav'>) => 
 PaginationNav.displayName = 'PaginationNav';
 
 const PaginationContent = forwardRef<HTMLDivElement, React.ComponentProps<'div'>>(({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex flex-row items-center gap-2 dark:text-white', className)} {...props} />
+    <div
+        ref={ref}
+        className={cn('flex flex-row items-center gap-2 text-[color:var(--pagination-text)]', className)}
+        {...props}
+    />
 ));
 PaginationContent.displayName = 'PaginationContent';
 
@@ -169,12 +173,12 @@ const Pagination: React.FC<PaginationProps> = (props) => {
                     <PaginationPrevious
                         onClick={handlePageChange(-1)}
                         disabled={lowerBoundary <= 1}
-                        className='disabled:text-gray-400 px-1 py-2 mx-2'
+                        className='disabled:text-[color:var(--pagination-disabled-text)] px-1 py-2 mx-2'
                     />
                     <PaginationNext
                         onClick={handlePageChange(1)}
                         disabled={upperBoundary >= count}
-                        className='disabled:text-gray-400 px-1 py-2 mx-2'
+                        className='disabled:text-[color:var(--pagination-disabled-text)] px-1 py-2 mx-2'
                     />
                 </PaginationItem>
             </PaginationContent>
