@@ -281,7 +281,7 @@ func (s analysisPipeline) dispatchAnalysisSteps(run analysisPipelineRun) analysi
 			if pipelineStep.operation != nil {
 				start_ts := time.Now()
 				status, errs := pipelineStep.operation(run)
-				step_duration := time.Now().Sub(start_ts)
+				step_duration := time.Since(start_ts)
 
 				pipelineStepResult.status = status
 				pipelineStepResult.errors = errs
