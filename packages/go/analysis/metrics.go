@@ -60,10 +60,18 @@ var (
 			(24 * time.Hour).Seconds(),
 		},
 	}, []string{"step"})
+
+	analysisStepLastDuration = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: model.Namespace,
+		Subsystem: analysisSubsystem,
+		Name:      "step_last_duration_seconds",
+		Help:      "How long the most recent analysis step run took to complete",
+	}, []string{"step"})
 )
 
 func RecordAnalysisStepDuration(step string, duration time.Duration) {
 	analysisStepDuration.WithLabelValues(step).Observe(duration.Seconds())
+	analysisStepLastDuration.WithLabelValues(step).Set(duration.Seconds())
 }
 
 // tagToPosition returns the value used for the "position" label on pzNodeTagCounterVec.
@@ -94,6 +102,10 @@ func RegisterAnalysisMetrics(registerer prometheus.Registerer) error {
 
 	if err := registerer.Register(analysisStepDuration); err != nil {
 		return fmt.Errorf("failed to register analysis step duration metric: %w", err)
+	}
+
+	if err := registerer.Register(analysisStepLastDuration); err != nil {
+		return fmt.Errorf("failed to register analysis step last duration metric: %w", err)
 	}
 
 	return nil
