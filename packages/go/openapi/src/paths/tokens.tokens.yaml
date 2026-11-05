@@ -43,11 +43,11 @@ get:
     - name: created_by
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
+        $ref: './../schemas/api.params.predicate.filter.uuid-required.yaml'
     - name: expires_at
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.time.yaml'
+        $ref: './../schemas/api.params.predicate.filter.time-nullable-required.yaml'
     - name: hmac_method
       in: query
       schema:
