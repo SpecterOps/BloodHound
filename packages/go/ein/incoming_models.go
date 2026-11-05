@@ -254,6 +254,11 @@ type User struct {
 	UnconstrainedDelegation bool
 }
 
+type DMSA struct {
+	IngestBase
+	PrecededBy TypedPrincipal
+}
+
 type Container struct {
 	IngestBase
 	ChildObjects      []TypedPrincipal

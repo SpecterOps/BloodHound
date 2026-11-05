@@ -167,6 +167,17 @@ func convertUserData(user ein.User, converted *ConvertedData, ingestTime time.Ti
 	converted.RelProps = append(converted.RelProps, ein.ParseUserMiscData(user)...)
 }
 
+func convertDMSAData(dmsa ein.DMSA, converted *ConvertedData, ingestTime time.Time) {
+	baseNodeProp := ein.ConvertObjectToNode(dmsa.IngestBase, ad.DMSA, ingestTime)
+	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
+	converted.RelProps = append(converted.RelProps,
+		ein.ParseACEData(baseNodeProp, dmsa.Aces, dmsa.ObjectIdentifier, ad.DMSA)...)
+	if rel := ein.ParseObjectContainer(dmsa.IngestBase, ad.DMSA); rel.IsValid() {
+		converted.RelProps = append(converted.RelProps, rel)
+	}
+	converted.RelProps = append(converted.RelProps, ein.ParseDMSAMiscData(dmsa)...)
+}
+
 func convertGroupData(group ein.Group, converted *ConvertedGroupData, ingestTime time.Time) {
 	baseNodeProp := ein.ConvertObjectToNode(group.IngestBase, ad.Group, ingestTime)
 	converted.NodeProps = append(converted.NodeProps, baseNodeProp)
