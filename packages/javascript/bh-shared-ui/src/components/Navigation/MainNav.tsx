@@ -17,10 +17,10 @@
 import { faCaretRight, faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, Typography } from 'doodle-ui';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { BREAKPOINTS, useApiVersion, useKeybindings, useMediaQuery, useNavExpanded } from '../../hooks';
+import { useApiVersion, useKeybindings, useNavExpanded } from '../../hooks';
 import { privilegeZonesPath } from '../../routes';
 import { cn, useAppNavigate } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -209,8 +209,6 @@ const MainNavFooter: FC<{
 
 const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
     const [isExpanded, setIsExpanded] = useNavExpanded();
-    const isExtraLargeViewport = useMediaQuery(`(min-width: ${BREAKPOINTS.xl})`);
-    const previousIsExtraLargeViewport = useRef(isExtraLargeViewport);
     const navigate = useAppNavigate();
 
     const keybindings = useMemo(
@@ -233,13 +231,6 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
 
     useKeybindings(keybindings);
 
-    useEffect(() => {
-        if (previousIsExtraLargeViewport.current === isExtraLargeViewport) return;
-
-        previousIsExtraLargeViewport.current = isExtraLargeViewport;
-        setIsExpanded(isExtraLargeViewport);
-    }, [isExtraLargeViewport, setIsExpanded]);
-
     const handleToggleNav = () => setIsExpanded(!isExpanded);
 
     return (
@@ -250,7 +241,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 aria-expanded={isExpanded}
                 aria-label='Toggle Navigation'
                 className={cn(
-                    'h-8 w-8 p-2 border-none',
+                    'h-8 w-8',
                     'text-common-white bg-primary dark:text-main dark:bg-neutral-5',
                     'hover:text-common-white hover:bg-secondary dark:hover:text-main dark:hover:bg-neutral-3',
                     'active:text-common-white active:bg-primary-variant dark:active:text-main dark:active:bg-neutral-2',
