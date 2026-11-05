@@ -63,6 +63,18 @@ describe('Field', () => {
         expect(screen.getByText('FALSE')).toHaveAttribute('title', 'FALSE');
     });
 
+    it('clears open help when switching between node kinds', async () => {
+        const user = userEvent.setup();
+        const { rerender } = render(<Field label='Admin Count' value={false} keyprop='admincount' nodeType='User' />);
+        await user.hover(screen.getByText('Admin Count'));
+        expect(await screen.findByRole('tooltip')).toBeVisible();
+
+        rerender(<Field label='Admin Count' value={false} keyprop='admincount' nodeType='Group' />);
+        rerender(<Field label='Admin Count' value={false} keyprop='admincount' nodeType='User' />);
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
     it('opens help on keyboard focus and dismisses it with Escape', async () => {
         const user = userEvent.setup();
         render(

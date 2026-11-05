@@ -155,7 +155,7 @@ export const Field: React.FC<EntityField & { nodeType?: string }> = (entityField
     const formattedLabel = typeof label === 'string' ? label.replace(/:$/, '') : label;
     const labelContent =
         typeof formattedLabel === 'string' ? (
-            <EntityPropertyLabel property={keyprop} label={formattedLabel} nodeType={nodeType} />
+            <EntityPropertyLabel key={nodeType} property={keyprop} label={formattedLabel} nodeType={nodeType} />
         ) : (
             formattedLabel
         );
