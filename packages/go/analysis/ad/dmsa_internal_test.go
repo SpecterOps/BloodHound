@@ -79,3 +79,11 @@ func TestDMSAVictimRights(t *testing.T) {
 		})
 	}
 }
+
+func TestMarkRelationshipEndpoint(t *testing.T) {
+	seenEndpoints := make(map[relationshipEndpoint]struct{})
+
+	require.True(t, markRelationshipEndpoint(seenEndpoints, 1, 2))
+	require.False(t, markRelationshipEndpoint(seenEndpoints, 1, 2))
+	require.True(t, markRelationshipEndpoint(seenEndpoints, 2, 1))
+}

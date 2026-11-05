@@ -270,6 +270,21 @@ func submitBadSuccessor(ctx context.Context, sink *post.FilteredRelationshipSink
 	return nil
 }
 
+type relationshipEndpoint struct {
+	startID graph.ID
+	endID   graph.ID
+}
+
+func markRelationshipEndpoint(seenEndpoints map[relationshipEndpoint]struct{}, startID, endID graph.ID) bool {
+	endpoint := relationshipEndpoint{startID: startID, endID: endID}
+	if _, seen := seenEndpoints[endpoint]; seen {
+		return false
+	}
+
+	seenEndpoints[endpoint] = struct{}{}
+	return true
+}
+
 // PostOuroborosSelfEnroll creates OuroborosSelfEnroll edges from any principal that owns or holds GenericAll over a
 // delegated Managed Service Account (DMSA node) to that dMSA.
 //
@@ -309,7 +324,12 @@ func PostOuroborosSelfEnroll(ctx context.Context, db graph.Database) (*post.Atom
 		})); err != nil {
 			return err
 		} else {
+			seenEndpoints := make(map[relationshipEndpoint]struct{})
 			for _, rel := range rels {
+				if !markRelationshipEndpoint(seenEndpoints, rel.StartID, rel.EndID) {
+					continue
+				}
+
 				if !sink.Submit(ctx, post.EnsureRelationshipJob{
 					FromID: rel.StartID,
 					ToID:   rel.EndID,
