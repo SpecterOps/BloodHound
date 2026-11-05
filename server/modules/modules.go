@@ -31,6 +31,7 @@ import (
 	"github.com/specterops/bloodhound/server/graphdb"
 	"github.com/specterops/bloodhound/server/identity"
 	"github.com/specterops/bloodhound/server/opengraphschema"
+	"github.com/specterops/bloodhound/server/savedqueries"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -87,4 +88,5 @@ func Register(deps Deps) {
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
 	opengraphschema.Register(deps.Router, deps.Pool)
+	savedqueries.Register(deps.Router, deps.Pool)
 }
