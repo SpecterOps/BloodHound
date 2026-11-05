@@ -369,9 +369,9 @@ func (s Property) Name() string {
 	case NodeResourceGroupID:
 		return "Node Resource Group ID"
 	case OnPremID:
-		return "On Prem ID"
+		return "On-Premises ID"
 	case OnPremSyncEnabled:
-		return "On Prem Sync Enabled"
+		return "On-Premises Sync Enabled"
 	case SecurityEnabled:
 		return "Security Enabled"
 	case SecurityIdentifier:
@@ -399,15 +399,15 @@ func (s Property) Name() string {
 	case PublisherDomain:
 		return "Publisher Domain"
 	case SignInAudience:
-		return "Sign In Audience"
+		return "Sign-In Audience"
 	case RoleTemplateID:
 		return "Role Template ID"
 	case RoleDefinitionId:
-		return "Role Definition Id"
+		return "Role Definition ID"
 	case EndUserAssignmentRequiresApproval:
 		return "End User Assignment Requires Approval"
 	case EndUserAssignmentRequiresCAPAuthenticationContext:
-		return "End User Assignment Requires CAP Authentication Context"
+		return "End User Assignment Requires Conditional Access Authentication Context"
 	case EndUserAssignmentUserApprovers:
 		return "End User Assignment User Approvers"
 	case EndUserAssignmentGroupApprovers:
@@ -419,7 +419,7 @@ func (s Property) Name() string {
 	case EndUserAssignmentRequiresTicketInformation:
 		return "End User Assignment Requires Ticket Information"
 	case LastSuccessfulSignInDateTime:
-		return "Last Successful Sign In Date Time"
+		return "Last Successful Sign-In"
 	case Issuer:
 		return "Issuer"
 	case Subject:

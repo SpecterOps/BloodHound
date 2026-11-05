@@ -971,9 +971,9 @@ func (s Property) Name() string {
 	case EnrollmentAgentRestrictionsCollected:
 		return "Enrollment Agent Restrictions Collected"
 	case IsUserSpecifiesSanEnabled:
-		return "Is User Specifies San Enabled"
+		return "User Supplied SAN Enabled"
 	case IsUserSpecifiesSanEnabledCollected:
-		return "Is User Specifies San Enabled Collected"
+		return "User Supplied SAN Setting Collected"
 	case RoleSeparationEnabled:
 		return "Role Separation Enabled"
 	case RoleSeparationEnabledCollected:
@@ -1061,17 +1061,17 @@ func (s Property) Name() string {
 	case EKUs:
 		return "Enhanced Key Usage"
 	case SubjectAltRequireUPN:
-		return "Subject Alternative Name Require UPN"
+		return "Requires UPN in Subject Alternative Name"
 	case SubjectAltRequireDNS:
-		return "Subject Alternative Name Require DNS"
+		return "Requires DNS Name in Subject Alternative Name"
 	case SubjectAltRequireDomainDNS:
-		return "Subject Alternative Name Require Domain DNS"
+		return "Requires Domain DNS Name in Subject Alternative Name"
 	case SubjectAltRequireEmail:
-		return "Subject Alternative Name Require Email"
+		return "Requires Email in Subject Alternative Name"
 	case SubjectAltRequireSPN:
-		return "Subject Alternative Name Require SPN"
+		return "Requires SPN in Subject Alternative Name"
 	case SubjectRequireEmail:
-		return "Subject Require Email"
+		return "Requires Email in Subject"
 	case AuthorizedSignatures:
 		return "Authorized Signatures Required"
 	case ApplicationPolicies:
@@ -1093,7 +1093,7 @@ func (s Property) Name() string {
 	case CertificateNameFlag:
 		return "Certificate Name Flags"
 	case EffectiveEKUs:
-		return "Effective EKUs"
+		return "Effective Enhanced Key Usages"
 	case EnrollmentFlag:
 		return "Enrollment Flags"
 	case Flags:
@@ -1117,7 +1117,7 @@ func (s Property) Name() string {
 	case ObjectGUID:
 		return "Object GUID"
 	case ExpirePasswordsOnSmartCardOnlyAccounts:
-		return "Expire Passwords on Smart Card only Accounts"
+		return "Expire Passwords on Smart Card Only Accounts"
 	case MachineAccountQuota:
 		return "Machine Account Quota"
 	case SupportedKerberosEncryptionTypes:
@@ -1127,7 +1127,7 @@ func (s Property) Name() string {
 	case PasswordStoredUsingReversibleEncryption:
 		return "Password Stored Using Reversible Encryption"
 	case SmartcardRequired:
-		return "Smartcard Required"
+		return "Smart Card Required"
 	case UseDESKeyOnly:
 		return "Use DES Key Only"
 	case LogonScriptEnabled:
@@ -1139,7 +1139,7 @@ func (s Property) Name() string {
 	case PasswordExpired:
 		return "Password Expired"
 	case DSHeuristics:
-		return "DSHeuristics"
+		return "Directory Service Heuristics"
 	case UserAccountControl:
 		return "User Account Control"
 	case TrustAttributesInbound:
@@ -1147,7 +1147,7 @@ func (s Property) Name() string {
 	case TrustAttributesOutbound:
 		return "Trust Attributes (Outbound)"
 	case MinPwdLength:
-		return "Minimum password length"
+		return "Minimum Password Length"
 	case PwdProperties:
 		return "Password Properties"
 	case PwdHistoryLength:
@@ -1171,23 +1171,23 @@ func (s Property) Name() string {
 	case RestrictOutboundNTLM:
 		return "Restrict Outbound NTLM"
 	case GMSA:
-		return "GMSA"
+		return "Group Managed Service Account"
 	case MSA:
-		return "MSA"
+		return "Standalone Managed Service Account"
 	case DoesAnyAceGrantOwnerRights:
-		return "Does Any ACE Grant Owner Rights"
+		return "Has ACE Granting Owner Rights"
 	case DoesAnyInheritedAceGrantOwnerRights:
-		return "Does Any Inherited ACE Grant Owner Rights"
+		return "Has Inherited ACE Granting Owner Rights"
 	case CustomExplicitDenyAcesCount:
-		return "Custom Explicit Deny ACEs Count"
+		return "Custom Explicit Deny ACE Count"
 	case CustomInheritedDenyAcesCount:
-		return "Custom Inherited Deny ACEs Count"
+		return "Custom Inherited Deny ACE Count"
 	case ADCSWebEnrollmentHTTP:
 		return "ADCS Web Enrollment HTTP"
 	case ADCSWebEnrollmentHTTPS:
 		return "ADCS Web Enrollment HTTPS"
 	case ADCSWebEnrollmentHTTPSEPA:
-		return "ADCS Web Enrollment HTTPS EPA"
+		return "ADCS Web Enrollment HTTPS Extended Protection"
 	case LDAPSigning:
 		return "LDAP Signing"
 	case LDAPAvailable:
@@ -1195,11 +1195,11 @@ func (s Property) Name() string {
 	case LDAPSAvailable:
 		return "LDAPS Available"
 	case LDAPSEPA:
-		return "LDAPS EPA"
+		return "LDAPS Extended Protection"
 	case IsDC:
 		return "Is Domain Controller"
 	case IsReadOnlyDC:
-		return "Read-Only DC"
+		return "Read-Only Domain Controller"
 	case HTTPEnrollmentEndpoints:
 		return "HTTP Enrollment Endpoints"
 	case HTTPSEnrollmentEndpoints:
@@ -1213,11 +1213,11 @@ func (s Property) Name() string {
 	case RestrictReceivingNTLMTraffic:
 		return "Restrict Receiving NTLM Traffic"
 	case NTLMMinServerSec:
-		return "NTLM Min Server Sec"
+		return "NTLM Minimum Server Session Security"
 	case NTLMMinClientSec:
-		return "NTLM Min Client Sec"
+		return "NTLM Minimum Client Session Security"
 	case LMCompatibilityLevel:
-		return "LM Compatibility Level"
+		return "LAN Manager Compatibility Level"
 	case UseMachineID:
 		return "Use Machine ID"
 	case ClientAllowedNTLMServers:
