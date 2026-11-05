@@ -285,7 +285,11 @@ func (s analysisPipeline) dispatchAnalysisSteps(run analysisPipelineRun) analysi
 
 				pipelineStepResult.status = status
 				pipelineStepResult.errors = errs
-				RecordAnalysisStepDuration(pipelineStep.String(), step_duration)
+
+				// check status again in case the step is skipped in the operation logic
+				if status != pipelineStepStatusSkipped {
+					RecordAnalysisStepDuration(pipelineStep.String(), step_duration)
+				}
 			}
 		}
 
