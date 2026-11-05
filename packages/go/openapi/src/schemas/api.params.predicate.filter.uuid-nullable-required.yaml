@@ -15,8 +15,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 type: string
-pattern: '^(eq|neq):[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$'
+pattern: '^((eq|neq):[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|(eq|neq):null)$'
 description: |
-  Filter results by a UUID value. A predicate is required.
+  Filter results by a UUID value using a required predicate.
   Valid filter predicates are `eq` and `neq`.
-  Example: `eq:12345678-1234-1234-1234-123456789abc`.
+  Use `eq:null` or `neq:null` to compare against null.
+  Example: `eq:12345678-1234-1234-1234-123456789abc`

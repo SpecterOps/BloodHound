@@ -43,7 +43,7 @@ get:
     - name: created_by
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.uuid-required.yaml'
+        $ref: './../schemas/api.params.predicate.filter.uuid-nullable-required.yaml'
     - name: expires_at
       in: query
       schema:
