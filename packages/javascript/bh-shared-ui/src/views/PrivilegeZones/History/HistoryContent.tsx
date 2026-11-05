@@ -96,6 +96,7 @@ const HistoryContent = () => {
                         className='overflow-y-auto min-h-32 h-full flex flex-col rounded-b-md'>
                         <DataTable
                             aria-label='History Log Table'
+                            className='border-0 bg-neutral-1'
                             data={records}
                             shouldFillHeight
                             TableHeaderProps={tableHeaderProps}
