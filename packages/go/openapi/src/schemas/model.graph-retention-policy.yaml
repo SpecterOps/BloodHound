@@ -24,5 +24,5 @@ properties:
     type: boolean
   ttl:
     type: string
-    description: Retention duration expressed as an ISO 8601 duration string.
+    description: Retention duration expressed as an ISO 8601 duration string, between 4 and 30 days inclusive (P4D to P30D).
     example: P14D

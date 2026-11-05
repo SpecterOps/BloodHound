@@ -53,7 +53,7 @@ put:
     - Enterprise
   requestBody:
     required: true
-    description: TTL must be a positive ISO 8601 duration.
+    description: TTL must be an ISO 8601 duration between 4 and 30 days inclusive (P4D to P30D).
     content:
       application/json:
         schema:
