@@ -16,9 +16,13 @@
 
 type: object
 description: The core data to describe a retention policy
+required:
+  - enabled
+  - ttl
 properties:
   enabled:
     type: boolean
   ttl:
     type: string
+    description: Retention duration expressed as an ISO 8601 duration string.
     example: P14D
