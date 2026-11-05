@@ -33,7 +33,7 @@ const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, Switch
         const switchId = id ?? generatedId;
 
         return (
-            <div className={cn(switchWrapperStyles(), label && 'py-0')}>
+            <div className={cn(switchWrapperStyles, label && 'py-0')}>
                 {labelPosition === 'left' && label && (
                     <label
                         data-state={props.checked ? 'checked' : 'unchecked'}
@@ -51,10 +51,10 @@ const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, Switch
                     ref={ref}
                     id={switchId}
                     aria-label={!label ? ariaLabel : undefined}
-                    className={cn(switchRootStyles(), className)}
+                    className={cn(switchRootStyles, className)}
                     disabled={disabled}
                     {...props}>
-                    <SwitchPrimitives.Thumb className={switchThumbStyles()} />
+                    <SwitchPrimitives.Thumb className={switchThumbStyles} />
                 </SwitchPrimitives.Root>
 
                 {labelPosition !== 'left' && label && (
