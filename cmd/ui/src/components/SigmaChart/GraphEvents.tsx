@@ -160,7 +160,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
             // We calculate control points for all curved edges here and pass those along as edge attributes in both viewport and framed graph
             // coordinates. We can then use those control points in our edge, edge label, and edge arrow programs.
             // Endpoints come from the graph rather than the edge key: keys are `rel_<id>`, which carries no source or target.
-            const [source, target] = graph.extremities(edge);
+            const [source, target] = sigma.getGraph().extremities(edge);
             const nodeDisplayData = getEdgeSourceAndTargetDisplayData(source, target, sigma);
             if (nodeDisplayData !== null) {
                 const sourceCoordinates = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
@@ -173,12 +173,12 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 newData.controlInViewport = sigma.framedGraphToViewport(control);
             }
         },
-        [sigma, graph, calculateCurveHeight, getControlAtMidpoint]
+        [sigma, calculateCurveHeight, getControlAtMidpoint]
     );
 
     const selfEdgeReducer = useCallback(
         (edge: string, newData: Attributes) => {
-            const [source, target] = graph.extremities(edge);
+            const [source, target] = sigma.getGraph().extremities(edge);
             const nodeDisplayData = getEdgeSourceAndTargetDisplayData(source, target, sigma);
             if (nodeDisplayData !== null) {
                 const nodeRadius = getNodeRadius(false, newData.inverseSqrtZoomRatio, nodeDisplayData.source.size);
@@ -191,7 +191,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 newData.framedGraphNodeRadius = framedGraphNodeRadius;
             }
         },
-        [sigma, graph, getLineLength]
+        [sigma, getLineLength]
     );
 
     useEffect(() => {
@@ -297,7 +297,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
         [graph, highlightedItem]
     );
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const bgColor = theme.neutral.primary;
         // dimFactor is how much of the original color shows through (1 = full, 0 = fully hidden).
         // Equivalent to 1 - nodeBlend from the old CPU-blend approach: dark 1-0.5=0.5, light 1-0.8=0.2.
@@ -305,60 +305,59 @@ export const GraphEvents = forwardRef(function GraphEvents(
         const edgeBlend = darkMode ? 0.6 : 0.9;
         const labelDimFactor = darkMode ? 0.3 : 0.1;
 
-        setSettings({
-            nodeReducer: (node, data) => {
-                const camera = sigma.getCamera();
-                const isDimmed =
-                    isExploreGraphHighlight !== false &&
-                    !!highlightedItem &&
-                    !highlightedNodeIds.has(node) &&
-                    isHighlightedItemInGraph;
+        // Reducers belong to this renderer; useSetSettings replays retained callbacks onto replacement instances.
+        sigma.setSetting('nodeReducer', (node, data) => {
+            const camera = sigma.getCamera();
+            const isDimmed =
+                isExploreGraphHighlight !== false &&
+                !!highlightedItem &&
+                !highlightedNodeIds.has(node) &&
+                isHighlightedItemInGraph;
 
-                return {
-                    ...data,
-                    highlighted: node === highlightedItem,
-                    isExploreGraphLabelClip,
-                    inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
-                    isDimmed,
-                    // Always pass the canvas background color so the shader can dim toward it.
-                    graphBgColor: bgColor,
-                    ...(isDimmed && {
-                        labelDimFactor,
-                        dimFactor: nodeDimFactor,
-                        // Keep label background dimmed — labels are rendered on canvas 2D, not by the shader.
-                        backgroundColor: blendHexColors(data.backgroundColor ?? bgColor, bgColor, 1 - nodeDimFactor),
-                    }),
-                };
-            },
-            edgeReducer: (edge, data) => {
-                const camera = sigma.getCamera();
-                const isDimmed =
-                    isExploreGraphHighlight !== false &&
-                    !!highlightedItem &&
-                    !highlightedEdgeIds.has(edge) &&
-                    isHighlightedItemInGraph;
+            return {
+                ...data,
+                highlighted: node === highlightedItem,
+                isExploreGraphLabelClip,
+                inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
+                isDimmed,
+                // Always pass the canvas background color so the shader can dim toward it.
+                graphBgColor: bgColor,
+                ...(isDimmed && {
+                    labelDimFactor,
+                    dimFactor: nodeDimFactor,
+                    // Keep label background dimmed — labels are rendered on canvas 2D, not by the shader.
+                    backgroundColor: blendHexColors(data.backgroundColor ?? bgColor, bgColor, 1 - nodeDimFactor),
+                }),
+            };
+        });
+        sigma.setSetting('edgeReducer', (edge, data) => {
+            const camera = sigma.getCamera();
+            const isDimmed =
+                isExploreGraphHighlight !== false &&
+                !!highlightedItem &&
+                !highlightedEdgeIds.has(edge) &&
+                isHighlightedItemInGraph;
 
-                const newData: Attributes = {
-                    ...data,
-                    hidden: data.hidden,
-                    highlighted: edge === highlightedItem,
-                    inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
-                    isDimmed,
-                    backgroundColor: bgColor,
-                    ...(isDimmed && {
-                        labelDimFactor,
-                        color: blendHexColors(data.color, bgColor, edgeBlend),
-                    }),
-                };
+            const newData: Attributes = {
+                ...data,
+                hidden: data.hidden,
+                highlighted: edge === highlightedItem,
+                inverseSqrtZoomRatio: 1 / Math.sqrt(camera.ratio),
+                isDimmed,
+                backgroundColor: bgColor,
+                ...(isDimmed && {
+                    labelDimFactor,
+                    color: blendHexColors(data.color, bgColor, edgeBlend),
+                }),
+            };
 
-                if (data.type === 'curved') {
-                    curvedEdgeReducer(edge, data, newData);
-                } else if (data.type === 'self') {
-                    selfEdgeReducer(edge, newData);
-                }
+            if (data.type === 'curved') {
+                curvedEdgeReducer(edge, data, newData);
+            } else if (data.type === 'self') {
+                selfEdgeReducer(edge, newData);
+            }
 
-                return newData;
-            },
+            return newData;
         });
     }, [
         curvedEdgeReducer,
@@ -367,7 +366,6 @@ export const GraphEvents = forwardRef(function GraphEvents(
         highlightedItem,
         highlightedNodeIds,
         selfEdgeReducer,
-        setSettings,
         sigma,
         theme.neutral.primary,
         isHighlightedItemInGraph,
