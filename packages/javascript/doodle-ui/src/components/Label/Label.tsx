@@ -13,23 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import * as LabelPrimitive from '@radix-ui/react-label';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
-
-const LabelVariants = cva('leading-none peer-disabled:cursor-not-allowed peer-disabled:text-disabled', {
-    variants: {
-        size: {
-            small: 'text-sm font-medium',
-            medium: 'text-base font-bold',
-            large: 'text-lg font-bold',
-        },
-    },
-    defaultVariants: {
-        size: 'medium',
-    },
-});
+import { LabelVariants } from './Label.styles';
 
 const Label = React.forwardRef<
     React.ElementRef<typeof LabelPrimitive.Root>,

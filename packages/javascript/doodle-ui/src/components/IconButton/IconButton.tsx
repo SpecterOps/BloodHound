@@ -19,8 +19,7 @@ import * as React from 'react';
 import { AccessibleIcon } from '../AccessibleIcon';
 import { Tooltip, type TooltipPosition } from '../Tooltip';
 import { cn, cnWithState } from '../utils';
-import { IconButtonVariants } from './IconButton.styles';
-
+import { iconButtonIconClasses, IconButtonVariants } from './IconButton.styles';
 export { IconButtonVariants } from './IconButton.styles';
 
 export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | 'className' | 'render'> {
@@ -74,9 +73,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(f
                     '--icon-button-icon-size': `${size}px`,
                 }) as IconButtonStyle
             }>
-            <span className='inline-flex size-[var(--icon-button-icon-size)] shrink-0 items-center justify-center [&>*]:size-full [&_svg]:size-full'>
-                {buttonIcon}
-            </span>
+            <span className={iconButtonIconClasses}>{buttonIcon}</span>
         </BaseUIButton>
     );
 

@@ -25,6 +25,7 @@ import {
     selectIconClasses,
     selectItemClasses,
     selectLabelClasses,
+    selectLoadingIconClasses,
     selectPopperContentClasses,
     selectPopperViewportClasses,
     selectScrollButtonClasses,
@@ -32,7 +33,6 @@ import {
     SelectTriggerVariants,
     selectViewportClasses,
 } from './Select.styles';
-
 export { SelectTriggerVariants } from './Select.styles';
 
 const Select = SelectPrimitive.Root;
@@ -70,7 +70,7 @@ const SelectTrigger = React.forwardRef<
         {children}
         <SelectPrimitive.Icon asChild>
             {isLoading ? (
-                <LoadingSpinner className='size-3 shrink-0 text-inherit' />
+                <LoadingSpinner className={selectLoadingIconClasses} />
             ) : (
                 <FontAwesomeIcon icon={faChevronDown} className={selectIconClasses} />
             )}

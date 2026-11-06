@@ -15,35 +15,36 @@
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
 import { buttonBaseClasses } from '../Button/Button.styles';
+import { cn } from '../utils';
 
-const defaultIconButtonClasses = [
+export const defaultIconButtonClasses = cn(
     'hover:text-primary',
     'active:bg-transparent active:text-secondary',
-    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary',
-];
+    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary'
+);
 
-export const iconPrimaryClasses = [
+export const iconPrimaryClasses = cn(
     'bg-primary text-[color:var(--button-primary-text)] shadow-outer-1',
     'hover:bg-secondary',
     'focus-visible:bg-secondary',
     'active:bg-[color:var(--button-primary-active-fill)]',
-    'disabled:shadow-none disabled:bg-[color:var(--button-disabled-fill)]',
-];
+    'disabled:shadow-none disabled:bg-[color:var(--button-disabled-fill)]'
+);
 
-export const iconSecondaryClasses = [
+export const iconSecondaryClasses = cn(
     'bg-[color:var(--button-secondary-fill)] text-[color:var(--button-secondary-text)] shadow-outer-1',
     'hover:bg-secondary hover:text-[color:var(--button-highlight-text)]',
     'focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
     'active:bg-[color:var(--button-secondary-active-fill)] active:text-[color:var(--button-secondary-text)]',
-    'disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none',
-];
+    'disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none'
+);
 
 export const IconButtonVariants = cva(
-    [
-        ...buttonBaseClasses,
+    cn(
+        buttonBaseClasses,
         'inline-grid h-fit aspect-square box-border',
-        'shrink-0 place-items-center align-middle rounded-full border-0 p-2',
-    ],
+        'shrink-0 place-items-center align-middle rounded-full border-0 p-2'
+    ),
     {
         variants: {
             variant: {
@@ -57,3 +58,6 @@ export const IconButtonVariants = cva(
         },
     }
 );
+
+export const iconButtonIconClasses =
+    'inline-flex size-[var(--icon-button-icon-size)] shrink-0 items-center justify-center [&>*]:size-full [&_svg]:size-full';
