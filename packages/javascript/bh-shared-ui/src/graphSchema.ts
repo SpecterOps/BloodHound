@@ -153,6 +153,7 @@ export enum ActiveDirectoryRelationshipKind {
     SyncedToADUser = 'SyncedToADUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
     CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
+    CoerceAndRelayNTLMToADCSRPC = 'CoerceAndRelayNTLMToADCSRPC',
     WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
     WriteOwnerRaw = 'WriteOwnerRaw',
     OwnsLimitedRights = 'OwnsLimitedRights',
@@ -319,6 +320,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'CoerceAndRelayNTLMToSMB';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
             return 'CoerceAndRelayNTLMToADCS';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC:
+            return 'CoerceAndRelayNTLMToADCSRPC';
         case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights:
             return 'WriteOwnerLimitedRights';
         case ActiveDirectoryRelationshipKind.WriteOwnerRaw:
@@ -368,6 +371,7 @@ export const EdgeCompositionRelationships = [
     'ADCSESC13',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToADCS',
+    'CoerceAndRelayNTLMToADCSRPC',
     'CoerceAndRelayNTLMToLDAP',
     'CoerceAndRelayNTLMToLDAPS',
     'GPOAppliesTo',
@@ -512,6 +516,8 @@ export enum ActiveDirectoryKindProperties {
     Transitive = 'transitive',
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
+    RPCEncryptionEnforced = 'rpcencryptionenforced',
+    RPCEncryptionCollected = 'rpcencryptioncollected',
     AdminSDHolderProtected = 'adminsdholderprotected',
     ServicePrincipalNames = 'serviceprincipalnames',
     ServerReference = 'serverreference',
@@ -798,6 +804,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Scope';
         case ActiveDirectoryKindProperties.NetBIOS:
             return 'NetBIOS';
+        case ActiveDirectoryKindProperties.RPCEncryptionEnforced:
+            return 'RPC Encryption Enforced';
+        case ActiveDirectoryKindProperties.RPCEncryptionCollected:
+            return 'RPC Encryption Collected';
         case ActiveDirectoryKindProperties.AdminSDHolderProtected:
             return 'AdminSDHolder Protected';
         case ActiveDirectoryKindProperties.ServicePrincipalNames:
@@ -863,6 +873,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.SyncedToADUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
@@ -932,6 +943,7 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.SyncedToADUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
