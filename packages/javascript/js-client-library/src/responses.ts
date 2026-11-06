@@ -511,7 +511,7 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
-export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'deprecated' | 'orphaned';
+export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'in_progress' | 'deprecated' | 'orphaned';
 
 export type UnifiedFinding = {
     id: number;
