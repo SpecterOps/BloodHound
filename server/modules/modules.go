@@ -27,6 +27,7 @@ import (
 	alerts "github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/appcfg"
+	"github.com/specterops/bloodhound/server/dataquality"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
 	"github.com/specterops/bloodhound/server/identity"
@@ -87,4 +88,5 @@ func Register(deps Deps) {
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
 	opengraphschema.Register(deps.Router, deps.Pool)
+	dataquality.Register(deps.Router, deps.Pool)
 }
