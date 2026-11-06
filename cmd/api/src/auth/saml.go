@@ -57,19 +57,6 @@ func GetIDPSingleSignOnServiceURL(metadata *saml.EntityDescriptor, bindingType s
 	return "", fmt.Errorf("no SSO service defined that supports the %s binding type", bindingType)
 }
 
-// GetAssertionConsumerServiceURL This may not be present, we return the first we find
-func GetAssertionConsumerServiceURL(metadata *saml.EntityDescriptor, bindingType string) (string, error) {
-	for _, spSSODescriptor := range metadata.SPSSODescriptors {
-		for _, acs := range spSSODescriptor.AssertionConsumerServices {
-			if acs.Binding == bindingType {
-				return acs.Location, nil
-			}
-		}
-	}
-
-	return "", fmt.Errorf("no SAML ascertion consumer service url defined in metadata xml")
-}
-
 func NewServiceProvider(hostUrl url.URL, cfg config.Configuration, samlProvider model.SAMLProvider) (saml.ServiceProvider, error) {
 	if spCert, spKey, err := crypto.X509ParsePair(cfg.SAML.ServiceProviderCertificate, cfg.SAML.ServiceProviderKey); err != nil {
 		return saml.ServiceProvider{}, fmt.Errorf("failed to parse service provider %s's cert pair: %w", samlProvider.Name, err)

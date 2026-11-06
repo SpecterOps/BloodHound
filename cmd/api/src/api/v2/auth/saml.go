@@ -26,7 +26,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
@@ -309,22 +308,8 @@ func updateSAMLProvider(ssoProvider model.SSOProvider, providerName string, meta
 			ssoProvider.SAMLProvider.SingleSignOnURI = ssoURL
 		}
 
-		// It's possible to update the ACS url which will be reflected in the metadataXML, we need to guarantee it is set to only what we expect if it is present
-		if acsUrl, err := auth.GetAssertionConsumerServiceURL(metadata, saml.HTTPPostBinding); err == nil {
-			if !strings.Contains(acsUrl, model.SAMLRootURIVersionMap[ssoProvider.SAMLProvider.RootURIVersion]) {
-				var validUri bool
-				for rootUriVersion, path := range model.SAMLRootURIVersionMap {
-					if strings.Contains(acsUrl, path) {
-						ssoProvider.SAMLProvider.RootURIVersion = rootUriVersion
-						validUri = true
-						break
-					}
-				}
-				if !validUri {
-					return ssoProvider, fmt.Errorf("metadata does not have a valid ACS location")
-				}
-			}
-		}
+		// Uploaded metadata describes the IdP, including any SP role it also serves.
+		// Its ACS endpoints do not change this provider's BloodHound callback version.
 	}
 
 	// Need to ensure that if no config is specified, we don't accidentally wipe the existing configuration
