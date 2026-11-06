@@ -82,6 +82,14 @@ func (s Resources) ListAuditLogs(response http.ResponseWriter, request *http.Req
 			if validPredicates, err := auditLogs.GetValidFilterPredicatesAsStrings(name); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
 			} else {
+				var combineWithOr = name == "action" || name == "status"
+				for _, filter := range filters {
+					if filter.Operator != model.Equals {
+						combineWithOr = false
+						break
+					}
+				}
+
 				for i, filter := range filters {
 					if !slices.Contains(validPredicates, string(filter.Operator)) {
 						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
@@ -89,6 +97,10 @@ func (s Resources) ListAuditLogs(response http.ResponseWriter, request *http.Req
 					}
 
 					queryFilters[name][i].IsStringData = auditLogs.IsString(filter.Name)
+					// Only equality-only action/status selections use OR; other filters retain AND.
+					if combineWithOr && i > 0 {
+						queryFilters[name][i].SetOperator = model.FilterOr
+					}
 				}
 			}
 		}

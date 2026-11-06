@@ -72,6 +72,24 @@ export type PaginatedResponse<T> = Partial<TimeWindowedResponse<T>> &
         skip: number;
     };
 
+export type AuditLog = {
+    id: number;
+    created_at: string;
+    actor_id: string;
+    actor_name: string;
+    actor_email: string;
+    action: string;
+    fields: Record<string, unknown>;
+    request_id: string;
+    source_ip_address: string;
+    status: string;
+    commit_id: string;
+};
+
+export type AuditLogsResponse = PaginatedResponse<{
+    logs: AuditLog[];
+}>;
+
 export type EnvironmentExposure = {
     exposure_percent: number;
     asset_group_tag: AssetGroupTag;
