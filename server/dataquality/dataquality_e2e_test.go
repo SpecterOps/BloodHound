@@ -41,7 +41,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDataQualityAggregationsContract(t *testing.T) {
+func TestE2E_GetDataQualityAggregations(t *testing.T) {
 	var (
 		ctx     = context.Background()
 		harness = servertest.NewHarness(t, func(routerInst *router.Router, databaseInstance *database.BloodhoundDB) {

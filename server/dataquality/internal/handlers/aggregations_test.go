@@ -41,7 +41,7 @@ func TestBuildAggregationsViewOmitsZeroTimeBounds(t *testing.T) {
 	assert.JSONEq(t, `{"count":0,"limit":1000,"skip":0,"data":null}`, string(encoded))
 }
 
-func TestListAggregations(t *testing.T) {
+func TestHandlers_ListAggregations(t *testing.T) {
 	t.Parallel()
 	var (
 		start     = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)

@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestListAggregations(t *testing.T) {
+func TestServices_ListAggregations(t *testing.T) {
 	t.Parallel()
 	var (
 		ctx             = context.Background()
@@ -74,7 +74,7 @@ func TestListAggregations(t *testing.T) {
 	}
 }
 
-func TestListAggregationsWithoutExtension(t *testing.T) {
+func TestServices_ListAggregations_WithoutExtension(t *testing.T) {
 	t.Parallel()
 	var (
 		ctx        = context.Background()

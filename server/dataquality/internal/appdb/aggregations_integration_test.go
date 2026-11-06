@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestListAggregationsIntegration(t *testing.T) {
+func TestStore_ListAggregations_Integration(t *testing.T) {
 	var (
 		ctx         = context.Background()
 		database    = servertest.NewDatabase(t)

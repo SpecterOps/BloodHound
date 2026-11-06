@@ -36,7 +36,7 @@ const (
 	countSQL = "SELECT COUNT(*) FROM data_quality_aggregations WHERE deleted_at IS NULL AND created_at >= $1 AND created_at <= $2 AND schema_environment_kind_id = $3"
 )
 
-func TestListAggregations(t *testing.T) {
+func TestStore_ListAggregations(t *testing.T) {
 	t.Parallel()
 	var (
 		ctx         = context.Background()
