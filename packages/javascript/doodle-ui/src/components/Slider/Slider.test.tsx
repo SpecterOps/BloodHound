@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, vi } from 'vitest';
 import { Slider } from './Slider';
@@ -140,6 +140,114 @@ describe('Slider Tests', () => {
 });
 
 describe('Slider ticks and value field', () => {
+    it('describes the default value field with its percent suffix', () => {
+        render(<Slider showValue thumbAriaLabel='Opacity' />);
+
+        expect(screen.getByRole('textbox', { name: 'Opacity value' })).toHaveAccessibleDescription('%');
+        expect(screen.getByRole('slider', { name: 'Opacity' })).not.toHaveAttribute('aria-describedby');
+    });
+
+    it('preserves the custom field label and combines caller descriptions, errors, and suffix', async () => {
+        const user = userEvent.setup();
+        render(
+            <>
+                <p id='opacity-help'>Choose opacity.</p>
+                <p id='opacity-detail'>Applies to the graph.</p>
+                <Slider showValue valueAriaLabel='Graph opacity' aria-describedby='opacity-help opacity-detail' />
+            </>
+        );
+        const input = screen.getByRole('textbox', { name: 'Graph opacity' });
+
+        expect(input).toHaveAccessibleDescription('Choose opacity. Applies to the graph. %');
+
+        await user.clear(input);
+        await user.type(input, '101{Enter}');
+
+        expect(input).toHaveAccessibleName('Graph opacity');
+        expect(input).toHaveAccessibleDescription(
+            'Choose opacity. Applies to the graph. Enter a value between 0 and 100. %'
+        );
+    });
+
+    it('updates the description for custom suffixes and removes it when the suffix is empty', () => {
+        const { rerender } = render(<Slider showValue valueSuffix='px' />);
+        const input = screen.getByRole('textbox');
+
+        expect(input).toHaveAccessibleDescription('px');
+
+        rerender(<Slider showValue valueSuffix='' />);
+
+        expect(input).not.toHaveAttribute('aria-describedby');
+    });
+
+    it.each([{ isComposing: true }, { keyCode: 229 }])(
+        'ignores IME confirmation Enter with %j without preventing it or clearing the draft',
+        async (compositionState) => {
+            const user = userEvent.setup();
+            const onValueChange = vi.fn();
+            const onValueCommitted = vi.fn();
+            render(
+                <Slider
+                    defaultValue={25}
+                    showValue
+                    thumbAriaLabel='Value'
+                    onValueChange={onValueChange}
+                    onValueCommitted={onValueCommitted}
+                />
+            );
+            const input = screen.getByRole('textbox');
+
+            await user.clear(input);
+            await user.type(input, '75');
+
+            expect(fireEvent.keyDown(input, { key: 'Enter', ...compositionState })).toBe(true);
+            expect(input).toHaveValue('75');
+            expect(screen.getByRole('slider')).toHaveValue('25');
+            expect(onValueChange).not.toHaveBeenCalled();
+            expect(onValueCommitted).not.toHaveBeenCalled();
+
+            expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(false);
+            expect(screen.getByRole('slider')).toHaveValue('75');
+            expect(onValueCommitted).toHaveBeenCalledOnce();
+        }
+    );
+
+    it.each([0, -1, NaN, Infinity, -Infinity])(
+        'normalizes invalid step %s for field snapping and keyboard movement',
+        async (step) => {
+            const user = userEvent.setup();
+            const onValueChange = vi.fn();
+            const onValueCommitted = vi.fn();
+            render(
+                <Slider
+                    step={step}
+                    defaultValue={25}
+                    showValue
+                    thumbAriaLabel='Value'
+                    onValueChange={onValueChange}
+                    onValueCommitted={onValueCommitted}
+                />
+            );
+            const input = screen.getByRole('textbox');
+            const thumb = screen.getByRole('slider');
+
+            await user.clear(input);
+            await user.type(input, '26.4{Enter}');
+
+            expect(input).toHaveValue('26');
+            expect(thumb).toHaveValue('26');
+            expect(onValueChange).toHaveBeenLastCalledWith(26, expect.objectContaining({ reason: 'input-change' }));
+            expect(onValueCommitted).toHaveBeenLastCalledWith(26, expect.objectContaining({ reason: 'input-change' }));
+
+            act(() => thumb.focus());
+            await user.keyboard('{ArrowRight}');
+
+            expect(thumb).toHaveValue('27');
+            expect(input).toHaveValue('27');
+            expect(onValueChange).toHaveBeenLastCalledWith(27, expect.objectContaining({ reason: 'keyboard' }));
+        }
+    );
+
     it('renders unique in-range tick labels without adding keyboard stops', () => {
         render(<Slider ticks={[-1, 0, 25, 25, 100, 101, NaN]} thumbAriaLabel='Value' />);
 
@@ -216,7 +324,7 @@ describe('Slider ticks and value field', () => {
         await user.keyboard('{Enter}');
 
         expect(input).toHaveAttribute('aria-invalid', 'true');
-        expect(input).toHaveAccessibleDescription('Enter a value between 0 and 100.');
+        expect(input).toHaveAccessibleDescription('Enter a value between 0 and 100. %');
         expect(screen.getByRole('slider')).toHaveValue('25');
         expect(onValueChange).not.toHaveBeenCalled();
     });

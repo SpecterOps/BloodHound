@@ -71,7 +71,9 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue ?? min);
         const [draftValue, setDraftValue] = React.useState<string | null>(null);
         const errorId = React.useId();
+        const suffixId = React.useId();
 
+        const validatedStep = Number.isFinite(step) && step > 0 ? step : 1;
         const displayValue = Math.min(max, Math.max(min, value ?? uncontrolledValue));
         const tickValues = [...new Set(ticks)].filter((tick) => Number.isFinite(tick) && tick >= min && tick <= max);
         const invalidValue =
@@ -97,7 +99,12 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 
             const nextValue = Math.min(
                 max,
-                Math.max(min, Number((min + Math.round((Number(draftValue) - min) / step) * step).toPrecision(12)))
+                Math.max(
+                    min,
+                    Number(
+                        (min + Math.round((Number(draftValue) - min) / validatedStep) * validatedStep).toPrecision(12)
+                    )
+                )
             );
             let isCanceled = false;
             let isPropagationAllowed = false;
@@ -137,7 +144,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                 className={cnWithState(sliderRootStyles, showValue && invalidValue && 'mb-5', className)}
                 min={min}
                 max={max}
-                step={step}
+                step={validatedStep}
                 disabled={disabled}
                 value={displayValue}
                 onValueChange={handleValueChange}
@@ -193,7 +200,9 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                             inputMode='decimal'
                             variant='outlined'
                             aria-label={valueAriaLabel ?? `${thumbAriaLabel ?? 'Slider'} value`}
-                            aria-describedby={describedBy}
+                            aria-describedby={
+                                [describedBy, valueSuffix ? suffixId : undefined].filter(Boolean).join(' ') || undefined
+                            }
                             aria-invalid={invalidValue || undefined}
                             disabled={disabled}
                             value={draftValue ?? String(displayValue)}
@@ -201,6 +210,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                             onBlur={commitValue}
                             onKeyDown={(event) => {
                                 if (event.key === 'Enter') {
+                                    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
                                     event.preventDefault();
                                     commitValue(event);
                                 } else if (event.key === 'Escape') {
@@ -211,7 +221,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                         />
                         {valueSuffix && (
                             <span
-                                aria-hidden='true'
+                                id={suffixId}
                                 className={cn(
                                     'pointer-events-none absolute end-2 top-1.5 text-xs',
                                     disabled ? 'text-disabled' : 'text-main'
