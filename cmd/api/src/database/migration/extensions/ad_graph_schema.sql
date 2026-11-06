@@ -247,9 +247,11 @@ BEGIN
 	PERFORM genscript_upsert_kind('ADCSESC10a');
 	PERFORM genscript_upsert_kind('ADCSESC10b');
 	PERFORM genscript_upsert_kind('ADCSESC13');
+	PERFORM genscript_upsert_kind('ADCSESC16');
 	PERFORM genscript_upsert_kind('SyncedToADUser');
 	PERFORM genscript_upsert_kind('CoerceAndRelayNTLMToSMB');
 	PERFORM genscript_upsert_kind('CoerceAndRelayNTLMToADCS');
+	PERFORM genscript_upsert_kind('CoerceAndRelayNTLMToADCSRPC');
 	PERFORM genscript_upsert_kind('WriteOwnerLimitedRights');
 	PERFORM genscript_upsert_kind('WriteOwnerRaw');
 	PERFORM genscript_upsert_kind('OwnsLimitedRights');
@@ -375,9 +377,11 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC10a', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC10b', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC13', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ADCSESC16', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToADUser', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceAndRelayNTLMToSMB', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceAndRelayNTLMToADCS', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'CoerceAndRelayNTLMToADCSRPC', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteOwnerLimitedRights', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteOwnerRaw', '', false);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'OwnsLimitedRights', '', true);

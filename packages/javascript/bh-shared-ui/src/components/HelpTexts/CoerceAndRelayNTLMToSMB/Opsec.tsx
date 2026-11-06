@@ -14,21 +14,28 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Link } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 
 const Opsec: FC = () => {
     return (
         <>
+            <Typography variant='body1'>Coercion Attempts</Typography>
+            <Typography variant='body2'>
+                Running manticore-coercer with --always-continue --path-type smb attempts all relevant SMB coercion
+                techniques and is not stealthy. Attempting many techniques increases observable activity. For better
+                OPSEC, use individual techniques whose prerequisites you have verified on the target.
+            </Typography>
             <Typography variant='body2'>
                 NTLM relayed authentications can be detected by login events where the IP address does not match the
                 computer’s actual IP address. This detection technique is described in the blog post:{' '}
-                <a
+                <Link
                     target='_blank'
                     rel='noopener noreferrer'
-                    href={'https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'}>
+                    href='https://posts.bluraven.io/detecting-ntlm-relay-attacks-d92e99e68fb9'>
                     Detecting NTLM Relay Attacks
-                </a>
+                </Link>
                 .
             </Typography>
         </>

@@ -733,8 +733,12 @@ func GetEdgeCompositionPath(ctx context.Context, db graph.Database, edge *graph.
 			pathSet, err = GetADCSESC10EdgeComposition(ctx, db, edge)
 		case ad.ADCSESC13:
 			pathSet, err = GetADCSESC13EdgeComposition(ctx, db, edge)
+		case ad.ADCSESC16:
+			pathSet, err = GetADCSESC16EdgeComposition(ctx, db, edge)
 		case ad.CoerceAndRelayNTLMToADCS:
 			pathSet, err = GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge)
+		case ad.CoerceAndRelayNTLMToADCSRPC:
+			pathSet, err = GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(ctx, db, edge)
 		case ad.CoerceAndRelayNTLMToSMB:
 			pathSet, err = GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx, db, edge)
 		}
@@ -759,6 +763,8 @@ func GetRelayTargets(ctx context.Context, db graph.Database, edge *graph.Relatio
 			nodeSet, err = GetVulnerableDomainControllersForRelayNTLMtoLDAPS(ctx, db, edge)
 		case ad.CoerceAndRelayNTLMToADCS:
 			nodeSet, err = GetVulnerableEnterpriseCAsForRelayNTLMtoADCS(ctx, db, edge)
+		case ad.CoerceAndRelayNTLMToADCSRPC:
+			nodeSet, err = GetVulnerableEnterpriseCAsForRelayNTLMtoADCSRPC(ctx, db, edge)
 		case ad.CoerceAndRelayNTLMToSMB:
 			nodeSet, err = GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(ctx, db, edge)
 		}
