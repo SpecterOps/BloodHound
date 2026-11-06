@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/duration"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
@@ -60,6 +61,11 @@ type AuthTokensSideEffects interface {
 	UpdateAuthTokenExpiration(ctx context.Context) error
 }
 
+type GraphRetentionBaseTTLManager interface {
+	GetBaseRetentionPolicyTTL(ctx context.Context) (duration.ISODuration, error)
+	SetBaseRetentionPolicyTTL(ctx context.Context, ttl duration.ISODuration) error
+}
+
 // Note ffReader, dataPipeSideEffects, and authTokensSideEffects are included
 // for custom Update Config special handling of particular configs.
 // I chose to inject them directly into handler rather than into service and having handler call
@@ -72,14 +78,16 @@ type Handlers struct {
 	ffReader              FeatureFlagReader
 	dataPipeSideEffects   DataPipeSideEffects
 	authTokensSideEffects AuthTokensSideEffects
+	graphRetentionManager GraphRetentionBaseTTLManager
 }
 
-func NewHandlers(service Service, ffReader FeatureFlagReader, dataPipeSideEffects DataPipeSideEffects, authTokensSideEffects AuthTokensSideEffects) *Handlers {
+func NewHandlers(service Service, ffReader FeatureFlagReader, dataPipeSideEffects DataPipeSideEffects, authTokensSideEffects AuthTokensSideEffects, graphRetentionManager GraphRetentionBaseTTLManager) *Handlers {
 	return &Handlers{
 		service:               service,
 		ffReader:              ffReader,
 		dataPipeSideEffects:   dataPipeSideEffects,
 		authTokensSideEffects: authTokensSideEffects,
+		graphRetentionManager: graphRetentionManager,
 	}
 }
 
@@ -124,7 +132,12 @@ func (s *Handlers) GetApplicationConfiguration(response http.ResponseWriter, req
 			return
 		}
 
-		responses.WriteBasic(ctx, BuildParameterListView(services.Parameters{param}), http.StatusOK, response)
+		params := services.Parameters{param}
+		if err := s.handleGetBackcompat(ctx, params); err != nil {
+			handleServiceError(ctx, response, err)
+			return
+		}
+		responses.WriteBasic(ctx, BuildParameterListView(params), http.StatusOK, response)
 		return
 	}
 
@@ -134,6 +147,10 @@ func (s *Handlers) GetApplicationConfiguration(response http.ResponseWriter, req
 		return
 	}
 
+	if err := s.handleGetBackcompat(ctx, params); err != nil {
+		handleServiceError(ctx, response, err)
+		return
+	}
 	responses.WriteBasic(ctx, BuildParameterListView(params), http.StatusOK, response)
 }
 
@@ -171,10 +188,26 @@ func (s *Handlers) SetApplicationConfiguration(response http.ResponseWriter, req
 		}
 	}
 
-	// update the parameter
-	if err := s.service.UpsertApplicationConfiguration(ctx, setConfigBody.Key, setConfigBody.Value); err != nil {
-		handleServiceError(ctx, response, err)
-		return
+	// handle backcompat cases which interact with different sources of truth
+	handlePruneTTLCase := false
+	if setConfigBody.Key == services.PruneTTL {
+		retentionPoliciesFeatureEnabled, _ := s.ffReader.IsEnabled(ctx, "retention_policies")
+		if retentionPoliciesFeatureEnabled {
+			handlePruneTTLCase = true
+		}
+	}
+	if handlePruneTTLCase {
+		if err := s.setPruneTTLBackcompat(ctx, setConfigBody.Value); err != nil {
+			handleServiceError(ctx, response, err)
+			return
+		}
+	} else {
+
+		// update the parameter
+		if err := s.service.UpsertApplicationConfiguration(ctx, setConfigBody.Key, setConfigBody.Value); err != nil {
+			handleServiceError(ctx, response, err)
+			return
+		}
 	}
 
 	// execute custom key-specific side-effects
@@ -218,6 +251,59 @@ func (s *Handlers) updateNextScheduledAnalysisStartTime(ctx context.Context, val
 			slog.ErrorContext(ctx, "Error clearing the next scheduled analysis start time", attr.Error(err))
 		}
 	}
+}
+
+// handleGetBackcompat updates the parameters values in-place
+func (s *Handlers) handleGetBackcompat(ctx context.Context, parameters []services.Parameter) error {
+	for i := range parameters {
+		if parameters[i].Key == services.PruneTTL {
+			retentionPoliciesFeatureEnabled, _ := s.ffReader.IsEnabled(ctx, "retention_policies")
+			if retentionPoliciesFeatureEnabled {
+				var err error
+				parameters[i].Value, err = s.getPruneTTLBackcompat(ctx, parameters[i].Value)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *Handlers) getPruneTTLBackcompat(ctx context.Context, fetchedvalue types.JSONBObject) (types.JSONBObject, error) {
+	// TODO BED-10166: stop assuming the base_ttl is in the config
+	// only expect has_session_edge_ttl
+
+	// Get stored config value for prune TTL
+	var pruneTTLConfig services.PruneTTLParameter
+	if err := fetchedvalue.Map(&pruneTTLConfig); err != nil {
+		return types.JSONBObject{}, err
+	}
+
+	// Get Retention Policy value for base ttl
+	ttl, err := s.graphRetentionManager.GetBaseRetentionPolicyTTL(ctx)
+	if err != nil {
+		return types.JSONBObject{}, err
+	}
+
+	// Sync results
+	pruneTTLConfig.BaseTTL = ttl
+	return types.NewJSONBObject(pruneTTLConfig)
+}
+
+func (s *Handlers) setPruneTTLBackcompat(ctx context.Context, value types.JSONBObject) error {
+	var pruneTTLConfig services.PruneTTLParameter
+	if err := value.Map(&pruneTTLConfig); err != nil {
+		return err
+	}
+	if err := s.graphRetentionManager.SetBaseRetentionPolicyTTL(ctx, pruneTTLConfig.BaseTTL); err != nil {
+		return err
+	}
+
+	// TODO BED-10166: stop updating the base_ttl value in the config
+	// only update has_session_edge_ttl
+	return s.service.UpsertApplicationConfiguration(ctx, services.PruneTTL, value)
 }
 
 func handleServiceError(ctx context.Context, response http.ResponseWriter, err error) {
