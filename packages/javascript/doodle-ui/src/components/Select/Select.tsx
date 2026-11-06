@@ -13,11 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { faChevronDown, faChevronUp, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { VariantProps } from 'class-variance-authority';
 import * as React from 'react';
+import { LoadingSpinner } from '../LoadingSpinner';
 import { cn } from '../utils';
 import {
     selectContentClasses,
@@ -69,7 +70,7 @@ const SelectTrigger = React.forwardRef<
         {children}
         <SelectPrimitive.Icon asChild>
             {isLoading ? (
-                <FontAwesomeIcon icon={faSpinner} className={selectLoadingIconClasses} />
+                <LoadingSpinner className={selectLoadingIconClasses} />
             ) : (
                 <FontAwesomeIcon icon={faChevronDown} className={selectIconClasses} />
             )}

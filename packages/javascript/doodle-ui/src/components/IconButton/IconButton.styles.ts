@@ -13,15 +13,30 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
 import { cva } from 'class-variance-authority';
-import { buttonBaseClasses, primaryClasses, secondaryClasses } from '../Button/Button.styles';
+import { buttonBaseClasses } from '../Button/Button.styles';
 import { cn } from '../utils';
 
 export const defaultIconButtonClasses = cn(
-    'hover:text-primary dark:hover:text-primary',
-    'active:bg-transparent active:text-secondary dark:active:text-secondary',
-    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary dark:focus-visible:text-primary'
+    'hover:text-primary',
+    'active:bg-transparent active:text-secondary',
+    'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary'
+);
+
+export const iconPrimaryClasses = cn(
+    'bg-primary text-[color:var(--button-primary-text)] shadow-outer-1',
+    'hover:bg-secondary',
+    'focus-visible:bg-secondary',
+    'active:bg-[color:var(--button-primary-active-fill)]',
+    'disabled:shadow-none disabled:bg-[color:var(--button-disabled-fill)]'
+);
+
+export const iconSecondaryClasses = cn(
+    'bg-[color:var(--button-secondary-fill)] text-[color:var(--button-secondary-text)] shadow-outer-1',
+    'hover:bg-secondary hover:text-[color:var(--button-highlight-text)]',
+    'focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
+    'active:bg-[color:var(--button-secondary-active-fill)] active:text-[color:var(--button-secondary-text)]',
+    'disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none'
 );
 
 export const IconButtonVariants = cva(
@@ -34,8 +49,8 @@ export const IconButtonVariants = cva(
         variants: {
             variant: {
                 default: defaultIconButtonClasses,
-                primary: primaryClasses,
-                secondary: secondaryClasses,
+                primary: iconPrimaryClasses,
+                secondary: iconSecondaryClasses,
             },
         },
         defaultVariants: {

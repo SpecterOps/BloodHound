@@ -910,13 +910,6 @@ RelayableToDCLDAPS: types.#StringEnum & {
 	representation: "replayabletodcldaps"
 }
 
-WebClientRunning: types.#StringEnum & {
-	symbol: "WebClientRunning"
-	schema: "ad"
-	name: "WebClient Running"
-	representation: "webclientrunning"
-}
-
 IsDC: types.#StringEnum & {
 	symbol: "IsDC"
 	schema: "ad"
@@ -1028,6 +1021,20 @@ NetBIOS: types.#StringEnum & {
 	representation: "netbios"
 }
 
+RPCEncryptionEnforced: types.#StringEnum & {
+	symbol:         "RPCEncryptionEnforced"
+	schema:         "ad"
+	name:           "RPC Encryption Enforced"
+	representation: "rpcencryptionenforced"
+}
+
+RPCEncryptionCollected: types.#StringEnum & {
+	symbol:         "RPCEncryptionCollected"
+	schema:         "ad"
+	name:           "RPC Encryption Collected"
+	representation: "rpcencryptioncollected"
+}
+
 ServicePrincipalNames: types.#StringEnum & {
 	symbol:         "ServicePrincipalNames"
 	schema:         "ad"
@@ -1068,6 +1075,20 @@ GPOStatus: types.#StringEnum & {
 	schema:         "ad"
 	name:           "GPO Status"
 	representation: "gpostatus"
+}
+
+DisabledExtensions: types.#StringEnum & {
+	symbol:         "DisabledExtensions"
+	schema:         "ad"
+	name:           "Disabled Extensions"
+	representation: "disabledextensions"
+}
+
+DisabledExtensionsCollected: types.#StringEnum & {
+	symbol:         "DisabledExtensionsCollected"
+	schema:         "ad"
+	name:           "Disabled Extensions Collected"
+	representation: "disabledextensionscollected"
 }
 
 Properties: [
@@ -1209,6 +1230,8 @@ Properties: [
 	Transitive,
 	GroupScope,
 	NetBIOS,
+	RPCEncryptionEnforced,
+	RPCEncryptionCollected,
 	AdminSDHolderProtected,
 	ServicePrincipalNames,
 	ServerReference,
@@ -1216,6 +1239,8 @@ Properties: [
 	ObjectClass,
 	GPOStatusRaw,
 	GPOStatus,
+	DisabledExtensions,
+	DisabledExtensionsCollected,
 ]
 
 // Kinds
@@ -1700,6 +1725,11 @@ ADCSESC13: types.#Kind & {
 	schema: "active_directory"
 }
 
+ADCSESC16: types.#Kind & {
+	symbol: "ADCSESC16"
+	schema: "active_directory"
+}
+
 SyncedToADUser: types.#Kind & {
 	symbol:			"SyncedToADUser"
 	schema:			"active_directory"
@@ -1713,6 +1743,11 @@ CoerceAndRelayNTLMToSMB: types.#Kind & {
 
 CoerceAndRelayNTLMToADCS: types.#Kind & {
 	symbol: "CoerceAndRelayNTLMToADCS"
+	schema: "active_directory"
+}
+
+CoerceAndRelayNTLMToADCSRPC: types.#Kind & {
+	symbol: "CoerceAndRelayNTLMToADCSRPC"
 	schema: "active_directory"
 }
 
@@ -1864,9 +1899,11 @@ RelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	WriteOwnerLimitedRights,
 	WriteOwnerRaw,
 	OwnsLimitedRights,
@@ -1972,9 +2009,11 @@ SharedRelationshipKinds: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	SyncedToADUser,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	WriteOwnerLimitedRights,
 	OwnsLimitedRights,
 	ClaimSpecialIdentity,
@@ -2017,8 +2056,10 @@ EdgeCompositionRelationships: [
 	ADCSESC10a,
 	ADCSESC10b,
 	ADCSESC13,
+	ADCSESC16,
 	CoerceAndRelayNTLMToSMB,
 	CoerceAndRelayNTLMToADCS,
+	CoerceAndRelayNTLMToADCSRPC,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
 	GPOAppliesTo,

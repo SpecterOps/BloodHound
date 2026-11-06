@@ -32,8 +32,7 @@ describe('Typography', () => {
             'font-normal',
             'leading-6',
             'tracking-normal',
-            'text-muted',
-            'dark:text-main',
+            'text-[color:var(--typography-body-text)]',
         ],
         body2: [
             'font-sans',
@@ -41,8 +40,7 @@ describe('Typography', () => {
             'font-normal',
             'leading-[1.375rem]',
             'tracking-normal',
-            'text-muted',
-            'dark:text-main',
+            'text-[color:var(--typography-body-text)]',
         ],
         subtitle1: ['font-sans', 'text-[.9375rem]', 'font-medium', 'leading-6', 'tracking-[.25px]', 'text-main'],
         subtitle2: [
@@ -59,8 +57,7 @@ describe('Typography', () => {
             'font-normal',
             'leading-5',
             'tracking-[.25px]',
-            'text-muted',
-            'dark:text-main',
+            'text-[color:var(--typography-body-text)]',
         ],
     } as const;
 
@@ -73,6 +70,13 @@ describe('Typography', () => {
         it(`renders a <${variantMapping[DEFAULT_VARIANT]}> tag when no variant or component is provided`, () => {
             render(<Typography>Default</Typography>);
             expect(screen.getByText('Default').tagName.toLowerCase()).toBe(variantMapping[DEFAULT_VARIANT]);
+        });
+
+        it(`applies the typography-${DEFAULT_VARIANT} class when no variant is provided`, () => {
+            render(<Typography>Default class</Typography>);
+            const classList = screen.getByText('Default class').classList;
+            expect(classList.contains(`typography-${DEFAULT_VARIANT}`)).toBe(true);
+            expect(classList.contains('typography-undefined')).toBe(false);
         });
     });
 
@@ -94,12 +98,12 @@ describe('Typography', () => {
         );
 
         it.each(['body1', 'body2', 'caption'] as const)(
-            'variant "%s" uses muted text only in light mode',
+            'variant "%s" uses the theme-aware body text token',
             (variant) => {
                 const classes = TypographyVariants({ variant }).split(' ');
 
-                expect(classes).toContain('text-muted');
-                expect(classes).toContain('dark:text-main');
+                expect(classes).toContain('text-[color:var(--typography-body-text)]');
+                expect(classes).not.toContain('dark:text-main');
                 expect(classes).not.toContain('text-[#505050]');
             }
         );

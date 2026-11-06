@@ -1988,7 +1988,7 @@ func ConvertAzureRoleEligibilityScheduleInstanceToRel(instance models.RoleEligib
 // with the supplied RoleManagementPolicyAssignment properties
 // If EndUserAssignmentGroupApprovers contains GUIDs: an edge will be created from each group to the created AZRole
 // If EndUserAssignmentUsersApprovers contains GUIDs: an edge will be created from each user to the created AZRole
-// If both lists are empty: an edge will be created from the tenant's PrivilegedRoleAdministratorRole to the created AZRole
+// If both lists are empty: edges will be created from the tenant's Privileged Role Administrator and Global Administrator roles
 func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleManagementPolicyAssignment) (IngestibleNode, []IngestibleRelationship) {
 	var (
 		rels = make([]IngestibleRelationship, 0)
@@ -2019,7 +2019,6 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 		return targetAZRole, rels
 	}
 
-	// TODO: Verify the edge creation here. The logic looks identical to the post processing for this edge and we could remove the edge creation here
 	if len(policyAssignment.EndUserAssignmentUserApprovers) > 0 {
 		// Create an AZRoleApprover edge from each user that allow approvals to the target azure role
 		for _, approver := range policyAssignment.EndUserAssignmentUserApprovers {
@@ -2053,21 +2052,21 @@ func ConvertAzureRoleManagementPolicyAssignment(policyAssignment models.RoleMana
 	}
 
 	if len(policyAssignment.EndUserAssignmentUserApprovers) == 0 && len(policyAssignment.EndUserAssignmentGroupApprovers) == 0 {
-		// No approvers: create the edge from the tenant's PrivilegedRoleAdministratorRole node to the target role.
-		// Uppercase the lowercase well-known constant to match the collector-sourced node objectid; under
-		// use_raw_object_id, relationship ingestion no longer normalizes it, so uppercasing here avoids a split node.
-		combinedObjectId := fmt.Sprintf("%s@%s", strings.ToUpper(azure.PrivilegedRoleAdministratorRole), policyAssignment.TenantId)
+		for _, roleDefinitionID := range []string{azure.PrivilegedRoleAdministratorRole, azure.CompanyAdministratorRole} {
+			// Match the collector's uppercased built-in role IDs even when use_raw_object_id is enabled.
+			var approverObjectID = fmt.Sprintf("%s@%s", strings.ToUpper(roleDefinitionID), policyAssignment.TenantId)
 
-		rels = append(rels, NewIngestibleRelationship(IngestibleEndpoint{
-			Value: combinedObjectId,
-			Kind:  azure.Role,
-		}, IngestibleEndpoint{
-			Value: targetAZRole.ObjectID,
-			Kind:  targetAZRole.Labels[0],
-		}, IngestibleRel{
-			RelProps: map[string]any{},
-			RelType:  azure.AZRoleApprover,
-		}))
+			rels = append(rels, NewIngestibleRelationship(IngestibleEndpoint{
+				Value: approverObjectID,
+				Kind:  azure.Role,
+			}, IngestibleEndpoint{
+				Value: targetAZRole.ObjectID,
+				Kind:  azure.Role,
+			}, IngestibleRel{
+				RelProps: map[string]any{},
+				RelType:  azure.AZRoleApprover,
+			}))
+		}
 	}
 
 	return targetAZRole, rels

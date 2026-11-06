@@ -16,10 +16,10 @@
 
 import { cn } from '../utils';
 
-export const accordionItemClasses = 'bg-neutral-light-2 rounded-lg mb-4';
+export const accordionItemClasses = 'bg-[color:var(--accordion-fill)] rounded-lg mb-4';
 
 export const accordionHeaderClasses = cn(
-    'flex flex-1 gap-1 items-center rounded-md font-bold transition-all',
+    'flex flex-1 gap-1 items-center rounded-md text-main font-bold transition-all',
     'hover:underline',
     'focus:outline-none',
     'focus-visible:focus-ring focus-visible:underline',
@@ -28,4 +28,4 @@ export const accordionHeaderClasses = cn(
 );
 
 export const accordionContentClasses =
-    'overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down';
+    'overflow-hidden text-sm text-main transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down';

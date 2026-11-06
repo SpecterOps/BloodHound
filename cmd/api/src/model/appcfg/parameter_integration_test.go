@@ -31,21 +31,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 )
 
-func TestParameters_IsValidKey(t *testing.T) {
-	parameter := appcfg.Parameter{}
-	t.Run("should return false on invalid keys", func(t *testing.T) {
-		require.False(t, parameter.IsValidKey(""))
-	})
-
-	t.Run("should return true on valid keys", func(t *testing.T) {
-		require.True(t, parameter.IsValidKey(appcfg.PruneTTL))
-	})
-
-	t.Run("should return true for scheduled analysis key", func(t *testing.T) {
-		require.True(t, parameter.IsValidKey(appcfg.ScheduledAnalysis))
-	})
-}
-
 func TestParameters_Validate(t *testing.T) {
 	t.Run("should error on missing parent value key", func(t *testing.T) {
 		parameter := appcfg.Parameter{}

@@ -13,63 +13,18 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { Slider as SliderPrimitive, type SliderRootProps as BaseSliderRootProps } from '@base-ui/react/slider';
-import { cva } from 'class-variance-authority';
 import * as React from 'react';
 import { cnWithState } from '../utils';
-
-const sliderRootStyles =
-    'relative flex w-full touch-none select-none items-center data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
-
-const sliderControlStyles = 'group/slider relative flex w-full grow items-center py-3';
-
-const sliderTrackStyles =
-    'relative h-1 w-full grow overflow-hidden rounded-full bg-neutral-200 data-[disabled]:bg-disabled';
-
-const sliderIndicatorStyles = cva(
-    'h-full rounded-full group-has-[:focus-visible]/slider:bg-secondary data-[disabled]:bg-disabled',
-    {
-        variants: {
-            active: {
-                true: 'bg-primary',
-                false: 'bg-neutral-200',
-            },
-        },
-        defaultVariants: {
-            active: false,
-        },
-    }
-);
-
-const sliderThumbStyles = cva(
-    'group/thumb relative size-4 rounded-full border border-neutral-300 bg-neutral-100 shadow-outer-1 dark:has-[:focus-visible]:bg-neutral-400 data-[disabled]:bg-disabled',
-    {
-        variants: {
-            active: {
-                true: 'dark:bg-common-white',
-                false: '',
-            },
-        },
-        defaultVariants: {
-            active: false,
-        },
-    }
-);
-
-const sliderThumbDotStyles = cva(
-    'pointer-events-none absolute left-1/2 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full group-has-[:focus-visible]/thumb:block group-has-[:focus-visible]/thumb:bg-secondary group-data-[disabled]/thumb:hidden',
-    {
-        variants: {
-            active: {
-                true: 'block bg-primary',
-                false: 'hidden',
-            },
-        },
-        defaultVariants: {
-            active: false,
-        },
-    }
-);
+import {
+    sliderControlStyles,
+    sliderIndicatorStyles,
+    sliderRootStyles,
+    sliderThumbDotStyles,
+    sliderThumbStyles,
+    sliderTrackStyles,
+} from './Slider.styles';
 
 type SliderRootProps = Omit<BaseSliderRootProps<number>, 'children'>;
 type SliderChangeEventDetails = Parameters<NonNullable<SliderRootProps['onValueChange']>>[1];

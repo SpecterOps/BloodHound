@@ -174,7 +174,7 @@ func PostEnrollOnBehalfOf(ctx context.Context, db graph.Database, cache *ADCSCac
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostEnrollOnBehalfOf", db, enrollOnBehalfOfTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	hostedChainedDomains := cache.GetECAHostedChainedDomains()
 	submittedTargetsBySource := make(map[graph.ID]map[graph.ID]struct{})
@@ -222,19 +222,27 @@ func PostEnrollOnBehalfOf(ctx context.Context, db graph.Database, cache *ADCSCac
 
 			for _, result := range EnrollOnBehalfOfVersionTwo(split.versionTwoTemplates, enrollmentAgentTemplates) {
 				if !submitRelationship(result) {
-					return sink.Stats(), nil
+					return sink.Stats(), errors.Join(
+						errors.New("failed submitting EnrollOnBehalfOf relationship"),
+						ctx.Err(),
+						sink.Abort(),
+					)
 				}
 			}
 
 			for _, result := range EnrollOnBehalfOfVersionOne(split.versionOneTemplates, enrollmentAgentTemplates) {
 				if !submitRelationship(result) {
-					return sink.Stats(), nil
+					return sink.Stats(), errors.Join(
+						errors.New("failed submitting EnrollOnBehalfOf relationship"),
+						ctx.Err(),
+						sink.Abort(),
+					)
 				}
 			}
 		}
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 func enterpriseCAChainsShareDomain(first, second *EnterpriseCAChainedDomains) bool {
@@ -289,7 +297,7 @@ func EnrollOnBehalfOfVersionOne(versionOneCertTemplates, enrollmentAgentCertTemp
 	results := make([]post.EnsureRelationshipJob, 0)
 
 	for _, certTemplateOne := range enrollmentAgentCertTemplates {
-		//prefilter as much as we can first
+		// prefilter as much as we can first
 		if hasEku, err := certTemplateHasEkuOrAll(certTemplateOne, EkuCertRequestAgent, EkuAnyPurpose); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.Warn(
 				"Error checking ekus for certtemplate",
@@ -647,7 +655,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 	}
 	startNodes.Add(startNode)
 
-	//Start by fetching all EnterpriseCA nodes that our user has Enroll rights on via group membership or directly (P4/P5)
+	// Start by fetching all EnterpriseCA nodes that our user has Enroll rights on via group membership or directly (P4/P5)
 	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
@@ -684,7 +692,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		return paths, nil
 	}
 
-	//Use the enterprise CA nodes we gathered to filter the first set of paths for P1
+	// Use the enterprise CA nodes we gathered to filter the first set of paths for P1
 	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
@@ -711,18 +719,20 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				lock.Unlock()
 
 				return nil
-			})}); err != nil {
+			}),
+		}); err != nil {
 			return nil, err
 		}
 	}
 
-	//Find all cert templates we have EnrollOnBehalfOf from our first group of templates to prefilter again
+	// Find all cert templates we have EnrollOnBehalfOf from our first group of templates to prefilter again
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if p, err := ops.FetchPathSet(tx.Relationships().Filter(
 			query.And(
 				query.InIDs(query.StartID(), graph.DuplexToGraphIDs(path1CertTemplates)...),
 				query.KindIn(query.Relationship(), ad.EnrollOnBehalfOf),
-				query.KindIn(query.End(), ad.CertTemplate)),
+				query.KindIn(query.End(), ad.CertTemplate),
+			),
 		)); err != nil {
 			return err
 		} else {
@@ -737,7 +747,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		path2CandidateTemplates.Add(path.Terminal().ID.Uint64())
 	}
 
-	//Use our enterprise ca + candidate templates as filters for the third query (P2)
+	// Use our enterprise ca + candidate templates as filters for the third query (P2)
 	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
@@ -752,12 +762,13 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 				lock.Unlock()
 
 				return nil
-			})}); err != nil {
+			}),
+		}); err != nil {
 			return nil, err
 		}
 	}
 
-	//Manifest P6/P7 keyed to enterprise ca nodes
+	// Manifest P6/P7 keyed to enterprise ca nodes
 	for ecaID := range enterpriseCASegments {
 		if !enterpriseCANodes.Contains(ecaID.Uint64()) {
 			continue
@@ -788,7 +799,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		}
 	}
 
-	//Manifest p8 keyed to certificate template nodes
+	// Manifest p8 keyed to certificate template nodes
 	for _, n := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: n,
@@ -807,7 +818,7 @@ func GetADCSESC3EdgeComposition(ctx context.Context, db graph.Database, edge *gr
 		}
 	}
 
-	//EnrollOnBehalfOf is used to join P1 and P2, so we'll use it as the key
+	// EnrollOnBehalfOf is used to join P1 and P2, so we'll use it as the key
 	for _, p3 := range enrollOnBehalfOfPaths {
 
 		ct1 := p3.Root()
@@ -943,7 +954,8 @@ func ADCSESC3Path2Pattern(domainId graph.ID, enterpriseCAs, candidateTemplates c
 		Outbound(query.And(
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.KindIn(query.End(), ad.EnterpriseCA),
-			query.InIDs(query.End(), graph.DuplexToGraphIDs(enterpriseCAs)...))), domainId)
+			query.InIDs(query.End(), graph.DuplexToGraphIDs(enterpriseCAs)...),
+		)), domainId)
 }
 
 func ADCSESC3Path3Pattern() traversal.PatternContinuation {

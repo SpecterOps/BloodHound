@@ -84,7 +84,7 @@ export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
 export type Environment = {
     // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
     // Needed because environment types can be provided by the user
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // oxlint-disable-next-line typescript/ban-types
     type: KnownEnvironmentType | (string & {});
     impactValue: number;
     name: string;
@@ -511,7 +511,7 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
-export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'deprecated' | 'orphaned';
+export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'in_progress' | 'deprecated' | 'orphaned';
 
 export type UnifiedFinding = {
     id: number;
