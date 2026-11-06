@@ -17,6 +17,8 @@
 package crypto
 
 import (
+	"crypto/rand"
+	"math"
 	"testing"
 
 	"golang.org/x/crypto/argon2"
@@ -83,5 +85,85 @@ func TestArgon2Digest_Validate(t *testing.T) {
 		t.Fatalf(`Expected content "This is a test." to validate against digest: %s`, digestMCFormatString)
 	} else if valid := digest.Validate("This should fail."); valid {
 		t.Fatalf(`Expected content "This should fail." to fail validation against digest: %s`, digestMCFormatString)
+	}
+}
+
+func TestArgon2Digest_Validate_NonStandardDigestLength(t *testing.T) {
+	const content = "This is a test."
+
+	salt := make([]byte, Argon2SaltByteLength)
+	if _, err := rand.Read(salt); err != nil {
+		t.Fatalf("Unexpected error while generating salt: %v", err)
+	}
+
+	// RFC 9106 §3.1 specifies the Argon2 tag length T as 4 through 2^32-1 bytes
+	for _, testCase := range []struct {
+		digestLength   uint32
+		shouldValidate bool
+	}{
+		{digestLength: 1, shouldValidate: false},
+		{digestLength: 2, shouldValidate: false},
+		{digestLength: 3, shouldValidate: false},
+		{digestLength: 4, shouldValidate: true},
+		{digestLength: 8, shouldValidate: true},
+		{digestLength: 16, shouldValidate: true},
+		{digestLength: 32, shouldValidate: true},
+	} {
+		digest := Argon2Digest{
+			DigestVariant:   Argon2idVariant,
+			Version:         argon2.Version,
+			MemoryKibibytes: 1024,
+			NumIterations:   1,
+			NumThreads:      1,
+			Salt:            salt,
+			Digest:          argon2.IDKey([]byte(content), salt, 1, 1024, 1, testCase.digestLength),
+		}
+
+		if valid := digest.Validate(content); valid != testCase.shouldValidate {
+			t.Fatalf("Expected digest of length %d to validate content %q as %v but got %v", testCase.digestLength, content, testCase.shouldValidate, valid)
+		}
+
+		if testCase.shouldValidate {
+			if valid := digest.Validate("This should fail."); valid {
+				t.Fatalf("Expected digest of length %d to reject incorrect content", testCase.digestLength)
+			}
+		}
+	}
+}
+
+func TestValidArgon2DigestLength(t *testing.T) {
+	// RFC 9106 §3.1 specifies the Argon2 tag length T as 4 through 2^32-1 bytes
+	for _, testCase := range []struct {
+		length  uint64
+		isValid bool
+	}{
+		{length: 0, isValid: false},
+		{length: 1, isValid: false},
+		{length: 3, isValid: false},
+		{length: 4, isValid: true},
+		{length: 16, isValid: true},
+		{length: math.MaxUint32 - 1, isValid: true},
+		{length: math.MaxUint32, isValid: true},
+		{length: math.MaxUint32 + 1, isValid: false},
+	} {
+		if valid := validArgon2DigestLength(testCase.length); valid != testCase.isValid {
+			t.Fatalf("Expected digest length %d to be %v but got %v", testCase.length, testCase.isValid, valid)
+		}
+	}
+}
+
+func TestArgon2Digest_Validate_EmptyDigest(t *testing.T) {
+	digest := Argon2Digest{
+		DigestVariant:   Argon2idVariant,
+		Version:         argon2.Version,
+		MemoryKibibytes: 1024,
+		NumIterations:   1,
+		NumThreads:      1,
+		Salt:            make([]byte, Argon2SaltByteLength),
+		Digest:          []byte{},
+	}
+
+	if valid := digest.Validate("anything"); valid {
+		t.Fatalf("Expected empty digest to fail validation")
 	}
 }
