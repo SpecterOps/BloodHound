@@ -144,7 +144,15 @@ type AuditLog struct {
 	SourceIpAddress string                  `json:"source_ip_address"`
 	Status          AuditLogEntryStatus     `json:"status"`
 	CommitID        uuid.UUID               `json:"commit_id" gorm:"type:text"`
+	Source          AuditLogSource          `json:"source"`
 }
+
+type AuditLogSource string
+
+const (
+	AuditLogSourceLegacy     AuditLogSource = "legacy"
+	AuditLogSourceMiddleware AuditLogSource = "middleware"
+)
 
 func (s AuditLog) String() string {
 	return fmt.Sprintf("actor %s %s executed action %s", s.ActorID, s.ActorName, s.Action)
@@ -160,7 +168,8 @@ func (s AuditLogs) IsSortable(column string) bool {
 		"action",
 		"created_at",
 		"source_ip_address",
-		"status":
+		"status",
+		"source":
 		return true
 	default:
 		return false
@@ -178,6 +187,7 @@ func (s AuditLogs) ValidFilters() map[string][]FilterOperator {
 		"created_at":        {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
 		"source_ip_address": {Equals, NotEquals},
 		"status":            {Equals, NotEquals},
+		"source":            {Equals, NotEquals},
 	}
 }
 
@@ -189,7 +199,8 @@ func (s AuditLogs) IsString(column string) bool {
 		"action",
 		"request_id",
 		"source_ip_address",
-		"status":
+		"status",
+		"source":
 		return true
 	default:
 		return false

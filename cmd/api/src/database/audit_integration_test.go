@@ -139,6 +139,9 @@ func TestDatabase_ListAuditLogs(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, testCase.expectedCount, count)
 			require.Len(t, logs, testCase.expectedLogs)
+			for _, auditLog := range logs {
+				require.Equal(t, model.AuditLogSourceLegacy, auditLog.Source)
+			}
 		})
 	}
 }
