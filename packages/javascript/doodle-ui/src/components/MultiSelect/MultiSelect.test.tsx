@@ -15,16 +15,12 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { afterEach, expect, vi } from 'vitest';
 import type { MultiSelectProps } from './MultiSelect';
 import { MultiSelect } from './MultiSelect';
-
-expect.extend(matchers);
 
 const options = [
     { value: 'a', label: 'Menu Item A' },
