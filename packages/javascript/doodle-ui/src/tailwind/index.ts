@@ -13,5 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+export { light as lightThemeColors } from './colors';
 export { default as DoodleUIPlugin } from './plugin';
 export { default as DoodleUIPreset } from './preset';

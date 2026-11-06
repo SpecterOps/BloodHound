@@ -23,7 +23,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
@@ -94,14 +93,6 @@ func ParseOptionalLimitQueryParameter(params url.Values, defaultValue int) (int,
 	} else {
 		return limit, nil
 	}
-}
-
-func ParseTimeQueryParameter(params url.Values, key string, defaultValue time.Time) (time.Time, error) {
-	if param := params.Get(key); param != "" {
-		return time.Parse(time.RFC3339Nano, param)
-	}
-
-	return defaultValue, nil
 }
 
 func GetEntityObjectIDFromRequestPath(req *http.Request) (string, error) {
