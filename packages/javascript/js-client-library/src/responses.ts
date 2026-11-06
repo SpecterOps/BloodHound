@@ -381,7 +381,7 @@ export type GetClientResponse = PaginatedResponse<Client[]>;
 export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
 
 // ---------------------------------------------------------------------------
-//  Collectors - Managed Collections
+//  Collectors - Cloud Collector
 // ---------------------------------------------------------------------------
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
 
