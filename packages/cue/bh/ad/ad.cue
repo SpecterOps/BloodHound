@@ -1070,7 +1070,87 @@ GPOStatus: types.#StringEnum & {
 	representation: "gpostatus"
 }
 
+UserPassword: types.#StringEnum & {
+	symbol: "UserPassword"
+	schema: "ad"
+	name: "User Password"
+	representation: "userpassword"
+}
+
+UnixPassword: types.#StringEnum & {
+	symbol: "UnixPassword"
+	schema: "ad"
+	name: "UNIX Password"
+	representation: "unixpassword"
+}
+
+UnicodePassword: types.#StringEnum & {
+	symbol: "UnicodePassword"
+	schema: "ad"
+	name: "Unicode Password"
+	representation: "unicodepassword"
+}
+
+SFUPassword: types.#StringEnum & {
+	symbol: "SFUPassword"
+	schema: "ad"
+	name: "Services for UNIX Password"
+	representation: "sfupassword"
+}
+
+SIDHistory: types.#StringEnum & {
+	symbol: "SIDHistory"
+	schema: "ad"
+	name: "SID History"
+	representation: "sidhistory"
+}
+
+LogonScript: types.#StringEnum & {
+	symbol: "LogonScript"
+	schema: "ad"
+	name: "Logon Script"
+	representation: "logonscript"
+}
+
+ProfilePath: types.#StringEnum & {
+	symbol: "ProfilePath"
+	schema: "ad"
+	name: "Profile Path"
+	representation: "profilepath"
+}
+
+GPCPath: types.#StringEnum & {
+	symbol: "GPCPath"
+	schema: "ad"
+	name: "GPO File System Path"
+	representation: "gpcpath"
+}
+
+AllowedDelegationTargets: types.#StringEnum & {
+	symbol: "AllowedDelegationTargets"
+	schema: "ad"
+	name: "Allowed Delegation Targets"
+	representation: "allowedtodelegate"
+}
+
+OIDGroupLinkTarget: types.#StringEnum & {
+	symbol: "OIDGroupLinkTarget"
+	schema: "ad"
+	name: "OID Group Link"
+	representation: "oidgrouplink"
+}
+
 Properties: [
+	UserPassword,
+	UnixPassword,
+	UnicodePassword,
+	SFUPassword,
+	SIDHistory,
+	LogonScript,
+	ProfilePath,
+	GPCPath,
+	AllowedDelegationTargets,
+	OIDGroupLinkTarget,
 	AdminCount,
 	CASecurityCollected,
 	CAName,
