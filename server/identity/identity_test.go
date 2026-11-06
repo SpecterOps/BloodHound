@@ -71,6 +71,13 @@ func TestRegister_RegistersRoutes(t *testing.T) {
 			},
 			expected: expected{routeRegistered: true},
 		},
+		{
+			name: "Success: GET /api/v2/tokens is registered",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodGet, "/api/v2/tokens", nil)
+			},
+			expected: expected{routeRegistered: true},
+		},
 	}
 
 	for _, testCase := range tests {

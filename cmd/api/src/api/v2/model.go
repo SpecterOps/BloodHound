@@ -34,10 +34,6 @@ import (
 	"github.com/specterops/dawgs/graph"
 )
 
-type ListTokensResponse struct {
-	Tokens model.AuthTokens `json:"tokens"`
-}
-
 type SAMLSignOnEndpoint struct {
 	Name          string    `json:"name"`
 	InitiationURL serde.URL `json:"initiation_url"`

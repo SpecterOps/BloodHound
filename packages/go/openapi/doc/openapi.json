@@ -1347,7 +1347,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are `user_id`, `client_id`, `name`, `last_access`, `created_at`, `updated_at`, `deleted_at`.\n",
+            "description": "Sortable columns are `name`, `last_access`, `created_at`, `updated_at`, `expires_at`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -1361,10 +1361,17 @@
             }
           },
           {
-            "name": "key",
+            "name": "created_by",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid-required"
+            }
+          },
+          {
+            "name": "expires_at",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time-nullable-required"
             }
           },
           {
@@ -1393,9 +1400,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
@@ -26709,6 +26713,16 @@
         "type": "string",
         "pattern": "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
         "description": "Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.uuid-required": {
+        "type": "string",
+        "pattern": "^(eq|neq):[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+        "description": "Filter results by a UUID value. A predicate is required.\nValid filter predicates are `eq` and `neq`.\nExample: `eq:12345678-1234-1234-1234-123456789abc`.\n"
+      },
+      "api.params.predicate.filter.time-nullable-required": {
+        "type": "string",
+        "pattern": "^((eq|neq|gt|gte|lt|lte):[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?([Zz]|-[0-9]{2}:[0-9]{2})|(eq|neq):null)$",
+        "description": "Filter by timestamp using a required predicate.\nValid timestamp predicates are `eq`, `neq`, `gt`, `gte`, `lt`, and `lte`.\nUse `eq:null` or `neq:null` to compare against null.\n"
       },
       "api.requests.user.update": {
         "type": "object",

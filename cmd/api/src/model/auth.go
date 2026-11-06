@@ -137,60 +137,6 @@ func (s AuthToken) StripKey() AuthToken {
 
 type AuthTokens []AuthToken
 
-func (s AuthTokens) IsSortable(column string) bool {
-	switch column {
-	case "name",
-		"last_access",
-		"created_at",
-		"updated_at",
-		"deleted_at",
-		"expires_at":
-		return true
-	default:
-		return false
-	}
-}
-
-func (s AuthTokens) ValidFilters() map[string][]FilterOperator {
-	return map[string][]FilterOperator{
-		"user_id":     {Equals, NotEquals},
-		"name":        {Equals, NotEquals},
-		"key":         {Equals, NotEquals},
-		"hmac_method": {Equals, NotEquals},
-		"id":          {Equals, NotEquals},
-		"created_by":  {Equals, NotEquals},
-		"last_access": {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"created_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"updated_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"deleted_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-		"expires_at":  {Equals, GreaterThan, GreaterThanOrEquals, LessThan, LessThanOrEquals, NotEquals},
-	}
-}
-
-func (s AuthTokens) IsString(column string) bool {
-	return column == "name" || column == "key" || column == "hmac_method"
-}
-
-func (s AuthTokens) GetFilterableColumns() []string {
-	columns := make([]string, 0)
-	for column := range s.ValidFilters() {
-		columns = append(columns, column)
-	}
-	return columns
-}
-
-func (s AuthTokens) GetValidFilterPredicatesAsStrings(column string) ([]string, error) {
-	if predicates, validColumn := s.ValidFilters()[column]; !validColumn {
-		return []string{}, fmt.Errorf("the specified column cannot be filtered")
-	} else {
-		stringPredicates := make([]string, 0)
-		for _, predicate := range predicates {
-			stringPredicates = append(stringPredicates, string(predicate))
-		}
-		return stringPredicates, nil
-	}
-}
-
 func (s AuthTokens) IDs() []uuid.UUID {
 	ids := make([]uuid.UUID, len(s))
 
@@ -199,16 +145,6 @@ func (s AuthTokens) IDs() []uuid.UUID {
 	}
 
 	return ids
-}
-
-func (s AuthTokens) StripKeys() AuthTokens {
-	tokens := make(AuthTokens, len(s))
-
-	for idx, token := range s {
-		tokens[idx] = token.StripKey()
-	}
-
-	return tokens
 }
 
 type AuthSecret struct {

@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -30,6 +31,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	testutils "github.com/specterops/bloodhound/cmd/api/src/utils/test"
@@ -805,6 +807,241 @@ func TestUserListView_ValidFilters(t *testing.T) {
 		{name: "last_login supports range operators", field: "last_login", wantPresent: true, wantString: false, wantOperator: params.GreaterThan},
 		{name: "created_at supports range operators", field: "created_at", wantPresent: true, wantString: false, wantOperator: params.LessThanOrEquals},
 		{name: "deleted_at is not filterable", field: "deleted_at", wantPresent: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			field, present := validFilters[tt.field]
+			require.Equal(t, tt.wantPresent, present)
+			if !tt.wantPresent {
+				return
+			}
+			assert.Equal(t, tt.wantString, field.IsStringData)
+			assert.Contains(t, field.Operators, tt.wantOperator)
+		})
+	}
+}
+
+func TestHandlers_ListAuthTokens(t *testing.T) {
+	type mock struct {
+		identity *mocks.MockIdentity
+	}
+
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		responseBody   func(t *testing.T, body []byte)
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(mock mock)
+		expected     expected
+	}
+
+	var (
+		unexpectedErr = errors.New("unexpected database failure")
+		filters       = params.Filters{
+			"name": {{Field: "name", Operator: params.Equals, Value: "token", IsStringData: true}},
+		}
+		sortItems  = params.SortItems{{Field: "last_access", Direction: params.Descending}}
+		userID     = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		tokenID    = uuid.FromStringOrNil("33333333-3333-3333-3333-333333333333")
+		lastAccess = time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+		adminUser  = model.User{
+			Unique: model.Unique{ID: userID},
+			Roles:  model.Roles{{Permissions: model.Permissions{auth.Permissions().AuthManageUsers}}},
+		}
+		nonAdminUser = model.User{Unique: model.Unique{ID: userID}}
+		authTokens   = []services.AuthToken{
+			{
+				ID:         tokenID,
+				UserID:     uuid.NullUUID{UUID: userID, Valid: true},
+				Name:       sql.NullString{String: "token", Valid: true},
+				HmacMethod: "hmac-sha2-256",
+				LastAccess: lastAccess,
+				ExpiresAt:  sql.NullTime{Time: lastAccess.Add(time.Hour), Valid: true},
+				CreatedBy:  uuid.NullUUID{UUID: userID, Valid: true},
+				CreatedAt:  lastAccess,
+				UpdatedAt:  lastAccess,
+			},
+		}
+	)
+
+	buildRequest := func(owner any) func() *http.Request {
+		return func() *http.Request {
+			request := httptest.NewRequest(http.MethodGet, "/api/v2/tokens", nil)
+			return bhctx.SetRequestContext(request, &bhctx.Context{AuthCtx: auth.Context{Owner: owner}, Filters: filters, Sort: sortItems})
+		}
+	}
+
+	assertErrorMessage := func(message string) func(t *testing.T, body []byte) {
+		return func(t *testing.T, body []byte) {
+			var envelope struct {
+				Errors []struct {
+					Message string `json:"message"`
+				} `json:"errors"`
+			}
+			require.NoError(t, json.Unmarshal(body, &envelope))
+			require.Len(t, envelope.Errors, 1)
+			assert.Equal(t, message, envelope.Errors[0].Message)
+		}
+	}
+
+	tt := []testData{
+		{
+			name:         "Success: legacy auth token JSON contract is reproduced - 200",
+			buildRequest: buildRequest(adminUser),
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().ListAuthTokens(testifyMock.Anything, services.AuthTokenRequester{UserID: userID, IsUser: true, CanManageUsers: true}, filters, sortItems).Return(authTokens, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody: func(t *testing.T, body []byte) {
+					var envelope struct {
+						Data struct {
+							Tokens []json.RawMessage `json:"tokens"`
+						} `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					require.Len(t, envelope.Data.Tokens, 1)
+					assert.JSONEq(t, `{
+						"user_id": "11111111-1111-1111-1111-111111111111",
+						"name": "token",
+						"hmac_method": "hmac-sha2-256",
+						"last_access": "2026-01-02T03:04:05Z",
+						"expires_at": {"Time": "2026-01-02T04:04:05Z", "Valid": true},
+						"created_by": "11111111-1111-1111-1111-111111111111",
+						"id": "33333333-3333-3333-3333-333333333333",
+						"created_at": "2026-01-02T03:04:05Z",
+						"updated_at": "2026-01-02T03:04:05Z",
+						"deleted_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}
+					}`, string(envelope.Data.Tokens[0]))
+				},
+			},
+		},
+		{
+			name:         "Success: non-admin requester is passed to the service - 200",
+			buildRequest: buildRequest(nonAdminUser),
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().ListAuthTokens(testifyMock.Anything, services.AuthTokenRequester{UserID: userID, IsUser: true}, filters, sortItems).Return([]services.AuthToken{}, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+				responseBody: func(t *testing.T, body []byte) {
+					var envelope struct {
+						Data json.RawMessage `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					assert.JSONEq(t, `{"tokens":[]}`, string(envelope.Data))
+				},
+			},
+		},
+		{
+			name:         "Error: user_id filter is not a UUID - 400",
+			buildRequest: buildRequest(adminUser),
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().ListAuthTokens(testifyMock.Anything, testifyMock.Anything, filters, sortItems).Return(nil, fmt.Errorf("%w: bad value", services.ErrInvalidAuthTokenUserID))
+			},
+			expected: expected{responseCode: http.StatusBadRequest, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, responseBody: assertErrorMessage("invalid UUID: bad value")},
+		},
+		{
+			name:         "Error: non-admin filters by another user's user_id - 403",
+			buildRequest: buildRequest(nonAdminUser),
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().ListAuthTokens(testifyMock.Anything, testifyMock.Anything, filters, sortItems).Return(nil, services.ErrAuthTokenUserIDRequiresAdmin)
+			},
+			expected: expected{responseCode: http.StatusForbidden, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, responseBody: assertErrorMessage("filtering tokens by another user's user_id requires admin privileges")},
+		},
+		{
+			name:         "Error: non-admin filters by user_id with a non-eq operator - 403",
+			buildRequest: buildRequest(nonAdminUser),
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().ListAuthTokens(testifyMock.Anything, testifyMock.Anything, filters, sortItems).Return(nil, services.ErrAuthTokenUserIDOperatorNotAllowed)
+			},
+			expected: expected{responseCode: http.StatusForbidden, responseHeader: http.Header{"Content-Type": []string{"application/json"}}, responseBody: assertErrorMessage("non-admin users may only apply the eq operator when filtering by user_id")},
+		},
+		{
+			name:         "Error: service fails - 500",
+			buildRequest: buildRequest(adminUser),
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().ListAuthTokens(testifyMock.Anything, testifyMock.Anything, filters, sortItems).Return(nil, unexpectedErr)
+			},
+			expected: expected{responseCode: http.StatusInternalServerError, responseHeader: http.Header{"Content-Type": []string{"application/json"}}},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				identityMock = mocks.NewMockIdentity(t)
+				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				muxRouter    = mux.NewRouter()
+				recorder     = httptest.NewRecorder()
+			)
+
+			muxRouter.HandleFunc("/api/v2/tokens", handlerSet.ListAuthTokens).Methods(http.MethodGet)
+			testCase.setupMocks(mock{identity: identityMock})
+
+			muxRouter.ServeHTTP(recorder, testCase.buildRequest())
+
+			status, header, body := testutils.ProcessResponse(t, recorder)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.responseBody != nil {
+				testCase.expected.responseBody(t, []byte(body))
+			}
+		})
+	}
+}
+
+func TestAuthTokenListView_IsSortable(t *testing.T) {
+	tests := []struct {
+		name  string
+		field string
+		want  bool
+	}{
+		{name: "name is sortable", field: "name", want: true},
+		{name: "last_access is sortable", field: "last_access", want: true},
+		{name: "expires_at is sortable", field: "expires_at", want: true},
+		{name: "created_at is sortable", field: "created_at", want: true},
+		{name: "updated_at is sortable", field: "updated_at", want: true},
+		{name: "user_id is not sortable", field: "user_id", want: false},
+		{name: "client_id is not sortable", field: "client_id", want: false},
+		{name: "deleted_at is not sortable", field: "deleted_at", want: false},
+		{name: "key is not sortable", field: "key", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, handlers.AuthTokenListView{}.IsSortable(tt.field))
+		})
+	}
+}
+
+func TestAuthTokenListView_ValidFilters(t *testing.T) {
+	var validFilters = handlers.AuthTokenListView{}.ValidFilters()
+
+	tests := []struct {
+		name         string
+		field        string
+		wantPresent  bool
+		wantString   bool
+		wantOperator params.FilterOperator
+	}{
+		{name: "user_id filterable as non-string data", field: "user_id", wantPresent: true, wantString: false, wantOperator: params.Equals},
+		{name: "name filterable as string data", field: "name", wantPresent: true, wantString: true, wantOperator: params.NotEquals},
+		{name: "hmac_method filterable as string data", field: "hmac_method", wantPresent: true, wantString: true, wantOperator: params.Equals},
+		{name: "last_access supports range operators", field: "last_access", wantPresent: true, wantString: false, wantOperator: params.GreaterThan},
+		{name: "expires_at supports range operators", field: "expires_at", wantPresent: true, wantString: false, wantOperator: params.LessThanOrEquals},
+		{name: "deleted_at is not filterable", field: "deleted_at", wantPresent: false},
+		{name: "key is not filterable", field: "key", wantPresent: false},
+		{name: "client_id is not filterable", field: "client_id", wantPresent: false},
 	}
 
 	for _, tt := range tests {

@@ -31,6 +31,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
@@ -184,6 +185,18 @@ type listUsersMinimalResponseEnvelope struct {
 	} `json:"data"`
 }
 
+// listAuthTokensResponseEnvelope is the JSON envelope shape returned by the
+// GET /api/v2/tokens handler.
+type listAuthTokensResponseEnvelope struct {
+	Data struct {
+		Tokens []struct {
+			ID     uuid.UUID     `json:"id"`
+			UserID uuid.NullUUID `json:"user_id"`
+			Name   *string       `json:"name"`
+		} `json:"tokens"`
+	} `json:"data"`
+}
+
 // newListRolesHandler wires the identity slice's ListRoles handler backed by
 // the given database, wrapped in the same filter and sort middleware the route
 // applies in production (see routes.Register). The middleware parses and
@@ -250,6 +263,34 @@ func seedUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalNa
 	require.NoError(t, err)
 
 	return principalName
+}
+
+// lookupUserID returns the id of the user seeded with the given principal name.
+func lookupUserID(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string) uuid.UUID {
+	t.Helper()
+	var (
+		rawUserID string
+		userID    uuid.UUID
+		err       error
+	)
+	require.NoError(t, pool.QueryRow(ctx, `SELECT id FROM users WHERE principal_name = $1`, principalName).Scan(&rawUserID))
+	userID, err = uuid.FromString(rawUserID)
+	require.NoError(t, err)
+	return userID
+}
+
+// seedAuthToken inserts an auth token owned by the supplied user and returns its id.
+func seedAuthToken(t *testing.T, ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, name string) uuid.UUID {
+	t.Helper()
+	tokenID, err := uuid.NewV4()
+	require.NoError(t, err)
+	_, err = pool.Exec(ctx,
+		`INSERT INTO auth_tokens (id, user_id, name, key, hmac_method, last_access, created_by, created_at, updated_at)
+                 VALUES ($1, $2, $3, 'secret-key', 'hmac-sha2-256', now(), $2, now(), now())`,
+		tokenID.String(), userID.String(), name,
+	)
+	require.NoError(t, err)
+	return tokenID
 }
 
 // userSeed describes a user row for seedUserRecord. Nil string pointers are
@@ -1207,6 +1248,168 @@ func TestIdentity_ListActiveUsersMinimal(t *testing.T) {
 			}
 			if testCase.expected.assertBody != nil {
 				testCase.expected.assertBody(t, body)
+			}
+		})
+	}
+}
+
+func TestIdentity_ListAuthTokens(t *testing.T) {
+	type expected struct {
+		responseCode int
+		assertBody   func(t *testing.T, body []byte)
+	}
+	type testData struct {
+		name     string
+		owner    any
+		query    url.Values
+		expected expected
+	}
+
+	var (
+		db                = setupIdentityDB(t)
+		ctx               = context.Background()
+		pool              = db.Pool()
+		permissions       = auth.Permissions()
+		routerInst        = router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
+		adminID           = lookupUserID(t, ctx, pool, seedUser(t, ctx, pool, "tokens-admin", false))
+		ownerID           = lookupUserID(t, ctx, pool, seedUser(t, ctx, pool, "tokens-owner", false))
+		otherID           = lookupUserID(t, ctx, pool, seedUser(t, ctx, pool, "tokens-other", false))
+		alphaTokenID      = seedAuthToken(t, ctx, pool, ownerID, "alpha-token")
+		zuluTokenID       = seedAuthToken(t, ctx, pool, ownerID, "zulu-token")
+		otherTokenID      = seedAuthToken(t, ctx, pool, otherID, "other-token")
+		adminUser         = model.User{Unique: model.Unique{ID: adminID}, Roles: model.Roles{{Permissions: model.Permissions{permissions.AuthCreateToken, permissions.AuthManageSelf, permissions.AuthManageUsers}}}}
+		ownerUser         = model.User{Unique: model.Unique{ID: ownerID}, Roles: model.Roles{{Permissions: model.Permissions{permissions.AuthCreateToken, permissions.AuthManageSelf}}}}
+		noCreateTokenUser = model.User{Unique: model.Unique{ID: ownerID}, Roles: model.Roles{{Permissions: model.Permissions{permissions.AuthManageSelf}}}}
+		noManageSelfUser  = model.User{Unique: model.Unique{ID: ownerID}, Roles: model.Roles{{Permissions: model.Permissions{permissions.AuthCreateToken}}}}
+	)
+	identity.Register(&routerInst, pool)
+	handler := routerInst.Handler()
+	tokenIDsIn := func(t *testing.T, body []byte) []uuid.UUID {
+		t.Helper()
+		var envelope listAuthTokensResponseEnvelope
+		require.NoError(t, json.Unmarshal(body, &envelope))
+		tokenIDs := make([]uuid.UUID, 0, len(envelope.Data.Tokens))
+		for _, token := range envelope.Data.Tokens {
+			tokenIDs = append(tokenIDs, token.ID)
+		}
+		return tokenIDs
+	}
+	bodyContains := func(message string) func(t *testing.T, body []byte) {
+		return func(t *testing.T, body []byte) { assert.Contains(t, string(body), message) }
+	}
+	tt := []testData{
+		{
+			name:  "Success: admin sees every user's tokens - 200",
+			owner: adminUser,
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				assert.ElementsMatch(t, []uuid.UUID{alphaTokenID, zuluTokenID, otherTokenID}, tokenIDsIn(t, body))
+			}},
+		},
+		{
+			name:  "Success: admin filters by another user's user_id - 200",
+			owner: adminUser,
+			query: url.Values{"user_id": {"eq:" + otherID.String()}},
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				assert.Equal(t, []uuid.UUID{otherTokenID}, tokenIDsIn(t, body))
+			}},
+		},
+		{
+			name:  "Success: non-admin without filters is scoped to their own tokens - 200",
+			owner: ownerUser,
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				assert.ElementsMatch(t, []uuid.UUID{alphaTokenID, zuluTokenID}, tokenIDsIn(t, body))
+			}},
+		},
+		{
+			name:  "Success: non-admin filters by their own user_id - 200",
+			owner: ownerUser,
+			query: url.Values{"user_id": {"eq:" + ownerID.String()}},
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				assert.ElementsMatch(t, []uuid.UUID{alphaTokenID, zuluTokenID}, tokenIDsIn(t, body))
+			}},
+		},
+		{
+			name:  "Success: tokens are filtered by name - 200",
+			owner: ownerUser,
+			query: url.Values{"name": {"eq:zulu-token"}},
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				assert.Equal(t, []uuid.UUID{zuluTokenID}, tokenIDsIn(t, body))
+			}},
+		},
+		{
+			name:  "Success: tokens are sorted by name descending - 200",
+			owner: ownerUser,
+			query: url.Values{"sort_by": {"-name"}},
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				assert.Equal(t, []uuid.UUID{zuluTokenID, alphaTokenID}, tokenIDsIn(t, body))
+			}},
+		},
+		{
+			name:     "Error: non-admin filters by another user's user_id - 403",
+			owner:    ownerUser,
+			query:    url.Values{"user_id": {"eq:" + otherID.String()}},
+			expected: expected{responseCode: http.StatusForbidden, assertBody: bodyContains(services.ErrAuthTokenUserIDRequiresAdmin.Error())},
+		},
+		{
+			name:     "Error: non-admin filters by their own user_id with neq - 403",
+			owner:    ownerUser,
+			query:    url.Values{"user_id": {"neq:" + ownerID.String()}},
+			expected: expected{responseCode: http.StatusForbidden, assertBody: bodyContains(services.ErrAuthTokenUserIDOperatorNotAllowed.Error())},
+		},
+		{
+			name:     "Error: user_id filter is not a UUID - 400",
+			owner:    adminUser,
+			query:    url.Values{"user_id": {"eq:not-a-uuid"}},
+			expected: expected{responseCode: http.StatusBadRequest, assertBody: bodyContains(services.ErrInvalidAuthTokenUserID.Error())},
+		},
+		{
+			name:     "Error: sort column is not supported - 400",
+			owner:    ownerUser,
+			query:    url.Values{"sort_by": {"deleted_at"}},
+			expected: expected{responseCode: http.StatusBadRequest, assertBody: bodyContains(api.ErrorResponseDetailsNotSortable)},
+		},
+		{
+			name:     "Error: filter column is not supported - 400",
+			owner:    ownerUser,
+			query:    url.Values{"key": {"eq:secret-key"}},
+			expected: expected{responseCode: http.StatusBadRequest, assertBody: bodyContains(api.ErrorResponseDetailsColumnNotFilterable)},
+		},
+		{
+			name:     "Error: filter predicate is not supported - 400",
+			owner:    ownerUser,
+			query:    url.Values{"name": {"gt:alpha"}},
+			expected: expected{responseCode: http.StatusBadRequest, assertBody: bodyContains(api.ErrorResponseDetailsFilterPredicateNotSupported)},
+		},
+		{
+			name:     "Error: unauthenticated request - 401",
+			owner:    nil,
+			expected: expected{responseCode: http.StatusUnauthorized},
+		},
+		{
+			name:     "Error: user lacks AuthCreateToken permission - 403",
+			owner:    noCreateTokenUser,
+			expected: expected{responseCode: http.StatusForbidden},
+		},
+		{
+			name:     "Error: user lacks AuthManageSelf permission - 401",
+			owner:    noManageSelfUser,
+			expected: expected{responseCode: http.StatusUnauthorized},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				recorder = httptest.NewRecorder()
+				request  = httptest.NewRequest(http.MethodGet, "/api/v2/tokens", nil)
+			)
+			request.URL.RawQuery = testCase.query.Encode()
+			request = bhctx.SetRequestContext(request, &bhctx.Context{AuthCtx: auth.Context{Owner: testCase.owner}})
+
+			handler.ServeHTTP(recorder, request)
+			assert.Equal(t, testCase.expected.responseCode, recorder.Code, recorder.Body.String())
+			assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, recorder.Body.Bytes())
 			}
 		})
 	}
