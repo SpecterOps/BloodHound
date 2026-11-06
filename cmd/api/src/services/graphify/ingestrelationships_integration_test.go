@@ -397,6 +397,70 @@ func Test_IngestRelationships(t *testing.T) {
 
 			})
 	})
+
+	t.Run("OpenGraph rel resolved by property+kind attaches to a pre-existing node from a different source kind instead of duplicating it", func(t *testing.T) {
+		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
+
+		testContext.DatabaseTestWithSetup(
+			func(harness *integration.HarnessDetails) error {
+				// A base AD Group node ingested by a built-in collector (SharpHound/RustHound-CE)
+				harness.IngestRelationships.Node1 = testContext.NewNode(graph.AsProperties(graph.PropertyMap{
+					common.ObjectID: "S-1-5-32-544",
+					common.Name:     "BUILTIN\\Administrators",
+				}), ad.Entity, ad.Group)
+
+				return nil
+			},
+			func(harness integration.HarnessDetails, db graph.Database) {
+				ingestibleRel := ein.NewIngestibleRelationship(
+					ein.IngestibleEndpoint{Value: "custom-node-1"},
+					ein.IngestibleEndpoint{
+						Kind:    ad.Group,
+						MatchBy: ein.MatchByProperty,
+						Matchers: []ein.MatchExpression{{
+							Key:      "objectid",
+							Operator: ein.OperatorEquals,
+							Value:    "S-1-5-32-544",
+						}},
+					},
+					ein.IngestibleRel{RelType: graph.StringKind("RelatedTo")},
+				)
+
+				err := db.BatchOperation(testContext.Context(), func(batch graph.Batch) error {
+					ingestContext := NewIngestContext(testContext.Context(), WithBatchUpdater(batch), WithEndpointResolver(endpoint.NewResolver(db)))
+
+					err := IngestRelationships(ingestContext, graph.StringKind("custom-source"), []ein.IngestibleRelationship{ingestibleRel})
+					require.Nil(t, err)
+					return nil
+				})
+
+				require.Nil(t, err)
+
+				err = db.ReadTransaction(testContext.Context(), func(tx graph.Transaction) error {
+					// The resolved target must be the pre-existing node: no duplicate node was created
+					count, err := tx.Nodes().Filter(
+						query.Equals(query.Property(query.Node(), "objectid"), "S-1-5-32-544"),
+					).Count()
+					require.Nil(t, err)
+					require.Equal(t, int64(1), count)
+
+					// The relationship is attached to the pre-existing node
+					relCount, err := tx.Relationships().Filter(
+						query.And(
+							query.Kind(query.Relationship(), graph.StringKind("RelatedTo")),
+							query.Equals(query.EndID(), harness.IngestRelationships.Node1.ID),
+						),
+					).Count()
+					require.Nil(t, err)
+					require.Equal(t, int64(1), relCount)
+
+					return nil
+				})
+
+				require.Nil(t, err)
+
+			})
+	})
 }
 
 func Test_ResolveRelationships(t *testing.T) {
