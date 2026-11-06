@@ -80,7 +80,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "Hybrid Attack Paths Post Processing", db, hybridTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	err = db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		var (
@@ -102,10 +102,10 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 				// Loop through each Entra user in this tenant
 				for _, tenantUser := range tenantUsers {
 					// Check to see if the Entra user has an on prem sync property set
-					if onPremID, hasOnPrem, err := hasOnPremUser(tenantUser); !hasOnPrem {
-						continue
-					} else if err != nil {
+					if onPremID, hasOnPrem, err := hasOnPremUser(tenantUser); err != nil {
 						return err
+					} else if !hasOnPrem {
+						continue
 					} else {
 						// We know this user has an onPrem counterpart, so add the node id and onPremID to our mapping inputs.
 						adObjIDMap[onPremID] = append(adObjIDMap[onPremID], tenantUser.ID)
@@ -161,10 +161,10 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 		return tx.Commit()
 	})
 	if err != nil {
-		return &post.AtomicPostProcessingStats{}, fmt.Errorf("hybrid post-processing transaction error: %w", err)
+		return &post.AtomicPostProcessingStats{}, errors.Join(fmt.Errorf("hybrid post-processing transaction error: %w", err), sink.Abort())
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 // hybridPostProcessedEdges lists the AD-Azure hybrid edge kinds which are post-processed using the delta-change-apply method

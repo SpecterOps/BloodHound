@@ -124,6 +124,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     ActiveDirectoryRelationshipKind.ADCSESC10a,
                     ActiveDirectoryRelationshipKind.ADCSESC10b,
                     ActiveDirectoryRelationshipKind.ADCSESC13,
+                    ActiveDirectoryRelationshipKind.ADCSESC16,
                 ],
             },
             {
@@ -142,6 +143,7 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                 edgeTypes: [
                     ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
                     ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+                    ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC,
                     ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
                     ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
                 ],
