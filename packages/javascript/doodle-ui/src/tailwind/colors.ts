@@ -277,26 +277,8 @@ export const common = {
     'light-blue-gray': '#E3EAF0',
 };
 
-export const elevation = {
-    light: {
-        0: common.white,
-        1: common.white,
-        2: palette.neutral.light[100],
-        3: palette.neutral.light[200],
-        4: palette.neutral.light[300],
-        5: palette.neutral.light[400],
-    },
-    dark: {
-        0: common.black,
-        1: palette.neutral.dark[50],
-        2: palette.neutral.dark[400],
-        3: palette.neutral.dark[500],
-        4: palette.neutral.dark[600],
-        5: palette.neutral.dark[700],
-    },
-};
-
 export const light = {
+    'brand-orange': '#BF360C',
     'bhce-main': '#E02F35',
     primary: {
         main: '#2C2677',
@@ -374,18 +356,8 @@ export const light = {
     },
 };
 
-export const text = {
-    main: common.dark,
-    light: '#505050',
-    dark: '#CDCDCD',
-    contrast: common.white,
-    placeholder: '#6D6D6D',
-    primary: light.primary.main,
-    secondary: light.secondary.main,
-    faint: '#707070',
-};
-
 export const dark = {
+    'brand-orange': '#FF7043',
     'bhce-main': '#F35857',
     primary: {
         main: '#A1A0FF',
@@ -465,5 +437,35 @@ export const dark = {
             fill: palette['light-blue'][800],
             outline: palette['light-blue'][200],
         },
+    },
+};
+
+export const text = {
+    main: common.dark,
+    light: '#505050',
+    dark: '#CDCDCD',
+    contrast: common.white,
+    placeholder: '#6D6D6D',
+    primary: light.primary.main,
+    secondary: light.secondary.main,
+    faint: '#707070',
+};
+
+export const elevation = {
+    light: {
+        0: common.white,
+        1: common.white,
+        2: palette.neutral.light[100],
+        3: palette.neutral.light[200],
+        4: palette.neutral.light[300],
+        5: palette.neutral.light[400],
+    },
+    dark: {
+        0: common.black,
+        1: palette.neutral.dark[50],
+        2: palette.neutral.dark[400],
+        3: palette.neutral.dark[500],
+        4: palette.neutral.dark[600],
+        5: palette.neutral.dark[700],
     },
 };
