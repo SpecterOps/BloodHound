@@ -14,8 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const breadcrumbListClasses =
-    'flex flex-wrap items-center gap-1.5 break-words text-xs sm:gap-2.5 dark:text-white';
+export const breadcrumbListClasses = 'flex flex-wrap items-center gap-1.5 break-words text-xs sm:gap-2.5 text-main';
 
 export const breadcrumbItemClasses = 'inline-flex items-center gap-1.5';
 

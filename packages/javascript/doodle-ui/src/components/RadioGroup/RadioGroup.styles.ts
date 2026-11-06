@@ -35,4 +35,4 @@ export const radioItemControlClasses = cn(
 );
 
 export const radioItemIndicatorClasses =
-    'bg-radio-indicator-fill w-2 h-2 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
+    'bg-[color:var(--radio-indicator-fill)] w-2 h-2 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
