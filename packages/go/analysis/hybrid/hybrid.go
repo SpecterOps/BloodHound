@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/analysis/post"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -158,6 +159,50 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 			}
 		}
 
+		// AZCloudSyncGroupWriteback: a cloud-managed (source-of-authority) Entra group whose membership
+		// Entra Cloud Sync writes back into the SID-matched on-prem AD group. Whoever controls the cloud
+		// group's membership (AZOwns / AZAddMembers / AZMGGroup_ReadWrite_All) can therefore add a synced
+		// principal that Cloud Sync writes into the on-prem group, inheriting its rights. This is a
+		// config-dependent, by-design governance crossing (not a vulnerability); it is excluded for groups
+		// that Cloud Sync cannot govern (built-in critical groups and AdminSDHolder-protected targets).
+		if entraGroups, err := fetchEntraGroups(tx); err != nil {
+			return err
+		} else if len(entraGroups) > 0 {
+			// Map on-prem SID -> cloud-managed Entra group node ids. A slice is kept per SID so that if more
+			// than one cloud-managed Entra group resolves to the same on-prem SID, each gets an edge, matching
+			// the multiple-match behavior of the synced-user mapping above.
+			sidToAZGroups := make(map[string][]graph.ID, len(entraGroups))
+			for _, azGroup := range entraGroups {
+				if cloudManaged, hasSID, sid, err := cloudManagedGroupSID(azGroup); err != nil {
+					return err
+				} else if cloudManaged && hasSID {
+					sidToAZGroups[sid] = append(sidToAZGroups[sid], azGroup.ID)
+				}
+			}
+
+			if len(sidToAZGroups) > 0 {
+				if adGroups, err := fetchADGroups(tx); err != nil {
+					return err
+				} else {
+					for _, adGroup := range adGroups {
+						if objectID, err := adGroup.Properties.Get(common.ObjectID.String()).String(); err != nil {
+							return err
+						} else if azGroupIDs, ok := sidToAZGroups[objectID]; ok && !isCloudSyncExcludedGroup(adGroup) {
+							for _, azGroupID := range azGroupIDs {
+								if !sink.Submit(ctx, post.EnsureRelationshipJob{
+									FromID: azGroupID,
+									ToID:   adGroup.ID,
+									Kind:   azure.CloudSyncGroupWriteback,
+								}) {
+									return fmt.Errorf("unable to submit %s relationship to the sink", azure.CloudSyncGroupWriteback)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
 		return tx.Commit()
 	})
 	if err != nil {
@@ -171,6 +216,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 var hybridPostProcessedEdges = graph.Kinds{
 	azure.SyncedToEntraUser,
 	adSchema.SyncedToADUser,
+	azure.CloudSyncGroupWriteback,
 }
 
 // hasOnPremUser takes a node and returns the OnPremID as a string, whether the node has an onPrem user defined as a bool
@@ -207,4 +253,71 @@ func fetchADUsers(tx graph.Transaction) ([]*graph.Node, error) {
 			query.Kind(query.Node(), adSchema.User),
 		)
 	}))
+}
+
+// fetchEntraGroups gets all Entra groups in the graph
+func fetchEntraGroups(tx graph.Transaction) ([]*graph.Node, error) {
+	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.Kind(query.Node(), azure.Group)
+	}))
+}
+
+// fetchADGroups gets all AD groups in the graph
+func fetchADGroups(tx graph.Transaction) ([]*graph.Node, error) {
+	return ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
+		return query.Kind(query.Node(), adSchema.Group)
+	}))
+}
+
+// cloudManagedGroupSID returns, for an Entra group, whether its source of authority is the cloud
+// (isCloudManaged == true), whether it carries a non-empty on-prem SID, that SID, and any error.
+// Mirrors hasOnPremUser: a cloud-managed group that carries an on-prem SID (azure.OnPremID, which the
+// ingest populates from the group's onPremisesSecurityIdentifier) is the candidate whose membership
+// Cloud Sync can write back to the SID-matched on-prem group.
+func cloudManagedGroupSID(node *graph.Node) (bool, bool, string, error) {
+	if cloudManaged, err := node.Properties.Get(azure.IsCloudManaged.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+		return false, false, "", nil
+	} else if err != nil {
+		return false, false, "", err
+	} else if sid, err := node.Properties.Get(azure.OnPremID.String()).String(); errors.Is(err, graph.ErrPropertyNotFound) {
+		return cloudManaged, false, "", nil
+	} else if err != nil {
+		return cloudManaged, false, "", err
+	} else {
+		return cloudManaged, len(sid) != 0, sid, nil
+	}
+}
+
+// cloudSyncBlocklistRIDs are the trailing RIDs of the built-in groups Microsoft forbids from Cloud
+// Sync group writeback (docs: "Govern on-premises groups with Cloud Sync"). Matched against the
+// on-prem group objectid (which is the group SID for AD security principals).
+var cloudSyncBlocklistRIDs = []string{
+	"-512", // Domain Admins
+	"-513", // Domain Users
+	"-514", // Domain Guests
+	"-518", // Schema Admins
+	"-519", // Enterprise Admins
+	"-520", // Group Policy Creator Owners
+	"-525", // Protected Users
+	"-526", // Key Admins
+	"-527", // Enterprise Key Admins
+}
+
+// isCloudSyncExcludedGroup reports whether an on-prem AD group cannot be the target of a Cloud Sync
+// group writeback: AdminSDHolder-protected (adminCount == 1) groups and the built-in critical groups
+// above. Matches the product's own governance controls so the edge is not drawn where it is impossible.
+func isCloudSyncExcludedGroup(node *graph.Node) bool {
+	if adminCount, err := node.Properties.Get(adSchema.AdminCount.String()).Bool(); err == nil && adminCount {
+		return true
+	}
+
+	if objectID, err := node.Properties.Get(common.ObjectID.String()).String(); err == nil {
+		for _, rid := range cloudSyncBlocklistRIDs {
+			if strings.HasSuffix(objectID, rid) {
+				return true
+			}
+		}
+	}
+
+	return false
 }

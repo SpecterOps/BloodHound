@@ -225,6 +225,7 @@ BEGIN
 	PERFORM genscript_upsert_kind('AZMGGrantAppRoles');
 	PERFORM genscript_upsert_kind('AZMGGrantRole');
 	PERFORM genscript_upsert_kind('SyncedToEntraUser');
+	PERFORM genscript_upsert_kind('AZCloudSyncGroupWriteback');
 	PERFORM genscript_upsert_kind('AZRoleEligible');
 	PERFORM genscript_upsert_kind('AZRoleApprover');
 	PERFORM genscript_upsert_kind('AZAuthenticatesTo');
@@ -320,6 +321,7 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGGrantAppRoles', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZMGGrantRole', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SyncedToEntraUser', '', true);
+	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZCloudSyncGroupWriteback', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleEligible', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZRoleApprover', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AZAuthenticatesTo', '', true);

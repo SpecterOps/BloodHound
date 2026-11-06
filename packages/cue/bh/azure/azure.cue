@@ -110,6 +110,13 @@ SecurityIdentifier: types.#StringEnum & {
 	representation: "securityidentifier"
 }
 
+IsCloudManaged: types.#StringEnum & {
+	symbol:         "IsCloudManaged"
+	schema:         "azure"
+	name:           "Is Cloud Managed"
+	representation: "iscloudmanaged"
+}
+
 EnableRBACAuthorization: types.#StringEnum & {
 	symbol:         "EnableRBACAuthorization"
 	schema:         "azure"
@@ -382,7 +389,8 @@ Properties: [
 	Issuer,
 	Subject,
 	Audiences,
-	FederatedIdentityCredentialAppID
+	FederatedIdentityCredentialAppID,
+	IsCloudManaged
 ]
 
 // Kinds
@@ -746,6 +754,12 @@ AddMembers: types.#Kind & {
 	representation: "AZAddMembers"
 }
 
+CloudSyncGroupWriteback: types.#Kind & {
+	symbol:         "CloudSyncGroupWriteback"
+	schema:         "azure"
+	representation: "AZCloudSyncGroupWriteback"
+}
+
 AddSecret: types.#Kind & {
 	symbol:         "AddSecret"
 	schema:         "azure"
@@ -883,6 +897,7 @@ RelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToEntraUser,
+	CloudSyncGroupWriteback,
 	AZRoleEligible,
 	AZRoleApprover,
 	AZAuthenticatesTo
@@ -987,6 +1002,7 @@ InboundOutboundRelationshipKinds: [
 	AZMGGrantAppRoles,
 	AZMGGrantRole,
 	SyncedToEntraUser,
+	CloudSyncGroupWriteback,
 	AZRoleEligible,
 	AZRoleApprover,
 	Contains,
