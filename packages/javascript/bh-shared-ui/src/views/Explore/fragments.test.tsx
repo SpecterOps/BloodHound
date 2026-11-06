@@ -14,11 +14,89 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
+import { ActiveDirectoryNodeKind, AzureNodeKind } from '../../graphSchema';
 import { render, screen } from '../../test-utils';
 import { EntityField } from '../../utils';
 import { Field, ObjectInfoFields, exclusionList } from './fragments';
 
 describe('Field', () => {
+    it.each([
+        { property: 'admincount', label: 'Admin Count', source: 'adminCount' },
+        { property: 'sensitive', label: 'Marked Sensitive', source: 'Account is sensitive and cannot be delegated' },
+        { property: 'passwordnotreqd', label: 'Password Not Required', source: 'PASSWD_NOTREQD' },
+    ])('explains $label and its management location when hovering the label', async ({ property, label, source }) => {
+        const user = userEvent.setup();
+        render(<Field label={label} value={false} keyprop={property} nodeType={ActiveDirectoryNodeKind.User} />);
+
+        expect(screen.getByText('FALSE')).toHaveAttribute('title', 'FALSE');
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+        await user.hover(screen.getByText(label));
+
+        const tooltip = await screen.findByRole('tooltip');
+        expect(tooltip).toHaveTextContent('Find this in Active Directory Users and Computers:');
+        expect(tooltip).toHaveTextContent(source);
+        expect(tooltip.querySelector('a')).toBeNull();
+    });
+
+    it.each([
+        { nodeType: ActiveDirectoryNodeKind.Computer, property: 'trustedtoauth', source: 'protocol transition' },
+        { nodeType: AzureNodeKind.Group, property: 'onpremid', source: 'onPremisesSecurityIdentifier' },
+    ])('explains $property on a $nodeType even when its value is null', async ({ nodeType, property, source }) => {
+        const user = userEvent.setup();
+        render(<Field label='Property' value={null} keyprop={property} nodeType={nodeType} />);
+
+        await user.hover(screen.getByRole('button', { name: 'About Property' }));
+
+        const tooltip = await screen.findByRole('tooltip');
+        expect(tooltip).toHaveTextContent(source);
+        expect(tooltip.querySelector('a')).toBeNull();
+        expect(screen.getByText('Null value')).toBeInTheDocument();
+    });
+
+    it.each([
+        { nodeType: undefined, property: 'admincount' },
+        { nodeType: 'CustomUser', property: 'sensitive' },
+    ])('does not attach $property help to an inapplicable $nodeType', ({ nodeType, property }) => {
+        render(<Field label='Property' value={false} keyprop={property} nodeType={nodeType} />);
+        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+        expect(screen.getByText('FALSE')).toHaveAttribute('title', 'FALSE');
+    });
+
+    it('clears open help when switching between node kinds', async () => {
+        const user = userEvent.setup();
+        const { rerender } = render(<Field label='Admin Count' value={false} keyprop='admincount' nodeType='User' />);
+        await user.hover(screen.getByText('Admin Count'));
+        expect(await screen.findByRole('tooltip')).toBeVisible();
+
+        rerender(<Field label='Admin Count' value={false} keyprop='admincount' nodeType='Group' />);
+        rerender(<Field label='Admin Count' value={false} keyprop='admincount' nodeType='User' />);
+
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('opens help on keyboard focus and dismisses it with Escape', async () => {
+        const user = userEvent.setup();
+        render(
+            <Field label='Admin Count:' value={false} keyprop='admincount' nodeType={ActiveDirectoryNodeKind.User} />
+        );
+
+        await user.tab();
+
+        const trigger = screen.getByRole('button', { name: 'About Admin Count' });
+        expect(trigger).toHaveFocus();
+        const tooltip = await screen.findByRole('tooltip');
+        expect(trigger).toHaveAttribute('aria-describedby', tooltip.id);
+        await user.keyboard('{Escape}');
+        expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+        expect(trigger).toHaveFocus();
+    });
+
+    it.each(['email', 'constructor'])('does not add help for an unconfigured property such as %s', (property) => {
+        render(<Field label='Unconfigured' value='value' keyprop={property} nodeType={ActiveDirectoryNodeKind.User} />);
+        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+
     it.each([
         { description: 'single-item', values: ['HOST/one'] },
         { description: 'multiple-item', values: ['HOST/one', 'HOST/two'] },

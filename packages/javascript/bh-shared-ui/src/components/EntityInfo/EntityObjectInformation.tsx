@@ -72,7 +72,7 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
                     zone={zoneName}
                     labels={labelNames}
                 />
-                <ObjectInfoFields fields={formattedObjectFields} />
+                <ObjectInfoFields fields={formattedObjectFields} nodeType={primaryKind} />
             </FieldsContainer>
         </EntityInfoCollapsibleSection>
     );

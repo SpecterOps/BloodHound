@@ -16,6 +16,7 @@
 
 import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
+import { EntityPropertyLabel } from '../../components/EntityInfo/EntityPropertyLabel';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -135,8 +136,8 @@ const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | und
     }
 };
 
-export const Field: React.FC<EntityField> = (entityField) => {
-    const { label, value, keyprop } = entityField;
+export const Field: React.FC<EntityField & { nodeType?: string }> = (entityField) => {
+    const { label, value, keyprop, nodeType } = entityField;
 
     try {
         if (
@@ -152,12 +153,18 @@ export const Field: React.FC<EntityField> = (entityField) => {
     const formattedValue = format(entityField);
 
     const formattedLabel = typeof label === 'string' ? label.replace(/:$/, '') : label;
+    const labelContent =
+        typeof formattedLabel === 'string' ? (
+            <EntityPropertyLabel key={nodeType} property={keyprop} label={formattedLabel} nodeType={nodeType} />
+        ) : (
+            formattedLabel
+        );
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
         content = (
             <div className='flex flex-wrap items-baseline justify-between p-2 text-left'>
                 <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                    {formattedLabel}
+                    {labelContent}
                 </Typography>
                 <Typography
                     component='span'
@@ -189,7 +196,7 @@ export const Field: React.FC<EntityField> = (entityField) => {
                     {/* Only render the label for the first item, since it kicks the list */}
                     {index === 0 ? (
                         <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                            {formattedLabel}
+                            {labelContent}
                         </Typography>
                     ) : (
                         <span aria-hidden='true' />
@@ -216,7 +223,10 @@ export const Field: React.FC<EntityField> = (entityField) => {
     return <>{content}</>;
 };
 
-export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }): JSX.Element => {
+export const ObjectInfoFields: React.FC<{ fields: EntityField[]; nodeType?: string }> = ({
+    fields,
+    nodeType,
+}): JSX.Element => {
     const filteredFields = filterNegatedFields(fields);
 
     return (
@@ -228,6 +238,7 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
                         label={field.label}
                         value={field.value}
                         keyprop={`${field.keyprop}`}
+                        nodeType={nodeType}
                         key={`${field.keyprop}-${field.label}`}
                     />
                 );

@@ -47,6 +47,29 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('EntityObjectInformation', () => {
+    it.each([
+        { kind: ActiveDirectoryNodeKind.User, helpCount: 3 },
+        { kind: ActiveDirectoryNodeKind.Computer, helpCount: 0 },
+        { kind: ActiveDirectoryNodeKind.Group, helpCount: 0 },
+    ])('scopes User property help when inspecting a $kind', ({ kind, helpCount }) => {
+        render(
+            <EntityObjectInformationWithProvider
+                selectedNode={{
+                    node_id: 1,
+                    kinds: [{ name: kind, node_kind_id: 1 }],
+                    properties: {
+                        objectid: 'test-object-id',
+                        admincount: false,
+                        sensitive: false,
+                        passwordnotreqd: false,
+                    },
+                }}
+            />
+        );
+
+        expect(screen.queryAllByRole('button', { name: /^About / })).toHaveLength(helpCount);
+    });
+
     it('renders the Object Information section and node properties', async () => {
         const selectedNode: NodeDetails = {
             node_id: 1,
