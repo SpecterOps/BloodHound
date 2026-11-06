@@ -110,7 +110,7 @@ export const DeleteExtensionButton: FC<{
                 tooltip={tooltip}
                 className={cn({
                     'cursor-pointer': !isDisabled,
-                    'opacity-50 cursor-not-allowed': isDisabled,
+                    'cursor-not-allowed': isDisabled,
                 })}
                 onClick={() => onDeleteClick(extension)}
                 disabled={isDisabled}>
