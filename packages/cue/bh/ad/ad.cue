@@ -28,9 +28,6 @@ RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 IngestACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
-PathfindingRelationshipsMatchFrontend: [...types.#Kind]
-InboundRelationshipKinds: [...types.#Kind]
-OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
 
 // Property name enumerations
@@ -1904,8 +1901,8 @@ PostProcessedACLRelationships: [
 
 IngestACLRelationships: [for r in ACLRelationships if !list.Contains(PostProcessedACLRelationships, r) {r}],
 
-// these edges are common to inbound/outbound/pathfinding
-SharedRelationshipKinds: [
+// Edges that are traversable in pathfinding and analysis
+PathfindingRelationships: [
 	Owns,
 	GenericAll,
 	GenericWrite,
@@ -1962,19 +1959,12 @@ SharedRelationshipKinds: [
 	ManageCA,
 	ManageCertificates,
 	ServerIs,
+	Contains,
+	DCFor,
+	SameForestTrust,
+	SpoofSIDHistory,
+	AbuseTGTDelegation,
 ]
-
-// Edges that are used during inbound traversal
-InboundRelationshipKinds: list.Concat([SharedRelationshipKinds, [Contains]])
-
-// Edges that are used during outbound traversal
-OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
-
-// Edges that are used in pathfinding
-PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
-
-// Edges that are used in Shortest Path and match the frontend's list of traversable edges
-PathfindingRelationshipsMatchFrontend: list.Concat([PathfindingRelationships, [ProtectAdminGroups]]),
 
 
 EdgeCompositionRelationships: [
