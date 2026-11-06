@@ -20,13 +20,20 @@ Application configurations are key values set on a particular instance of the Bl
 
 ### Interface
 
-This module handles the `api/v2/config` [GET](https://bloodhound.specterops.io/reference/config/list-application-config-parameters) and [PUT](https://bloodhound.specterops.io/reference/config/write-application-configuration-parameters) (TODO BED-9765) API endpoints, supporting reading and writing an allowed subset of configuration parameters.
+#### API
 
-`GetConfig` is also used internally by the Bloodhound application, allowing relevant modules to read configuration values to control their config-dependant behavior.
+This module handles the `api/v2/config` [GET](https://bloodhound.specterops.io/reference/config/list-application-config-parameters) and [PUT](https://bloodhound.specterops.io/reference/config/write-application-configuration-parameters) API endpoints, supporting reading and writing an allowed subset of configuration parameters.
+
+Along with storing and retrieving the requested config values, the API handler also performs some unrelated business logic for particular keys, such as executing side effects in other parts of the application when values are updated.
+
+#### Onion Adapter
+
+The appcfg onion exports getters for each config another onion requires access to.
+See for instance `GetConfigScheduledAnalysis`. This allows relevant modules to read configuration values to control their config-dependant behavior.
 
 ### Implementation notes
 
-Configs are stored in the `parameters` table of the enterprise database.
+Configs are stored in the `parameters` table of the enterprise database, except for particular cases where values have a source of truth elsewhere but are still handled by the configs API for backwards compatability (such as `prune.ttl`).
 
 ## Working in this module
 
@@ -46,4 +53,4 @@ New parameters must be defined in [param_types.go](./internal/services/param_typ
 * Specify whether this key should be API-updatable
 * Specify a default and any data transformations using your parameter struct type
 
-You should now be able to fetch this parameter using the `GetConfig` function, any value under that key should be returned via API (if allowed), and be updatable via API (if allowed).
+You should now be able to add this parameter to the adapter if needed, and any value under that key should be returned via API (if allowed), and be updatable via API (if allowed).
