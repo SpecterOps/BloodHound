@@ -23,18 +23,25 @@ import { Checkbox, CheckboxWithLabel } from './Checkbox';
 
 describe('Checkbox Tests', () => {
     it('generates the CSS that shows checked and indeterminate icons', async () => {
-        const { container } = render(
-            <>
-                <Checkbox aria-label='Checked checkbox' defaultChecked />
-                <Checkbox aria-label='Indeterminate checkbox' defaultChecked='indeterminate' />
-            </>
-        );
-        const { css } = await postcss([
-            tailwindcss({ content: [{ raw: container.innerHTML, extension: 'html' }] }),
-        ]).process('@tailwind utilities;', { from: undefined });
+        const { root } = await postcss([tailwindcss('./tailwind.config.js')]).process('@tailwind utilities;', {
+            from: undefined,
+        });
 
-        expect(css).toContain('.group[data-state="checked"]');
-        expect(css).toContain('.group[data-state="indeterminate"]');
+        const iconSelectors = [
+            String.raw`.group[data-state="checked"] .group-data-\[state\=checked\]\:block`,
+            String.raw`.group[data-state="indeterminate"] .group-data-\[state\=indeterminate\]\:block`,
+        ];
+
+        for (const selector of iconSelectors) {
+            expect(root.nodes).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        selector,
+                        nodes: expect.arrayContaining([expect.objectContaining({ prop: 'display', value: 'block' })]),
+                    }),
+                ])
+            );
+        }
     });
 
     it('renders an uncontrolled indeterminate checkbox', () => {
