@@ -75,6 +75,9 @@ interface MultiSelectProps {
     options: MultiSelectOption[];
     value: string[];
     onValueChange: (values: string[]) => void;
+    onSearchValueChange?: (value: string) => void;
+    /** Set to false when options are already filtered by an external search. Defaults to true. */
+    shouldFilter?: boolean;
     placeholder?: string;
     disabled?: boolean;
     error?: boolean;
@@ -86,6 +89,10 @@ interface MultiSelectProps {
     loadingText?: string;
     emptyText?: string;
     noResultsText?: string;
+    /** Displays the no-results message alongside retained options for an external search. */
+    showNoResults?: boolean;
+    /** Displays a search failure while keeping the supplied options available. */
+    searchError?: string;
     /**
      * Controls the collapsed trigger appearance independently of its selected values.
      * Use `outlined` when a “Select All” is defaulted state. Example: Findings Table Trigger defaults to all selected.
@@ -173,6 +180,8 @@ const MultiSelect = ({
     options,
     value,
     onValueChange,
+    onSearchValueChange,
+    shouldFilter = true,
     placeholder,
     disabled,
     error,
@@ -184,16 +193,23 @@ const MultiSelect = ({
     loadingText = 'Loading options',
     emptyText = 'No options available',
     noResultsText = 'No matches',
+    showNoResults = false,
+    searchError,
     variant,
 }: MultiSelectProps) => {
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
 
+    const handleSearchChange = (value: string) => {
+        setSearchValue(value);
+        onSearchValueChange?.(value);
+    };
+
     const handleOpenChange = (shouldOpen: boolean) => {
         setOpen(shouldOpen);
 
-        if (!shouldOpen) {
-            setSearchValue('');
+        if (!shouldOpen && searchValue !== '') {
+            handleSearchChange('');
         }
     };
 
@@ -269,11 +285,11 @@ const MultiSelect = ({
     const searchTerm = searchValue.trim().toLowerCase();
 
     const filteredOptions = React.useMemo(() => {
-        if (!searchTerm) {
+        if (!shouldFilter || !searchTerm || searchError) {
             return options;
         }
         return options.filter((option) => option.label.toLowerCase().includes(searchTerm));
-    }, [options, searchTerm]);
+    }, [options, searchTerm, searchError, shouldFilter]);
 
     const hasOptions = options.length > 0;
     const hasSearchText = searchTerm.length > 0;
@@ -283,8 +299,10 @@ const MultiSelect = ({
 
     let listContent: React.ReactNode;
 
-    if (isLoading) {
+    if (isLoading && !hasSearchText) {
         listContent = <MultiSelectLoadingRows loadingText={loadingText} />;
+    } else if (!hasOptions && searchError) {
+        listContent = null;
     } else if (!hasOptions) {
         listContent = <MultiSelectStateRow>{emptyText}</MultiSelectStateRow>;
     } else if (isSearchResultEmpty) {
@@ -320,14 +338,21 @@ const MultiSelect = ({
                         <Input
                             aria-label={searchPlaceholder}
                             value={searchValue}
-                            onChange={(e) => setSearchValue(e.target.value)}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                             placeholder={searchPlaceholder}
                             className={multiSelectSearchInputClasses}
                         />
                     </div>
                 )}
+                {searchError && (
+                    <div role='alert' className='px-3 py-2 text-status-error-main'>
+                        {searchError}
+                    </div>
+                )}
 
-                <ScrollArea thumbColor='var(--multiselect-scrollbar-thumb)' className={multiSelectScrollAreaClasses}>
+                <ScrollArea
+                    thumbColor='var(--multiselect-scrollbar-thumb)'
+                    className='max-h-60 [&_[data-radix-scroll-area-viewport]]:max-h-60'>
                     <div
                         role='group'
                         aria-label={placeholder ?? 'Select options'}
@@ -345,6 +370,9 @@ const MultiSelect = ({
                                 />
                             )}
 
+                        {showNoResults && hasOptions && !isSearchResultEmpty && !isLoading && !searchError && (
+                            <MultiSelectStateRow>{noResultsText}</MultiSelectStateRow>
+                        )}
                         {listContent}
                     </div>
                 </ScrollArea>
