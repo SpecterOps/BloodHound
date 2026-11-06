@@ -107,6 +107,8 @@ interface MultiSelectProps {
     loadingText?: string;
     emptyText?: string;
     noResultsText?: string;
+    /** Displays a search failure while keeping the supplied options available. */
+    searchError?: string;
     /**
      * Controls the collapsed trigger appearance independently of its selected values.
      * Use `outlined` when a “Select All” is defaulted state. Example: Findings Table Trigger defaults to all selected.
@@ -206,6 +208,7 @@ const MultiSelect = ({
     loadingText = 'Loading options',
     emptyText = 'No options available',
     noResultsText = 'No matches',
+    searchError,
     variant,
 }: MultiSelectProps) => {
     const [open, setOpen] = React.useState(false);
@@ -296,11 +299,11 @@ const MultiSelect = ({
     const searchTerm = searchValue.trim().toLowerCase();
 
     const filteredOptions = React.useMemo(() => {
-        if (!searchTerm) {
+        if (!searchTerm || searchError) {
             return options;
         }
         return options.filter((option) => option.label.toLowerCase().includes(searchTerm));
-    }, [options, searchTerm]);
+    }, [options, searchTerm, searchError]);
 
     const hasOptions = options.length > 0;
     const hasSearchText = searchTerm.length > 0;
@@ -312,6 +315,8 @@ const MultiSelect = ({
 
     if (isLoading) {
         listContent = <MultiSelectLoadingRows loadingText={loadingText} />;
+    } else if (!hasOptions && searchError) {
+        listContent = null;
     } else if (!hasOptions) {
         listContent = <MultiSelectStateRow>{emptyText}</MultiSelectStateRow>;
     } else if (isSearchResultEmpty) {
@@ -353,6 +358,12 @@ const MultiSelect = ({
                             placeholder={searchPlaceholder}
                             className='h-6 border-none bg-transparent px-2 text-main leading-4 placeholder:text-[color:var(--input-placeholder-text)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
                         />
+                    </div>
+                )}
+
+                {searchError && (
+                    <div role='alert' className='px-3 py-2 text-status-error-main'>
+                        {searchError}
                     </div>
                 )}
 
