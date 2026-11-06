@@ -109,6 +109,8 @@ interface MultiSelectProps {
     loadingText?: string;
     emptyText?: string;
     noResultsText?: string;
+    /** Displays the no-results message alongside retained options for an external search. */
+    showNoResults?: boolean;
     /** Displays a search failure while keeping the supplied options available. */
     searchError?: string;
     /**
@@ -211,6 +213,7 @@ const MultiSelect = ({
     loadingText = 'Loading options',
     emptyText = 'No options available',
     noResultsText = 'No matches',
+    showNoResults = false,
     searchError,
     variant,
 }: MultiSelectProps) => {
@@ -316,7 +319,7 @@ const MultiSelect = ({
 
     let listContent: React.ReactNode;
 
-    if (isLoading) {
+    if (isLoading && !hasSearchText) {
         listContent = <MultiSelectLoadingRows loadingText={loadingText} />;
     } else if (!hasOptions && searchError) {
         listContent = null;
@@ -390,6 +393,9 @@ const MultiSelect = ({
                                 />
                             )}
 
+                        {showNoResults && hasOptions && !isSearchResultEmpty && !isLoading && !searchError && (
+                            <MultiSelectStateRow>{noResultsText}</MultiSelectStateRow>
+                        )}
                         {listContent}
                     </div>
                 </ScrollArea>
