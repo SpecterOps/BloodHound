@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Accordion, AccordionContent, AccordionItem, IconButton, Skeleton, TextButton, Tooltip } from 'doodle-ui';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
@@ -162,7 +162,7 @@ const ObjectAccordionItem: React.FC<ObjectAccordionItemProps> = ({
                         onClick={() => {
                             onOpen((prev) => (prev === kind ? '' : kind));
                         }}>
-                        <FontAwesomeIcon icon={faChevronUp} size='sm' />
+                        <FontAwesomeIcon icon={faChevronDown} size='sm' />
                     </IconButton>
                     <div className='flex items-center gap-2'>
                         <NodeIcon nodeType={kind} />
