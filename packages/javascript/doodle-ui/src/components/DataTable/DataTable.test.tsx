@@ -62,8 +62,8 @@ describe('DataTable', () => {
         );
 
         expect(screen.getByRole('row', { name: 'Ada Lovelace' })).not.toHaveClass(
-            'bg-data-table-row-even-fill',
-            'bg-data-table-row-odd-fill'
+            'bg-[color:var(--data-table-row-even-fill)]',
+            'bg-[color:var(--data-table-row-odd-fill)]'
         );
     });
 });

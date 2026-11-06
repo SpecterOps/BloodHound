@@ -163,7 +163,7 @@ const GlyphSelectDialog: React.FC<{
                                                 className='size-full p-0 focus-visible:rounded-lg'
                                                 onClick={handleClear}
                                                 size={64}>
-                                                <span className='relative size-full'>
+                                                <span className='relative'>
                                                     <FontAwesomeIcon
                                                         icon={faClose}
                                                         className='absolute right-1 top-1 !size-4'
