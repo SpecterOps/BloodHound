@@ -18,7 +18,7 @@ package users
 //go:generate go tool mockery
 
 import (
-	"net/http"
+	"context"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -26,17 +26,41 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
+// Principal contains the authentication attributes commonly needed to identify
+// and authorize the caller of a request. This type is intended to stay small.
+// feature-specific user data belongs in the owning slice's domain types rather
+// than being added here.
+type Principal struct {
+	ID              uuid.UUID
+	PrincipalName   string
+	EmailAddress    string
+	Administrator   bool
+	AllEnvironments bool
+}
+
+func (s Principal) GetID() uuid.UUID {
+	return s.ID
+}
+
+func (s Principal) IsAdministrator() bool {
+	return s.Administrator
+}
+
+func (s Principal) HasAllEnvironments() bool {
+	return s.AllEnvironments
+}
+
 // User is the minimal interface for a user in the BHE system.
 type User interface {
 	GetID() uuid.UUID
 	HasAllEnvironments() bool
 }
 
-// Resolver extracts a User from an HTTP request. Implementations are responsible
+// Resolver extracts a Principal from a request context. Implementations are responsible
 // for reading authentication context, validating credentials, and returning the
 // authenticated user.
 type Resolver interface {
-	Resolve(r *http.Request) (User, bool)
+	Resolve(ctx context.Context) (Principal, bool)
 }
 
 // RequestContextResolver is the production implementation of Resolver that
@@ -48,14 +72,24 @@ func NewResolver() *RequestContextResolver {
 	return &RequestContextResolver{}
 }
 
-// Resolve extracts a User from the request's BloodHound context.
-func (s *RequestContextResolver) Resolve(r *http.Request) (User, bool) {
+// Resolve extracts a Principal from the request's BloodHound context.
+func (s *RequestContextResolver) Resolve(ctx context.Context) (Principal, bool) {
 	var (
-		bhContext = bhctx.FromRequest(r)
+		bhContext = bhctx.Get(ctx)
 		modelUser model.User
 		ok        bool
 	)
 
 	modelUser, ok = auth.GetUserFromAuthCtx(bhContext.AuthCtx)
-	return &modelUser, ok
+	if !ok {
+		return Principal{}, false
+	}
+
+	return Principal{
+		ID:              modelUser.ID,
+		PrincipalName:   modelUser.PrincipalName,
+		EmailAddress:    modelUser.EmailAddress.ValueOrZero(),
+		Administrator:   modelUser.Roles.Has(model.Role{Name: auth.RoleAdministrator}),
+		AllEnvironments: modelUser.HasAllEnvironments(),
+	}, true
 }
