@@ -80,6 +80,11 @@ interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElem
     onRowClick?: (row: TData) => void;
     selectedRow?: string;
     noResultsFallback?: string | React.ReactNode;
+    /**
+     * Fill the available height in a flex-column parent and center the empty state.
+     * Scroll internally unless virtualizationOptions.getScrollElement supplies a scroll owner.
+     */
+    shouldFillHeight?: boolean;
     growLastColumn?: boolean;
     virtualizationOptions?: Partial<Parameters<typeof useVirtualizer>[0]>;
     tableOptions?: Omit<TableOptions<TData>, 'columns' | 'data' | 'getCoreRowModel'>;
@@ -135,6 +140,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         TableBodyRowProps,
         TableCellProps,
         noResultsFallback,
+        shouldFillHeight = false,
         virtualizationOptions: virtualizationOptionsProp = {},
         enableResizing = false,
         enableDragAndDrop = false,
@@ -321,11 +327,22 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
 
-    const { className: tableClassName, heightContainerClassName, ...restTableProps } = TableProps || {};
+    const {
+        className: tableClassName,
+        heightContainerClassName,
+        tableContainerClassName,
+        ...restTableProps
+    } = TableProps || {};
     const { className: headerClassName, ...restHeaderProps } = TableHeaderProps || {};
     const { className: headerRowClassName, ...restHeaderRowProps } = TableHeaderRowProps || {};
 
     const tableRows = table.getRowModel().rows;
+    const shouldFillEmptyState = shouldFillHeight && tableRows.length === 0;
+    // The virtualizer measures body rows; allow populated, full-height tables to also fit their header.
+    const heightContainerStyle: React.CSSProperties =
+        shouldFillHeight && !shouldFillEmptyState
+            ? { minHeight: 'var(--data-table-content-height)' }
+            : { height: shouldFillEmptyState ? '100%' : 'var(--data-table-content-height)' };
     const haveLeftPinnedColumns = (columnPinning?.left?.length || 0) > 0;
     const tableWidth = enableResizing && !growLastColumn ? table.getCenterTotalSize() : '100%';
 
@@ -457,25 +474,32 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             sensors={sensors}
             disabled={!enableDragAndDrop}
             accessibility={{ announcements, screenReaderInstructions: { draggable: 'draggable column header' } }}>
-            <div className={cn(dataTableWrapperClasses, className)} {...wrapperRest} ref={parentRef}>
-                <div
-                    style={{
-                        height: 'var(--data-table-content-height)',
-                    }}
-                    className={cn(heightContainerClassName)}>
+            <div
+                className={cn(
+                    dataTableWrapperClasses,
+                    shouldFillHeight &&
+                        (virtualizationOptionsProp.getScrollElement ? 'flex-auto' : 'flex-1 min-h-0 overflow-auto'),
+                    className,
+                    shouldFillEmptyState && 'pb-0'
+                )}
+                {...wrapperRest}
+                ref={parentRef}>
+                <div style={heightContainerStyle} className={cn(heightContainerClassName)}>
                     <Table
                         {...restTableProps}
+                        tableContainerClassName={cn(shouldFillEmptyState && 'h-full', tableContainerClassName)}
                         style={{
                             width: tableWidth,
                         }}
                         className={cn(
                             dataTableClasses,
                             enableResizing && haveLeftPinnedColumns && 'table-fixed',
+                            shouldFillEmptyState && 'h-full after:hidden',
                             tableClassName
                         )}>
                         <TableHeader
                             {...restHeaderProps}
-                            className={cn(headerClassName, dataTableHeaderClasses)}
+                            className={cn(headerClassName, dataTableHeaderClasses, shouldFillEmptyState && 'h-px')}
                             ref={tableHeaderRef}>
                             {table.getHeaderGroups().map((headerGroup) => {
                                 return (
