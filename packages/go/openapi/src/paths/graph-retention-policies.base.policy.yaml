@@ -48,6 +48,7 @@ get:
 put:
   operationId: UpdateBaseRetentionPolicy
   summary: Update Base Retention Policy
+  description: Creates the base policy if it is missing; otherwise updates it, and returns the saved policy with 200 OK.
   tags:
     - Graph Retention Policies
     - Enterprise
