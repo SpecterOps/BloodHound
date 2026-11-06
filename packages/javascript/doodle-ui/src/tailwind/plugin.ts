@@ -184,6 +184,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // Components/Slider
             '--slider-track-fill': 'var(--neutral-200)',
+            '--slider-tick-fill': 'var(--neutral-400)',
             '--slider-thumb-fill': 'var(--neutral-100)',
             '--slider-thumb-border': 'var(--neutral-300)',
             '--slider-thumb-focus-fill': 'var(--neutral-100)',
@@ -539,6 +540,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // Components/Slider
             '--slider-track-fill': 'var(--neutral-200)',
+            '--slider-tick-fill': 'var(--neutral-400)',
             '--slider-thumb-fill': 'var(--neutral-100)',
             '--slider-thumb-border': 'var(--neutral-300)',
             '--slider-thumb-focus-fill': 'var(--neutral-400)',
