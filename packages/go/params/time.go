@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v2
+package params
 
-import "time"
-
-// Constants and functions relating to pagination
+import (
+	"net/url"
+	"time"
+)
 
 const (
 	// DefaultTimeRangeDuration is the default time range for range query parameters: 30 days prior to now
@@ -29,4 +30,12 @@ func DefaultTimeRange() (time.Time, time.Time) {
 	now := time.Now()
 
 	return now, now.Add(DefaultTimeRangeDuration)
+}
+
+func ParseTimeQueryParameter(params url.Values, key string, defaultValue time.Time) (time.Time, error) {
+	if param := params.Get(key); param != "" {
+		return time.Parse(time.RFC3339Nano, param)
+	}
+
+	return defaultValue, nil
 }
