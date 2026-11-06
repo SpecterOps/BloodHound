@@ -191,7 +191,7 @@ describe('Formatting object information fields', () => {
         });
 
         expect(formattedFields).toEqual([
-            { kind: 'ad', keyprop: 'effectiveekus', label: 'Effective EKUs:', value: [] },
+            { kind: 'ad', keyprop: 'effectiveekus', label: 'Effective Enhanced Key Usages:', value: [] },
             { kind: null, keyprop: 'emptystring', label: 'Emptystring:', value: '' },
             { kind: null, keyprop: 'nullvalue', label: 'Nullvalue:', value: null },
         ]);

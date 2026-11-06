@@ -94,14 +94,14 @@ EnrollmentAgentRestrictionsCollected: types.#StringEnum & {
 IsUserSpecifiesSanEnabled: types.#StringEnum & {
 	symbol:         "IsUserSpecifiesSanEnabled"
 	schema:         "ad"
-	name:           "Is User Specifies San Enabled"
+	name:           "User Supplied SAN Enabled"
 	representation: "isuserspecifiessanenabled"
 }
 
 IsUserSpecifiesSanEnabledCollected: types.#StringEnum & {
 	symbol:         "IsUserSpecifiesSanEnabledCollected"
 	schema:         "ad"
-	name:           "Is User Specifies San Enabled Collected"
+	name:           "User Supplied SAN Setting Collected"
 	representation: "isuserspecifiessanenabledcollected"
 }
 
@@ -430,42 +430,42 @@ EKUs: types.#StringEnum & {
 SubjectAltRequireUPN: types.#StringEnum & {
 	symbol:         "SubjectAltRequireUPN"
 	schema:         "ad"
-	name:           "Subject Alternative Name Require UPN"
+	name:           "Requires UPN in Subject Alternative Name"
 	representation: "subjectaltrequireupn"
 }
 
 SubjectAltRequireDNS: types.#StringEnum & {
 	symbol:         "SubjectAltRequireDNS"
 	schema:         "ad"
-	name:           "Subject Alternative Name Require DNS"
+	name:           "Requires DNS Name in Subject Alternative Name"
 	representation: "subjectaltrequiredns"
 }
 
 SubjectAltRequireDomainDNS: types.#StringEnum & {
 	symbol:         "SubjectAltRequireDomainDNS"
 	schema:         "ad"
-	name:           "Subject Alternative Name Require Domain DNS"
+	name:           "Requires Domain DNS Name in Subject Alternative Name"
 	representation: "subjectaltrequiredomaindns"
 }
 
 SubjectAltRequireEmail: types.#StringEnum & {
 	symbol:         "SubjectAltRequireEmail"
 	schema:         "ad"
-	name:           "Subject Alternative Name Require Email"
+	name:           "Requires Email in Subject Alternative Name"
 	representation: "subjectaltrequireemail"
 }
 
 SubjectAltRequireSPN: types.#StringEnum & {
 	symbol:         "SubjectAltRequireSPN"
 	schema:         "ad"
-	name:           "Subject Alternative Name Require SPN"
+	name:           "Requires SPN in Subject Alternative Name"
 	representation: "subjectaltrequirespn"
 }
 
 SubjectRequireEmail: types.#StringEnum & {
 	symbol:         "SubjectRequireEmail"
 	schema:         "ad"
-	name:           "Subject Require Email"
+	name:           "Requires Email in Subject"
 	representation: "subjectrequireemail"
 }
 
@@ -542,7 +542,7 @@ CertificateNameFlag: types.#StringEnum & {
 EffectiveEKUs: types.#StringEnum & {
 	symbol:         "EffectiveEKUs"
 	schema:         "ad"
-	name:           "Effective EKUs"
+	name:           "Effective Enhanced Key Usages"
 	representation: "effectiveekus"
 }
 
@@ -619,7 +619,7 @@ ObjectGUID: types.#StringEnum & {
 ExpirePasswordsOnSmartCardOnlyAccounts: types.#StringEnum & {
 	symbol:         "ExpirePasswordsOnSmartCardOnlyAccounts"
 	schema:         "ad"
-	name:           "Expire Passwords on Smart Card only Accounts"
+	name:           "Expire Passwords on Smart Card Only Accounts"
 	representation: "expirepasswordsonsmartcardonlyaccounts"
 }
 
@@ -654,7 +654,7 @@ PasswordStoredUsingReversibleEncryption: types.#StringEnum & {
 SmartcardRequired: types.#StringEnum & {
 	symbol:         "SmartcardRequired"
 	schema:         "ad"
-	name:           "Smartcard Required"
+	name:           "Smart Card Required"
 	representation: "smartcardrequired"
 }
 
@@ -696,7 +696,7 @@ PasswordExpired: types.#StringEnum & {
 DSHeuristics: types.#StringEnum & {
 	symbol:         "DSHeuristics"
 	schema:         "ad"
-	name:           "DSHeuristics"
+	name:           "Directory Service Heuristics"
 	representation: "dsheuristics"
 }
 
@@ -773,21 +773,21 @@ PwdProperties: types.#StringEnum & {
 MinPwdLength: types.#StringEnum & {
 	symbol:         "MinPwdLength"
 	schema:         "ad"
-	name:           "Minimum password length"
+	name:           "Minimum Password Length"
 	representation: "minpwdlength"
 }
 
 GMSA: types.#StringEnum & {
  	symbol: "GMSA"
  	schema: "ad"
- 	name: "GMSA"
+	name: "Group Managed Service Account"
  	representation: "gmsa"
 }
 
 MSA: types.#StringEnum & {
  	symbol: "MSA"
  	schema: "ad"
- 	name: "MSA"
+	name: "Standalone Managed Service Account"
  	representation: "msa"
 }
 
@@ -829,35 +829,35 @@ ADCSWebEnrollmentHTTPS: types.#StringEnum & {
 ADCSWebEnrollmentHTTPSEPA: types.#StringEnum & {
 	symbol: "ADCSWebEnrollmentHTTPSEPA"
 	schema: "ad"
-	name: "ADCS Web Enrollment HTTPS EPA"
+	name: "ADCS Web Enrollment HTTPS Extended Protection"
 	representation: "adcswebenrollmenthttpsepa"
 }
 
 DoesAnyAceGrantOwnerRights: types.#StringEnum & {
  	symbol: "DoesAnyAceGrantOwnerRights"
  	schema: "ad"
- 	name: "Does Any ACE Grant Owner Rights"
+	name: "Has ACE Granting Owner Rights"
  	representation: "doesanyacegrantownerrights"
 }
 
 DoesAnyInheritedAceGrantOwnerRights: types.#StringEnum & {
  	symbol: "DoesAnyInheritedAceGrantOwnerRights"
  	schema: "ad"
- 	name: "Does Any Inherited ACE Grant Owner Rights"
+	name: "Has Inherited ACE Granting Owner Rights"
  	representation: "doesanyinheritedacegrantownerrights"
 }
 
 CustomExplicitDenyAcesCount: types.#StringEnum & {
 	symbol: "CustomExplicitDenyAcesCount"
 	schema: "ad"
-	name: "Custom Explicit Deny ACEs Count"
+	name: "Custom Explicit Deny ACE Count"
 	representation: "customexplicitdenyacescount"
 }
 
 CustomInheritedDenyAcesCount: types.#StringEnum & {
 	symbol: "CustomInheritedDenyAcesCount"
 	schema: "ad"
-	name: "Custom Inherited Deny ACEs Count"
+	name: "Custom Inherited Deny ACE Count"
 	representation: "custominheriteddenyacescount"
 }
 
@@ -892,7 +892,7 @@ LDAPSAvailable: types.#StringEnum & {
 LDAPSEPA: types.#StringEnum & {
 	symbol: "LDAPSEPA"
 	schema: "ad"
-	name: "LDAPS EPA"
+	name: "LDAPS Extended Protection"
 	representation: "ldapsepa"
 }
 
@@ -927,7 +927,7 @@ IsDC: types.#StringEnum & {
 IsReadOnlyDC: types.#StringEnum & {
 	symbol: "IsReadOnlyDC"
 	schema: "ad"
-	name: "Read-Only DC"
+	name: "Read-Only Domain Controller"
 	representation: "isreadonlydc"
 }
 
@@ -976,20 +976,20 @@ RestrictReceivingNTLMTraffic: types.#StringEnum & {
 NTLMMinServerSec: types.#StringEnum & {
 	symbol: "NTLMMinServerSec"
 	schema: "ad"
-	name: "NTLM Min Server Sec"
+	name: "NTLM Minimum Server Session Security"
 	representation: "ntlmminserversec"
 }
 
 NTLMMinClientSec: types.#StringEnum & {
 	symbol: "NTLMMinClientSec"
 	schema: "ad"
-	name: "NTLM Min Client Sec"
+	name: "NTLM Minimum Client Session Security"
 	representation: "ntlmminclientsec"
 }
 LMCompatibilityLevel: types.#StringEnum & {
 	symbol: "LMCompatibilityLevel"
 	schema: "ad"
-	name: "LM Compatibility Level"
+	name: "LAN Manager Compatibility Level"
 	representation: "lmcompatibilitylevel"
 }
 

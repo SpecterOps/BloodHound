@@ -571,9 +571,9 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.EnrollmentAgentRestrictionsCollected:
             return 'Enrollment Agent Restrictions Collected';
         case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabled:
-            return 'Is User Specifies San Enabled';
+            return 'User Supplied SAN Enabled';
         case ActiveDirectoryKindProperties.IsUserSpecifiesSanEnabledCollected:
-            return 'Is User Specifies San Enabled Collected';
+            return 'User Supplied SAN Setting Collected';
         case ActiveDirectoryKindProperties.RoleSeparationEnabled:
             return 'Role Separation Enabled';
         case ActiveDirectoryKindProperties.RoleSeparationEnabledCollected:
@@ -661,17 +661,17 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.EKUs:
             return 'Enhanced Key Usage';
         case ActiveDirectoryKindProperties.SubjectAltRequireUPN:
-            return 'Subject Alternative Name Require UPN';
+            return 'Requires UPN in Subject Alternative Name';
         case ActiveDirectoryKindProperties.SubjectAltRequireDNS:
-            return 'Subject Alternative Name Require DNS';
+            return 'Requires DNS Name in Subject Alternative Name';
         case ActiveDirectoryKindProperties.SubjectAltRequireDomainDNS:
-            return 'Subject Alternative Name Require Domain DNS';
+            return 'Requires Domain DNS Name in Subject Alternative Name';
         case ActiveDirectoryKindProperties.SubjectAltRequireEmail:
-            return 'Subject Alternative Name Require Email';
+            return 'Requires Email in Subject Alternative Name';
         case ActiveDirectoryKindProperties.SubjectAltRequireSPN:
-            return 'Subject Alternative Name Require SPN';
+            return 'Requires SPN in Subject Alternative Name';
         case ActiveDirectoryKindProperties.SubjectRequireEmail:
-            return 'Subject Require Email';
+            return 'Requires Email in Subject';
         case ActiveDirectoryKindProperties.AuthorizedSignatures:
             return 'Authorized Signatures Required';
         case ActiveDirectoryKindProperties.ApplicationPolicies:
@@ -693,7 +693,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.CertificateNameFlag:
             return 'Certificate Name Flags';
         case ActiveDirectoryKindProperties.EffectiveEKUs:
-            return 'Effective EKUs';
+            return 'Effective Enhanced Key Usages';
         case ActiveDirectoryKindProperties.EnrollmentFlag:
             return 'Enrollment Flags';
         case ActiveDirectoryKindProperties.Flags:
@@ -717,7 +717,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.ObjectGUID:
             return 'Object GUID';
         case ActiveDirectoryKindProperties.ExpirePasswordsOnSmartCardOnlyAccounts:
-            return 'Expire Passwords on Smart Card only Accounts';
+            return 'Expire Passwords on Smart Card Only Accounts';
         case ActiveDirectoryKindProperties.MachineAccountQuota:
             return 'Machine Account Quota';
         case ActiveDirectoryKindProperties.SupportedKerberosEncryptionTypes:
@@ -727,7 +727,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.PasswordStoredUsingReversibleEncryption:
             return 'Password Stored Using Reversible Encryption';
         case ActiveDirectoryKindProperties.SmartcardRequired:
-            return 'Smartcard Required';
+            return 'Smart Card Required';
         case ActiveDirectoryKindProperties.UseDESKeyOnly:
             return 'Use DES Key Only';
         case ActiveDirectoryKindProperties.LogonScriptEnabled:
@@ -739,7 +739,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.PasswordExpired:
             return 'Password Expired';
         case ActiveDirectoryKindProperties.DSHeuristics:
-            return 'DSHeuristics';
+            return 'Directory Service Heuristics';
         case ActiveDirectoryKindProperties.UserAccountControl:
             return 'User Account Control';
         case ActiveDirectoryKindProperties.TrustAttributesInbound:
@@ -747,7 +747,7 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.TrustAttributesOutbound:
             return 'Trust Attributes (Outbound)';
         case ActiveDirectoryKindProperties.MinPwdLength:
-            return 'Minimum password length';
+            return 'Minimum Password Length';
         case ActiveDirectoryKindProperties.PwdProperties:
             return 'Password Properties';
         case ActiveDirectoryKindProperties.PwdHistoryLength:
@@ -771,23 +771,23 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.RestrictOutboundNTLM:
             return 'Restrict Outbound NTLM';
         case ActiveDirectoryKindProperties.GMSA:
-            return 'GMSA';
+            return 'Group Managed Service Account';
         case ActiveDirectoryKindProperties.MSA:
-            return 'MSA';
+            return 'Standalone Managed Service Account';
         case ActiveDirectoryKindProperties.DoesAnyAceGrantOwnerRights:
-            return 'Does Any ACE Grant Owner Rights';
+            return 'Has ACE Granting Owner Rights';
         case ActiveDirectoryKindProperties.DoesAnyInheritedAceGrantOwnerRights:
-            return 'Does Any Inherited ACE Grant Owner Rights';
+            return 'Has Inherited ACE Granting Owner Rights';
         case ActiveDirectoryKindProperties.CustomExplicitDenyAcesCount:
-            return 'Custom Explicit Deny ACEs Count';
+            return 'Custom Explicit Deny ACE Count';
         case ActiveDirectoryKindProperties.CustomInheritedDenyAcesCount:
-            return 'Custom Inherited Deny ACEs Count';
+            return 'Custom Inherited Deny ACE Count';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
             return 'ADCS Web Enrollment HTTP';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
             return 'ADCS Web Enrollment HTTPS';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPSEPA:
-            return 'ADCS Web Enrollment HTTPS EPA';
+            return 'ADCS Web Enrollment HTTPS Extended Protection';
         case ActiveDirectoryKindProperties.LDAPSigning:
             return 'LDAP Signing';
         case ActiveDirectoryKindProperties.LDAPAvailable:
@@ -795,11 +795,11 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.LDAPSAvailable:
             return 'LDAPS Available';
         case ActiveDirectoryKindProperties.LDAPSEPA:
-            return 'LDAPS EPA';
+            return 'LDAPS Extended Protection';
         case ActiveDirectoryKindProperties.IsDC:
             return 'Is Domain Controller';
         case ActiveDirectoryKindProperties.IsReadOnlyDC:
-            return 'Read-Only DC';
+            return 'Read-Only Domain Controller';
         case ActiveDirectoryKindProperties.HTTPEnrollmentEndpoints:
             return 'HTTP Enrollment Endpoints';
         case ActiveDirectoryKindProperties.HTTPSEnrollmentEndpoints:
@@ -813,11 +813,11 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
         case ActiveDirectoryKindProperties.RestrictReceivingNTLMTraffic:
             return 'Restrict Receiving NTLM Traffic';
         case ActiveDirectoryKindProperties.NTLMMinServerSec:
-            return 'NTLM Min Server Sec';
+            return 'NTLM Minimum Server Session Security';
         case ActiveDirectoryKindProperties.NTLMMinClientSec:
-            return 'NTLM Min Client Sec';
+            return 'NTLM Minimum Client Session Security';
         case ActiveDirectoryKindProperties.LMCompatibilityLevel:
-            return 'LM Compatibility Level';
+            return 'LAN Manager Compatibility Level';
         case ActiveDirectoryKindProperties.UseMachineID:
             return 'Use Machine ID';
         case ActiveDirectoryKindProperties.ClientAllowedNTLMServers:
@@ -1288,9 +1288,9 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
         case AzureKindProperties.NodeResourceGroupID:
             return 'Node Resource Group ID';
         case AzureKindProperties.OnPremID:
-            return 'On Prem ID';
+            return 'On-Premises ID';
         case AzureKindProperties.OnPremSyncEnabled:
-            return 'On Prem Sync Enabled';
+            return 'On-Premises Sync Enabled';
         case AzureKindProperties.SecurityEnabled:
             return 'Security Enabled';
         case AzureKindProperties.SecurityIdentifier:
@@ -1318,15 +1318,15 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
         case AzureKindProperties.PublisherDomain:
             return 'Publisher Domain';
         case AzureKindProperties.SignInAudience:
-            return 'Sign In Audience';
+            return 'Sign-In Audience';
         case AzureKindProperties.RoleTemplateID:
             return 'Role Template ID';
         case AzureKindProperties.RoleDefinitionId:
-            return 'Role Definition Id';
+            return 'Role Definition ID';
         case AzureKindProperties.EndUserAssignmentRequiresApproval:
             return 'End User Assignment Requires Approval';
         case AzureKindProperties.EndUserAssignmentRequiresCAPAuthenticationContext:
-            return 'End User Assignment Requires CAP Authentication Context';
+            return 'End User Assignment Requires Conditional Access Authentication Context';
         case AzureKindProperties.EndUserAssignmentUserApprovers:
             return 'End User Assignment User Approvers';
         case AzureKindProperties.EndUserAssignmentGroupApprovers:
@@ -1338,7 +1338,7 @@ export function AzureKindPropertiesToDisplay(value: AzureKindProperties): string
         case AzureKindProperties.EndUserAssignmentRequiresTicketInformation:
             return 'End User Assignment Requires Ticket Information';
         case AzureKindProperties.LastSuccessfulSignInDateTime:
-            return 'Last Successful Sign In Date Time';
+            return 'Last Successful Sign-In';
         case AzureKindProperties.Issuer:
             return 'Issuer';
         case AzureKindProperties.Subject:

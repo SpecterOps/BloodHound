@@ -153,7 +153,7 @@ describe('EntityObjectInformation', () => {
 
         render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
 
-        expect(await screen.findByText('Effective EKUs')).toBeInTheDocument();
+        expect(await screen.findByText('Effective Enhanced Key Usages')).toBeInTheDocument();
         expect(screen.getByText('NONE')).toHaveAttribute('aria-hidden', 'true');
         expect(screen.getByText('Empty array, zero values')).toBeInTheDocument();
         expect(screen.getByText('Emptystring')).toBeInTheDocument();

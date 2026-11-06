@@ -92,7 +92,7 @@ MFAEnabled: types.#StringEnum & {
 OnPremSyncEnabled: types.#StringEnum & {
 	symbol:         "OnPremSyncEnabled"
 	schema:         "azure"
-	name:           "On Prem Sync Enabled"
+	name:           "On-Premises Sync Enabled"
 	representation: "onpremsyncenabled"
 }
 
@@ -173,7 +173,7 @@ PublisherDomain: types.#StringEnum & {
 SignInAudience: types.#StringEnum & {
 	symbol:         "SignInAudience"
 	schema:         "azure"
-	name:           "Sign In Audience"
+	name:           "Sign-In Audience"
 	representation: "signinaudience"
 }
 
@@ -222,7 +222,7 @@ DeviceID: types.#StringEnum & {
 OnPremID: types.#StringEnum & {
 	symbol:         "OnPremID"
 	schema:         "azure"
-	name:           "On Prem ID"
+	name:           "On-Premises ID"
 	representation: "onpremid"
 }
 
@@ -250,7 +250,7 @@ TenantID: types.#StringEnum & {
 RoleDefinitionId: types.#StringEnum & {
 	symbol:         "RoleDefinitionId"
 	schema:         "azure"
-	name:           "Role Definition Id"
+	name:           "Role Definition ID"
 	representation: "roledefinitionid"
 }
 
@@ -264,7 +264,7 @@ EndUserAssignmentRequiresApproval: types.#StringEnum & {
 EndUserAssignmentRequiresCAPAuthenticationContext: types.#StringEnum & {
 	symbol:         "EndUserAssignmentRequiresCAPAuthenticationContext"
 	schema:         "azure"
-	name:           "End User Assignment Requires CAP Authentication Context"
+	name:           "End User Assignment Requires Conditional Access Authentication Context"
 	representation: "enduserassignmentrequirescapauthenticationcontext"
 }
 
@@ -306,7 +306,7 @@ EndUserAssignmentRequiresTicketInformation: types.#StringEnum & {
 LastSuccessfulSignInDateTime: types.#StringEnum & {
 	symbol:         "LastSuccessfulSignInDateTime"
 	schema:         "azure"
-	name:           "Last Successful Sign In Date Time"
+	name:           "Last Successful Sign-In"
 	representation: "lastsuccessfulsignindatetime"
 }
 
