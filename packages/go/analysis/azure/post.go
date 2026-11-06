@@ -595,14 +595,14 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*post.AtomicPostPro
 		return &post.AtomicPostProcessingStats{}, err
 	} else {
 		sink := post.NewFilteredRelationshipSink(ctx, "AZExecuteCommand Post Processing", db, executeCommandTracker)
-		defer sink.Done()
+		defer sink.Abort()
 
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			for _, tenant := range tenants {
 				if tenantDevices, err := EndNodes(tx, tenant, azure.Contains, azure.Device); err != nil {
 					return err
 				} else if tenantDevices.Len() == 0 {
-					return nil
+					continue
 				} else if intuneAdmins, err := RoleMembers(tx, tenant, azure.IntuneServiceAdministratorRole); err != nil {
 					return err
 				} else {
@@ -628,10 +628,10 @@ func ExecuteCommand(ctx context.Context, db graph.Database) (*post.AtomicPostPro
 
 			return nil
 		}); err != nil {
-			return &post.AtomicPostProcessingStats{}, err
+			return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
 		}
 
-		return sink.Stats(), nil
+		return sink.Stats(), sink.Done()
 	}
 }
 
