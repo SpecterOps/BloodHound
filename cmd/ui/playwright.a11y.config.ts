@@ -23,13 +23,34 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+const envFilePath = path.resolve(__dirname, '.env');
+const dotenvResult = dotenv.config({ path: envFilePath });
+
+// Fail fast with an actionable message instead of an opaque `Invalid URL` error below.
+const requiredEnvVars = ['A11Y_TEST_URL', 'A11Y_TEST_USERNAME', 'A11Y_TEST_PASSWORD'];
+const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);
+if (missingEnvVars.length > 0) {
+    const envFileHint = dotenvResult.error ? `No .env file found at ${envFilePath}.\n` : '';
+    throw new Error(
+        `Missing required env vars: ${missingEnvVars.join(', ')}.\n` +
+            envFileHint +
+            'Copy cmd/ui/.env.example to cmd/ui/.env and fill in the values.'
+    );
+}
 
 // Base URL to use in actions like `await page.goto('/')`.
 const baseURL = `${process.env.A11Y_TEST_URL}`;
 
+const parseBaseURL = (url: string): URL => {
+    try {
+        return new URL(url);
+    } catch {
+        throw new Error(`A11Y_TEST_URL is not a valid absolute URL: "${url}" (e.g. http://bloodhound.localhost)`);
+    }
+};
+
 // Address and port dev web server will run on
-const { hostname, port } = new URL(baseURL);
+const { hostname, port } = parseBaseURL(baseURL);
 
 // When true, browser will run tests on Vite web server (API service must still be running)
 // Set to false when testing against http://bloodhound.localhost or https://test.bloodhoundenterprise.io

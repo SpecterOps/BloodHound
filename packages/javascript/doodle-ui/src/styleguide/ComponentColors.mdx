@@ -569,6 +569,17 @@ export const tokenRows = [
         components: ['Stepper'],
     },
     {
+        token: '--surface',
+        light: common.white,
+        dark: common.dark,
+        lightReference: '#FFFFFF',
+        darkReference: '#121212',
+        lightPalette: 'common.white',
+        darkPalette: 'common.dark',
+        components: ['Shared surfaces'],
+        utilities: ['bg-surface', 'text-surface', 'border-surface'],
+    },
+    {
         token: '--table-dragging-fill',
         light: common.white,
         dark: palette.neutral.dark[50],
@@ -981,6 +992,19 @@ Tokens on this page fall into two groups:
 -   Inside a component module, read component tokens with an arbitrary value and the `color:` type hint, for example `bg-[color:var(--tooltip-fill)]`. The hint tells Tailwind the variable is a color, so it generates the correct property.
 -   Utility names do not always match variable names. `text-inverse` reads `--text-contrast`, while `text-contrast` reads `--contrast`. Check the **Utilities** line in the shared tokens table.
 -   When adding a token, define it in both `:root` and `.dark` in `plugin.ts`, prefix it with the component name, and add a row to this page. Add it to `preset.ts` only when it is needed outside a single component; it then becomes a shared token.
+
+### Replacing `bg-neutral-1`
+
+Use `bg-surface` in place of the legacy `bg-neutral-1` utility. Both resolve to the same colors in each theme:
+
+| Theme | `bg-neutral-1` | `bg-surface` | `colors.ts` source |
+| ----- | -------------- | ------------ | ------------------ |
+| Light | `#FFFFFF`      | `#FFFFFF`    | `common.white`     |
+| Dark  | `#121212`      | `#121212`    | `common.dark`      |
+
+`plugin.ts` defines `--surface` for both themes, and `preset.ts` exposes it as `bg-surface`. The legacy `--neutral-1` variable resolves through `--neutral-light-1` in light mode and `--neutral-dark-1` in dark mode.
+
+`bg-neutral-50` is close, but its light-mode value is `palette.neutral.light[50]` (`#F2F2F2`), so it does not preserve the original white background. Use `bg-surface` for an exact replacement.
 
 ## Color reference
 
