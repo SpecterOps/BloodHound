@@ -46,9 +46,9 @@ describe('DataTable', () => {
         expect(screen.getByText('No results.')).toBeVisible();
         expect(table).not.toHaveClass('h-full', 'after:hidden');
         expect(table.parentElement?.parentElement?.style.height).toBe('var(--data-table-content-height)');
-        expect(table.parentElement?.parentElement?.parentElement?.style.getPropertyValue('--data-table-content-height')).toBe(
-            '0px'
-        );
+        expect(
+            table.parentElement?.parentElement?.parentElement?.style.getPropertyValue('--data-table-content-height')
+        ).toBe('0px');
     });
 
     it('restores virtualized sizing after a full-height empty table receives rows', () => {
@@ -66,10 +66,20 @@ describe('DataTable', () => {
         expect(screen.queryByText('No results.')).not.toBeInTheDocument();
         expect(screen.getByRole('row', { name: 'Ada Lovelace' })).toBeVisible();
         expect(table).not.toHaveClass('h-full', 'after:hidden');
-        expect(heightContainer?.style.height).toBe('var(--data-table-content-height)');
-        expect((container.firstChild as HTMLElement).style.getPropertyValue('--data-table-content-height')).toBe('57px');
+        expect(heightContainer?.style.minHeight).toBe('var(--data-table-content-height)');
+        expect(heightContainer?.style.height).toBe('');
+        expect((container.firstChild as HTMLElement).style.getPropertyValue('--data-table-content-height')).toBe(
+            '57px'
+        );
         expect(table.querySelector('thead')).not.toHaveClass('h-px');
         expect(container.firstChild).toHaveClass('overflow-auto');
+
+        rerender(<DataTable shouldFillHeight columns={columns} data={[]} />);
+
+        expect(heightContainer).toHaveStyle({ height: '100%' });
+        expect(heightContainer?.style.minHeight).toBe('');
+        expect(table).toHaveClass('h-full', 'after:hidden');
+        expect(screen.getByText('No results.')).toBeVisible();
     });
 
     it('preserves caller-owned scrolling while transitioning between populated and empty states', () => {
@@ -85,9 +95,9 @@ describe('DataTable', () => {
         );
 
         expect(container.firstChild).toHaveClass('flex-auto');
-        expect(screen.getByRole('table').parentElement?.parentElement?.style.height).toBe(
-            'var(--data-table-content-height)'
-        );
+        const heightContainer = screen.getByRole('table').parentElement?.parentElement;
+        expect(heightContainer?.style.minHeight).toBe('var(--data-table-content-height)');
+        expect(heightContainer?.style.height).toBe('');
         expect(container.firstChild).not.toHaveClass('overflow-auto');
         expect(container.firstChild).not.toHaveClass('min-h-0');
 
@@ -99,6 +109,8 @@ describe('DataTable', () => {
         expect(container.firstChild).not.toHaveClass('overflow-auto');
         expect(container.firstChild).not.toHaveClass('min-h-0');
         expect(screen.getByText('No results.')).toBeVisible();
+        expect(heightContainer).toHaveStyle({ height: '100%' });
+        expect(heightContainer?.style.minHeight).toBe('');
     });
 
     it('uses outlined canvas styling for the table surface, header, and rows', () => {

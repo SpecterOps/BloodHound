@@ -338,6 +338,11 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     const tableRows = table.getRowModel().rows;
     const shouldFillEmptyState = shouldFillHeight && tableRows.length === 0;
+    // The virtualizer measures body rows; allow populated, full-height tables to also fit their header.
+    const heightContainerStyle: React.CSSProperties =
+        shouldFillHeight && !shouldFillEmptyState
+            ? { minHeight: 'var(--data-table-content-height)' }
+            : { height: shouldFillEmptyState ? '100%' : 'var(--data-table-content-height)' };
     const haveLeftPinnedColumns = (columnPinning?.left?.length || 0) > 0;
     const tableWidth = enableResizing && !growLastColumn ? table.getCenterTotalSize() : '100%';
 
@@ -479,11 +484,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                 )}
                 {...wrapperRest}
                 ref={parentRef}>
-                <div
-                    style={{
-                        height: shouldFillEmptyState ? '100%' : 'var(--data-table-content-height)',
-                    }}
-                    className={cn(heightContainerClassName)}>
+                <div style={heightContainerStyle} className={cn(heightContainerClassName)}>
                     <Table
                         {...restTableProps}
                         tableContainerClassName={cn(shouldFillEmptyState && 'h-full', tableContainerClassName)}
