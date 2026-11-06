@@ -128,6 +128,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // BRAND COLORS
             '--bhe-main': 'var(--primary)', // TODO BED-10220 is this necessary?
+            '--brand-orange': light['brand-orange'],
             // '--sp-main': 'var(--primary)',
             '--bhce-main': light['bhce-main'],
             // '--logo-neutral': common.black,
@@ -315,6 +316,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--button-highlight-text': 'var(--common-white)',
             '--button-primary-active-fill': light.primary.variant,
             '--button-text-active': light.primary.variant,
+            '--button-secondary-border': '#939597',
 
             // Components/Menu
             '--menu-content-fill': common.white,
@@ -483,6 +485,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
 
             // BRAND COLORS
             '--bhe-main': 'var(--primary)',
+            '--brand-orange': dark['brand-orange'],
             // '--sp-main': 'var(--primary)',
             '--bhce-main': dark['bhce-main'],
             // '--logo-neutral': common.white,
@@ -671,6 +674,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--button-highlight-text': 'var(--common-dark)',
             '--button-primary-active-fill': dark.primary.variant,
             '--button-text-active': 'var(--primary)',
+            '--button-secondary-border': '#7B7B7B',
 
             // Components/Menu
             '--menu-content-fill': palette.neutral.dark[400],

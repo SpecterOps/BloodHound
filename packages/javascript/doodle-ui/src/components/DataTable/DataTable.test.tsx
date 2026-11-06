@@ -15,13 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ColumnDef } from '@tanstack/react-table';
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { DataTable } from './DataTable';
-
-expect.extend(matchers);
 
 vi.mock('@tanstack/react-virtual', () => ({
     useVirtualizer: ({ count }: { count: number }) => ({
@@ -49,7 +45,10 @@ describe('DataTable', () => {
         const table = screen.getByRole('table');
         expect(screen.getByText('No results.')).toBeVisible();
         expect(table).not.toHaveClass('h-full', 'after:hidden');
-        expect(table.parentElement?.parentElement).toHaveStyle({ height: '0px' });
+        expect(table.parentElement?.parentElement?.style.height).toBe('var(--data-table-content-height)');
+        expect(table.parentElement?.parentElement?.parentElement?.style.getPropertyValue('--data-table-content-height')).toBe(
+            '0px'
+        );
     });
 
     it('restores virtualized sizing after a full-height empty table receives rows', () => {
@@ -67,8 +66,8 @@ describe('DataTable', () => {
         expect(screen.queryByText('No results.')).not.toBeInTheDocument();
         expect(screen.getByRole('row', { name: 'Ada Lovelace' })).toBeVisible();
         expect(table).not.toHaveClass('h-full', 'after:hidden');
-        expect(heightContainer).toHaveStyle({ minHeight: '57px' });
-        expect(heightContainer?.style.height).toBe('');
+        expect(heightContainer?.style.height).toBe('var(--data-table-content-height)');
+        expect((container.firstChild as HTMLElement).style.getPropertyValue('--data-table-content-height')).toBe('57px');
         expect(table.querySelector('thead')).not.toHaveClass('h-px');
         expect(container.firstChild).toHaveClass('overflow-auto');
     });
@@ -86,7 +85,9 @@ describe('DataTable', () => {
         );
 
         expect(container.firstChild).toHaveClass('flex-auto');
-        expect(screen.getByRole('table').parentElement?.parentElement).toHaveStyle({ minHeight: '57px' });
+        expect(screen.getByRole('table').parentElement?.parentElement?.style.height).toBe(
+            'var(--data-table-content-height)'
+        );
         expect(container.firstChild).not.toHaveClass('overflow-auto');
         expect(container.firstChild).not.toHaveClass('min-h-0');
 
@@ -119,8 +120,8 @@ describe('DataTable', () => {
         );
 
         expect(screen.getByRole('row', { name: 'Ada Lovelace' })).not.toHaveClass(
-            'bg-data-table-row-even-fill',
-            'bg-data-table-row-odd-fill'
+            'bg-[color:var(--data-table-row-even-fill)]',
+            'bg-[color:var(--data-table-row-odd-fill)]'
         );
     });
 });
