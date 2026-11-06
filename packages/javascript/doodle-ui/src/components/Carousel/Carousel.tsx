@@ -23,12 +23,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../Button';
 import { IconButton } from '../IconButton';
 import { cn } from '../utils';
-import {
-    carouselIndicatorClasses,
-    carouselItemClasses,
-    carouselNavigationIconClasses,
-    carouselSelectedIndicatorClasses,
-} from './Carousel.styles';
+import { carouselIndicatorClasses, carouselItemClasses, carouselSelectedIndicatorClasses } from './Carousel.styles';
 
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
@@ -214,14 +209,8 @@ const CarouselPrev = React.forwardRef<HTMLButtonElement, CarouselPrevProps>(({ .
     const { scrollPrev, canScrollPrev } = useCarousel();
 
     return (
-        <IconButton
-            name='Previous slide'
-            ref={ref}
-            className='px-2'
-            disabled={!canScrollPrev}
-            onClick={scrollPrev}
-            {...props}>
-            <ChevronLeft className={carouselNavigationIconClasses} />
+        <IconButton name='Previous slide' ref={ref} size={12} disabled={!canScrollPrev} onClick={scrollPrev} {...props}>
+            <ChevronLeft />
         </IconButton>
     );
 });
@@ -262,14 +251,8 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, CarouselNextProps>(({ .
     const { scrollNext, canScrollNext } = useCarousel();
 
     return (
-        <IconButton
-            name='Next slide'
-            ref={ref}
-            className='px-2'
-            disabled={!canScrollNext}
-            onClick={scrollNext}
-            {...props}>
-            <ChevronRight className={carouselNavigationIconClasses} />
+        <IconButton name='Next slide' ref={ref} size={12} disabled={!canScrollNext} onClick={scrollNext} {...props}>
+            <ChevronRight />
         </IconButton>
     );
 });
