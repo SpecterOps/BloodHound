@@ -13,7 +13,7 @@ Shared Playwright testing utilities for BloodHound UI workspaces.
 
 The package intentionally does **not** own:
 
--   Playwright configs (browsers, projects, reporters, web server).
+-   App-specific accessibility configs (browsers, projects, reporters, web server). The HAR workflow supplies a shared e2e config.
 -   The pages, routes, or DOM subtrees that get scanned or asserted against.
 -   App-specific environment variables (e.g. `*_TEST_URL`, credentials).
 -   Suite-specific orchestration (which selectors to wait on, which routes to scope).
@@ -31,6 +31,10 @@ The package is consumed via subpath imports so each consumer pulls only what it 
 | `bh-playwright-testing/themes` | Theme types and constants (`Theme`, `THEMES`, `TestOptions`, `authStorageStateFor`) for the per-theme storage-state convention.                          |
 | `bh-playwright-testing/auth`   | `loginAndSnapshotThemes` — logs in once and snapshots `storageState` for both light and dark themes.                                                     |
 | `bh-playwright-testing/stubs`  | A barrel of `page.route` stubs so tests can control API responses without mutating real state.                                                           |
+
+### Recorded API replay (`har`)
+
+Import `test` and `expect` from `bh-playwright-testing/har` to replay one adjacent HAR with a fake local session. See [the HAR workflow](HAR.md) for recording and updating mocks.
 
 ### Accessibility (`axe`)
 

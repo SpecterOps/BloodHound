@@ -45,6 +45,7 @@ jobs:
             **/tests/**
             **/testdata/**
             **/fixtures/**
+            **/*.har
             **/__tests__/**
             **/__mocks__/**
             **/mocks/**
