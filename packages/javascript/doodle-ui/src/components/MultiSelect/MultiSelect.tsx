@@ -96,6 +96,8 @@ interface MultiSelectProps {
     value: string[];
     onValueChange: (values: string[]) => void;
     onSearchValueChange?: (value: string) => void;
+    /** Set to false when options are already filtered by an external search. Defaults to true. */
+    shouldFilter?: boolean;
     placeholder?: string;
     disabled?: boolean;
     error?: boolean;
@@ -197,6 +199,7 @@ const MultiSelect = ({
     value,
     onValueChange,
     onSearchValueChange,
+    shouldFilter = true,
     placeholder,
     disabled,
     error,
@@ -299,11 +302,11 @@ const MultiSelect = ({
     const searchTerm = searchValue.trim().toLowerCase();
 
     const filteredOptions = React.useMemo(() => {
-        if (!searchTerm || searchError) {
+        if (!shouldFilter || !searchTerm || searchError) {
             return options;
         }
         return options.filter((option) => option.label.toLowerCase().includes(searchTerm));
-    }, [options, searchTerm, searchError]);
+    }, [options, searchTerm, searchError, shouldFilter]);
 
     const hasOptions = options.length > 0;
     const hasSearchText = searchTerm.length > 0;
