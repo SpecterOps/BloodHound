@@ -411,6 +411,7 @@ func jitOIDCUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, claim
 	} else if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
 		//  roles should only ever have 1 role
 		user.Roles = roles
+		user.AllEnvironments = allEnvironmentsForSSORoles(roles, dogTagsService)
 		if err := u.UpdateUser(ctx, user); err != nil {
 			return fmt.Errorf("update user: %v", err)
 		}
@@ -430,11 +431,7 @@ func jitOIDCUserCreate(ctx context.Context, ssoProvider model.SSOProvider, claim
 		LastName:      null.StringFrom(claims.LastName),
 	}
 
-	if dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED) {
-		user.AllEnvironments = !hasValidRolesForETAC(roles)
-	} else {
-		user.AllEnvironments = true
-	}
+	user.AllEnvironments = allEnvironmentsForSSORoles(roles, dogTagsService)
 
 	if _, err := u.CreateUser(ctx, user); err != nil {
 		return fmt.Errorf("create user: %v", err)

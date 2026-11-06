@@ -25,6 +25,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -101,6 +102,12 @@ func handleETACRequest(updateUserRequest v2.UpdateUserRequest, roles model.Roles
 	}
 
 	return nil
+}
+
+// allEnvironmentsForSSORoles returns the environment-access default for SSO account creation and provisioned role changes.
+// Administrators, power users, and auditors require all environments; other roles are restricted when ETAC is enabled.
+func allEnvironmentsForSSORoles(roles model.Roles, dogTagsService dogtags.Service) bool {
+	return !dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED) || !hasValidRolesForETAC(roles)
 }
 
 // hasValidRolesForETAC will check the passed in roles to determine if a user can have ETAC controls applied to theem
