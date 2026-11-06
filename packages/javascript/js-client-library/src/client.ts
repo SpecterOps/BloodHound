@@ -613,7 +613,7 @@ class BHEAPIClient {
             options
         );
 
-    changeFindingStatus = (findingId: string, status: 'active' | 'in_progress', options?: RequestOptions) =>
+    changeFindingStatus = (findingId: number | string, status: 'active' | 'in_progress', options?: RequestOptions) =>
         this.baseClient.put(`/api/v2/attack-paths/findings/${findingId}/status`, { status }, options);
 
     requestAttackPaths = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
