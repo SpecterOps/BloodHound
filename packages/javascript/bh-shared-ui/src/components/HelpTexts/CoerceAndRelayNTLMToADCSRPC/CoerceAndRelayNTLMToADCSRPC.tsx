@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2025 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v2
+import Composition from './Composition';
+import General from './General';
+import LinuxAbuse from './LinuxAbuse';
+import Opsec from './Opsec';
+import References from './References';
+import RelayTargets from './RelayTargets';
+import WindowsAbuse from './WindowsAbuse';
 
-import "time"
+const CoerceAndRelayNTLMToADCSRPC = {
+    general: General,
+    windowsAbuse: WindowsAbuse,
+    linuxAbuse: LinuxAbuse,
+    opsec: Opsec,
+    references: References,
+    composition: Composition,
+    relaytargets: RelayTargets,
+};
 
-// Constants and functions relating to pagination
-
-const (
-	// DefaultTimeRangeDuration is the default time range for range query parameters: 30 days prior to now
-	DefaultTimeRangeDuration = -30 * 24 * time.Hour
-)
-
-func DefaultTimeRange() (time.Time, time.Time) {
-	now := time.Now()
-
-	return now, now.Add(DefaultTimeRangeDuration)
-}
+export default CoerceAndRelayNTLMToADCSRPC;
