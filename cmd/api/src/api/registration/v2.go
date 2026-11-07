@@ -42,8 +42,6 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		middleware.LoginTimer()(http.HandlerFunc(loginResource.Login)).ServeHTTP(response, request)
 	})
 
-	// Login resources
-	routerInst.GET("/api/v2/self", managementResource.GetSelf)
 	// Login path prefix matcher for SAML providers, order matters here due to PathPrefix
 	routerInst.POST(fmt.Sprintf("/api/{version}/login/saml/{%s}/acs", api.URIPathVariableSSOProviderSlug), managementResource.SAMLCallbackRedirect)
 	routerInst.GET(fmt.Sprintf("/api/{version}/login/saml/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata)
