@@ -103,9 +103,36 @@ describe('Handling value formatting for Active Directory entity properties lastl
 });
 
 describe('Formatting number properties', () => {
-    it('handles unix time values by converting them to our standard date display format', () => {
-        expect(formatNumber(1694549003)).toEqual('2023-09-12 13:03 PDT (GMT-0700)');
+    it('preserves numbers without property metadata', () => {
+        expect(formatNumber(1694549003)).toEqual('1694549003');
     });
+
+    it.each([176518713, 315536400, 315536401, 853632860, 3000000000])(
+        'preserves numeric identifiers regardless of timestamp-sized value %s',
+        (value) => {
+            expect(formatPrimitive(value, null, 'database_id')).toEqual(String(value));
+            expect(formatPrimitive(value, null, 'owner_database_id')).toEqual(String(value));
+        }
+    );
+
+    it('does not infer a date from an unknown property name or a known property kind', () => {
+        expect(formatPrimitive(1694549003, null, 'custom_timestamp')).toEqual('1694549003');
+        expect(formatPrimitive(1694549003, 'ad', 'count')).toEqual('1694549003');
+    });
+
+    it.each([
+        'lastseen',
+        'whencreated',
+        'lastlogontimestamp',
+        'lastlogon',
+        'pwdlastset',
+        'lastsuccessfulsignindatetime',
+        'lastcollected',
+        'firstseen',
+    ])('formats the declared timestamp property %s', (property) => {
+        expect(formatPrimitive(1694549003, null, property)).toEqual('2023-09-12 13:03 PDT (GMT-0700)');
+    });
+
     it('handles percent values by multiplying by 100, truncating to an integer, and adding a "%" to the end', () => {
         expect(formatNumber(0.23)).toEqual('23%');
         expect(formatNumber(0.234)).toEqual('23%');
