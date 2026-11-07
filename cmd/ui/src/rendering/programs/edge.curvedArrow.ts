@@ -29,6 +29,7 @@ import CurvedEdgeProgram from './edge.curved';
 import CurvedEdgeArrowHeadProgram from './edge.curvedArrowHead';
 
 export type CurvedEdgeDisplayData = EdgeDisplayData & {
+    dashed?: boolean;
     groupSize?: number;
     groupPosition?: number;
     direction?: EdgeDirection;

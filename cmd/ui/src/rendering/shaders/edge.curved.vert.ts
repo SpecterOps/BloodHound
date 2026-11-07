@@ -19,14 +19,19 @@ attribute vec4 a_color;
 attribute vec2 a_normal;
 attribute vec2 a_position;
 attribute float a_radius;
+attribute float a_distance;
+attribute float a_dashed;
 
 uniform mat3 u_matrix;
+uniform vec2 u_dimensions;
 uniform float u_sqrtZoomRatio;
 uniform float u_correctionRatio;
 
 varying vec4 v_color;
 varying vec2 v_normal;
 varying float v_thickness;
+varying highp float v_distance;
+varying float v_dashed;
 
 const float minThickness = 1.7;
 const float bias = 255.0 / 254.0;
@@ -53,6 +58,11 @@ void main() {
   gl_Position = vec4((u_matrix * vec3(a_position + unitNormal * adaptedWebGLThickness + compensationVector, 1)).xy, 0, 1);
 
   v_thickness = webGLThickness / u_sqrtZoomRatio;
+
+  // Measure dashes at the default zoom. Cancelling camera zoom lets the pattern scale with the edge.
+  float pixelsPerUnit = length((u_matrix * vec3(1.0, 0.0, 0.0)).xy * u_dimensions * 0.5);
+  v_distance = a_distance * pixelsPerUnit * u_sqrtZoomRatio * u_sqrtZoomRatio;
+  v_dashed = a_dashed;
 
   v_normal = unitNormal;
   v_color = a_color;

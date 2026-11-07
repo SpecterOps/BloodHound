@@ -50,7 +50,7 @@ describe('DropdownSelector', () => {
         });
         const button = await screen.getByRole('button');
         expect(button).toHaveClass('bg-primary');
-        expect(button).toHaveClass('rounded-3xl');
+        expect(button).toHaveClass('rounded');
         expect(button).toHaveClass('uppercase');
         await user.click(button);
         const listItems = screen.getAllByRole('listitem');

@@ -611,18 +611,18 @@ func (mr *MockDatabaseMockRecorder) CreateSavedQueries(ctx, savedQueries any) *g
 }
 
 // CreateSavedQuery mocks base method.
-func (m *MockDatabase) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name, query, description string) (model.SavedQuery, error) {
+func (m *MockDatabase) CreateSavedQuery(ctx context.Context, userID uuid.UUID, name, query, description string, schemaExtensionID *int32, queryKey *string, category string) (model.SavedQuery, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateSavedQuery", ctx, userID, name, query, description)
+	ret := m.ctrl.Call(m, "CreateSavedQuery", ctx, userID, name, query, description, schemaExtensionID, queryKey, category)
 	ret0, _ := ret[0].(model.SavedQuery)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateSavedQuery indicates an expected call of CreateSavedQuery.
-func (mr *MockDatabaseMockRecorder) CreateSavedQuery(ctx, userID, name, query, description any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateSavedQuery(ctx, userID, name, query, description, schemaExtensionID, queryKey, category any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQuery), ctx, userID, name, query, description)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSavedQuery", reflect.TypeOf((*MockDatabase)(nil).CreateSavedQuery), ctx, userID, name, query, description, schemaExtensionID, queryKey, category)
 }
 
 // CreateSavedQueryPermissionToPublic mocks base method.
@@ -1375,21 +1375,6 @@ func (m *MockDatabase) GetAllIngestTasks(ctx context.Context) (model.IngestTasks
 func (mr *MockDatabaseMockRecorder) GetAllIngestTasks(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllIngestTasks", reflect.TypeOf((*MockDatabase)(nil).GetAllIngestTasks), ctx)
-}
-
-// GetAllPermissions mocks base method.
-func (m *MockDatabase) GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllPermissions", ctx, order, filter)
-	ret0, _ := ret[0].(model.Permissions)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllPermissions indicates an expected call of GetAllPermissions.
-func (mr *MockDatabaseMockRecorder) GetAllPermissions(ctx, order, filter any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPermissions", reflect.TypeOf((*MockDatabase)(nil).GetAllPermissions), ctx, order, filter)
 }
 
 // GetAllRoles mocks base method.
@@ -2514,6 +2499,21 @@ func (mr *MockDatabaseMockRecorder) GetSSOProviderUsers(ctx, id any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSSOProviderUsers", reflect.TypeOf((*MockDatabase)(nil).GetSSOProviderUsers), ctx, id)
 }
 
+// GetSavedQueriesByExtensionID mocks base method.
+func (m *MockDatabase) GetSavedQueriesByExtensionID(ctx context.Context, schemaExtensionID int32) (model.SavedQueries, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSavedQueriesByExtensionID", ctx, schemaExtensionID)
+	ret0, _ := ret[0].(model.SavedQueries)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSavedQueriesByExtensionID indicates an expected call of GetSavedQueriesByExtensionID.
+func (mr *MockDatabaseMockRecorder) GetSavedQueriesByExtensionID(ctx, schemaExtensionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSavedQueriesByExtensionID", reflect.TypeOf((*MockDatabase)(nil).GetSavedQueriesByExtensionID), ctx, schemaExtensionID)
+}
+
 // GetSavedQueriesOwnedBy mocks base method.
 func (m *MockDatabase) GetSavedQueriesOwnedBy(ctx context.Context, userID uuid.UUID) (model.SavedQueries, error) {
 	m.ctrl.T.Helper()
@@ -2621,10 +2621,10 @@ func (mr *MockDatabaseMockRecorder) GetSchemaFindingsByExtensionId(ctx, extensio
 }
 
 // GetScopeForSavedQuery mocks base method.
-func (m *MockDatabase) GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (database.SavedQueryScopeMap, error) {
+func (m *MockDatabase) GetScopeForSavedQuery(ctx context.Context, queryID int64, userID uuid.UUID) (database.SavedQueryScopes, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetScopeForSavedQuery", ctx, queryID, userID)
-	ret0, _ := ret[0].(database.SavedQueryScopeMap)
+	ret0, _ := ret[0].(database.SavedQueryScopes)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

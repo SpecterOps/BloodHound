@@ -84,7 +84,7 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !hasAccess {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
-	} else if node, err := s.GraphQuery.GetEntityByObjectId(request.Context(), objectId, entityType); err != nil {
+	} else if node, err := s.GraphQuery.GetADEntityDetails(request.Context(), objectId, entityType); err != nil {
 		if graph.IsErrNotFound(err) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "node not found", request), response)
 		} else {
@@ -95,8 +95,9 @@ func (s *Resources) handleAdEntityInfoQuery(response http.ResponseWriter, reques
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
 	} else {
 		if tiering.IsTierZero(node) {
-			node.Properties.Map["isTierZero"] = true
+			node.Properties.Set("isTierZero", true)
 		}
+
 		results := map[string]any{"props": node.Properties.Map, "kinds": node.Kinds.Strings()}
 		api.WriteBasicResponse(request.Context(), results, http.StatusOK, response)
 	}
@@ -176,6 +177,7 @@ func (s *Resources) GetGPOEntityInfo(response http.ResponseWriter, request *http
 			"ous":         adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOContainerCandidateFilter),
 			"computers":   adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectComputersCandidateFilter),
 			"users":       adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectUsersCandidateFilter),
+			"sites":       adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectSitesCandidateFilter),
 			"controllers": adAnalysis.FetchInboundADEntityControllers,
 			"tierzero":    adAnalysis.CreateGPOAffectedIntermediariesListDelegate(adAnalysis.SelectGPOTierZeroCandidateFilter),
 		}
@@ -241,9 +243,9 @@ func (s *Resources) GetOUEntityInfo(response http.ResponseWriter, request *http.
 	var (
 		countQueries = map[string]any{
 			"gpos":      adAnalysis.FetchEnforcedGPOs,
-			"users":     adAnalysis.CreateOUContainedListDelegate(ad.User),
-			"groups":    adAnalysis.CreateOUContainedListDelegate(ad.Group),
-			"computers": adAnalysis.CreateOUContainedListDelegate(ad.Computer),
+			"users":     adAnalysis.CreateContainedListDelegate(ad.User),
+			"groups":    adAnalysis.CreateContainedListDelegate(ad.Group),
+			"computers": adAnalysis.CreateContainedListDelegate(ad.Computer),
 		}
 	)
 
@@ -297,4 +299,33 @@ func (s *Resources) GetIssuancePolicyEntityInfo(response http.ResponseWriter, re
 	)
 
 	s.handleAdEntityInfoQuery(response, request, ad.IssuancePolicy, countQueries)
+}
+
+func (s *Resources) GetSiteEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{
+			"controllers": adAnalysis.FetchInboundADEntityControllers,
+			"linkedgpos":  adAnalysis.FetchEntityLinkedGPOList,
+			"siteServers": adAnalysis.CreateContainedListDelegate(ad.SiteServer),
+			"siteSubnets": adAnalysis.CreateContainedListDelegate(ad.SiteSubnet),
+		}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.Site, countQueries)
+}
+
+func (s *Resources) GetSiteServerEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.SiteServer, countQueries)
+}
+
+func (s *Resources) GetSiteSubnetEntityInfo(response http.ResponseWriter, request *http.Request) {
+	var (
+		countQueries = map[string]any{}
+	)
+
+	s.handleAdEntityInfoQuery(response, request, ad.SiteSubnet, countQueries)
 }

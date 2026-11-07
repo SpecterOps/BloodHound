@@ -358,7 +358,7 @@ func Version_740_Migration(ctx context.Context, db graph.Database) error {
 func Version_730_Migration(ctx context.Context, db graph.Database) error {
 	const adminRightsCount = "adminrightscount"
 
-	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes and smbsigning from computer nodes")
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove admin_rights_count property from user nodes and smbsigning from computer nodes")()
 
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 		// MATCH(n:User) WHERE n.adminrightscount <> null

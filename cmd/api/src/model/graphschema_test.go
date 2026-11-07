@@ -856,6 +856,74 @@ func Test_validateGraphExtension(t *testing.T) {
 			},
 			wantErr: fmt.Errorf("duplicate graph schema relationship finding: AD_finding_1"),
 		},
+		{name: "fail - saved query empty key", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{Name: "Query", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query key is required")},
+		{name: "fail - saved query whitespace key", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: " ", Name: "Query", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query key is required")},
+		{name: "fail - saved query empty name", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query name is required")},
+		{name: "fail - saved query whitespace name", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Name: " ", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query name is required")},
+		{name: "fail - saved query empty query", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Name: "Query"}}}}, wantErr: fmt.Errorf("graph schema saved query text is required")},
+		{name: "fail - saved query whitespace query", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Name: "Query", Query: " "}}}}, wantErr: fmt.Errorf("graph schema saved query text is required")},
+		{name: "fail - duplicate saved query key", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-key", Name: "Query One", Query: "RETURN 1"}, {QueryKey: "query-key", Name: "Query Two", Query: "RETURN 2"}}}}, wantErr: fmt.Errorf("duplicate graph schema saved query key: query-key")},
+		{name: "fail - duplicate saved query name", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "query-one", Name: "Query", Query: "RETURN 1"}, {QueryKey: "query-two", Name: "Query", Query: "RETURN 2"}}}}, wantErr: fmt.Errorf("duplicate graph schema saved query name: Query")},
+		{
+			name: "success - parsable saved query",
+			args: args{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: baseExtensionInput(),
+					NodeKindsInput: NodesInput{{Name: "AD_node_kind_1"}},
+					SavedQueriesInput: SavedQueriesInput{{
+						QueryKey: "valid-query",
+						Name:     "Valid query",
+						Query:    "MATCH (n) RETURN n",
+					}},
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "fail - saved query contains updating clause",
+			args: args{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: baseExtensionInput(),
+					NodeKindsInput: NodesInput{{Name: "AD_node_kind_1"}},
+					SavedQueriesInput: SavedQueriesInput{{
+						QueryKey: "updating-query",
+						Name:     "Updating query",
+						Query:    "MATCH (n) DELETE n",
+					}},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema saved query Updating query contains invalid Cypher: updating clauses are not supported"),
+		},
+		{
+			name: "fail - saved query contains procedure invocation",
+			args: args{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: baseExtensionInput(),
+					NodeKindsInput: NodesInput{{Name: "AD_node_kind_1"}},
+					SavedQueriesInput: SavedQueriesInput{{
+						QueryKey: "procedure-query",
+						Name:     "Procedure query",
+						Query:    "CALL db.labels()",
+					}},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema saved query Procedure query contains invalid Cypher: procedure invocation is not supported"),
+		},
+		{
+			name: "fail - unparseable saved query",
+			args: args{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: baseExtensionInput(),
+					NodeKindsInput: NodesInput{{Name: "AD_node_kind_1"}},
+					SavedQueriesInput: SavedQueriesInput{{
+						QueryKey: "invalid-query",
+						Name:     "Invalid query",
+						Query:    "MATCH (",
+					}},
+				},
+			},
+			wantErr: fmt.Errorf("graph schema saved query Invalid query contains invalid Cypher"),
+		},
 		{
 			name: "success - valid ExtensionInput",
 			args: args{
@@ -1299,6 +1367,9 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 							},
 						},
 					},
+					SavedQueries: &SavedQueriesPayload{{
+						QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description", Category: "Category",
+					}},
 				},
 			},
 			want: GraphExtensionInput{
@@ -1348,6 +1419,51 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 						},
 					},
 				},
+				SavedQueriesInput: SavedQueriesInput{{
+					QueryKey: "query-key", Name: "Query Name", Query: "MATCH (n) RETURN n", Description: "Description", Category: "Category",
+				}},
+			},
+		},
+		{
+			name: "success_without_saved_queries",
+			args: args{
+				payload: GraphExtensionPayload{},
+			},
+			want: GraphExtensionInput{
+				NodeKindsInput:         make(NodesInput, 0),
+				RelationshipKindsInput: make(RelationshipsInput, 0),
+				EnvironmentsInput:      make(EnvironmentsInput, 0),
+				SavedQueriesInput:      make(SavedQueriesInput, 0),
+			},
+		},
+		{
+			name: "success_-_privilege_zone_rule_defaults",
+			args: args{
+				payload: GraphExtensionPayload{
+					GraphSchemaExtension: GraphSchemaExtensionPayload{Namespace: "TEST"},
+					PZRules: &PZRulesPayload{{
+						RuleKey: "rule_1",
+						Name:    "Rule 1",
+						Seeds: []SelectorSeedPayload{{
+							Type:  SelectorTypeCypher,
+							Value: "MATCH (n) RETURN n",
+						}},
+					}},
+				},
+			},
+			want: GraphExtensionInput{
+				ExtensionInput:         ExtensionInput{Namespace: "TEST"},
+				NodeKindsInput:         make(NodesInput, 0),
+				RelationshipKindsInput: make(RelationshipsInput, 0),
+				EnvironmentsInput:      make(EnvironmentsInput, 0),
+				SavedQueriesInput:      make(SavedQueriesInput, 0),
+				PZRulesInput: PZRulesInput{{
+					ExtensionRuleId: "rule_1",
+					Name:            "Rule 1",
+					Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n) RETURN n"}},
+					Enabled:         true,
+					AllowDisable:    true,
+				}},
 			},
 		},
 		{
@@ -1378,6 +1494,71 @@ func Test_GraphExtensionPayload_ToGraphExtensionInput(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equalf(t, tt.want, got, "ToGraphExtensionInput(%v)", tt.args.payload)
 			}
+		})
+	}
+}
+
+func TestPZRulesInputValidate(t *testing.T) {
+	t.Parallel()
+
+	validRule := PZRuleInput{
+		ExtensionRuleId: "TEST_rule",
+		Name:            "Rule",
+		Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n) RETURN n"}},
+	}
+
+	tests := []struct {
+		name    string
+		rules   PZRulesInput
+		wantErr string
+	}{
+		{
+			name:  "success_-_one_cypher_seed",
+			rules: PZRulesInput{validRule},
+		},
+		{
+			name: "error_-_multiple_seeds",
+			rules: PZRulesInput{{
+				ExtensionRuleId: "rule",
+				Name:            "Rule",
+				Seeds: []SelectorSeedInput{
+					{Type: SelectorTypeCypher, Value: "MATCH (n) RETURN n"},
+					{Type: SelectorTypeCypher, Value: "MATCH (n:Two) RETURN n"},
+				},
+			}},
+			wantErr: "requires exactly one seed",
+		},
+		{
+			name: "error_-_object_id_seed",
+			rules: PZRulesInput{{
+				ExtensionRuleId: "rule",
+				Name:            "Rule",
+				Seeds:           []SelectorSeedInput{{Type: SelectorTypeObjectId, Value: "0123456"}},
+			}},
+			wantErr: "must be of cypher type",
+		},
+		{
+			name: "error_-_invalid_cypher_seed",
+			rules: PZRulesInput{{
+				ExtensionRuleId: "rule",
+				Name:            "Rule",
+				Seeds:           []SelectorSeedInput{{Type: SelectorTypeCypher, Value: "MATCH (n RETURN n"}},
+			}},
+			wantErr: "contains invalid Cypher seed",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := testCase.rules.Validate("TEST")
+			if testCase.wantErr != "" {
+				assert.ErrorContains(t, err, testCase.wantErr)
+				return
+			}
+
+			assert.NoError(t, err)
 		})
 	}
 }

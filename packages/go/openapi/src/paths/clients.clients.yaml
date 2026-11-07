@@ -131,6 +131,9 @@ post:
               type: array
               items:
                 $ref: './../schemas/model.client-schedule.yaml'
+            provided_identifier:
+              type: string
+              description: Optional identifier used to associate an external identity-provider token with this client.
   responses:
     200:
       description: OK

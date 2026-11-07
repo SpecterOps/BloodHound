@@ -15,20 +15,42 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { defineConfig, devices } from '@playwright/test';
-import { authStorageStateFor, THEMES, type TestOptions } from 'bh-playwright-testing/themes';
+import type { A11yTestOptions } from 'bh-playwright-testing';
+import { authStorageStateFor, THEMES } from 'bh-playwright-testing/themes';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+const envFilePath = path.resolve(__dirname, '.env');
+const dotenvResult = dotenv.config({ path: envFilePath });
+
+// Fail fast with an actionable message instead of an opaque `Invalid URL` error below.
+const requiredEnvVars = ['A11Y_TEST_URL', 'A11Y_TEST_USERNAME', 'A11Y_TEST_PASSWORD'];
+const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);
+if (missingEnvVars.length > 0) {
+    const envFileHint = dotenvResult.error ? `No .env file found at ${envFilePath}.\n` : '';
+    throw new Error(
+        `Missing required env vars: ${missingEnvVars.join(', ')}.\n` +
+            envFileHint +
+            'Copy cmd/ui/.env.example to cmd/ui/.env and fill in the values.'
+    );
+}
 
 // Base URL to use in actions like `await page.goto('/')`.
 const baseURL = `${process.env.A11Y_TEST_URL}`;
 
+const parseBaseURL = (url: string): URL => {
+    try {
+        return new URL(url);
+    } catch {
+        throw new Error(`A11Y_TEST_URL is not a valid absolute URL: "${url}" (e.g. http://bloodhound.localhost)`);
+    }
+};
+
 // Address and port dev web server will run on
-const { hostname, port } = new URL(baseURL);
+const { hostname, port } = parseBaseURL(baseURL);
 
 // When true, browser will run tests on Vite web server (API service must still be running)
 // Set to false when testing against http://bloodhound.localhost or https://test.bloodhoundenterprise.io
@@ -42,13 +64,13 @@ const browsers = [
 ] as const;
 
 const webServer = {
-    command: `yarn dev --host ${hostname} --port ${port || '3000'}`,
+    command: `yarn dev --mode playwright --host ${hostname} --port ${port || '3000'}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
 };
 
-export default defineConfig<TestOptions>({
+export default defineConfig<A11yTestOptions>({
     testDir: './tests/a11y',
     outputDir: './playwright/a11y/results',
     fullyParallel: true,
@@ -78,21 +100,27 @@ export default defineConfig<TestOptions>({
     ],
     use: {
         ...devices['Desktop Chrome'],
+        a11yDefaultInclude: '#content-wrapper',
         baseURL,
         contextOptions: {
             // Turns off transition animations to reduce false negatives
             reducedMotion: 'reduce',
         },
+        // App-specific priming of the shared a11y fixture options from `bh-playwright-testing`:
+        // install the cypher "has data" stub for every a11y spec, scope scans to the app's content
+        // wrapper by default, and tell `goAndWaitFor` which button collapses the global nav.
+        installGraphDataStub: true,
+        navToggleName: 'Toggle Navigation',
         screenshot: 'only-on-failure',
-        trace: 'retain-on-failure',
         // Block service workers so MSW (registered by the Vite dev build in `main.tsx`) cannot
         // take over network traffic. With MSW active, requests are routed through its Service
         // Worker before Playwright sees them, which makes `page.route` / `context.route` invisible
-        // to API calls and causes test-only stubs (e.g. the `useGraphHasData` cypher stub
-        // installed in `global.setup.ts` and `tests/a11y/fixtures.ts`) to silently fall through to
-        // the real backend. `main.tsx` swallows the resulting registration failure so the app
+        // to API calls and causes test-only stubs (e.g. the `useGraphHasData` cypher stub installed
+        // via the `installGraphDataStub` option and in `global.setup.ts`) to silently fall through
+        // to the real backend. `main.tsx` swallows the resulting registration failure so the app
         // still mounts.
         serviceWorkers: 'block',
+        trace: 'retain-on-failure',
     },
     // Browser × theme matrix. A single `setup` project logs in once and snapshots both
     // light and dark storage states (see global.setup.ts); each browser-theme project then loads

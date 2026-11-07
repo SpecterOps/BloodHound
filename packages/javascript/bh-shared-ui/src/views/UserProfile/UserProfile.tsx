@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, AlertTitle, CircularProgress, Grid } from '@mui/material';
-import { Button, Switch, Typography } from 'doodle-ui';
+import { Alert, AlertTitle, Grid } from '@mui/material';
+import { Button, LoadingSpinner, Switch, Typography } from 'doodle-ui';
 import { PutUserAuthSecretRequest } from 'js-client-library';
 import { useState } from 'react';
 import { useMutation } from 'react-query';
@@ -75,7 +75,7 @@ const UserProfile = () => {
         if (getSelfQuery.isLoading) {
             return (
                 <div className='p-4 text-center'>
-                    <CircularProgress />
+                    <LoadingSpinner />
                 </div>
             );
         }
@@ -132,9 +132,8 @@ const UserProfile = () => {
                                 <Grid item xs={3}>
                                     <Typography variant='body1'>API Key Management</Typography>
                                 </Grid>
-                                <Grid item xs={2}>
+                                <Grid item xs={9}>
                                     <Button
-                                        style={{ width: '100%' }}
                                         onClick={() => setUserTokenManagementDialogOpen(true)}
                                         data-testid='my-profile_button-api-key-management'>
                                         API Key Management
@@ -148,9 +147,8 @@ const UserProfile = () => {
                                     <Grid item xs={3}>
                                         <Typography variant='body1'>Password</Typography>
                                     </Grid>
-                                    <Grid item xs={2}>
+                                    <Grid item xs={9}>
                                         <Button
-                                            style={{ width: '100%' }}
                                             onClick={() => setChangePasswordDialogOpen(true)}
                                             data-testid='my-profile_button-reset-password'>
                                             Reset Password

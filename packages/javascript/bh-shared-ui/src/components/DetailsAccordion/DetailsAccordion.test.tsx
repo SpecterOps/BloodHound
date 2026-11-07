@@ -24,8 +24,6 @@ vi.mock('@fortawesome/react-fontawesome', () => ({
     FontAwesomeIcon: ({ className }: any) => <span data-testid='fa' className={className} />,
 }));
 
-vi.mock('@fortawesome/free-solid-svg-icons', () => ({ faAngleDown: {} }));
-
 type Item = { title: string; description: string; disabled?: boolean };
 
 const Header: React.FC<Item> = (item) => <h3>{item.title}</h3>;

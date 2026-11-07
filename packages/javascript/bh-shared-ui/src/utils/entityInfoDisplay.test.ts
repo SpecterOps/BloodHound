@@ -18,24 +18,58 @@ import {
     ActiveDirectoryKindProperties,
     ActiveDirectoryNodeKind,
     AzureKindProperties,
+    AzureNodeKind,
     CommonKindProperties,
 } from '../graphSchema';
+import { ZoneNodeKind } from './content';
 import {
     AD_NEVER_VALUE,
     AD_UNKNOWN_VALUE,
     ADSpecificTimeProperties,
     DATE_FIELDS,
+    EMPTY_ARRAY_DISPLAY,
+    EMPTY_VALUE_DISPLAY,
     EntityField,
     formatADSpecificTime,
     formatBoolean,
     formatDateString,
+    formatGraphNodeSublabel,
     formatList,
     formatNumber,
+    formatObjectInfoFields,
     formatPrimitive,
     getEntityName,
+    getNodeSource,
     NoEntitySelectedHeader,
     validateProperty,
 } from './entityInfoDisplay';
+
+describe('formatGraphNodeSublabel', () => {
+    it.each([
+        { source: 'OpenGraph', nodeType: ZoneNodeKind, expected: 'Zone' },
+        { source: 'Azure', nodeType: 'AZUser', expected: 'Azure | AZUser' },
+        { source: 'Active Directory', nodeType: 'User', expected: 'Active Directory | User' },
+        { source: 'OpenGraph', nodeType: 'CustomNode', expected: 'OpenGraph | CustomNode' },
+        { source: 'OpenGraph', nodeType: 'Unknown', expected: 'OpenGraph | Unknown' },
+        { source: undefined, nodeType: ZoneNodeKind, expected: 'Zone' },
+    ])('formats $source and $nodeType as $expected', ({ source, nodeType, expected }) => {
+        expect(formatGraphNodeSublabel(source, nodeType)).toBe(expected);
+    });
+});
+
+describe('getNodeSource', () => {
+    it.each([
+        { kinds: [ZoneNodeKind], expected: 'OpenGraph' },
+        { kinds: [ZoneNodeKind, AzureNodeKind.Entity], expected: 'Azure' },
+        { kinds: [ActiveDirectoryNodeKind.Entity, ZoneNodeKind], expected: 'Active Directory' },
+        { kinds: [AzureNodeKind.Entity, AzureNodeKind.User], expected: 'Azure' },
+        { kinds: [ActiveDirectoryNodeKind.Entity, ActiveDirectoryNodeKind.User], expected: 'Active Directory' },
+        { kinds: ['CustomNode'], expected: 'OpenGraph' },
+        { kinds: [], expected: 'OpenGraph' },
+    ])('classifies $kinds as $expected', ({ kinds, expected }) => {
+        expect(getNodeSource(kinds)).toBe(expected);
+    });
+});
 
 describe('Handling value formatting for Active Directory entity properties lastlogon, lastlogontimestamp, whencreated, and pwdlastset', () => {
     test('whencreated', () => {
@@ -122,6 +156,11 @@ describe('Formatting strings via formatPrimive', () => {
         expect(formatPrimitive('2016')).toEqual('2016');
         expect(formatPrimitive('2016')).not.toEqual('2016-01-01 00:00 PST (GMT-0800)');
     });
+
+    it('renders empty strings and null values with an explicit placeholder', () => {
+        expect(formatPrimitive('')).toEqual(EMPTY_VALUE_DISPLAY);
+        expect(formatPrimitive(null)).toEqual(EMPTY_VALUE_DISPLAY);
+    });
 });
 
 describe('Formatting list properties', () => {
@@ -131,6 +170,31 @@ describe('Formatting list properties', () => {
             label: 'test',
         };
         expect(formatList(testEntityField)).toEqual(['test', '5', 'FALSE']);
+    });
+
+    it('renders an empty list as NONE', () => {
+        const testEntityField: EntityField = {
+            value: [],
+            label: 'test',
+        };
+
+        expect(formatList(testEntityField)).toEqual([EMPTY_ARRAY_DISPLAY]);
+    });
+});
+
+describe('Formatting object information fields', () => {
+    it('preserves explicitly set empty arrays, empty strings, and null values', () => {
+        const formattedFields = formatObjectInfoFields({
+            [ActiveDirectoryKindProperties.EffectiveEKUs]: [],
+            emptystring: '',
+            nullvalue: null,
+        });
+
+        expect(formattedFields).toEqual([
+            { kind: 'ad', keyprop: 'effectiveekus', label: 'Effective EKUs:', value: [] },
+            { kind: null, keyprop: 'emptystring', label: 'Emptystring:', value: '' },
+            { kind: null, keyprop: 'nullvalue', label: 'Nullvalue:', value: null },
+        ]);
     });
 });
 

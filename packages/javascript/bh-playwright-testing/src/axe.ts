@@ -44,6 +44,9 @@ export type A11yScanOptions = {
     /** Axe rule ids to turn off for this scan. */
     disableRules?: string | string[];
 
+    /** When `true`, axe results that require manual review fail the test. Defaults to `false`. */
+    failOnIncomplete?: boolean;
+
     /**
      * Namespaces the attachments (axe-results.json, screenshots, etc.) so multiple scans in one
      * test don't overwrite each other in the report.
@@ -185,6 +188,7 @@ export const test = base.extend<AxeFixtures, TestOptions>({
                 include = a11yDefaultInclude,
                 exclude,
                 disableRules,
+                failOnIncomplete = false,
                 attachmentNamePrefix,
                 maxNodesPerViolation,
             } = { ...a11yDefaults, ...options };
@@ -199,6 +203,7 @@ export const test = base.extend<AxeFixtures, TestOptions>({
             const results = await builder.analyze();
             await expectNoAccessibilityViolations(testInfo, results, {
                 page,
+                failOnIncomplete,
                 attachmentNamePrefix,
                 maxNodesPerViolation,
             });
@@ -248,6 +253,8 @@ export type AttachAxeReportOptions = {
     page?: Page;
 };
 
+export type ExpectNoAccessibilityViolationsOptions = AttachAxeReportOptions & Pick<A11yScanOptions, 'failOnIncomplete'>;
+
 const DEFAULT_MAX_NODES_PER_VIOLATION = 5;
 
 /**
@@ -280,16 +287,21 @@ export async function attachAxeReport(testInfo: TestInfo, results: AxeResults, o
         contentType: 'application/json',
     });
 
-    if (results.violations.length === 0) {
-        return;
+    if (results.incomplete.length > 0) {
+        await testInfo.attach(prefixedAttachmentName('a11y-incomplete.md', opts.attachmentNamePrefix), {
+            body: formatAxeResults(results.incomplete, 'No incomplete accessibility checks detected.'),
+            contentType: 'text/markdown',
+        });
     }
 
-    await testInfo.attach(prefixedAttachmentName('a11y-violations.md', opts.attachmentNamePrefix), {
-        body: formatViolations(results.violations),
-        contentType: 'text/markdown',
-    });
+    if (results.violations.length > 0) {
+        await testInfo.attach(prefixedAttachmentName('a11y-violations.md', opts.attachmentNamePrefix), {
+            body: formatAxeResults(results.violations, 'No accessibility violations detected.'),
+            contentType: 'text/markdown',
+        });
+    }
 
-    if (opts.page) {
+    if (opts.page && results.violations.length > 0) {
         await attachViolationScreenshots(
             testInfo,
             opts.page,
@@ -303,23 +315,32 @@ export async function attachAxeReport(testInfo: TestInfo, results: AxeResults, o
 export async function expectNoAccessibilityViolations(
     testInfo: TestInfo,
     results: AxeResults,
-    opts: AttachAxeReportOptions = {}
+    opts: ExpectNoAccessibilityViolationsOptions = {}
 ) {
     await attachAxeReport(testInfo, results, opts);
 
-    expect(results.violations, formatViolations(results.violations)).toEqual([]);
+    expect(results.violations, formatAxeResults(results.violations, 'No accessibility violations detected.')).toEqual(
+        []
+    );
+
+    if (opts.failOnIncomplete) {
+        expect(
+            results.incomplete,
+            formatAxeResults(results.incomplete, 'No incomplete accessibility checks detected.')
+        ).toEqual([]);
+    }
 }
 
-function formatViolations(violations: Result[]) {
-    if (violations.length === 0) {
-        return 'No accessibility violations detected.';
+function formatAxeResults(results: Result[], emptyMessage: string) {
+    if (results.length === 0) {
+        return emptyMessage;
     }
 
-    return violations.map(formatViolation).join('\n\n---\n\n');
+    return results.map(formatAxeResult).join('\n\n---\n\n');
 }
 
-function formatViolation(violation: Result) {
-    const affectedNodes = violation.nodes
+function formatAxeResult(result: Result) {
+    const affectedNodes = result.nodes
         .slice(0, 10)
         .map((node) => {
             const target = node.target.join(' ');
@@ -329,9 +350,9 @@ function formatViolation(violation: Result) {
         })
         .join('\n');
 
-    return `### ${violation.id} (${violation.impact ?? 'unknown impact'})
-${violation.help}
-${violation.helpUrl}
+    return `### ${result.id} (${result.impact ?? 'unknown impact'})
+${result.help}
+${result.helpUrl}
 
 **Affected nodes:**
 ${affectedNodes}`;

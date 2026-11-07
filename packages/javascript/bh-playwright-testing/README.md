@@ -4,12 +4,11 @@ Shared Playwright testing utilities for BloodHound UI workspaces.
 
 ## Purpose
 
-`bh-playwright-testing` centralizes the Playwright building blocks that are common across BloodHound UI suites and consumers (e.g. both BHE and BHCE's `cmd/ui`). It exists so each consumer can consistently compose test suites without reimplementing common features. This includes:
+`bh-playwright-testing` centralizes the Playwright building blocks that are common across BloodHound UI suites and consumers (e.g. both BHE and BHCE's `cmd/ui`). It exists so each consumer can consistently compose test suites without reimplementing common features:
 
--   axe-core fixture
--   reporting
--   auth bootstrap
--   route stubs
+-   axe-core accessibility, fixture, and reporting helpers
+-   one-time auth bootstrap
+-   `page.route` API stubs
 -   theme matrix helpers
 
 The package intentionally does **not** own:
@@ -23,74 +22,48 @@ Consumers compose those concerns on top of the modules below.
 
 ## Modules
 
-The package is consumed via subpath imports so each consumer pulls only what it uses. Each subpath is a thin, focused module — no cross-module coupling beyond shared `Theme` types.
+The package is consumed via subpath imports so each consumer pulls only what it uses.
 
-| Subpath                        | Exports                                                                                                                                                                                                                                                                                                       | Purpose                                                                                                                                                                          |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bh-playwright-testing`        | `test`, `expect`, `WCAG_TAGS`, `attachAxeReport`, `expectNoAccessibilityViolations`, `hideBySelector`, `restoreHidden`, `AttachAxeReportOptions`                                                                                                                                                              | Package root entry — the axe-core fixture and reporting helpers, exposed as named exports (no default export). Convenience re-export of `./axe`.                                 |
-| `bh-playwright-testing/axe`    | same as above                                                                                                                                                                                                                                                                                                 | Same named exports as the package root entry. Use this path when you want to be explicit.                                                                                        |
-| `bh-playwright-testing/themes` | `Theme`, `THEMES`, `TestOptions`, `authStorageStateFor`                                                                                                                                                                                                                                                       | Type-only and constant helpers for the per-theme storage-state convention used by `loginAndSnapshotThemes` and Playwright configs.                                               |
-| `bh-playwright-testing/auth`   | `loginAndSnapshotThemes`, `LoginAndSnapshotThemesOptions`                                                                                                                                                                                                                                                     | One-time login helper that snapshots `storageState` for both light and dark themes from a single session.                                                                        |
-| `bh-playwright-testing/stubs`  | `GRAPHS_CYPHER_QUERY`, `installGraphHasDataStub`, `installGraphHasNoDataStub`, `installMFAEnrollmentStub`, `MFAEnrollmentStubOptions`, `installResetPasswordStub`, `installUserTokensStub`, `UserTokensStubOptions`, `installCreateUserTokenStub`, `CreateUserTokenStubOptions`, `installDeleteUserTokenStub` | Barrel of `page.route` stubs so tests can control API responses without mutating real state: cypher graph-data probes, MFA enrollment, password reset, and API token management. |
+| Subpath                        | Purpose                                                                                                                                                  |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bh-playwright-testing`        | Package root entry (re-export of `./axe`): the shared `test`/`expect`, the axe fixture, the `checkA11y` / `goAndWaitFor` helpers, and reporting helpers. |
+| `bh-playwright-testing/axe`    | Same exports as the root entry. Use this path when you want to be explicit.                                                                              |
+| `bh-playwright-testing/themes` | Theme types and constants (`Theme`, `THEMES`, `TestOptions`, `authStorageStateFor`) for the per-theme storage-state convention.                          |
+| `bh-playwright-testing/auth`   | `loginAndSnapshotThemes` — logs in once and snapshots `storageState` for both light and dark themes.                                                     |
+| `bh-playwright-testing/stubs`  | A barrel of `page.route` stubs so tests can control API responses without mutating real state.                                                           |
 
-### `axe`
+### Accessibility (`axe`)
 
-The axe fixture is a thin wrapper around `@axe-core/playwright`'s `AxeBuilder`:
+The shared `test` extends Playwright's `test` with an axe-core fixture and a couple of helpers that collapse the boilerplate most specs repeat:
 
-1. `test` is Playwright's `test` extended with a `makeAxeBuilder()` fixture, a worker-scoped `theme` option (default `'light'`), and a `context` fixture that injects a `window.__APP_TEST_RUNTIME__` marker so the app can detect a Playwright run (e.g. to disable CSS transition animations).
-2. Calling `makeAxeBuilder()` returns a fresh `AxeBuilder` bound to the current `page` and constrained to `WCAG_TAGS` (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`).
-3. The spec chains scoping or rule methods it needs (`.include(...)`, `.exclude(...)`, `.disableRules(...)`) and `await builder.analyze()`.
-4. The `AxeResults` are handed to `expectNoAccessibilityViolations(testInfo, results, opts?)`, which attaches `axe-results.json` (always) and `a11y-violations.md` (only on failure) before asserting that `results.violations` is empty.
+-   `makeAxeBuilder()` returns a fresh `AxeBuilder` bound to the current `page` and constrained to `WCAG_TAGS` (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`). Chain `.include(...)` / `.exclude(...)` / `.disableRules(...)` as needed and `await builder.analyze()`.
+-   `expectNoAccessibilityViolations(testInfo, results, opts?)` attaches the axe report and asserts there are no violations. Pass `{ page }` to also attach a screenshot of each affected element.
+-   `checkA11y(options?)` runs a full-page scan by default, can optionally be scoped, and asserts no violations in one call (builder + `expectNoAccessibilityViolations`).
+-   `goAndWaitFor(path, target, options?)` navigates to `path`, collapses the global nav, then waits for `target` (a `Locator` or `(page) => Locator`) to become visible.
+-   `hideBySelector(page, selector)` / `restoreHidden(handle)` temporarily hide background content (e.g. behind a dialog) that would otherwise produce noisy `incomplete` results.
 
-The fixture also records an `a11y-tags` annotation on `testInfo` so the active tag set shows up in Playwright and Allure reports.
+`checkA11y` and `goAndWaitFor` read a few consumer-primed Playwright options so app-specific assumptions live in each consumer's config `use` block rather than in the package:
 
-#### Per-Node Screenshots
+| Option                 | Default               | Purpose                                                                                                 |
+| ---------------------- | --------------------- | ------------------------------------------------------------------------------------------------------- |
+| `a11yDefaultInclude`   | `null` (full page)    | Default scan scope for `checkA11y` (e.g. `'#content-wrapper'`).                                         |
+| `a11yDefaults`         | `{}`                  | Describe-scoped default `A11yScanOptions`; set once via `test.use({ a11yDefaults: { ... } })`.          |
+| `navToggleName`        | `'Toggle Navigation'` | Accessible name of the button `goAndWaitFor` clicks to collapse the nav.                                |
+| `installGraphDataStub` | `false`               | When `true`, the `page` fixture installs the cypher "has data" stub so the "No Data" dialog stays shut. |
 
-`expectNoAccessibilityViolations` (and `attachAxeReport`) accept an optional third argument:
+Prime them in the config `use` block (typed via `A11yTestOptions`, which combines `TestOptions` with these four options).
 
-```ts
-type AttachAxeReportOptions = {
-    page?: Page;
-    maxNodesPerViolation?: number; // default 5
-    attachmentNamePrefix?: string;
-};
-```
+### Themes (`themes`)
 
-When `page` is provided and there are violations, the helper screenshots each affected element and attaches it as `a11y-<violation.id>-<n>.png` so that reports can show a visual indicator for each violation next to the textual one. `maxNodesPerViolation` caps how many element screenshots are taken per rule (e.g. a `color-contrast` violation spanning 30 elements only attaches the first 5 PNGs).
+Theme TypeScript types and constants, plus `authStorageStateFor(theme)` — the canonical per-theme `storageState` path shared by `loginAndSnapshotThemes` and Playwright project configs.
 
-`attachmentNamePrefix` keeps attachments distinct when a single test performs multiple scans, for example `mfa-password-axe-results.json`.
+### Auth (`auth`)
 
-Targets that cross iframe or shadow-DOM boundaries are skipped — Playwright requires a different API for those, though the textual report still describes the violation. Per-element screenshot failures (detached/animated-off elements) are swallowed so a missing screenshot never blocks the assertion.
+`loginAndSnapshotThemes(...)` logs in once and writes an authenticated `storageState` snapshot for both light and dark themes, avoiding the parallel-login race two setups as the same user would hit.
 
-Without `page`, behavior is unchanged (textual attachments only).
+### Stubs (`stubs`)
 
-#### Hiding Background Content
-
-`hideBySelector(page, selector)` injects a `<style>` tag that hides matching elements with `visibility: hidden`, which is useful before an axe scan when background content (e.g. behind a dialog) produces noisy `incomplete` results. It returns the created `ElementHandle`; pass that handle to `restoreHidden(styleTag)` to remove the injected style and restore the content.
-
-### `themes`
-
-Theme TypeScript types and constants.
-
-### `auth`
-
-Auth storageState session snapshot helpers.
-
-### `stubs`
-
-A single barrel of `page.route` stubs, grouped by the API surface they cover. Each installs a route handler that falls through (`route.fallback()`) for methods/requests it doesn't own, so stubs compose and test-local overrides win under Playwright's LIFO routing.
-
-#### Graph data (cypher)
-
-Stubs for tests that need controlled cypher response states.
-
-`installGraphHasDataStub(page)` stubs all cypher `POST` traffic with a populated graph payload. It is useful as a broad suite fixture when the "No Data Available" dialog should stay closed.
-
-`installGraphHasNoDataStub(page)` only overrides the `useGraphHasData` probe (matched via the exported `GRAPHS_CYPHER_QUERY`) with an empty graph payload, then falls through for other cypher requests. Install it inside individual tests after any broad fixture route so Playwright's LIFO routing gives the test-local override priority.
-
-#### MFA enrollment
-
-`installMFAEnrollmentStub(page, opts?)` stubs the happy path for enabling MFA (the `POST .../mfa` and `POST .../mfa-activation` endpoints) so tests can walk the enrollment dialog without mutating the real user's MFA state. `MFAEnrollmentStubOptions` lets you override the returned `qrCode` and `totpSecret`.
+A single barrel of `page.route` stubs, grouped by the API surface they cover — asset group tags, BloodHound users (MFA enrollment, password reset), feature flags, graph data (cypher), and API tokens. Each stub installs a route handler that falls through (`route.fallback()`) for requests it doesn't own, so stubs compose and test-local overrides win under Playwright's LIFO routing.
 
 ```ts
 import { installMFAEnrollmentStub } from 'bh-playwright-testing/stubs';
@@ -100,18 +73,6 @@ test('MFA dialog', async ({ page }) => {
     // Click the MFA toggle and walk the dialog steps.
 });
 ```
-
-#### Password reset
-
-`installResetPasswordStub(page)` stubs the `PUT .../secret` endpoint so the Reset Password dialog can complete without changing the real user's password.
-
-#### API tokens
-
-Stubs for the API Key Management dialog so tests can render and exercise token flows without touching real tokens:
-
--   `installUserTokensStub(page, opts?)` stubs the `GET /api/v2/tokens` list. `UserTokensStubOptions` lets you supply custom `tokens` (pass an empty array for the "No tokens available" empty state).
--   `installCreateUserTokenStub(page, opts?)` stubs `POST /api/v2/tokens`. `CreateUserTokenStubOptions` lets you override the returned `token`.
--   `installDeleteUserTokenStub(page)` stubs `DELETE /api/v2/tokens/:id` so the revoke flow completes.
 
 ## Usage
 
@@ -157,13 +118,20 @@ setup('Generate and cache auth state', async ({ page }) => {
 });
 ```
 
-A Playwright config that consumes the theme matrix:
+A Playwright config that consumes the theme matrix and primes the a11y helper options:
 
 ```ts
 import { defineConfig, devices } from '@playwright/test';
-import { authStorageStateFor, THEMES, type TestOptions } from 'bh-playwright-testing/themes';
+import type { A11yTestOptions } from 'bh-playwright-testing';
+import { authStorageStateFor, THEMES } from 'bh-playwright-testing/themes';
 
-export default defineConfig<TestOptions>({
+export default defineConfig<A11yTestOptions>({
+    use: {
+        // App-specific priming of the shared a11y helper options.
+        installGraphDataStub: true,
+        a11yDefaultInclude: '#content-wrapper',
+        navToggleName: 'Toggle Navigation',
+    },
     projects: [
         { name: 'setup', testMatch: /global\.setup\.ts$/ },
         ...THEMES.flatMap((theme) => [
@@ -177,22 +145,18 @@ export default defineConfig<TestOptions>({
 });
 ```
 
+Use `TestOptions` (from `bh-playwright-testing/themes`) instead of `A11yTestOptions` if a suite only needs the `theme` option and not the `checkA11y` / `goAndWaitFor` helpers.
+
 ### Extending The Fixture
 
-Consumers can wrap the shared `test` to layer suite-specific fixtures on top of `makeAxeBuilder` (see `cmd/ui/tests/fixtures.ts` for the BloodHound UI suite's wrapper that installs `installGraphHasDataStub` on every test's `page`):
+Most suites need nothing beyond priming the options above — the `page` stub, `checkA11y`, and `goAndWaitFor` all ship in the shared `test`. For a bespoke fixture the options don't cover, wrap `test` with `test.extend` in the consuming suite:
 
 ```ts
-import { test as playwrightTest } from 'bh-playwright-testing';
-import { installGraphHasDataStub } from 'bh-playwright-testing/stubs';
+import { test as base } from 'bh-playwright-testing';
 
-export const test = playwrightTest.extend({
-    page: async ({ page }, use) => {
-        await installGraphHasDataStub(page);
-        await use(page);
-    },
+export const test = base.extend({
+    // ...suite-specific fixtures...
 });
-
-export { expect, expectNoAccessibilityViolations } from 'bh-playwright-testing';
 ```
 
 ## Source-Only Distribution

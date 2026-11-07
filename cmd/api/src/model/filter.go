@@ -290,11 +290,11 @@ func BuildSQLFilter(filters Filters, tableAlias models.Optional[string]) (SQLFil
 	var filter SQLFilter
 
 	if whereClauseFragment != nil {
-		if sqlFragment, err := format.SyntaxNode(whereClauseFragment); err != nil {
+		if sqlFragment, err := format.SyntaxNodeWithBuilder(whereClauseFragment, format.NewOutputBuilder().WithMaterializedParameters(map[string]any{})); err != nil {
 			return filter, fmt.Errorf("failed formatting SQL filter: %w", err)
 		} else {
 			filter = SQLFilter{
-				SQLString: sqlFragment,
+				SQLString: sqlFragment.Statement,
 			}
 		}
 	}
@@ -431,9 +431,11 @@ type Filter struct {
 	IsStringData bool
 }
 
-type Filters map[string][]Filter
-type ValidFilters map[string][]FilterOperator
-type SortDirection int
+type (
+	Filters       map[string][]Filter
+	ValidFilters  map[string][]FilterOperator
+	SortDirection int
+)
 
 const (
 	InvalidSortDirection SortDirection = iota

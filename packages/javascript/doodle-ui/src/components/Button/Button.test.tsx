@@ -1,0 +1,101 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { render, screen } from '@testing-library/react';
+import { expect } from 'vitest';
+import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
+import { IconButton } from '../IconButton';
+import { Button, ButtonVariants, TextButton } from './Button';
+
+describe('Button', () => {
+    it('defaults to type button', () => {
+        render(<Button>Button</Button>);
+
+        expect(screen.getByRole('button', { name: 'Button' }).getAttribute('type')).toBe('button');
+    });
+
+    it('accepts type submit', () => {
+        render(<Button type='submit'>Submit</Button>);
+
+        expect(screen.getByRole('button', { name: 'Submit' }).getAttribute('type')).toBe('submit');
+    });
+
+    it.each([
+        ['primary', 'border border-transparent bg-primary text-inverse'],
+        ['secondary', 'border-[color:var(--button-secondary-border)] bg-elevation-1 text-main'],
+        ['tertiary', 'border-brand-orange bg-elevation-1 text-main'],
+    ] as const)('applies the %s visual treatment', (variant, expectedClasses) => {
+        render(<Button variant={variant}>{variant}</Button>);
+
+        expect(screen.getByRole('button', { name: variant })).toHaveClass(
+            'rounded',
+            'p-2',
+            'text-sm/none',
+            'hover:bg-secondary',
+            'hover:text-inverse',
+            'focus-visible:bg-secondary',
+            'focus-visible:text-inverse',
+            'active:bg-primary-variant',
+            'active:text-inverse',
+            ...expectedClasses.split(' ')
+        );
+        expect(screen.getByRole('button', { name: variant })).not.toHaveClass('shadow-outer-1');
+    });
+
+    it.each(['small', 'medium', 'large'] as const)('keeps uniform geometry for the deprecated %s size', (size) => {
+        expect(ButtonVariants({ size })).toContain('rounded p-2 text-sm/none');
+    });
+
+    it('keeps deprecated variants free of contained-button geometry', () => {
+        expect(ButtonVariants({ variant: 'transparent' })).toContain('rounded-3xl');
+        expect(ButtonVariants({ variant: 'transparent' })).not.toContain('rounded p-2');
+        expect(ButtonVariants({ variant: 'icon' })).not.toContain('rounded p-2');
+    });
+
+    it('defaults to a non-submitting button', () => {
+        render(<Button>Save</Button>);
+
+        expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('type', 'button');
+    });
+
+    it('keeps TextButton and IconButton geometry independent', () => {
+        render(
+            <>
+                <TextButton>Help</TextButton>
+                <IconButton aria-label='Settings'>
+                    <AppIcon.Info />
+                </IconButton>
+            </>
+        );
+
+        expect(screen.getByRole('button', { name: 'Help' })).toHaveClass('rounded-3xl');
+        expect(screen.getByRole('button', { name: 'Settings' })).toHaveClass('rounded-full');
+    });
+});
+
+describe('TextButton', () => {
+    it('defaults to type button', () => {
+        render(<TextButton>Text Button</TextButton>);
+
+        expect(screen.getByRole('button', { name: 'Text Button' }).getAttribute('type')).toBe('button');
+    });
+
+    it('accepts type submit', () => {
+        render(<TextButton type='submit'>Submit</TextButton>);
+
+        expect(screen.getByRole('button', { name: 'Submit' }).getAttribute('type')).toBe('submit');
+    });
+});

@@ -125,6 +125,13 @@ const References: FC = () => {
             <br />
             <Link
                 target='_blank'
+                rel='noopener noreferrer'
+                href='https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites'>
+                https://www.synacktiv.com/publications/site-unseen-enumerating-and-attacking-active-directory-sites
+            </Link>
+            <br />
+            <Link
+                target='_blank'
                 rel='noopener'
                 href='https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9'>
                 https://posts.specterops.io/adcs-esc14-abuse-technique-333a004dc2b9

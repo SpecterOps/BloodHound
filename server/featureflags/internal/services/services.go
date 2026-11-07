@@ -31,15 +31,16 @@ import (
 // defined in cmd/api/src/model/appcfg but are redeclared here so consumers do
 // not need to import the appcfg package.
 const (
-	FeatureOpenHoundSupport          = "openhound_support"
-	FeatureAlerts                    = "alerts"
-	FeatureFindingsPrioritizationV0  = appcfg.FeatureFindingsPrioritizationV0
-	FeatureArtifactExpirationCleanup = "artifact_expiration_cleanup"
+	FeatureOpenHoundSupport           = "openhound_support"
+	FeatureManagedOpenHoundCollection = "managed_openhound_collection"
+	FeatureAlerts                     = "alerts"
+	FeatureFindingsPrioritizationV0   = appcfg.FeatureFindingsPrioritizationV0
+	FeatureArtifactExpirationCleanup  = "artifact_expiration_cleanup"
 )
 
 // Request source values used by the feature flags slice.
 const (
-	PrioritizationFlagRequestSource = "prioritization-feature-flag-toggle"
+	PrioritizationFlagRequestSource = appcfg.PrioritizationFlagRequestSource
 )
 
 // ErrNotFound indicates that no feature flag exists for the requested key.
@@ -124,10 +125,16 @@ func (s *Service) GetAllFlags(ctx context.Context) ([]FeatureFlag, error) {
 	return s.db.GetAllFlags(ctx)
 }
 
-// ToggleFlag enables/disables the feature flag by the feature flag id
+// ToggleFlag enables/disables the feature flag by the feature flag id.
+// Findings prioritization toggles request analysis to create or remove zone nodes.
 func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error) {
-	flag, err := s.db.GetFlagByID(ctx, id)
-	if err != nil {
+	var (
+		analysisRequestSource string
+		flag                  FeatureFlag
+		err                   error
+	)
+
+	if flag, err = s.db.GetFlagByID(ctx, id); err != nil {
 		return flag, err
 	}
 
@@ -141,8 +148,12 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 		return flag, err
 	}
 
-	if flag.Key == FeatureFindingsPrioritizationV0 && flag.Enabled {
-		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
+	if flag.Key == FeatureFindingsPrioritizationV0 {
+		analysisRequestSource = PrioritizationFlagRequestSource
+	}
+
+	if analysisRequestSource != "" {
+		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, analysisRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
 			flag.Enabled = !flag.Enabled
 
 			if rollbackErr := s.db.SetFlag(ctx, flag); rollbackErr != nil {

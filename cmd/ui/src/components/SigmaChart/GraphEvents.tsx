@@ -24,7 +24,6 @@ import {
     DRAG_THRESHOLD,
     MOUSE_BUTTON_PRIMARY,
     getDistanceBetween,
-    getEdgeDataFromKey,
     getEdgeSourceAndTargetDisplayData,
     getNodeOffset,
     graphToFramedGraph,
@@ -152,42 +151,39 @@ export const GraphEvents = forwardRef(function GraphEvents(
         (edge: string, data: Attributes, newData: Attributes) => {
             // We calculate control points for all curved edges here and pass those along as edge attributes in both viewport and framed graph
             // coordinates. We can then use those control points in our edge, edge label, and edge arrow programs.
-            const edgeData = getEdgeDataFromKey(edge);
-            if (edgeData !== null) {
-                const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
-                if (nodeDisplayData !== null) {
-                    const sourceCoordinates = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
-                    const targetCoordinates = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
+            // Endpoints come from the graph rather than the edge key: keys are `rel_<id>`, which carries no source or target.
+            const [source, target] = graph.extremities(edge);
+            const nodeDisplayData = getEdgeSourceAndTargetDisplayData(source, target, sigma);
+            if (nodeDisplayData !== null) {
+                const sourceCoordinates = { x: nodeDisplayData.source.x, y: nodeDisplayData.source.y };
+                const targetCoordinates = { x: nodeDisplayData.target.x, y: nodeDisplayData.target.y };
 
-                    const height = calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
-                    const control = getControlAtMidpoint(height, sourceCoordinates, targetCoordinates);
+                const height = calculateCurveHeight(data.groupSize, data.groupPosition, data.direction);
+                const control = getControlAtMidpoint(height, sourceCoordinates, targetCoordinates);
 
-                    newData.control = control;
-                    newData.controlInViewport = sigma.framedGraphToViewport(control);
-                }
+                newData.control = control;
+                newData.controlInViewport = sigma.framedGraphToViewport(control);
             }
         },
-        [sigma, calculateCurveHeight, getControlAtMidpoint]
+        [sigma, graph, calculateCurveHeight, getControlAtMidpoint]
     );
 
     const selfEdgeReducer = useCallback(
         (edge: string, newData: Attributes) => {
-            const edgeData = getEdgeDataFromKey(edge);
-            if (edgeData !== null) {
-                const nodeDisplayData = getEdgeSourceAndTargetDisplayData(edgeData.source, edgeData.target, sigma);
-                if (nodeDisplayData !== null) {
-                    const nodeRadius = getNodeRadius(false, newData.inverseSqrtZoomRatio, nodeDisplayData.source.size);
+            const [source, target] = graph.extremities(edge);
+            const nodeDisplayData = getEdgeSourceAndTargetDisplayData(source, target, sigma);
+            if (nodeDisplayData !== null) {
+                const nodeRadius = getNodeRadius(false, newData.inverseSqrtZoomRatio, nodeDisplayData.source.size);
 
-                    const framedGraphNodeRadius = getLineLength(
-                        graphToFramedGraph(sigma, { x: 0, y: 0 }),
-                        graphToFramedGraph(sigma, { x: nodeRadius, y: nodeRadius })
-                    );
+                const framedGraphNodeRadius = getLineLength(
+                    graphToFramedGraph(sigma, { x: 0, y: 0 }),
+                    graphToFramedGraph(sigma, { x: nodeRadius, y: nodeRadius })
+                );
 
-                    newData.framedGraphNodeRadius = framedGraphNodeRadius;
-                }
+                newData.framedGraphNodeRadius = framedGraphNodeRadius;
             }
         },
-        [sigma, getLineLength]
+        [sigma, graph, getLineLength]
     );
 
     useEffect(() => {

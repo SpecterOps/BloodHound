@@ -139,7 +139,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10, false).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10, false, nil).
 						Return([]*graph.Node{
 							{
 								Properties: graph.AsProperties(map[string]any{
@@ -169,7 +169,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -204,7 +204,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10, false).
+						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10, false, nil).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -223,7 +223,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false).
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false, nil).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -241,7 +241,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: true}, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
-						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, true).
+						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, true, nil).
 						Return(nil, nil)
 				},
 				Test: func(output apitest.Output) {
@@ -278,7 +278,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
-					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false).
+					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false, []string{"12345", "54321"}).
 					Return(nil, nil)
 			},
 			expectedStatusCode: 200,
@@ -305,7 +305,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
-					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false).
+					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false, nil).
 					Return(nil, nil)
 			},
 			expectedStatusCode: 200,

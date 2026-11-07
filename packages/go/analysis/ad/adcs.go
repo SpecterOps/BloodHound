@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
 )
 
 var ErrNoCertParent = errors.New("cert has no parent")
@@ -72,17 +73,64 @@ func PostADCS(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 			attr.Scope("routine"),
 		)()
 
-		operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing")
-
-		operation.Stats.Merge(step1Stats)
-		operation.Stats.Merge(step2Stats)
-
-		for _, certChains := range cache.GetECAHostedChainedDomains() {
-			processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, operation)
+		// Clear old post-processed edges that will not have a `firstseen` property
+		if err := post.MigrationForDCAPostProcessedEdges(ctx, db, escPostProcessedEdges); err != nil {
+			return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed migrating ADCS ESC edges to DCA: %w", err)
 		}
 
-		return &operation.Stats, cache, operation.Done()
+		// Pull a subgraph to compare against for tracking changes
+		escTracker, err := post.FetchTracker(ctx, db, escPostProcessedEdges)
+		if err != nil {
+			return &post.AtomicPostProcessingStats{}, cache, fmt.Errorf("failed fetching ADCS ESC edge tracker: %w", err)
+		}
+
+		var (
+			readerPool = ops.StartNewOperation[any](ops.OperationContext{
+				Parent:     ctx,
+				DB:         db,
+				NumReaders: post.MaximumDatabaseParallelWorkers,
+			})
+			escSink        = post.NewFilteredRelationshipSink(ctx, "ADCS ESC Post Processing", db, escTracker)
+			aggregateStats = post.NewAtomicPostProcessingStats()
+		)
+
+		aggregateStats.Merge(step1Stats)
+		aggregateStats.Merge(step2Stats)
+
+		for _, certChains := range cache.GetECAHostedChainedDomains() {
+			if err := processEnterpriseCAWithValidCertChainToDomain(certChains, localGroupData, cache, readerPool, escSink); err != nil {
+				return &aggregateStats, cache, errors.Join(err, readerPool.Done(), escSink.Abort())
+			}
+		}
+
+		// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
+		readerErr := readerPool.Done()
+		if readerErr != nil {
+			readerErr = errors.Join(readerErr, escSink.Abort())
+		} else {
+			readerErr = escSink.Done()
+		}
+		aggregateStats.Merge(escSink.Stats())
+
+		return &aggregateStats, cache, readerErr
 	}
+}
+
+// escPostProcessedEdges lists the ADCS edge kinds produced by processEnterpriseCAWithValidCertChainToDomain, all of which
+// are post-processed using the delta-change-apply method
+var escPostProcessedEdges = graph.Kinds{
+	ad.GoldenCert,
+	ad.ADCSESC1,
+	ad.ADCSESC3,
+	ad.ADCSESC4,
+	ad.ADCSESC6a,
+	ad.ADCSESC6b,
+	ad.ADCSESC9a,
+	ad.ADCSESC9b,
+	ad.ADCSESC10a,
+	ad.ADCSESC10b,
+	ad.ADCSESC13,
+	ad.ADCSESC16,
 }
 
 // postADCSPreProcessStep1 processes the edges that are not dependent on any other post-processed edges
@@ -96,23 +144,33 @@ func postADCSPreProcessStep1(ctx context.Context, db graph.Database, enterpriseC
 		attr.Scope("routine"),
 	)()
 
-	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 1")
-
-	if err := PostTrustedForNTAuth(ctx, db, operation); err != nil {
-		operation.Done()
+	trustedForNTAuthStats, err := PostTrustedForNTAuth(ctx, db)
+	if err != nil {
 		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.TrustedForNTAuth.String(), err)
-	} else if err := PostIssuedSignedBy(operation, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities); err != nil {
-		operation.Done()
-		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
-	} else if err := PostEnterpriseCAFor(operation, enterpriseCertAuthorities); err != nil {
-		operation.Done()
-		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
-	} else if err = PostExtendedByPolicyBinding(operation, certTemplates); err != nil {
-		operation.Done()
-		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ExtendedByPolicy.String(), err)
-	} else {
-		return &operation.Stats, operation.Done()
 	}
+
+	issuedSignedByStats, err := PostIssuedSignedBy(ctx, db, enterpriseCertAuthorities, rootCertAuthorities, aiaCertAuthorities)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.IssuedSignedBy.String(), err)
+	}
+
+	enterpriseCAForStats, err := PostEnterpriseCAFor(ctx, db, enterpriseCertAuthorities)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnterpriseCAFor.String(), err)
+	}
+
+	extendedByPolicyStats, err := PostExtendedByPolicyBinding(ctx, db, certTemplates)
+	if err != nil {
+		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.ExtendedByPolicy.String(), err)
+	}
+
+	aggregateStats := post.NewAtomicPostProcessingStats()
+	aggregateStats.Merge(trustedForNTAuthStats)
+	aggregateStats.Merge(issuedSignedByStats)
+	aggregateStats.Merge(enterpriseCAForStats)
+	aggregateStats.Merge(extendedByPolicyStats)
+
+	return &aggregateStats, nil
 }
 
 // postADCSPreProcessStep2 Processes the edges that are dependent on those processed in postADCSPreProcessStep1
@@ -126,19 +184,17 @@ func postADCSPreProcessStep2(ctx context.Context, db graph.Database, cache *ADCS
 		attr.Scope("routine"),
 	)()
 
-	operation := post.NewPostRelationshipOperation(ctx, db, "ADCS Post Processing Step 2")
-
-	if err := PostEnrollOnBehalfOf(cache, operation); err != nil {
-		operation.Done()
+	enrollOnBehalfOfStats, err := PostEnrollOnBehalfOf(ctx, db, cache)
+	if err != nil {
 		return &post.AtomicPostProcessingStats{}, fmt.Errorf("failed post processing for %s: %w", ad.EnrollOnBehalfOf.String(), err)
-	} else {
-		return &operation.Stats, operation.Done()
 	}
+
+	return enrollOnBehalfOfStats, nil
 }
 
-func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, operation post.StatTrackedOperation[post.EnsureRelationshipJob]) {
+func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChainedDomains, localGroupData *LocalGroupData, cache *ADCSCache, readerPool *ops.Operation[any], escSink *post.FilteredRelationshipSink) error {
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -149,7 +205,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostGoldenCert(ctx, tx, outC, certChains); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostGoldenCert(ctx, tx, escSink, certChains); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for GoldenCert missing property",
@@ -165,7 +221,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -176,7 +232,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC1(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC1(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC1 missing property",
@@ -192,7 +248,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -203,7 +259,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC3(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC3(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC3 missing property",
@@ -219,7 +275,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -230,7 +286,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC4(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC4(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC4 missing property",
@@ -246,7 +302,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -257,7 +313,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC6a(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC6a(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC6a missing property",
@@ -273,7 +329,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -284,7 +340,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC6b(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC6b(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC6b missing property",
@@ -300,7 +356,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -311,7 +367,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC9a(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC9a(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC9a missing property",
@@ -327,7 +383,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -338,7 +394,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC9b(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC9b(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC9b missing property",
@@ -354,7 +410,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -365,7 +421,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC10a(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC10a(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC10a missing property",
@@ -381,7 +437,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -392,7 +448,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC10b(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC10b(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC10b missing property",
@@ -408,7 +464,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 		return nil
 	})
 
-	operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+	readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 		defer measure.ContextMeasureWithThreshold(
 			ctx,
 			slog.LevelInfo,
@@ -419,7 +475,7 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
 		)()
 
-		if err := PostADCSESC13(ctx, tx, outC, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+		if err := PostADCSESC13(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
 			slog.WarnContext(
 				ctx,
 				"Post processing for ADCSESC13 missing property",
@@ -431,6 +487,33 @@ func processEnterpriseCAWithValidCertChainToDomain(certChains *EnterpriseCAChain
 				"Failed post processing for ADCSESC13",
 				attr.Error(err),
 			)
+		}
+		return nil
+	})
+	return readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
+		defer measure.ContextMeasureWithThreshold(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing ADCSESC16",
+			attr.Namespace("analysis"),
+			attr.Function("processEnterpriseCAWithValidCertChainToDomain"),
+			attr.Scope("routine"),
+			slog.Uint64("enterprise_ca_id", uint64(certChains.EnterpriseCA.ID)),
+		)()
+
+		if err := PostADCSESC16(ctx, tx, escSink, localGroupData, certChains, cache); errors.Is(err, graph.ErrPropertyNotFound) {
+			slog.WarnContext(
+				ctx,
+				"Post processing for ADCSESC16 missing property",
+				attr.Error(err),
+			)
+		} else if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Failed post processing for ADCSESC16",
+				attr.Error(err),
+			)
+			return err
 		}
 		return nil
 	})

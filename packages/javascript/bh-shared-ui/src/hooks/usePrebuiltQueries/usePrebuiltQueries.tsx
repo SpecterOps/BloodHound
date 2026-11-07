@@ -17,42 +17,52 @@ import { QueryScope, SavedQuery } from 'js-client-library';
 import { useMemo } from 'react';
 import { CommonSearches as prebuiltSearchListAGI } from '../../commonSearchesAGI';
 import { CommonSearches as prebuiltSearchListAGT } from '../../commonSearchesAGT';
+import { useExtensionsQuery } from '../../hooks/useExtensions';
 import { useFeatureFlag } from '../../hooks/useFeatureFlags';
 import { useSavedQueries } from '../../hooks/useSavedQueries';
-import { QueryLineItem } from '../../types';
+import { QueryLineItem, QueryListSection } from '../../types';
 import { useSelf } from '../useSelf';
 
 export const usePrebuiltQueries = () => {
     const { data: tierFlag } = useFeatureFlag('tier_management_engine');
     const { getSelfId } = useSelf();
     const { data: selfId } = getSelfId;
+    const { data: extensions } = useExtensionsQuery();
+    const userQueries = useSavedQueries(QueryScope.ALL);
 
-    const queryDataMapper = (data: SavedQuery[]) => {
-        return (
-            data?.map((query: SavedQuery) => ({
-                name: query.name,
-                description: query.description,
-                query: query.query,
-                canEdit: query.user_id === selfId,
-                id: query.id,
-                user_id: query.user_id,
-            })) || []
-        );
-    };
+    const savedQuerySections = useMemo<QueryListSection[]>(() => {
+        const queries = (userQueries.data || []).map((query: SavedQuery) => ({
+            name: query.name,
+            description: query.description,
+            query: query.query,
+            canEdit: query.extension_id == null && query.user_id === selfId,
+            id: query.id,
+            user_id: query.user_id,
+            category: query.category,
+            schema_extension_id: query.extension_id,
+        }));
+        const extensionsById = new Map(extensions?.map((extension) => [Number(extension.id), extension.name]));
+        const sections = new Map<string, QueryListSection>();
 
-    const userQueries = useSavedQueries(QueryScope.ALL, {
-        select: queryDataMapper,
-    });
+        for (const query of queries) {
+            const platform =
+                query.schema_extension_id == null
+                    ? 'Saved Queries'
+                    : extensionsById.get(query.schema_extension_id) || 'Extension';
+            const category = query.category?.trim() || 'Uncategorized';
+            const key = JSON.stringify([platform, category]);
+            if (!sections.has(key)) {
+                sections.set(key, { category: platform, subheader: category, queries: [] });
+            }
+            sections.get(key)?.queries.push(query);
+        }
 
-    const savedQueries = {
-        category: 'Saved Queries',
-        subheader: '',
-        queries: userQueries.data || [],
-    };
+        return [...sections.values()];
+    }, [userQueries.data, extensions, selfId]);
 
     const queryList = tierFlag?.enabled
-        ? [...prebuiltSearchListAGT, savedQueries]
-        : [...prebuiltSearchListAGI, savedQueries];
+        ? [...prebuiltSearchListAGT, ...savedQuerySections]
+        : [...prebuiltSearchListAGI, ...savedQuerySections];
 
     return queryList;
 };

@@ -19,6 +19,25 @@ import { EntityField } from '../../utils';
 import { Field, ObjectInfoFields, exclusionList } from './fragments';
 
 describe('Field', () => {
+    it.each([
+        { description: 'single-item', values: ['HOST/one'] },
+        { description: 'multiple-item', values: ['HOST/one', 'HOST/two'] },
+    ])('renders $description lists with one label and a title for each value', ({ values }) => {
+        render(<Field label='Service Principal Names:' value={values} />);
+
+        expect(screen.getAllByText(/^Service Principal Names:?$/)).toHaveLength(1);
+        values.forEach((value) => {
+            const element = screen.getByText(value);
+            expect(element).toHaveAttribute('title', value);
+        });
+    });
+
+    it('preserves rich labels', () => {
+        render(<Field label={<span>Rich label</span>} value='value' />);
+        expect(screen.getByText('Rich label')).toBeInTheDocument();
+        expect(screen.getByText('value')).toBeInTheDocument();
+    });
+
     it('should render a Field when the provided value is false', () => {
         render(<Field label='Test Field (Boolean)' value={false} keyprop='test-field-boolean' />);
         expect(screen.getByText('FALSE')).toBeInTheDocument();
@@ -35,14 +54,41 @@ describe('Field', () => {
         expect(screen.queryByText('-0')).not.toBeInTheDocument();
     });
 
-    it('should not render a Field when the provided value is ""', () => {
+    it('should render an accessible placeholder when the provided value is an empty string', () => {
         render(<Field label='Test Field (String)' value={''} keyprop='test-field-string' />);
-        expect(screen.queryByText('Test Field (String)')).not.toBeInTheDocument();
+        expect(screen.getByText('Test Field (String)')).toBeInTheDocument();
+        expect(screen.getByText('—')).toHaveAttribute('aria-hidden', 'true');
+        expect(screen.getByText('Empty string')).toBeInTheDocument();
     });
 
-    it('should not render a Field when the provided value is []', () => {
+    it('should render an accessible placeholder when the provided value is an empty array', () => {
         render(<Field label='Test Field (Array)' value={[]} keyprop='test-field-array' />);
-        expect(screen.queryByText('Test Field (Array)')).not.toBeInTheDocument();
+        expect(screen.getByText('Test Field (Array)')).toBeInTheDocument();
+        expect(screen.getByText('NONE')).toHaveAttribute('aria-hidden', 'true');
+        expect(screen.getByText('Empty array, zero values')).toBeInTheDocument();
+    });
+
+    it('should render accessible placeholders for empty values in a list', () => {
+        render(<Field label='Test Field (Array)' value={['value', '', null]} keyprop='test-field-array' />);
+        expect(screen.getByText('value')).not.toHaveAttribute('aria-hidden');
+        screen.getAllByText('—').forEach((placeholder) => {
+            expect(placeholder).toHaveAttribute('aria-hidden', 'true');
+        });
+        expect(screen.getByText('Empty string')).toBeInTheDocument();
+        expect(screen.getByText('Null value')).toBeInTheDocument();
+    });
+
+    it('should render an accessible placeholder when the provided value is null', () => {
+        render(<Field label='Test Field (Null)' value={null} keyprop='test-field-null' />);
+        expect(screen.getByText('Test Field (Null)')).toBeInTheDocument();
+        expect(screen.getByText('—')).toHaveAttribute('aria-hidden', 'true');
+        expect(screen.getByText('Null value')).toBeInTheDocument();
+    });
+
+    it('should render a real value matching an empty state placeholder as ordinary text', () => {
+        render(<Field label='Test Field (String)' value='NONE' keyprop='test-field-string' />);
+        expect(screen.getByText('NONE')).not.toHaveAttribute('aria-hidden');
+        expect(screen.queryByText('Empty array, zero values')).not.toBeInTheDocument();
     });
 });
 

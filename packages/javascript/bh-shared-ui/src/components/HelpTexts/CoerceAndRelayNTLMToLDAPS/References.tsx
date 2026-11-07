@@ -49,12 +49,8 @@ const References: FC = () => {
                 Windows Coerced Authentication Methods
             </Link>
             <br />
-            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/topotam/PetitPotam'>
-                PetitPotam
-            </Link>
-            <br />
-            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/leechristensen/SpoolSample'>
-                SpoolSample
+            <Link target='_blank' rel='noopener noreferrer' href='https://github.com/TheManticoreProject/coercer'>
+                Manticore Coercer
             </Link>
             <br />
             <Link
@@ -62,13 +58,6 @@ const References: FC = () => {
                 rel='noopener noreferrer'
                 href='https://www.guidepointsecurity.com/blog/beyond-the-basics-exploring-uncommon-ntlm-relay-attack-techniques/'>
                 Beyond the Basics: Exploring Uncommon NTLM Relay Attack Techniques
-            </Link>
-            <br />
-            <Link
-                target='_blank'
-                rel='noopener noreferrer'
-                href='https://github.com/dirkjanm/krbrelayx/blob/master/printerbug.py'>
-                printerbug.py
             </Link>
             <br />
             <Link

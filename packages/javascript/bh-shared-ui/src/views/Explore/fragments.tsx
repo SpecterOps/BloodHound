@@ -14,13 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, CircularProgress } from '@mui/material';
-import { Typography } from 'doodle-ui';
+import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
-import { EntityField, format } from '../../utils';
+import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
-import useCollapsibleSectionStyles from './InfoStyles/CollapsibleSection';
+
+const accordionCountClassName =
+    'flex h-[1.6rem] min-w-12 items-center justify-center rounded-lg bg-neutral-5 px-2 text-[0.9rem] font-bold leading-[1.6em]';
 
 export const exclusionList = [
     'gid',
@@ -36,6 +37,10 @@ export const exclusionList = [
     CommonKindProperties.DisplayName,
     AzureKindProperties.ServicePrincipalID,
     AzureKindProperties.FederatedIdentityCredentialAppID,
+    'serverreferencecomputer',
+    'serverreferencecomputername',
+    'siteservernode',
+    'siteservernodename',
     'highvalue',
     'reconcile',
     ActiveDirectoryKindProperties.InheritanceHashes,
@@ -78,34 +83,56 @@ export const SubHeader: React.FC<{ label: string; count?: number; isLoading?: bo
     isLoading = false,
     isError = false,
 }) => {
-    const styles = useCollapsibleSectionStyles();
     return (
-        <Box display='flex' justifyContent='space-between' alignItems='center' width='100%'>
-            <Typography variant='h6' className={styles.title}>
+        <div className='flex w-full items-center justify-between'>
+            <Typography variant='h6' className='ml-4 text-sm leading-[3em]'>
                 {label}
             </Typography>
             {isLoading ? (
-                <Box className={styles.accordionCount}>
-                    <CircularProgress size={20} />
-                </Box>
+                <div className={accordionCountClassName}>
+                    <span
+                        aria-label={`Loading ${label}`}
+                        className='size-5 animate-spin rounded-full border-2 border-neutral-4 border-t-primary'
+                        role='progressbar'
+                    />
+                </div>
             ) : isError ? (
                 <Alert
-                    severity='error'
-                    classes={{
-                        root: styles.alertRoot,
-                        icon: styles.alertIcon,
-                    }}
-                />
+                    className='h-[1.6rem] w-12 items-center justify-center p-0 [&>div:first-child]:m-0 [&>div:nth-child(2)]:sr-only'
+                    variant='error'>
+                    Error loading {label}
+                </Alert>
             ) : (
-                count !== undefined && <span className={styles.accordionCount}>{count.toLocaleString()}</span>
+                count !== undefined && <span className={accordionCountClassName}>{count.toLocaleString()}</span>
             )}
-        </Box>
+        </div>
     );
 };
 
-export const FieldsContainer: React.FC<PropsWithChildren> = ({ children }) => {
-    const styles = useCollapsibleSectionStyles();
-    return <Box className={styles.fieldsContainer}>{children}</Box>;
+export const FieldsContainer: React.FC<PropsWithChildren<{ className?: string }>> = ({ children, className }) => {
+    return (
+        <div
+            className={cn(
+                '[&>:nth-child(even)]:bg-[color:var(--data-table-row-even-fill)] [&>:nth-child(odd)]:bg-[color:var(--data-table-row-odd-fill)]',
+                className
+            )}>
+            {children}
+        </div>
+    );
+};
+
+const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | undefined => {
+    if (Array.isArray(value) && value.length === 0) {
+        return 'Empty array, zero values';
+    }
+
+    if (value === '') {
+        return 'Empty string';
+    }
+
+    if (value === null) {
+        return 'Null value';
+    }
 };
 
 export const Field: React.FC<EntityField> = (entityField) => {
@@ -114,48 +141,74 @@ export const Field: React.FC<EntityField> = (entityField) => {
     try {
         if (
             value === undefined ||
-            value === '' ||
-            (Array.isArray(value) && value.length === 0) ||
-            (typeof value === 'object' && Object.keys(value).length === 0)
+            (value !== null && !Array.isArray(value) && typeof value === 'object' && Object.keys(value).length === 0)
         )
             return null;
     } catch (e) {
         return null;
     }
 
+    const emptyValueAccessibleLabel = getEmptyValueAccessibleLabel(value);
     const formattedValue = format(entityField);
 
+    const formattedLabel = typeof label === 'string' ? label.replace(/:$/, '') : label;
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
         content = (
-            <Box display='flex' flexDirection='row' flexWrap='wrap' padding={1}>
-                <Box flexShrink={0} flexGrow={1} fontWeight='bold' mr={1}>
-                    {label}
-                </Box>
-                <Box overflow='hidden' textOverflow='ellipsis' title={formattedValue}>
-                    {formattedValue}
-                </Box>
-            </Box>
+            <div className='flex flex-wrap items-baseline justify-between p-2 text-left'>
+                <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                    {formattedLabel}
+                </Typography>
+                <Typography
+                    component='span'
+                    variant='body2'
+                    className='min-w-0 max-w-full break-words'
+                    title={formattedValue}>
+                    {emptyValueAccessibleLabel ? (
+                        <>
+                            <span aria-hidden='true'>{formattedValue}</span>
+                            <VisuallyHidden>{emptyValueAccessibleLabel}</VisuallyHidden>
+                        </>
+                    ) : (
+                        formattedValue
+                    )}
+                </Typography>
+            </div>
         );
     } else {
         content = formattedValue!.map((value: string, index: number) => {
+            const listItemEmptyValueAccessibleLabel =
+                Array.isArray(entityField.value) && entityField.value.length > 0
+                    ? getEmptyValueAccessibleLabel(entityField.value[index])
+                    : emptyValueAccessibleLabel;
+
             return (
-                <Box
-                    display='flex'
-                    flexDirection='row'
-                    flexWrap='wrap'
-                    padding={1}
-                    justifyContent='flex-end'
+                <div
+                    className='flex flex-wrap items-baseline justify-between p-2 text-left'
                     key={`${keyprop}-${index}`}>
-                    {index === 0 && (
-                        <Box flexShrink={0} flexGrow={1} fontWeight='bold' mr={1}>
-                            {label}
-                        </Box>
+                    {/* Only render the label for the first item, since it kicks the list */}
+                    {index === 0 ? (
+                        <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                            {formattedLabel}
+                        </Typography>
+                    ) : (
+                        <span aria-hidden='true' />
                     )}
-                    <Box overflow='hidden' textOverflow='ellipsis' title={value}>
-                        {value}
-                    </Box>
-                </Box>
+                    <Typography
+                        component='span'
+                        variant='body2'
+                        className='min-w-0 max-w-full break-words'
+                        title={value}>
+                        {listItemEmptyValueAccessibleLabel ? (
+                            <>
+                                <span aria-hidden='true'>{value}</span>
+                                <VisuallyHidden>{listItemEmptyValueAccessibleLabel}</VisuallyHidden>
+                            </>
+                        ) : (
+                            value
+                        )}
+                    </Typography>
+                </div>
             );
         });
     }

@@ -40,7 +40,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T
 	)
 
 	t.Run("Creates saved query permission to public", func(t *testing.T) {
-		query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query", "TESTING", "Example")
+		query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query", "TESTING", "Example", nil, nil, "")
 		require.NoError(t, err)
 
 		_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
@@ -48,15 +48,16 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T
 
 		scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user.ID)
 		require.NoError(t, err)
-		require.Equal(t, database.SavedQueryScopeMap{
-			model.SavedQueryScopePublic: true,
-			model.SavedQueryScopeOwned:  true,
-			model.SavedQueryScopeShared: false,
+		require.Equal(t, database.SavedQueryScopes{
+			Public:   true,
+			Owned:    true,
+			Shared:   false,
+			ReadOnly: false,
 		}, scope)
 	})
 
 	t.Run("Creates saved query permission to public while deleting previous user's shared query permission", func(t *testing.T) {
-		query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query2", "TESTING2", "Example2")
+		query, err := dbInst.CreateSavedQuery(testCtx, user.ID, "Test Query2", "TESTING2", "Example2", nil, nil, "")
 		require.NoError(t, err)
 
 		_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
@@ -64,10 +65,11 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T
 
 		scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 		require.NoError(t, err)
-		require.Equal(t, database.SavedQueryScopeMap{
-			model.SavedQueryScopePublic: false,
-			model.SavedQueryScopeOwned:  false,
-			model.SavedQueryScopeShared: true,
+		require.Equal(t, database.SavedQueryScopes{
+			Public:   false,
+			Owned:    false,
+			Shared:   true,
+			ReadOnly: false,
 		}, scope)
 
 		_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
@@ -75,10 +77,11 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionToPublic(t *testing.T
 
 		scope2, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 		require.NoError(t, err)
-		require.Equal(t, database.SavedQueryScopeMap{
-			model.SavedQueryScopePublic: true,
-			model.SavedQueryScopeOwned:  false,
-			model.SavedQueryScopeShared: false,
+		require.Equal(t, database.SavedQueryScopes{
+			Public:   true,
+			Owned:    false,
+			Shared:   false,
+			ReadOnly: false,
 		}, scope2)
 	})
 }
@@ -93,7 +96,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsToUsers(t *testing.T
 		user4   = createUser(t, dbInst, user4Principal)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", nil, nil, "")
 	require.NoError(t, err)
 
 	// Share with Users 2 and 3 and ensure its not shared with user 4
@@ -102,26 +105,29 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsToUsers(t *testing.T
 
 	scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 	require.NoError(t, err)
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: true,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    false,
+		Shared:   true,
+		ReadOnly: false,
 	}, scope)
 
 	scope2, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user3.ID)
 	require.NoError(t, err)
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: true,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    false,
+		Shared:   true,
+		ReadOnly: false,
 	}, scope2)
 
 	scope3, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user4.ID)
 	require.NoError(t, err)
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: false,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    false,
+		Shared:   false,
+		ReadOnly: false,
 	}, scope3)
 
 	// Share query with User 4, ensure user 2 and 3 no longer have access to query
@@ -130,26 +136,29 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsToUsers(t *testing.T
 
 	scope4, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user4.ID)
 	require.NoError(t, err)
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: true,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    false,
+		Shared:   true,
+		ReadOnly: false,
 	}, scope4)
 
 	scope5, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 	require.NoError(t, err)
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: false,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    false,
+		Shared:   false,
+		ReadOnly: false,
 	}, scope5)
 
 	scope6, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user3.ID)
 	require.NoError(t, err)
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: false,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    false,
+		Shared:   false,
+		ReadOnly: false,
 	}, scope6)
 }
 
@@ -163,7 +172,7 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsBatchBadDataError(t 
 
 	unknownUUID, _ := uuid.NewV4()
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", nil, nil, "")
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID, unknownUUID)
@@ -172,18 +181,20 @@ func TestSavedQueriesPermissions_CreateSavedQueryPermissionsBatchBadDataError(t 
 	// verify partial share doesn't happen
 	scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 	require.NoError(t, err)
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: false,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    false,
+		Shared:   false,
+		ReadOnly: false,
 	}, scope)
 
 	scope2, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, unknownUUID)
 	require.NoError(t, err)
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: false,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    false,
+		Shared:   false,
+		ReadOnly: false,
 	}, scope2)
 }
 
@@ -195,7 +206,7 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryPublic(t *testing.T) {
 		user2   = createUser(t, dbInst, user2Principal)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example", nil, nil, "")
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
@@ -204,10 +215,11 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryPublic(t *testing.T) {
 	scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user1.ID)
 	require.NoError(t, err)
 
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: true,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: false,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   true,
+		Owned:    false,
+		Shared:   false,
+		ReadOnly: false,
 	}, scope)
 }
 
@@ -219,7 +231,7 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryShared(t *testing.T) {
 		user2   = createUser(t, dbInst, user2Principal)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user2.ID, "Test Query", "TESTING", "Example", nil, nil, "")
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user1.ID)
@@ -228,10 +240,11 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryShared(t *testing.T) {
 	scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user1.ID)
 	require.NoError(t, err)
 
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  false,
-		model.SavedQueryScopeShared: true,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    false,
+		Shared:   true,
+		ReadOnly: false,
 	}, scope)
 }
 
@@ -243,7 +256,7 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryOwned(t *testing.T) {
 		user2   = createUser(t, dbInst, user2Principal)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", nil, nil, "")
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
@@ -252,10 +265,38 @@ func TestSavedQueriesPermissions_GetScopeForSavedQueryOwned(t *testing.T) {
 	scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user1.ID)
 	require.NoError(t, err)
 
-	require.Equal(t, database.SavedQueryScopeMap{
-		model.SavedQueryScopePublic: false,
-		model.SavedQueryScopeOwned:  true,
-		model.SavedQueryScopeShared: false,
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   false,
+		Owned:    true,
+		Shared:   false,
+		ReadOnly: false,
+	}, scope)
+}
+
+func TestSavedQueriesPermissions_GetScopeForSavedQueryReadOnly(t *testing.T) {
+	var (
+		testCtx = context.Background()
+		dbInst  = integration.SetupDB(t)
+		user1   = createUser(t, dbInst, userPrincipal)
+	)
+
+	schema, err := dbInst.CreateGraphSchemaExtension(testCtx, "test schema", "test schema", "v1.0.0", "savedquerytest")
+	require.NoError(t, err)
+	queryKey := "key"
+	query, err := dbInst.CreateSavedQuery(testCtx, uuid.Nil, "Test Query", "TESTING", "Example", &schema.ID, &queryKey, "")
+	require.NoError(t, err)
+
+	_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
+	require.NoError(t, err)
+
+	scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user1.ID)
+	require.NoError(t, err)
+
+	require.Equal(t, database.SavedQueryScopes{
+		Public:   true,
+		Owned:    false,
+		Shared:   false,
+		ReadOnly: true,
 	}, scope)
 }
 
@@ -269,7 +310,7 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 	)
 
 	t.Run("Deletes saved query permissions for user(s)", func(t *testing.T) {
-		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", nil, nil, "")
 		require.NoError(t, err)
 
 		_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID, user3.ID)
@@ -277,18 +318,20 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 
 		scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 		require.NoError(t, err)
-		require.Equal(t, database.SavedQueryScopeMap{
-			model.SavedQueryScopePublic: false,
-			model.SavedQueryScopeOwned:  false,
-			model.SavedQueryScopeShared: true,
+		require.Equal(t, database.SavedQueryScopes{
+			Public:   false,
+			Owned:    false,
+			Shared:   true,
+			ReadOnly: false,
 		}, scope)
 
 		scope2, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user3.ID)
 		require.NoError(t, err)
-		require.Equal(t, database.SavedQueryScopeMap{
-			model.SavedQueryScopePublic: false,
-			model.SavedQueryScopeOwned:  false,
-			model.SavedQueryScopeShared: true,
+		require.Equal(t, database.SavedQueryScopes{
+			Public:   false,
+			Owned:    false,
+			Shared:   true,
+			ReadOnly: false,
 		}, scope2)
 
 		err = dbInst.DeleteSavedQueryPermissionsForUsers(testCtx, query.ID, user2.ID)
@@ -296,23 +339,25 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 
 		scope3, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 		require.NoError(t, err)
-		require.Equal(t, database.SavedQueryScopeMap{
-			model.SavedQueryScopePublic: false,
-			model.SavedQueryScopeOwned:  false,
-			model.SavedQueryScopeShared: false,
+		require.Equal(t, database.SavedQueryScopes{
+			Public:   false,
+			Owned:    false,
+			Shared:   false,
+			ReadOnly: false,
 		}, scope3)
 
 		scope4, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user3.ID)
 		require.NoError(t, err)
-		require.Equal(t, database.SavedQueryScopeMap{
-			model.SavedQueryScopePublic: false,
-			model.SavedQueryScopeOwned:  false,
-			model.SavedQueryScopeShared: true,
+		require.Equal(t, database.SavedQueryScopes{
+			Public:   false,
+			Owned:    false,
+			Shared:   true,
+			ReadOnly: false,
 		}, scope4)
 	})
 
 	t.Run("Deletes saved query permissions given no provided users", func(t *testing.T) {
-		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query2", "TESTING2", "Example2")
+		query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query2", "TESTING2", "Example2", nil, nil, "")
 		require.NoError(t, err)
 
 		_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
@@ -320,10 +365,11 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 
 		scope, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 		require.NoError(t, err)
-		require.Equal(t, database.SavedQueryScopeMap{
-			model.SavedQueryScopePublic: false,
-			model.SavedQueryScopeOwned:  false,
-			model.SavedQueryScopeShared: true,
+		require.Equal(t, database.SavedQueryScopes{
+			Public:   false,
+			Owned:    false,
+			Shared:   true,
+			ReadOnly: false,
 		}, scope)
 
 		err = dbInst.DeleteSavedQueryPermissionsForUsers(testCtx, query.ID)
@@ -331,10 +377,11 @@ func TestSavedQueriesPermissions_DeleteSavedQueryPermissionsForUsers(t *testing.
 
 		scope2, err := dbInst.GetScopeForSavedQuery(testCtx, query.ID, user2.ID)
 		require.NoError(t, err)
-		require.Equal(t, database.SavedQueryScopeMap{
-			model.SavedQueryScopePublic: false,
-			model.SavedQueryScopeOwned:  false,
-			model.SavedQueryScopeShared: false,
+		require.Equal(t, database.SavedQueryScopes{
+			Public:   false,
+			Owned:    false,
+			Shared:   false,
+			ReadOnly: false,
 		}, scope2)
 	})
 }
@@ -345,7 +392,7 @@ func TestSavedQueriesPermissions_IsSavedQueryPublic(t *testing.T) {
 		dbInst, user1 = initAndCreateUser(t)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", nil, nil, "")
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionToPublic(testCtx, query.ID)
@@ -362,7 +409,7 @@ func TestSavedQueriesPermissions_IsSavedQuerySharedToUser(t *testing.T) {
 		dbInst, user1 = initAndCreateUser(t)
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Example", nil, nil, "")
 	require.NoError(t, err)
 
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user1.ID)
@@ -391,7 +438,7 @@ func TestSavedQueriesPermissions_GetSavedQueryPermissions(t *testing.T) {
 		}}
 	)
 
-	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Test Description")
+	query, err := dbInst.CreateSavedQuery(testCtx, user1.ID, "Test Query", "TESTING", "Test Description", nil, nil, "")
 	require.NoError(t, err)
 	_, err = dbInst.CreateSavedQueryPermissionsToUsers(testCtx, query.ID, user2.ID)
 	require.NoError(t, err)

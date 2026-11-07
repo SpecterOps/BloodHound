@@ -18,7 +18,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
 
-const LabelVariants = cva('leading-none peer-disabled:cursor-not-allowed peer-disabled:text-text-disabled', {
+const LabelVariants = cva('leading-none peer-disabled:cursor-not-allowed peer-disabled:text-disabled', {
     variants: {
         size: {
             small: 'text-sm font-medium',

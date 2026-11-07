@@ -41,6 +41,11 @@ func Test_PrimaryNodeKind(t *testing.T) {
 		require.Equal(t, ad.Computer, primaryKind)
 	})
 
+	t.Run("detects zone kind", func(t *testing.T) {
+		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{Zone})
+		require.Equal(t, Zone, primaryKind)
+	})
+
 	t.Run("falls back to base kind if no valid kinds", func(t *testing.T) {
 		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{ad.Entity, graph.StringKind("Villain")})
 		require.Equal(t, ad.Entity, primaryKind)

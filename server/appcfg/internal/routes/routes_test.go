@@ -33,20 +33,27 @@ import (
 
 func TestRegister(t *testing.T) {
 	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-		mock       = mocks.NewMockService(t)
-		handlerSet = handlers.NewHandlers(mock)
+		cfg          = config.Configuration{}
+		authorizer   = auth.NewAuthorizer(nil)
+		routerInst   = router.NewRouter(cfg, authorizer, "")
+		mockService  = mocks.NewMockService(t)
+		mockFFReader = mocks.NewMockFeatureFlagReader(t)
+		handlerSet   = handlers.NewHandlers(mockService, mockFFReader, nil, nil)
 	)
 
 	routes.Register(&routerInst, handlerSet)
 
 	muxRouter := routerInst.MuxRouter()
+	var match mux.RouteMatch
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v2/datapipe/status", nil)
-	var match mux.RouteMatch
 	assert.True(t, muxRouter.Match(req, &match), "GET /api/v2/datapipe/status route should be registered")
+
+	req = httptest.NewRequest(http.MethodGet, "/api/v2/config", nil)
+	assert.True(t, muxRouter.Match(req, &match), "GET /api/v2/config route should be registered")
+
+	req = httptest.NewRequest(http.MethodPut, "/api/v2/config", nil)
+	assert.True(t, muxRouter.Match(req, &match), "PUT /api/v2/config route should be registered")
 }
 
 // TestRegister_RoutesRequireAuthentication dispatches real requests through the wired
@@ -55,23 +62,33 @@ func TestRegister(t *testing.T) {
 // wireup ever loses RequireAuth, this test will fail.
 func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 	var (
-		cfg        = config.Configuration{}
-		authorizer = auth.NewAuthorizer(nil)
-		routerInst = router.NewRouter(cfg, authorizer, "")
-		mock       = mocks.NewMockService(t)
-		handlerSet = handlers.NewHandlers(mock)
+		cfg          = config.Configuration{}
+		authorizer   = auth.NewAuthorizer(nil)
+		routerInst   = router.NewRouter(cfg, authorizer, "")
+		mockService  = mocks.NewMockService(t)
+		mockFFReader = mocks.NewMockFeatureFlagReader(t)
+		handlerSet   = handlers.NewHandlers(mockService, mockFFReader, nil, nil)
 	)
 
 	routes.Register(&routerInst, handlerSet)
 	handler := routerInst.Handler()
 
-	var (
-		request  = httptest.NewRequest(http.MethodGet, "/api/v2/datapipe/status", nil)
-		recorder = httptest.NewRecorder()
-	)
+	cases := []struct {
+		method string
+		path   string
+	}{
+		{method: http.MethodGet, path: "/api/v2/datapipe/status"},
+		{method: http.MethodGet, path: "/api/v2/config"},
+		{method: http.MethodPut, path: "/api/v2/config"},
+	}
 
-	handler.ServeHTTP(recorder, request)
-
-	assert.Equal(t, http.StatusUnauthorized, recorder.Code,
-		"unauthenticated GET /api/v2/datapipe/status must be rejected by middleware before reaching the handler")
+	for _, cc := range cases {
+		var (
+			request  = httptest.NewRequest(cc.method, cc.path, nil)
+			recorder = httptest.NewRecorder()
+		)
+		handler.ServeHTTP(recorder, request)
+		assert.Equal(t, http.StatusUnauthorized, recorder.Code,
+			"unauthenticated %s %s must be rejected by middleware before reaching the handler", cc.method, cc.path)
+	}
 }

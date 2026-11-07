@@ -25,6 +25,7 @@ cmd/api/src/cmd/bhapi/bhapi
 # ui builds
 **/build/*
 **/dist/*
+**/storybook-static/*
 
 # tmp directories
 work
@@ -37,6 +38,9 @@ integration-config-local.json
 # coverage files
 coverage/
 coverage.*
+
+# DORA metrics generated files
+.dora/trends/
 
 # Log files
 logs
@@ -77,9 +81,6 @@ cmd/api/src/api/static/assets/*
 .DS_Store
 .AppleDouble
 .LSOverride
-
-# Icon must end with two \r
-Icon
 
 # Thumbnails
 ._*
@@ -470,4 +471,11 @@ go-test-results.json
 # Playwright generated
 cmd/ui/playwright
 
+#########
+# DORA Metrics
+#################
+# Local configuration overrides (may contain sensitive data)
+.dora.local.yaml
+# DORA data directory (contains SQLite DB and authentication tokens)
+.dora/
 .claude/

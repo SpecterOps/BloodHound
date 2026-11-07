@@ -26,7 +26,9 @@ const FileDrop: React.FC<{
     multiple?: boolean;
     icon?: IconDefinition;
     className?: string;
-}> = ({ onDrop, disabled, accept, multiple = true, icon = faInbox, className }) => {
+    uploadLabel?: string;
+    uploadInstructions?: string;
+}> = ({ onDrop, disabled, accept, multiple = true, icon = faInbox, className, uploadLabel, uploadInstructions }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragActive, setDragActive] = useState(false);
     const [isHoverActive, setHoverActive] = useState(false);
@@ -59,20 +61,12 @@ const FileDrop: React.FC<{
     const handleMouseLeave = () => setHoverActive(false);
 
     const formatAcceptList = () => (accept && accept.length ? accept.join(',') : undefined);
-    const uploadLabel = multiple
+    const defaultUploadLabel = multiple
         ? 'Choose JSON or zip/compressed JSON files to upload'
         : 'Choose a JSON file to upload';
 
     return (
-        <div
-            className={cn(
-                'cursor-pointer h-80 rounded font-bold text-center border-2 border-contrast px-32 py-4 relative flex flex-col items-center justify-center bg-neutral-2',
-                {
-                    'cursor-default opacity-50': disabled,
-                    'bg-neutral-3': isHoverActive || isDragActive || disabled,
-                },
-                className
-            )}>
+        <>
             <input
                 data-testid='ingest-file-upload'
                 disabled={disabled}
@@ -83,25 +77,34 @@ const FileDrop: React.FC<{
                 hidden
                 accept={formatAcceptList()}
             />
-            <FontAwesomeIcon icon={isDragActive ? faArrowDown : icon} size='3x' />
-            <p className='pt-2'>
-                {multiple
-                    ? 'Click here or drag and drop to upload JSON or zip/compressed JSON files'
-                    : 'Click here or drag and drop to upload a JSON file'}
-            </p>
             <button
                 type='button'
-                aria-label={uploadLabel}
+                aria-label={uploadLabel ?? defaultUploadLabel}
                 disabled={disabled}
-                className='absolute inset-0 size-full rounded focus-visible:focus-ring'
+                className={cn(
+                    'cursor-pointer h-80 rounded font-bold text-center border-2 border-contrast px-32 py-4 flex flex-col items-center justify-center bg-neutral-2 focus-visible:focus-ring',
+                    {
+                        'cursor-default opacity-50': disabled,
+                        'bg-neutral-3': isHoverActive || isDragActive || disabled,
+                    },
+                    className
+                )}
                 onClick={handleClick}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDragOver={handleDragOver}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                onDrop={handleDrop}></button>
-        </div>
+                onDrop={handleDrop}>
+                <FontAwesomeIcon className='pointer-events-none' icon={isDragActive ? faArrowDown : icon} size='3x' />
+                <span className='pt-2 pointer-events-none'>
+                    {uploadInstructions ??
+                        (multiple
+                            ? 'Click here or drag and drop to upload JSON or zip/compressed JSON files'
+                            : 'Click here or drag and drop to upload a JSON file')}
+                </span>
+            </button>
+        </>
     );
 };
 

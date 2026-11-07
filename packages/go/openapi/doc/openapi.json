@@ -1035,7 +1035,7 @@
           {
             "name": "sort_by",
             "in": "query",
-            "description": "Sortable columns are `authority`, `name`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "description": "Sortable columns are `authority`, `name`, `id`, `created_at`, `updated_at`.",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
             }
@@ -1066,9 +1066,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
@@ -1193,7 +1190,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `name`, `description`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "description": "Sortable columns are `name`, `description`, `id`, `created_at`, `updated_at`.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -1218,9 +1215,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
@@ -1576,7 +1570,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are first_name, last_name, email_address, principal_name, last_login, created_at, updated_at, deleted_at.",
+            "description": "Sortable columns are first_name, last_name, email_address, principal_name, last_login, created_at, updated_at.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -1629,9 +1623,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
@@ -3652,7 +3643,7 @@
           },
           {
             "name": "after",
-            "description": "Return logs created after the specified time. Value should be in the RFC-3339 format. If not supplied, this will default to 1 year before the current time.",
+            "description": "Return logs created after the specified time. Value should be in the RFC-3339 format. If not supplied, this will default to 1 year before the current time. Must not be later than `before`.",
             "in": "query",
             "schema": {
               "type": "string",
@@ -7736,6 +7727,9 @@
           "403": {
             "$ref": "#/components/responses/forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
           },
@@ -7816,6 +7810,9 @@
           "403": {
             "$ref": "#/components/responses/forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
           },
@@ -7827,7 +7824,7 @@
     },
     "/api/v2/extensions": {
       "put": {
-        "description": "**Experimental** - Upserts the OpenGraph extension",
+        "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP bundle must contain `schema.json`, without embedded optional components, and may contain `pz_rules.json` and `saved_queries.json`. Recognized components may be at the ZIP root or one folder deep. For ZIP bundles, findings require `pz_rules.json` with at least one rule. Duplicate components and unexpected files are rejected.\n\nThe root `__MACOSX` entry and everything under `__MACOSX/`, along with hidden files at the ZIP root, are ignored. Top-level directory entries are ignored; deeper directory entries and files more than one folder deep are rejected. All other files remain subject to normal component validation.\n\nEach recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.\n",
         "tags": [
           "OpenGraph (Experimental)",
           "Community",
@@ -7836,6 +7833,7 @@
         "operationId": "UpsertOpenGraphExtension",
         "summary": "Upserts the OpenGraph Extension",
         "requestBody": {
+          "description": "An OpenGraph extension JSON payload or ZIP bundle.",
           "required": true,
           "content": {
             "application/json": {
@@ -7931,6 +7929,15 @@
                           "short_remediation": "Do X",
                           "long_remediation": "Do X to fix Finding 1"
                         }
+                      }
+                    ],
+                    "queries": [
+                      {
+                        "query_key": "all-node-kind-1",
+                        "name": "All Node Kind 1",
+                        "query": "MATCH (n:OGE_Node_Kind_1) RETURN n",
+                        "description": "Lists all OGE_Node_Kind_1 nodes.",
+                        "category": "Asset Management"
                       }
                     ]
                   }
@@ -8052,6 +8059,12 @@
                   }
                 }
               }
+            },
+            "application/zip": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
             }
           }
         },
@@ -8073,6 +8086,9 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "415": {
+            "$ref": "#/components/responses/unsupported-media-type"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -8440,7 +8456,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are user_id, name, query, id, created_at, updated_at, deleted_at.",
+            "description": "Sortable columns are user_id, name, query, id, extension_id, category, created_at, updated_at, deleted_at.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -8462,6 +8478,20 @@
           },
           {
             "name": "user_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "extension_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "category",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
@@ -8503,6 +8533,7 @@
                                 "type": "object",
                                 "properties": {
                                   "scope": {
+                                    "description": "`public` for public queries, `owned` for queries created by this user, `shared` for queries shared to this user by another user, `extension` for opengraph extension queries\n",
                                     "type": "string"
                                   }
                                 }
@@ -8667,7 +8698,7 @@
       "delete": {
         "operationId": "DeleteSavedQuery",
         "summary": "Delete a saved query",
-        "description": "Delete an existing saved query by ID",
+        "description": "Delete an existing saved query by ID. Note that only queries owned by the requesting user and public queries if requested by an admin can be deleted. Queries associated with an extension cannot be deleted.\n",
         "tags": [
           "Cypher",
           "Community",
@@ -8712,7 +8743,7 @@
       "put": {
         "operationId": "UpdateSavedQuery",
         "summary": "Update a saved query",
-        "description": "Update an existing saved query by ID",
+        "description": "Update an existing saved query by ID. Note that only queries owned by the requesting user and public queries if requested by an admin can be updated. Queries associated with an extension cannot be updated.\n",
         "tags": [
           "Cypher",
           "Community",
@@ -11701,6 +11732,60 @@
         }
       }
     },
+    "/api/v2/gpos/{object_id}/sites": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetGpoEntitySites",
+        "summary": "Get GPO entity sites",
+        "description": "Get a list, graph, or count of the sites affected by this GPO.",
+        "tags": [
+          "GPOs",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/gpos/{object_id}/tier-zero": {
       "parameters": [
         {
@@ -12636,6 +12721,366 @@
           },
           "403": {
             "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntity",
+        "summary": "Get Site entity info",
+        "description": "Get info and counts for this Site node.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/controllers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntityControllers",
+        "summary": "Get Site entity controllers",
+        "description": "Get a list, graph, or count of the principals that can control this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/linked-gpos": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntityLinkedGpos",
+        "summary": "Get Site entity linked GPOs",
+        "description": "Get a list, graph, or count of the GPOs linked to this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/siteservers": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntitySiteServers",
+        "summary": "Get Site entity site servers",
+        "description": "Get a list, graph, or count of the site servers linked to this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sites/{object_id}/sitesubnets": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteEntitySiteSubnets",
+        "summary": "Get Site entity site subnets",
+        "description": "Get a list, graph, or count of the site subnets linked to this Site.",
+        "tags": [
+          "Sites",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.entity.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.limit"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.type"
+          },
+          {
+            "$ref": "#/components/parameters/query.entity.sort-by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/related-entity-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/siteservers/{object_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteServerEntity",
+        "summary": "Get Site Server entity info",
+        "description": "Get info and counts for this Site Server node.",
+        "tags": [
+          "Site Servers",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/sitesubnets/{object_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.object-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetSiteSubnetEntity",
+        "summary": "Get Site Subnet entity info",
+        "description": "Get info and counts for this Site Subnet node.",
+        "tags": [
+          "Site Subnets",
+          "Community",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.hydrate-counts"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/entity-info-query-results"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -15375,6 +15820,10 @@
                     "items": {
                       "$ref": "#/components/schemas/model.client-schedule"
                     }
+                  },
+                  "provided_identifier": {
+                    "type": "string",
+                    "description": "Optional identifier used to associate an external identity-provider token with this client."
                   }
                 }
               }
@@ -15630,6 +16079,10 @@
                   },
                   "domain_controller": {
                     "type": "string"
+                  },
+                  "provided_identifier": {
+                    "type": "string",
+                    "description": "Optional identifier used to associate an external identity-provider token with this client."
                   }
                 }
               }
@@ -16937,6 +17390,2254 @@
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "post": {
+        "operationId": "CreateCollectorJob",
+        "summary": "Enqueue a collector job",
+        "description": "Enqueues immediately due work from either an existing profile or schema-validated inline parameters.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "job_profile_id"
+                    ],
+                    "properties": {
+                      "job_profile_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "priority": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "job_type_id",
+                      "params"
+                    ],
+                    "properties": {
+                      "job_type_id": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "params": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "secret_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                      },
+                      "scope_client_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                      },
+                      "priority": {
+                        "type": "integer",
+                        "format": "int32",
+                        "default": 0
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "job"
+                      ],
+                      "properties": {
+                        "job": {
+                          "$ref": "#/components/schemas/model.collector-job"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "**Bad Request**\nThis could be due to one of the following reasons:\n- JSON payload is missing or malformed\n- The data sent is not valid (ex- sending a `string` in an `integer` field)\n- The request body references a profile, job type, secret or client that doesn't exist\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "A job for the supplied `job_profile_id` already exists in the collector job queue. Applies only to profile-based requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/available": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListAvailableCollectorJobs",
+        "summary": "List collector jobs available to the authenticated collector",
+        "description": "Returns due jobs eligible for the caller, ordered by priority ascending and creation time ascending.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `priority`, `created_at`, `run_at`. Default is `priority`, then `created_at` (both ascending).",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "job_type_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer-strict"
+            }
+          },
+          {
+            "name": "job_key",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "run_at",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "scope_client_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "required": [
+                            "jobs"
+                          ],
+                          "properties": {
+                            "jobs": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.collector-job"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/current": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetCurrentCollectorJob",
+        "summary": "Get the authenticated collector's current job",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "job"
+                      ],
+                      "properties": {
+                        "job": {
+                          "$ref": "#/components/schemas/model.collector-job"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/{collector_job_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "delete": {
+        "operationId": "CancelCollectorJob",
+        "summary": "Cancel a live collector job",
+        "description": "Atomically records a cancelled history outcome and deletes the queue entry from any non-terminal state.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/{collector_job_id}/claim": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "post": {
+        "operationId": "ClaimCollectorJob",
+        "summary": "Claim a collector job",
+        "description": "Atomically claims an eligible ready job. Re-claim by the current holder is idempotent.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "job"
+                      ],
+                      "properties": {
+                        "job": {
+                          "$ref": "#/components/schemas/model.collector-job"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "The job was claimed by another collector, or the caller already holds another active job.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/{collector_job_id}/start": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "post": {
+        "operationId": "StartCollectorJob",
+        "summary": "Start a claimed collector job",
+        "description": "Moves a claimed job to running and renews `claim_expires_at`. Duplicate starts are idempotent.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "The job is not in a startable state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/{collector_job_id}/heartbeat": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "post": {
+        "operationId": "HeartbeatCollectorJob",
+        "summary": "Renew a collector job claim",
+        "description": "Renews `claim_expires_at` for the current holder. A missing, inactive, or no-longer-owned job returns 404 so the collector aborts local work.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/{collector_job_id}/ingest": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "post": {
+        "operationId": "IngestCollectorJobData",
+        "summary": "Ingest data collected by a running job",
+        "description": "Streams a collected data file for ingestion and renews the job claim. Ingest requests must complete before the job is ended.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "The job is not running.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-queue/{collector_job_id}/end": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "post": {
+        "operationId": "EndCollectorJob",
+        "summary": "End a collector job",
+        "description": "Succeeded, partially-succeeded, and failed outcomes create immutable history; requeue returns the job to ready with backoff and consumes an attempt.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "outcome"
+                ],
+                "properties": {
+                  "outcome": {
+                    "type": "string",
+                    "enum": [
+                      "succeeded",
+                      "partially-succeeded",
+                      "failed",
+                      "cancelled",
+                      "requeue"
+                    ]
+                  },
+                  "failure_message": {
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Persisted as `outcome_metadata` for terminal outcomes."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-types": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListCollectorJobTypes",
+        "summary": "List collector job types",
+        "description": "Returns the read-only registry of collector job wire contracts and execution policies.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "is_builtin",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          },
+          {
+            "name": "schema_extension_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer-strict"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.deleted-at"
+          },
+          {
+            "name": "deleted_by",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "required": [
+                            "types"
+                          ],
+                          "properties": {
+                            "types": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.collector-job-type"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-types/{collector_job_type_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "collector_job_type_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCollectorJobType",
+        "summary": "Get a collector job type",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "$ref": "#/components/schemas/model.collector-job-type"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-profiles": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListCollectorJobProfiles",
+        "summary": "List collector job profiles",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `name`, `created_at`. Default is `created_at` ascending.",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "job_type_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer-strict"
+            }
+          },
+          {
+            "name": "scope_client_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "required": [
+                            "profiles"
+                          ],
+                          "properties": {
+                            "profiles": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.collector-job-profile"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "CreateCollectorJobProfile",
+        "summary": "Create a collector job profile",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "job_type_id",
+                  "params"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "job_type_id": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "scope_client_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "secret_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "schedule_ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "profile"
+                      ],
+                      "properties": {
+                        "profile": {
+                          "$ref": "#/components/schemas/model.collector-job-profile"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "**Conflict**\nThe supplied `name` collides with an existing collector job profile\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-05-21T19:27:43.866Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "collector job profile name already exists"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-profiles/{collector_job_profile_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "collector_job_profile_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCollectorJobProfile",
+        "summary": "Get a collector job profile",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "profile"
+                      ],
+                      "properties": {
+                        "profile": {
+                          "$ref": "#/components/schemas/model.collector-job-profile"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "UpdateCollectorJobProfile",
+        "summary": "Update a collector job profile",
+        "description": "Partially updates a profile. `job_type_id` is immutable; `schedule_ids`, when present, atomically replaces all schedule links.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "scope_client_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "secret_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "schedule_ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "profile"
+                      ],
+                      "properties": {
+                        "profile": {
+                          "$ref": "#/components/schemas/model.collector-job-profile"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "**Conflict**\nThe supplied `name` collides with an existing collector job profile\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-05-21T19:27:43.866Z",
+                  "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "collector job profile name already exists"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteCollectorJobProfile",
+        "summary": "Delete a collector job profile",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-schedules": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListCollectorJobSchedules",
+        "summary": "List collector job schedules",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `name`, `next_run_at`, `created_at`. Default is `created_at` ascending.",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "disabled",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
+            }
+          },
+          {
+            "name": "next_run_at",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          },
+          {
+            "$ref": "#/components/parameters/query.updated-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "required": [
+                            "schedules"
+                          ],
+                          "properties": {
+                            "schedules": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.collector-job-schedule"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "CreateCollectorJobSchedule",
+        "summary": "Create a collector job schedule",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "rrule"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "rrule": {
+                    "type": "string",
+                    "description": "RFC 5545 recurrence rule."
+                  },
+                  "priority": {
+                    "type": "integer",
+                    "format": "int32",
+                    "default": 1
+                  },
+                  "disabled": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "profile_ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "schedule"
+                      ],
+                      "properties": {
+                        "schedule": {
+                          "$ref": "#/components/schemas/model.collector-job-schedule"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-09-25T19:27:45.865Z",
+                  "request_id": "5fa85f64-5717-4562-b3fc-2c963f66afa7",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "A collector job schedule with the given name already exists"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-schedules/{collector_job_schedule_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "collector_job_schedule_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCollectorJobSchedule",
+        "summary": "Get a collector job schedule",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "schedule"
+                      ],
+                      "properties": {
+                        "schedule": {
+                          "$ref": "#/components/schemas/model.collector-job-schedule"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "UpdateCollectorJobSchedule",
+        "summary": "Update a collector job schedule",
+        "description": "Partially updates a schedule. `profile_ids`, when present, atomically replaces all profile links; enabling recomputes the next future run.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "rrule": {
+                    "type": "string"
+                  },
+                  "priority": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "disabled": {
+                    "type": "boolean"
+                  },
+                  "profile_ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "schedule"
+                      ],
+                      "properties": {
+                        "schedule": {
+                          "$ref": "#/components/schemas/model.collector-job-schedule"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                },
+                "example": {
+                  "http_status": 409,
+                  "timestamp": "2026-09-25T19:27:45.865Z",
+                  "request_id": "5fa85f64-5717-4562-b3fc-2c963f66afa7",
+                  "errors": [
+                    {
+                      "context": "",
+                      "message": "A collector job schedule with the given name already exists"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteCollectorJobSchedule",
+        "summary": "Delete a collector job schedule",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-secrets": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListCollectorJobSecrets",
+        "summary": "List collector job secret references",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          },
+          {
+            "name": "external_key_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/query.created-at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "required": [
+                            "secrets"
+                          ],
+                          "properties": {
+                            "secrets": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.collector-job-secret"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "CreateCollectorJobSecret",
+        "summary": "Create a collector job secret reference",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "external_key_id",
+                  "name",
+                  "value"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "auth_key"
+                    ]
+                  },
+                  "external_key_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "value": {
+                    "type": "string",
+                    "minLength": 1,
+                    "writeOnly": true,
+                    "description": "Secret material stored in the external secret manager and never returned by this API."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "secret"
+                      ],
+                      "properties": {
+                        "secret": {
+                          "$ref": "#/components/schemas/model.collector-job-secret"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "409": {
+            "description": "**Conflict**\nThe supplied `name` collides with an existing collector job secret\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-secrets/{collector_job_secret_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "collector_job_secret_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetCollectorJobSecret",
+        "summary": "Get a collector job secret reference",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "secret"
+                      ],
+                      "properties": {
+                        "secret": {
+                          "$ref": "#/components/schemas/model.collector-job-secret"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteCollectorJobSecret",
+        "summary": "Delete a collector job secret reference",
+        "description": "Detaches referencing profiles while in-flight jobs retain their snapshotted key reference.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/no-content"
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-history": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "ListCollectorJobHistoryRecords",
+        "summary": "List collector job history",
+        "description": "Returns immutable terminal collector job records. Filter `outcome=failed` to triage dead-lettered jobs.",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query.skip"
+          },
+          {
+            "$ref": "#/components/parameters/query.limit"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "description": "Sortable columns are `recorded_at`, `job_created_at`,`last_claimed_at`. Default is `-recorded_at` (most recent first).",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.query.sort-by"
+            }
+          },
+          {
+            "name": "job_schedule_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
+            }
+          },
+          {
+            "name": "job_profile_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid"
+            }
+          },
+          {
+            "name": "job_type_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer-strict"
+            }
+          },
+          {
+            "name": "job_key",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          },
+          {
+            "name": "outcome",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.integer"
+            }
+          },
+          {
+            "name": "last_claimed_by",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.string-strict"
+            }
+          },
+          {
+            "name": "recorded_at",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          },
+          {
+            "name": "job_created_at",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/api.response.pagination"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "required": [
+                            "records"
+                          ],
+                          "properties": {
+                            "records": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/model.collector-job-history"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/collie-job-history/{collector_job_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "$ref": "#/components/parameters/path.collector-job-id"
+        }
+      ],
+      "get": {
+        "operationId": "GetCollectorJobHistoryRecord",
+        "summary": "Get a collector job history record",
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "record"
+                      ],
+                      "properties": {
+                        "record": {
+                          "$ref": "#/components/schemas/model.collector-job-history"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
           },
           "401": {
             "$ref": "#/components/responses/unauthorized"
@@ -19341,7 +22042,7 @@
       "get": {
         "operationId": "ListAttackPathFindingTypes",
         "summary": "List attack path finding types",
-        "description": "Returns distinct attack path finding types available to the caller.\nResults are always returned in ascending order by `title`.\n",
+        "description": "Returns distinct attack path finding types available to the caller.\nFinding types are included even when all of their findings are archived\n(remediated, deprecated, or orphaned), so every type remains searchable by status.\nResults are always returned in ascending order by `title`.\n",
         "tags": [
           "Attack Paths",
           "Enterprise"
@@ -19529,7 +22230,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `id`, `first_seen`, `last_seen`.\n",
+            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `id`, `first_seen`, `last_seen`, `is_regression`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -19661,6 +22362,15 @@
             }
           },
           {
+            "name": "principal_object_id",
+            "description": "Filter by one principal object identifier. A finding matches when the object id is either its source (starting) principal or its target principal. The supported predicate is `eq` or `neq`.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^(eq|neq):[^:]+$"
+            }
+          },
+          {
             "name": "status",
             "description": "Filter by finding status.",
             "in": "query",
@@ -19682,6 +22392,14 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "is_regression",
+            "description": "Filter findings by recurrence after remediation. Supports eq and neq with true or false.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
             }
           },
           {
@@ -19710,7 +22428,7 @@
                 },
                 "examples": {
                   "Unified CSV export": {
-                    "value": "Severity,Finding,Title,FindingType,IsCrossPlatform,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen,ArchivedAt\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,true,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,\nhigh,Kerberoasting,Kerberoastable User Accounts,list,false,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,\n"
+                    "value": "Severity,Finding,Title,FindingType,IsCrossPlatform,IsRegression,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen,ArchivedAt\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,true,true,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,\nhigh,Kerberoasting,Kerberoastable User Accounts,list,false,false,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,\n"
                   }
                 }
               },
@@ -19745,6 +22463,10 @@
                                   "relationship",
                                   "list"
                                 ]
+                              },
+                              "is_regression": {
+                                "type": "boolean",
+                                "description": "Whether this unarchived finding matches a previously archived, remediated finding by type, name, environment, zone, and principal identity. Always false for archived findings."
                               },
                               "is_cross_platform": {
                                 "type": "boolean",
@@ -19807,6 +22529,7 @@
                                 "description": "Finding status.",
                                 "enum": [
                                   "active",
+                                  "in_progress",
                                   "accepted",
                                   "remediated",
                                   "deprecated",
@@ -19826,6 +22549,11 @@
                                 "type": "string",
                                 "format": "date-time",
                                 "description": "Timestamp of last update."
+                              },
+                              "archived_at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "Timestamp of when the finding was archived. Omitted when finding has not been archived."
                               }
                             }
                           }
@@ -19838,7 +22566,7 @@
                   "Mixed findings (relationship and list)": {
                     "summary": "Unified response with both finding types",
                     "value": {
-                      "count": 2,
+                      "count": 3,
                       "skip": 0,
                       "limit": 10,
                       "data": [
@@ -19848,6 +22576,7 @@
                           "title": "GenericWrite Privileges on Tier Zero Objects",
                           "finding_type": "relationship",
                           "is_cross_platform": true,
+                          "is_regression": true,
                           "platform": "Active Directory",
                           "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
                           "environment_name": "CORP1.LAB.HOME-LABS.LOL",
@@ -19870,6 +22599,7 @@
                           "title": "Kerberoastable User Accounts",
                           "finding_type": "list",
                           "is_cross_platform": false,
+                          "is_regression": false,
                           "platform": "Active Directory",
                           "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
                           "environment_name": "CORP1.LAB.HOME-LABS.LOL",
@@ -19885,6 +22615,30 @@
                           "id": 102,
                           "first_seen": "2026-04-11T00:30:18.491666Z",
                           "last_seen": "2026-04-14T16:57:35.675609Z"
+                        },
+                        {
+                          "severity": "moderate",
+                          "finding": "T0WriteOwner",
+                          "title": "WriteOwner Privileges on Tier Zero Objects",
+                          "finding_type": "relationship",
+                          "is_cross_platform": false,
+                          "is_regression": false,
+                          "platform": "Active Directory",
+                          "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
+                          "environment_name": "CORP1.LAB.HOME-LABS.LOL",
+                          "asset_group_tag_id": 1,
+                          "zone_name": "Tier Zero",
+                          "source_principal_id": "JSMITH@CORP1.LAB.HOME-LABS.LOL",
+                          "source_principal_kind": "User",
+                          "source_principal_name": "John Smith",
+                          "target_principal_id": "ADMIN@CORP1.LAB.HOME-LABS.LOL",
+                          "target_principal_kind": "User",
+                          "target_principal_name": "Domain Admin",
+                          "status": "remediated",
+                          "id": 103,
+                          "first_seen": "2026-03-01T08:00:00.000000Z",
+                          "last_seen": "2026-04-20T12:00:00.000000Z",
+                          "archived_at": "2026-04-20T12:00:00.000000Z"
                         }
                       ]
                     }
@@ -20468,7 +23222,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `CompositeRisk`, `FindingCount`, `ImpactedAssetCount`, `domain_sid`, `id`, `created_at`, `updated_at`, `deleted_at`.",
+            "description": "Sortable columns are `CompositeRisk`, `FindingCount`, `ImpactedAssetCount`, `domain_sid`, `id`, `created_at`, and `updated_at`.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -20612,6 +23366,125 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/attack-paths/findings/{finding_id}/status": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "finding_id",
+          "description": "Finding ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "UpdateAttackPathFindingStatus",
+        "summary": "Update finding status",
+        "description": "Updates an open attack path finding status to active or in_progress.",
+        "tags": [
+          "Attack Paths",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "description": "The requested open workflow status.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "in_progress"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Finding status updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "status",
+                        "updated_at"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "format": "int64"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "in_progress"
+                          ]
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "The finding is archived and cannot be updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -22510,7 +25383,7 @@
       "post": {
         "operationId": "RetryAlertAttempt",
         "summary": "Retry Alert Attempt",
-        "description": "Manually re-queues an existing alert delivery attempt. The composite key\nin the request body identifies the specific attempt (alert, event, channel/webhook) to retry. The attempt is ignored\nwhen the attempt has already succeeded.\n",
+        "description": "Manually re-queues an existing alert delivery attempt. The composite key\nin the request body identifies the specific attempt (alert, event, channel/webhook) to retry. The attempt is ignored\nwhen the attempt has already succeeded, or when the alert, subscription, or channel/webhook is disabled.\n",
         "tags": [
           "Alerts",
           "Enterprise"
@@ -22521,7 +25394,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Request body for manually re-queueing an alert delivery attempt. The supplied\ncomposite key identifies the row to retry; the handler is a no-op when the\nattempt has already succeeded (`succeeded_at IS NOT NULL`).\n",
+                "description": "Request body for manually re-queueing an alert delivery attempt. The supplied\ncomposite key identifies the row to retry; the handler is a no-op when the\nattempt has already succeeded (`succeeded_at IS NOT NULL`) or when the alert, subscription, or channel/webhook is disabled.\n",
                 "required": [
                   "alert_id",
                   "channel_id",
@@ -22871,6 +25744,16 @@
         "in": "query",
         "schema": {
           "$ref": "#/components/schemas/api.params.predicate.filter.time"
+        }
+      },
+      "path.collector-job-id": {
+        "name": "collector_job_id",
+        "description": "Collector job queue or history UUID.",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
         }
       },
       "path.alert-webhook-id": {
@@ -23641,6 +26524,14 @@
                 "allOf": [
                   {
                     "$ref": "#/components/schemas/enum.client-type"
+                  }
+                ]
+              },
+              "provided_identifier": {
+                "readOnly": true,
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/null.string"
                   }
                 ]
               }
@@ -25753,6 +28644,102 @@
                 }
               }
             }
+          },
+          "pz_rules": {
+            "type": "array",
+            "description": "Declares the extension's desired privilege zones. Omitting this property or\nproviding an empty array removes existing privilege zones associated with the extension.\n",
+            "items": {
+              "type": "object",
+              "required": [
+                "key",
+                "name",
+                "seeds"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "description": "A stable identifier for reconciling rules between extension upserts."
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Whether the privilege zone rule is enabled. Defaults to true when omitted."
+                },
+                "allow_disable": {
+                  "type": "boolean",
+                  "description": "Whether users may disable the privilege zone rule. Defaults to true when omitted."
+                },
+                "seeds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "type",
+                      "value"
+                    ],
+                    "properties": {
+                      "type": {
+                        "type": "integer",
+                        "enum": [
+                          2
+                        ],
+                        "description": "The selector type. Privilege-zone rules only support Cypher (2)."
+                      },
+                      "value": {
+                        "type": "string",
+                        "description": "A valid Cypher query used to seed the privilege zone."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "queries": {
+            "type": "array",
+            "description": "Declares the extension's desired saved queries. Omitting this property or\nproviding an empty array removes existing saved queries associated with the extension.\n",
+            "items": {
+              "type": "object",
+              "required": [
+                "query_key",
+                "name",
+                "query"
+              ],
+              "properties": {
+                "query_key": {
+                  "type": "string",
+                  "description": "A stable identifier for reconciling the saved query.",
+                  "example": "critical-assets"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The saved query's display name.",
+                  "example": "Critical Assets"
+                },
+                "query": {
+                  "type": "string",
+                  "description": "Extension-provided saved queries must be read-only; updating clauses are not supported.",
+                  "example": "MATCH (n) RETURN n"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "An optional description of the saved query.",
+                  "example": "Lists all critical assets."
+                },
+                "category": {
+                  "type": "string",
+                  "description": "An optional category for grouping the saved query.",
+                  "example": "Asset Management"
+                }
+              }
+            }
           }
         }
       },
@@ -25899,6 +28886,15 @@
               },
               "description": {
                 "type": "string"
+              },
+              "extension_id": {
+                "type": "integer",
+                "format": "int32",
+                "readOnly": true
+              },
+              "category": {
+                "type": "string",
+                "readOnly": true
               }
             }
           }
@@ -25918,6 +28914,9 @@
             "format": "int64"
           },
           "public": {
+            "type": "boolean"
+          },
+          "readonly": {
             "type": "boolean"
           }
         }
@@ -26075,6 +29074,18 @@
               "certtemplates": {
                 "type": "integer"
               },
+              "issuancepolicies": {
+                "type": "integer"
+              },
+              "sites": {
+                "type": "integer"
+              },
+              "siteservers": {
+                "type": "integer"
+              },
+              "sitesubnets": {
+                "type": "integer"
+              },
               "acls": {
                 "type": "integer"
               },
@@ -26201,6 +29212,18 @@
                 "type": "integer"
               },
               "certtemplates": {
+                "type": "integer"
+              },
+              "issuancepolicies": {
+                "type": "integer"
+              },
+              "sites": {
+                "type": "integer"
+              },
+              "siteservers": {
+                "type": "integer"
+              },
+              "sitesubnets": {
                 "type": "integer"
               },
               "acls": {
@@ -26667,10 +29690,516 @@
               },
               "type": {
                 "$ref": "#/components/schemas/enum.client-type"
+              },
+              "provided_identifier": {
+                "$ref": "#/components/schemas/null.string"
               }
             }
           }
         ]
+      },
+      "model.collector-job": {
+        "type": "object",
+        "description": "Live collector job queue entry. Terminal jobs are moved to collector job history.",
+        "required": [
+          "id",
+          "job_schedule_id",
+          "job_profile_id",
+          "job_type_id",
+          "job_key",
+          "version",
+          "params",
+          "scope_client_id",
+          "external_secret_key_id",
+          "secret_key_id",
+          "priority",
+          "status",
+          "run_at",
+          "unclaimed_deadline_at",
+          "attempts",
+          "max_attempts",
+          "last_failure",
+          "claimed_by",
+          "claimed_at",
+          "claim_expires_at",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "job_schedule_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "job_profile_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "job_type_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "job_key": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "scope_client_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "external_secret_key_id": {
+            "$ref": "#/components/schemas/null.string.response"
+          },
+          "secret_key_id": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/null.string.response"
+              }
+            ],
+            "description": "Reference to secret material; never the material itself."
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "claimed",
+              "running"
+            ]
+          },
+          "run_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "unclaimed_deadline_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "max_attempts": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "last_failure": {
+            "$ref": "#/components/schemas/null.string.response"
+          },
+          "claimed_by": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "claimed_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "claim_expires_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "model.collector-job-type": {
+        "type": "object",
+        "description": "Registry entry defining a collector job's wire contract and execution policy.",
+        "required": [
+          "id",
+          "key",
+          "display_name",
+          "version",
+          "params_schema",
+          "backoff_strategy",
+          "backoff_base",
+          "backoff_cap",
+          "max_attempts",
+          "unclaimed_ttl",
+          "claim_ttl",
+          "is_builtin",
+          "schema_extension_id",
+          "created_at",
+          "updated_at",
+          "deleted_at",
+          "deleted_by"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "key": {
+            "type": "string",
+            "description": "Immutable wire identifier recognized by collectors."
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "params_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "JSON Schema used to validate job parameters."
+          },
+          "backoff_strategy": {
+            "type": "string",
+            "enum": [
+              "exponential",
+              "fixed"
+            ]
+          },
+          "backoff_base": {
+            "type": "string",
+            "format": "duration"
+          },
+          "backoff_cap": {
+            "type": "string",
+            "format": "duration"
+          },
+          "max_attempts": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "unclaimed_ttl": {
+            "type": "string",
+            "format": "duration"
+          },
+          "claim_ttl": {
+            "type": "string",
+            "format": "duration"
+          },
+          "is_builtin": {
+            "type": "boolean"
+          },
+          "schema_extension_id": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "deleted_by": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/null.string.response"
+              }
+            ],
+            "description": "Actor responsible for soft deletion."
+          }
+        }
+      },
+      "model.collector-job-profile-minimal": {
+        "type": "object",
+        "description": "Minimal collector job profile representation.",
+        "required": [
+          "id",
+          "name",
+          "job_type_id",
+          "params",
+          "scope_client_id",
+          "secret_id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "job_type_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "scope_client_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Null allows any authenticated collector to claim the job."
+          },
+          "secret_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "model.collector-job-schedule-minimal": {
+        "type": "object",
+        "description": "Minimal collector job schedule representation.",
+        "required": [
+          "id",
+          "name",
+          "rrule",
+          "next_run_at",
+          "priority"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rrule": {
+            "type": "string",
+            "description": "RFC 5545 recurrence rule."
+          },
+          "next_run_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "model.collector-job-profile": {
+        "description": "Reusable, schema-validated configuration for a collector job.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.collector-job-profile-minimal"
+          },
+          {
+            "type": "object",
+            "required": [
+              "schedules",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "schedules": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.collector-job-schedule-minimal"
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "model.collector-job-schedule": {
+        "description": "Recurring schedule that materializes jobs for its linked profiles.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.collector-job-schedule-minimal"
+          },
+          {
+            "type": "object",
+            "required": [
+              "disabled_at",
+              "disabled_by",
+              "profiles",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "disabled_at": {
+                "$ref": "#/components/schemas/null.time.response"
+              },
+              "disabled_by": {
+                "$ref": "#/components/schemas/null.string.response"
+              },
+              "profiles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.collector-job-profile-minimal"
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "model.collector-job-secret": {
+        "type": "object",
+        "description": "Reference to collector credentials held externally, secret values are never stored.",
+        "required": [
+          "id",
+          "type",
+          "key_id",
+          "external_key_id",
+          "name",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "auth_key"
+            ]
+          },
+          "key_id": {
+            "type": "string",
+            "description": "Identifier redeemed by the collector against external secret manager."
+          },
+          "external_key_id": {
+            "type": "string",
+            "description": "Operator-facing identifier for the referenced key."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the secret reference."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "model.collector-job-history": {
+        "type": "object",
+        "description": "Immutable terminal record for a collector job queue entry.",
+        "required": [
+          "id",
+          "recorded_at",
+          "job_created_at",
+          "last_claimed_at",
+          "last_claimed_by",
+          "job_schedule_id",
+          "job_profile_id",
+          "job_type_id",
+          "job_key",
+          "version",
+          "priority",
+          "params",
+          "attempts",
+          "outcome",
+          "outcome_metadata",
+          "failure_reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of the deleted queue entry."
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "job_created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_claimed_at": {
+            "$ref": "#/components/schemas/null.time.response"
+          },
+          "last_claimed_by": {
+            "type": "string",
+            "nullable": true
+          },
+          "job_schedule_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "job_profile_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "job_type_id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "job_key": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "attempts": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "succeeded",
+              "partially-succeeded",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "outcome_metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "failure_reason": {
+            "$ref": "#/components/schemas/null.string.response"
+          }
+        }
       },
       "enum.client-management-operation-type": {
         "type": "string",
@@ -28057,6 +31586,9 @@
         "Enterprise CAs",
         "NT Auth Stores",
         "Cert Templates",
+        "Sites",
+        "Site Servers",
+        "Site Subnets",
         "OUs",
         "AD Users",
         "Groups",
@@ -28075,6 +31607,7 @@
         "Client Ingest",
         "Clients",
         "Jobs",
+        "Collector Jobs (Experimental)",
         "Tasks",
         "Events (Schedules)",
         "Attack Paths",

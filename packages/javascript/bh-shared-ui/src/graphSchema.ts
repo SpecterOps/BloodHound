@@ -30,6 +30,9 @@ export enum ActiveDirectoryNodeKind {
     NTAuthStore = 'NTAuthStore',
     CertTemplate = 'CertTemplate',
     IssuancePolicy = 'IssuancePolicy',
+    Site = 'Site',
+    SiteServer = 'SiteServer',
+    SiteSubnet = 'SiteSubnet',
 }
 export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
@@ -65,6 +68,12 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'CertTemplate';
         case ActiveDirectoryNodeKind.IssuancePolicy:
             return 'IssuancePolicy';
+        case ActiveDirectoryNodeKind.Site:
+            return 'Site';
+        case ActiveDirectoryNodeKind.SiteServer:
+            return 'SiteServer';
+        case ActiveDirectoryNodeKind.SiteSubnet:
+            return 'SiteSubnet';
         default:
             return undefined;
     }
@@ -81,6 +90,7 @@ export enum ActiveDirectoryRelationshipKind {
     AddMember = 'AddMember',
     HasSession = 'HasSession',
     Contains = 'Contains',
+    ServerIs = 'ServerIs',
     GPLink = 'GPLink',
     AllowedToDelegate = 'AllowedToDelegate',
     CoerceToTGT = 'CoerceToTGT',
@@ -140,9 +150,11 @@ export enum ActiveDirectoryRelationshipKind {
     ADCSESC10a = 'ADCSESC10a',
     ADCSESC10b = 'ADCSESC10b',
     ADCSESC13 = 'ADCSESC13',
+    ADCSESC16 = 'ADCSESC16',
     SyncedToADUser = 'SyncedToADUser',
     CoerceAndRelayNTLMToSMB = 'CoerceAndRelayNTLMToSMB',
     CoerceAndRelayNTLMToADCS = 'CoerceAndRelayNTLMToADCS',
+    CoerceAndRelayNTLMToADCSRPC = 'CoerceAndRelayNTLMToADCSRPC',
     WriteOwnerLimitedRights = 'WriteOwnerLimitedRights',
     WriteOwnerRaw = 'WriteOwnerRaw',
     OwnsLimitedRights = 'OwnsLimitedRights',
@@ -183,6 +195,8 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'HasSession';
         case ActiveDirectoryRelationshipKind.Contains:
             return 'Contains';
+        case ActiveDirectoryRelationshipKind.ServerIs:
+            return 'ServerIs';
         case ActiveDirectoryRelationshipKind.GPLink:
             return 'GPLink';
         case ActiveDirectoryRelationshipKind.AllowedToDelegate:
@@ -301,12 +315,16 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ADCSESC10b';
         case ActiveDirectoryRelationshipKind.ADCSESC13:
             return 'ADCSESC13';
+        case ActiveDirectoryRelationshipKind.ADCSESC16:
+            return 'ADCSESC16';
         case ActiveDirectoryRelationshipKind.SyncedToADUser:
             return 'SyncedToADUser';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB:
             return 'CoerceAndRelayNTLMToSMB';
         case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS:
             return 'CoerceAndRelayNTLMToADCS';
+        case ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC:
+            return 'CoerceAndRelayNTLMToADCSRPC';
         case ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights:
             return 'WriteOwnerLimitedRights';
         case ActiveDirectoryRelationshipKind.WriteOwnerRaw:
@@ -354,8 +372,10 @@ export const EdgeCompositionRelationships = [
     'ADCSESC10a',
     'ADCSESC10b',
     'ADCSESC13',
+    'ADCSESC16',
     'CoerceAndRelayNTLMToSMB',
     'CoerceAndRelayNTLMToADCS',
+    'CoerceAndRelayNTLMToADCSRPC',
     'CoerceAndRelayNTLMToLDAP',
     'CoerceAndRelayNTLMToLDAPS',
     'GPOAppliesTo',
@@ -475,6 +495,8 @@ export enum ActiveDirectoryKindProperties {
     MSA = 'msa',
     DoesAnyAceGrantOwnerRights = 'doesanyacegrantownerrights',
     DoesAnyInheritedAceGrantOwnerRights = 'doesanyinheritedacegrantownerrights',
+    CustomExplicitDenyAcesCount = 'customexplicitdenyacescount',
+    CustomInheritedDenyAcesCount = 'custominheriteddenyacescount',
     ADCSWebEnrollmentHTTP = 'adcswebenrollmenthttp',
     ADCSWebEnrollmentHTTPS = 'adcswebenrollmenthttps',
     ADCSWebEnrollmentHTTPSEPA = 'adcswebenrollmenthttpsepa',
@@ -498,10 +520,17 @@ export enum ActiveDirectoryKindProperties {
     Transitive = 'transitive',
     GroupScope = 'groupscope',
     NetBIOS = 'netbios',
+    RPCEncryptionEnforced = 'rpcencryptionenforced',
+    RPCEncryptionCollected = 'rpcencryptioncollected',
     AdminSDHolderProtected = 'adminsdholderprotected',
     ServicePrincipalNames = 'serviceprincipalnames',
+    ServerReference = 'serverreference',
+    SiteObject = 'siteobject',
+    ObjectClass = 'objectclass',
     GPOStatusRaw = 'gpostatusraw',
     GPOStatus = 'gpostatus',
+    DisabledExtensions = 'disabledextensions',
+    DisabledExtensionsCollected = 'disabledextensionscollected',
 }
 export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKindProperties): string | undefined {
     switch (value) {
@@ -731,6 +760,10 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Does Any ACE Grant Owner Rights';
         case ActiveDirectoryKindProperties.DoesAnyInheritedAceGrantOwnerRights:
             return 'Does Any Inherited ACE Grant Owner Rights';
+        case ActiveDirectoryKindProperties.CustomExplicitDenyAcesCount:
+            return 'Custom Explicit Deny ACEs Count';
+        case ActiveDirectoryKindProperties.CustomInheritedDenyAcesCount:
+            return 'Custom Inherited Deny ACEs Count';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTP:
             return 'ADCS Web Enrollment HTTP';
         case ActiveDirectoryKindProperties.ADCSWebEnrollmentHTTPS:
@@ -777,14 +810,28 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Group Scope';
         case ActiveDirectoryKindProperties.NetBIOS:
             return 'NetBIOS';
+        case ActiveDirectoryKindProperties.RPCEncryptionEnforced:
+            return 'RPC Encryption Enforced';
+        case ActiveDirectoryKindProperties.RPCEncryptionCollected:
+            return 'RPC Encryption Collected';
         case ActiveDirectoryKindProperties.AdminSDHolderProtected:
             return 'AdminSDHolder Protected';
         case ActiveDirectoryKindProperties.ServicePrincipalNames:
             return 'Service Principal Names';
+        case ActiveDirectoryKindProperties.ServerReference:
+            return 'Server Reference';
+        case ActiveDirectoryKindProperties.SiteObject:
+            return 'Site Object';
+        case ActiveDirectoryKindProperties.ObjectClass:
+            return 'Object Class';
         case ActiveDirectoryKindProperties.GPOStatusRaw:
             return 'GPO Status (Raw)';
         case ActiveDirectoryKindProperties.GPOStatus:
             return 'GPO Status';
+        case ActiveDirectoryKindProperties.DisabledExtensions:
+            return 'Disabled Extensions';
+        case ActiveDirectoryKindProperties.DisabledExtensionsCollected:
+            return 'Disabled Extensions Collected';
         default:
             return undefined;
     }
@@ -833,9 +880,11 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
+        ActiveDirectoryRelationshipKind.ADCSESC16,
         ActiveDirectoryRelationshipKind.SyncedToADUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
@@ -850,6 +899,7 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.ServerIs,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
@@ -901,9 +951,11 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.ADCSESC10a,
         ActiveDirectoryRelationshipKind.ADCSESC10b,
         ActiveDirectoryRelationshipKind.ADCSESC13,
+        ActiveDirectoryRelationshipKind.ADCSESC16,
         ActiveDirectoryRelationshipKind.SyncedToADUser,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC,
         ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
         ActiveDirectoryRelationshipKind.OwnsLimitedRights,
         ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
@@ -914,6 +966,7 @@ export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryR
         ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.ServerIs,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,

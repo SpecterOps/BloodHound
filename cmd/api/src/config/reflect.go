@@ -117,7 +117,7 @@ func valueOf(target any) reflect.Value {
 // indirectOf takes an interface and inspects if it's a pointer type. If so, the function returns the reflection value
 // type of the value the pointer references. If not, the reflection value of the interface is returned.
 func indirectOf(target any) reflect.Value {
-	if valueRef := valueOf(target); valueRef.Kind() == reflect.Ptr {
+	if valueRef := valueOf(target); valueRef.Kind() == reflect.Pointer {
 		return reflect.Indirect(valueRef)
 	} else {
 		return valueRef

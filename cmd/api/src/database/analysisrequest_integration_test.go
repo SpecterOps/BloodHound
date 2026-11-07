@@ -54,7 +54,6 @@ func setVariableAnalysisModeFlag(t *testing.T, ctx context.Context, dbInst datab
 }
 
 func TestAnalysisRequest(t *testing.T) {
-	t.Parallel()
 
 	var (
 		testCtx = context.Background()
@@ -111,7 +110,6 @@ func TestAnalysisRequest(t *testing.T) {
 }
 
 func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
-	t.Parallel()
 
 	var (
 		testCtx = context.Background()
@@ -168,7 +166,6 @@ func TestAnalysisRequest_MergeAnalysisSteps(t *testing.T) {
 }
 
 func TestAnalysisRequest_RequestTypePrecedence(t *testing.T) {
-	t.Parallel()
 
 	var (
 		testCtx = context.Background()
@@ -259,7 +256,6 @@ func TestAnalysisRequest_RequestTypePrecedence(t *testing.T) {
 }
 
 func TestAnalysisRequest_ConcurrentAnalysisRequestsMerge(t *testing.T) {
-	t.Parallel()
 
 	var (
 		testCtx = context.Background()
@@ -299,7 +295,6 @@ func TestAnalysisRequest_ConcurrentAnalysisRequestsMerge(t *testing.T) {
 }
 
 func TestAnalysisRequest_DisabledVariableAnalysisModeQueuesFullAnalysis(t *testing.T) {
-	t.Parallel()
 
 	var (
 		testCtx = context.Background()

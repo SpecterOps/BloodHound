@@ -17,7 +17,7 @@ import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { Button, ButtonVariants, CheckboxWithLabel } from 'doodle-ui';
+import { AccessibleIcon, Button, ButtonVariants, CheckboxWithLabel } from 'doodle-ui';
 import { FlatGraphResponse, GraphResponse, UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { UncommonSearches } from '../../../commonSearchesAGT';
@@ -242,7 +242,12 @@ const CypherSearchInner = ({
 
     const handleClickSave = () => {
         if (selectedQuery) {
-            if (selectedQuery.canEdit) {
+            if (selectedQuery.schema_extension_id != null) {
+                setMessageState({
+                    showMessage: true,
+                    message: 'This query is managed by an extension and cannot be updated. Save as a new query instead',
+                });
+            } else if (selectedQuery.canEdit) {
                 //save existing
                 setSelected({ query: cypherQuery, id: selectedQuery.id });
                 setSaveAction('edit');
@@ -370,18 +375,19 @@ const CypherSearchInner = ({
                             {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
                                 <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
                             )}
-                            <Button
-                                variant='secondary'
-                                onClick={handleClickSave}
-                                aria-label='Save query'
-                                size='small'
-                                className='rounded-r-none'>
-                                <div className='flex items-center'>
-                                    <p className='ml-2 text-base'>Save </p>
-                                </div>
-                            </Button>
-                            <SaveQueryActionMenu saveAs={handleSaveAs} />
+                            <div className='flex'>
+                                <Button
+                                    variant='secondary'
+                                    onClick={handleClickSave}
+                                    aria-label='Save query'
+                                    size='small'
+                                    className='rounded-r-none px-4 text-base/none'>
+                                    Save
+                                </Button>
+                                <SaveQueryActionMenu saveAs={handleSaveAs} />
+                            </div>
 
+                            {/* below is a link, rather than a Button, as it launches to a new page */}
                             <a
                                 href='https://bloodhound.specterops.io/analyze-data/bloodhound-gui/cypher-search'
                                 rel='noopener noreferrer'
@@ -394,7 +400,9 @@ const CypherSearchInner = ({
                                     }),
                                     'group px-1.5'
                                 )}>
-                                <AppIcon.Info size={24} />
+                                <AccessibleIcon aria-label='Learn more about Cypher (opens in a new tab)'>
+                                    <AppIcon.Info className='-my-2' size={24} />
+                                </AccessibleIcon>
                             </a>
 
                             <Button
@@ -405,11 +413,11 @@ const CypherSearchInner = ({
                                 className='max-w-[83px]'>
                                 <div className='flex items-center transition-all animate-in fade-in-10 '>
                                     {cypherSearchIsRunning ? (
-                                        <ProcessingIndicator title='Running' className='text-base' />
+                                        <ProcessingIndicator title='Running' className='text-base/none' />
                                     ) : (
                                         <>
-                                            <p className='text-base'>Run</p>
-                                            <FontAwesomeIcon size='lg' icon={faChevronCircleRight} className='ml-2' />
+                                            <p className='text-base/none'>Run</p>
+                                            <FontAwesomeIcon icon={faChevronCircleRight} className='ml-2' />
                                         </>
                                     )}
                                 </div>

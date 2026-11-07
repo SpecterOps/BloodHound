@@ -77,7 +77,6 @@ func assertAssetGroupTagSelectorConstraintError(t *testing.T, err error, expecte
 }
 
 func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
-	t.Parallel()
 	var (
 		dbInst          = integration.SetupDB(t)
 		testCtx         = context.Background()
@@ -119,7 +118,6 @@ func TestDatabase_CreateAssetGroupTagSelector(t *testing.T) {
 }
 
 func TestDatabase_CreateAssetGroupTagSelectorRuleKey(t *testing.T) {
-	t.Parallel()
 	var (
 		dbInst  = integration.SetupDB(t).(*database.BloodhoundDB)
 		testCtx = context.Background()
@@ -154,7 +152,6 @@ func TestDatabase_CreateAssetGroupTagSelectorRuleKey(t *testing.T) {
 }
 
 func TestDatabase_CreateAssetGroupTagSelectorRequiresRuleKeyAndExtensionIDTogether(t *testing.T) {
-	t.Parallel()
 	var (
 		dbInst    = integration.SetupDB(t).(*database.BloodhoundDB)
 		testCtx   = context.Background()
@@ -183,7 +180,6 @@ func TestDatabase_CreateAssetGroupTagSelectorRequiresRuleKeyAndExtensionIDTogeth
 }
 
 func TestDatabase_CreateAssetGroupTagSelectorRuleKeyIsUniquePerExtension(t *testing.T) {
-	t.Parallel()
 	var (
 		dbInst  = integration.SetupDB(t).(*database.BloodhoundDB)
 		testCtx = context.Background()
@@ -217,7 +213,6 @@ func TestDatabase_CreateAssetGroupTagSelectorRuleKeyIsUniquePerExtension(t *test
 }
 
 func TestDatabase_UpdateAssetGroupTagSelectorPreservesExtensionManagedFields(t *testing.T) {
-	t.Parallel()
 	var (
 		dbInst    = integration.SetupDB(t).(*database.BloodhoundDB)
 		testCtx   = context.Background()
@@ -254,7 +249,6 @@ func TestDatabase_UpdateAssetGroupTagSelectorPreservesExtensionManagedFields(t *
 }
 
 func TestDatabase_OpenGraphAssetGroupTagSelectorHelpers(t *testing.T) {
-	t.Parallel()
 	var (
 		dbInst  = integration.SetupDB(t).(*database.BloodhoundDB)
 		testCtx = context.Background()
@@ -1438,7 +1432,6 @@ func TestDatabase_GetAssetGroupTagSelectors(t *testing.T) {
 }
 
 func TestDatabase_GetAssetGroupTagSelectorsByExtensionId(t *testing.T) {
-	t.Parallel()
 
 	type testSetupData struct {
 		extensionId   int32
@@ -1610,7 +1603,6 @@ func TestDatabase_GetAssetGroupTagSelectorsByExtensionId(t *testing.T) {
 }
 
 func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
-	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
 
@@ -1748,7 +1740,6 @@ func TestDatabase_UpdateCertificationBySelectorNode(t *testing.T) {
 }
 
 func TestDatabase_InsertSelectorNodes(t *testing.T) {
-	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
 
@@ -1962,7 +1953,6 @@ func TestDatabase_SelectorNodesBatching(t *testing.T) {
 }
 
 func TestDatabase_UpdateSelectorNodes(t *testing.T) {
-	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
 
@@ -2259,7 +2249,6 @@ func TestDatabase_UpdateSelectorNodes(t *testing.T) {
 }
 
 func TestDatabase_DeleteSelectorNodes(t *testing.T) {
-	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
 
@@ -2476,7 +2465,6 @@ func assertUpdateSelectorNodesHistoryRecord(t *testing.T, expectedAction model.A
 }
 
 func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *testing.T) {
-	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
 
@@ -2553,7 +2541,6 @@ func TestDatabase_GetAssetGroupSelectorNodeExpandedOrderedByIdAndPosition(t *tes
 }
 
 func TestDatabase_GetAggregatedSelectorNodesCertification(t *testing.T) {
-	t.Parallel()
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)
 

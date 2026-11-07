@@ -22,19 +22,15 @@ import { FC, ReactNode } from 'react';
 const GraphMenu: FC<{
     label: string;
     icon: IconDefinition;
-    tooltip?: string;
     children: ReactNode;
-}> = ({ children, label, icon, tooltip }) => {
+}> = ({ children, label, icon }) => {
     const testId = `explore_graph-controls_${label.toLowerCase().split(' ').join('-')}-menu`;
 
     return (
         <Menu>
-            <Tooltip
-                tooltip={<span>{tooltip ?? label}</span>}
-                triggerProps={{ asChild: true, className: 'pointer-events-auto' }}
-                contentProps={{ className: 'dark:bg-neutral-4 dark:border-neutral-5 dark:text-white' }}>
+            <Tooltip tooltip={label}>
                 <MenuTrigger asChild>
-                    <IconButton aria-label={label} data-testid={testId}>
+                    <IconButton aria-label={label} data-testid={testId} hideTooltip>
                         <FontAwesomeIcon icon={icon} />
                     </IconButton>
                 </MenuTrigger>

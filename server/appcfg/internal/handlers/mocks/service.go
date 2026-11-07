@@ -22,6 +22,8 @@ package mocks
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -51,6 +53,134 @@ type MockService_Expecter struct {
 
 func (_m *MockService) EXPECT() *MockService_Expecter {
 	return &MockService_Expecter{mock: &_m.Mock}
+}
+
+// GetAllApplicationConfigurations provides a mock function for the type MockService
+func (_mock *MockService) GetAllApplicationConfigurations(ctx context.Context) (services.Parameters, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllApplicationConfigurations")
+	}
+
+	var r0 services.Parameters
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (services.Parameters, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) services.Parameters); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(services.Parameters)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockService_GetAllApplicationConfigurations_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAllApplicationConfigurations'
+type MockService_GetAllApplicationConfigurations_Call struct {
+	*mock.Call
+}
+
+// GetAllApplicationConfigurations is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockService_Expecter) GetAllApplicationConfigurations(ctx interface{}) *MockService_GetAllApplicationConfigurations_Call {
+	return &MockService_GetAllApplicationConfigurations_Call{Call: _e.mock.On("GetAllApplicationConfigurations", ctx)}
+}
+
+func (_c *MockService_GetAllApplicationConfigurations_Call) Run(run func(ctx context.Context)) *MockService_GetAllApplicationConfigurations_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_GetAllApplicationConfigurations_Call) Return(parameters services.Parameters, err error) *MockService_GetAllApplicationConfigurations_Call {
+	_c.Call.Return(parameters, err)
+	return _c
+}
+
+func (_c *MockService_GetAllApplicationConfigurations_Call) RunAndReturn(run func(ctx context.Context) (services.Parameters, error)) *MockService_GetAllApplicationConfigurations_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetApplicationConfiguration provides a mock function for the type MockService
+func (_mock *MockService) GetApplicationConfiguration(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error) {
+	ret := _mock.Called(ctx, parameterKey)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetApplicationConfiguration")
+	}
+
+	var r0 services.Parameter
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.ParameterKey) (services.Parameter, error)); ok {
+		return returnFunc(ctx, parameterKey)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.ParameterKey) services.Parameter); ok {
+		r0 = returnFunc(ctx, parameterKey)
+	} else {
+		r0 = ret.Get(0).(services.Parameter)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, services.ParameterKey) error); ok {
+		r1 = returnFunc(ctx, parameterKey)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockService_GetApplicationConfiguration_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetApplicationConfiguration'
+type MockService_GetApplicationConfiguration_Call struct {
+	*mock.Call
+}
+
+// GetApplicationConfiguration is a helper method to define mock.On call
+//   - ctx context.Context
+//   - parameterKey services.ParameterKey
+func (_e *MockService_Expecter) GetApplicationConfiguration(ctx interface{}, parameterKey interface{}) *MockService_GetApplicationConfiguration_Call {
+	return &MockService_GetApplicationConfiguration_Call{Call: _e.mock.On("GetApplicationConfiguration", ctx, parameterKey)}
+}
+
+func (_c *MockService_GetApplicationConfiguration_Call) Run(run func(ctx context.Context, parameterKey services.ParameterKey)) *MockService_GetApplicationConfiguration_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 services.ParameterKey
+		if args[1] != nil {
+			arg1 = args[1].(services.ParameterKey)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_GetApplicationConfiguration_Call) Return(parameter services.Parameter, err error) *MockService_GetApplicationConfiguration_Call {
+	_c.Call.Return(parameter, err)
+	return _c
+}
+
+func (_c *MockService_GetApplicationConfiguration_Call) RunAndReturn(run func(ctx context.Context, parameterKey services.ParameterKey) (services.Parameter, error)) *MockService_GetApplicationConfiguration_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // GetDatapipeStatus provides a mock function for the type MockService
@@ -109,6 +239,179 @@ func (_c *MockService_GetDatapipeStatus_Call) Return(datapipeStatus services.Dat
 }
 
 func (_c *MockService_GetDatapipeStatus_Call) RunAndReturn(run func(context1 context.Context) (services.DatapipeStatus, error)) *MockService_GetDatapipeStatus_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// IsAPIAllowedKey provides a mock function for the type MockService
+func (_mock *MockService) IsAPIAllowedKey(parameterKey services.ParameterKey) bool {
+	ret := _mock.Called(parameterKey)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsAPIAllowedKey")
+	}
+
+	var r0 bool
+	if returnFunc, ok := ret.Get(0).(func(services.ParameterKey) bool); ok {
+		r0 = returnFunc(parameterKey)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+	return r0
+}
+
+// MockService_IsAPIAllowedKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'IsAPIAllowedKey'
+type MockService_IsAPIAllowedKey_Call struct {
+	*mock.Call
+}
+
+// IsAPIAllowedKey is a helper method to define mock.On call
+//   - parameterKey services.ParameterKey
+func (_e *MockService_Expecter) IsAPIAllowedKey(parameterKey interface{}) *MockService_IsAPIAllowedKey_Call {
+	return &MockService_IsAPIAllowedKey_Call{Call: _e.mock.On("IsAPIAllowedKey", parameterKey)}
+}
+
+func (_c *MockService_IsAPIAllowedKey_Call) Run(run func(parameterKey services.ParameterKey)) *MockService_IsAPIAllowedKey_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 services.ParameterKey
+		if args[0] != nil {
+			arg0 = args[0].(services.ParameterKey)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_IsAPIAllowedKey_Call) Return(b bool) *MockService_IsAPIAllowedKey_Call {
+	_c.Call.Return(b)
+	return _c
+}
+
+func (_c *MockService_IsAPIAllowedKey_Call) RunAndReturn(run func(parameterKey services.ParameterKey) bool) *MockService_IsAPIAllowedKey_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpsertApplicationConfiguration provides a mock function for the type MockService
+func (_mock *MockService) UpsertApplicationConfiguration(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error {
+	ret := _mock.Called(ctx, parameterKey, value)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpsertApplicationConfiguration")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.ParameterKey, types.JSONBObject) error); ok {
+		r0 = returnFunc(ctx, parameterKey, value)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockService_UpsertApplicationConfiguration_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpsertApplicationConfiguration'
+type MockService_UpsertApplicationConfiguration_Call struct {
+	*mock.Call
+}
+
+// UpsertApplicationConfiguration is a helper method to define mock.On call
+//   - ctx context.Context
+//   - parameterKey services.ParameterKey
+//   - value types.JSONBObject
+func (_e *MockService_Expecter) UpsertApplicationConfiguration(ctx interface{}, parameterKey interface{}, value interface{}) *MockService_UpsertApplicationConfiguration_Call {
+	return &MockService_UpsertApplicationConfiguration_Call{Call: _e.mock.On("UpsertApplicationConfiguration", ctx, parameterKey, value)}
+}
+
+func (_c *MockService_UpsertApplicationConfiguration_Call) Run(run func(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject)) *MockService_UpsertApplicationConfiguration_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 services.ParameterKey
+		if args[1] != nil {
+			arg1 = args[1].(services.ParameterKey)
+		}
+		var arg2 types.JSONBObject
+		if args[2] != nil {
+			arg2 = args[2].(types.JSONBObject)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_UpsertApplicationConfiguration_Call) Return(err error) *MockService_UpsertApplicationConfiguration_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockService_UpsertApplicationConfiguration_Call) RunAndReturn(run func(ctx context.Context, parameterKey services.ParameterKey, value types.JSONBObject) error) *MockService_UpsertApplicationConfiguration_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ValidateValue provides a mock function for the type MockService
+func (_mock *MockService) ValidateValue(key services.ParameterKey, value types.JSONBObject) utils.Errors {
+	ret := _mock.Called(key, value)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ValidateValue")
+	}
+
+	var r0 utils.Errors
+	if returnFunc, ok := ret.Get(0).(func(services.ParameterKey, types.JSONBObject) utils.Errors); ok {
+		r0 = returnFunc(key, value)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(utils.Errors)
+		}
+	}
+	return r0
+}
+
+// MockService_ValidateValue_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ValidateValue'
+type MockService_ValidateValue_Call struct {
+	*mock.Call
+}
+
+// ValidateValue is a helper method to define mock.On call
+//   - key services.ParameterKey
+//   - value types.JSONBObject
+func (_e *MockService_Expecter) ValidateValue(key interface{}, value interface{}) *MockService_ValidateValue_Call {
+	return &MockService_ValidateValue_Call{Call: _e.mock.On("ValidateValue", key, value)}
+}
+
+func (_c *MockService_ValidateValue_Call) Run(run func(key services.ParameterKey, value types.JSONBObject)) *MockService_ValidateValue_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 services.ParameterKey
+		if args[0] != nil {
+			arg0 = args[0].(services.ParameterKey)
+		}
+		var arg1 types.JSONBObject
+		if args[1] != nil {
+			arg1 = args[1].(types.JSONBObject)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockService_ValidateValue_Call) Return(errors utils.Errors) *MockService_ValidateValue_Call {
+	_c.Call.Return(errors)
+	return _c
+}
+
+func (_c *MockService_ValidateValue_Call) RunAndReturn(run func(key services.ParameterKey, value types.JSONBObject) utils.Errors) *MockService_ValidateValue_Call {
 	_c.Call.Return(run)
 	return _c
 }

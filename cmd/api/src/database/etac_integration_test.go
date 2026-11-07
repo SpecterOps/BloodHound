@@ -29,7 +29,6 @@ import (
 )
 
 func TestBloodhoundDB_AccessControlList(t *testing.T) {
-	t.Parallel()
 
 	suite := setupIntegrationTestSuite(t)
 	defer teardownIntegrationTestSuite(t, &suite)

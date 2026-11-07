@@ -152,7 +152,9 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
             <Grid container height={'100%'} spacing={2}>
                 <Grid item xs={3} md={3}>
                     <div className='mb-2'>
-                        <Grid container className='bg-neutral-2'>
+                        <Grid
+                            container
+                            className='bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'>
                             <Grid item sm={4} className={selectorLabelStyles} alignItems={'center'} paddingLeft={3}>
                                 <Typography className='font-medium text-sm uppercase'>Group:</Typography>
                             </Grid>
@@ -210,7 +212,7 @@ const GroupManagementContent: FC<GroupManagementContentProps> = ({
                             style={{ borderRadius: '4px', marginTop: '8px', width: '100%' }}
                             onClick={onShowNodeInExplore}>
                             <FontAwesomeIcon icon={faExternalLink} />
-                            <Typography className='ml-2'>Open in Explore</Typography>
+                            <span className='ml-2'>Open in Explore</span>
                         </Button>
                     )}
                 </Grid>

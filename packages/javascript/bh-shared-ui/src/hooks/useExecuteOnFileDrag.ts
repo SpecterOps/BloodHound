@@ -15,10 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect } from 'react';
 import { isQuickUploadExcludedById } from '../utils/quickUpload';
-import type { AcceptedIngestType } from './useFileIngest';
 
 type ExecuteOnFileDragOptions = {
-    acceptedTypes?: AcceptedIngestType[];
+    acceptedTypes?: string[];
     condition?: () => boolean;
 };
 
@@ -48,9 +47,7 @@ export const useExecuteOnFileDrag = (
 
                 // Filter out non-accepted if provided a list
                 if (acceptedTypes) {
-                    draggedFiles = draggedFiles.filter((item) =>
-                        acceptedTypes.includes(item.type as AcceptedIngestType)
-                    );
+                    draggedFiles = draggedFiles.filter((item) => acceptedTypes.includes(item.type));
                 }
 
                 // Only execute if at least one of the dragged files is accepted

@@ -19,6 +19,7 @@ import ADCSESC1 from './ADCSESC1/ADCSESC1';
 import ADCSESC10a from './ADCSESC10a/ADCSESC10a';
 import ADCSESC10b from './ADCSESC10b/ADCSESC10b';
 import ADCSESC13 from './ADCSESC13/ADCSESC13';
+import ADCSESC16 from './ADCSESC16/ADCSESC16';
 import ADCSESC3 from './ADCSESC3/ADCSESC3';
 import ADCSESC4 from './ADCSESC4/ADCSESC4';
 import ADCSESC6a from './ADCSESC6a/ADCSESC6a';
@@ -84,6 +85,7 @@ import CanPSRemote from './CanPSRemote/CanPSRemote';
 import CanRDP from './CanRDP/CanRDP';
 import ClaimSpecialIdentity from './ClaimSpecialIdentity/ClaimSpecialIdentity';
 import CoerceAndRelayNTLMToADCS from './CoerceAndRelayNTLMToADCS/CoerceAndRelayNTLMToADCS';
+import CoerceAndRelayNTLMToADCSRPC from './CoerceAndRelayNTLMToADCSRPC/CoerceAndRelayNTLMToADCSRPC';
 import CoerceAndRelayNTLMToLDAP from './CoerceAndRelayNTLMToLDAP/CoerceAndRelayNTLMToLDAP';
 import CoerceAndRelayNTLMToLDAPS from './CoerceAndRelayNTLMToLDAPS/CoerceAndRelayNTLMToLDAPS';
 import CoerceAndRelayNTLMToSMB from './CoerceAndRelayNTLMToSMB/CoerceAndRelayNTLMToSMB';
@@ -126,6 +128,7 @@ import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
 import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SameForestTrust from './SameForestTrust/SameForestTrust';
+import ServerIs from './ServerIs/ServerIs';
 import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
 import SyncedToADUser from './SyncedToADUser/SyncedToADUser';
@@ -263,11 +266,13 @@ const EdgeInfoComponents = {
     ADCSESC10a: ADCSESC10a,
     ADCSESC10b: ADCSESC10b,
     ADCSESC13: ADCSESC13,
+    ADCSESC16: ADCSESC16,
     ManageCA: ManageCA,
     ManageCertificates: ManageCertificates,
     WritePKIEnrollmentFlag: WritePKIEnrollmentFlag,
     WritePKINameFlag: WritePKINameFlag,
     DCFor: DCFor,
+    ServerIs: ServerIs,
     OIDGroupLink: OIDGroupLink,
     ExtendedByPolicy: ExtendedByPolicy,
     SyncedToADUser: SyncedToADUser,
@@ -276,6 +281,7 @@ const EdgeInfoComponents = {
     CoerceAndRelayNTLMToLDAP: CoerceAndRelayNTLMToLDAP,
     CoerceAndRelayNTLMToLDAPS: CoerceAndRelayNTLMToLDAPS,
     CoerceAndRelayNTLMToADCS: CoerceAndRelayNTLMToADCS,
+    CoerceAndRelayNTLMToADCSRPC: CoerceAndRelayNTLMToADCSRPC,
     ProtectAdminGroups: ProtectAdminGroups,
     ClaimSpecialIdentity: ClaimSpecialIdentity,
     HasTrustKeys: HasTrustKeys,

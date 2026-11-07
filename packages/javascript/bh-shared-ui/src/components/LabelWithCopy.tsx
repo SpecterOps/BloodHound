@@ -48,7 +48,7 @@ const LabelWithCopy: FC<{
             onMouseLeave={handleMouseLeave}
             className={cn('h-6 flex items-center', className)}>
             {label}
-            <Tooltip tooltip='Copied' open={copied} contentProps={{ side: 'right' }}>
+            <Tooltip open={copied} tooltip='Copied' tooltipPosition='right'>
                 <TextButton
                     onClick={handleCopy}
                     aria-label='Copy to clipboard'

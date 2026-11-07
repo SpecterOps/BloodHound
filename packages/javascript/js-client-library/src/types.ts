@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { EnvironmentRequest } from './requests';
+import type { EnvironmentRequest } from './requests';
 import type { SupportBundleSummaryStatus } from './responses';
+
+export type SortBy<Field extends string> = `${'' | '-'}${Field}`;
 
 export interface Serial {
     id: number;
@@ -642,25 +644,9 @@ export type Webhook = {
     disabled_by: string | null;
 };
 
-export type WebhookSortBy =
-    | 'name'
-    | 'created_at'
-    | 'updated_at'
-    | 'health'
-    | 'type'
-    | 'url'
-    | 'last_triggered_at'
-    | 'last_error'
-    | 'attempts'
-    | '-name'
-    | '-created_at'
-    | '-updated_at'
-    | '-health'
-    | '-type'
-    | '-url'
-    | '-last_triggered_at'
-    | '-last_error'
-    | '-attempts';
+export type WebhookSortBy = SortBy<
+    'name' | 'created_at' | 'updated_at' | 'health' | 'type' | 'url' | 'last_triggered_at' | 'last_error' | 'attempts'
+>;
 
 export interface GetWebhooksParams {
     skip?: number;
@@ -669,7 +655,7 @@ export interface GetWebhooksParams {
     name?: string;
 }
 
-export type AlertsSortBy = 'name' | 'created_at' | 'updated_at' | '-name' | '-created_at' | '-updated_at';
+export type AlertsSortBy = SortBy<'name' | 'created_at' | 'updated_at'>;
 
 export interface WebhookParams {
     skip?: number;
@@ -1003,4 +989,134 @@ export interface RelationshipDetails {
 
 export type RelationshipDetailsWithInfo = RelationshipDetails & {
     info?: RelationshipKindInfo;
+};
+
+// While this only has one currently, there will be more in the future, so we're doing this now to make that easier.
+export enum CollectorJobSecretType {
+    AuthKey = 'auth_key',
+}
+
+export interface CollectorJobSecret {
+    id: string;
+    type: CollectorJobSecretType;
+    key_id: string;
+    external_key_id: string;
+    name: string;
+    created_at: string;
+}
+
+export interface CollectorJobType {
+    id: number;
+    key: string;
+    display_name: string;
+    version: string;
+    params_schema: Record<string, unknown>;
+    backoff_strategy: 'exponential' | 'fixed';
+    backoff_base: string;
+    backoff_cap: string;
+    max_attempts: number;
+    unclaimed_ttl: string | null;
+    claim_ttl: string;
+    is_builtin: boolean;
+    schema_extension_id: number | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at: string | null;
+    deleted_by: string | null;
+}
+
+export interface CollectorJobProfileMinimal {
+    id: string;
+    name: string;
+    job_type_id: number;
+    params: Record<string, unknown>;
+    scope_client_id: string | null;
+    secret_id: string | null;
+}
+
+export interface CollectorJobScheduleMinimal {
+    id: string;
+    name: string;
+    rrule: string;
+    next_run_at: string;
+    priority: number;
+}
+
+export interface CollectorJobProfile extends CollectorJobProfileMinimal {
+    schedules: CollectorJobScheduleMinimal[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CollectorJobSchedule extends CollectorJobScheduleMinimal {
+    disabled_at: string | null;
+    disabled_by: string | null;
+    profiles: CollectorJobProfileMinimal[];
+    created_at: string;
+    updated_at: string;
+}
+
+export enum CollectorJobStatus {
+    Ready = 'ready',
+    Claimed = 'claimed',
+    Running = 'running',
+}
+
+export interface CollectorJob {
+    id: string;
+    job_schedule_id: string | null;
+    job_profile_id: string | null;
+    job_type_id: number;
+    job_key: string;
+    version: string;
+    params: Record<string, unknown>;
+    scope_client_id: string | null;
+    secret_key_id: string | null;
+    priority: number;
+    status: CollectorJobStatus;
+    run_at: string;
+    unclaimed_deadline_at: string;
+    attempts: number;
+    max_attempts: number;
+    last_failure: string | null;
+    claimed_by: string | null;
+    claimed_at: string | null;
+    claim_expires_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export enum CollectorJobOutcome {
+    Succeeded = 'succeeded',
+    Failed = 'failed',
+    Cancelled = 'cancelled',
+    PartialSuccess = 'partially-succeeded',
+}
+
+export interface CollectorJobHistory {
+    id: string;
+    recorded_at: string;
+    job_created_at: string;
+    last_claimed_at: string | null;
+    last_claimed_by: string | null;
+    job_schedule_id: string | null;
+    job_profile_id: string | null;
+    job_type_id: number;
+    job_key: string;
+    version: string;
+    priority: number;
+    params: Record<string, unknown>;
+    attempts: number;
+    outcome: CollectorJobOutcome;
+    outcome_metadata: Record<string, unknown> | null;
+    failure_reason: string | null;
+}
+
+export type JobHistorySortBy = SortBy<'recorded_at' | 'last_claimed_at' | 'job_created_at'>;
+
+export type JobHistoryOptions = {
+    skip?: number;
+    limit?: number;
+    sort_by?: JobHistorySortBy;
+    outcome?: CollectorJobOutcome;
 };

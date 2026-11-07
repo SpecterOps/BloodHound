@@ -63,8 +63,10 @@ func initAndGetRoles(t *testing.T) (database.Database, model.Roles) {
 func createUser(t *testing.T, dbInst database.Database, principalName string) model.User {
 	if roles, err := dbInst.GetAllRoles(context.Background(), "", model.SQLFilter{}); err != nil {
 		t.Fatalf("Error fetching roles: %v", err)
+	} else if administratorRole, found := roles.FindByName(auth.RoleAdministrator); !found {
+		t.Fatalf("Administrator role not found")
 	} else if newUser, err := dbInst.CreateUser(context.Background(), model.User{
-		Roles:         roles,
+		Roles:         model.Roles{administratorRole},
 		FirstName:     null.StringFrom("First"),
 		LastName:      null.StringFrom("Last"),
 		EmailAddress:  null.StringFrom(principalName),
@@ -80,9 +82,10 @@ func createUser(t *testing.T, dbInst database.Database, principalName string) mo
 
 func initAndCreateUser(t *testing.T) (database.Database, model.User) {
 	var (
-		dbInst, roles = initAndGetRoles(t)
-		user          = model.User{
-			Roles:         roles,
+		dbInst, roles        = initAndGetRoles(t)
+		administratorRole, _ = roles.FindByName(auth.RoleAdministrator)
+		user                 = model.User{
+			Roles:         model.Roles{administratorRole},
 			FirstName:     null.StringFrom("First"),
 			LastName:      null.StringFrom("Last"),
 			EmailAddress:  null.StringFrom(userPrincipal),
@@ -122,31 +125,6 @@ func TestDatabase_Installation(t *testing.T) {
 	}
 }
 
-func TestDatabase_InitializePermissions(t *testing.T) {
-	dbInst := integration.SetupDB(t)
-
-	if permissions, err := dbInst.GetAllPermissions(context.Background(), "", model.SQLFilter{}); err != nil {
-		t.Fatalf("Error fetching permissions: %v", err)
-	} else {
-		templates := auth.Permissions().All()
-
-		for _, permissionTemplate := range templates {
-			found := false
-
-			for _, permission := range permissions {
-				if permission.Equals(permissionTemplate) {
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				t.Fatalf("Missing permission %s", permissionTemplate)
-			}
-		}
-	}
-}
-
 func TestDatabase_InitializeRoles(t *testing.T) {
 	var (
 		_, roles  = initAndGetRoles(t)
@@ -171,20 +149,21 @@ func TestDatabase_InitializeRoles(t *testing.T) {
 
 func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 	var (
-		ctx           = context.Background()
-		dbInst, roles = initAndGetRoles(t)
+		ctx                 = context.Background()
+		dbInst, roles       = initAndGetRoles(t)
+		roleToDeleteRole, _ = roles.FindByName(roleToDelete)
 
 		users = model.Users{
 
 			{
-				Roles:         roles,
+				Roles:         model.Roles{roleToDeleteRole},
 				FirstName:     null.StringFrom("First"),
 				LastName:      null.StringFrom("Last"),
 				EmailAddress:  null.StringFrom(userPrincipal),
 				PrincipalName: userPrincipal,
 			},
 			{
-				Roles:         roles,
+				Roles:         model.Roles{roleToDeleteRole},
 				FirstName:     null.StringFrom("First2"),
 				LastName:      null.StringFrom("Last2"),
 				EmailAddress:  null.StringFrom(user2Principal),
@@ -192,7 +171,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 			},
 			// Support account
 			{
-				Roles:          roles,
+				Roles:          model.Roles{roleToDeleteRole},
 				FirstName:      null.StringFrom("Dev"),
 				LastName:       null.StringFrom("Support"),
 				EmailAddress:   null.StringFrom(user5Principal),
@@ -212,7 +191,7 @@ func TestDatabase_CreateGetDeleteUser(t *testing.T) {
 		} else if err = test.VerifyAuditLogs(dbInst, model.AuditLogActionCreateUser, "principal_name", newUser.PrincipalName); err != nil {
 			t.Fatalf("Failed to validate CreateUser audit logs:\n%v", err)
 		} else {
-			for _, role := range roles {
+			for _, role := range user.Roles {
 				found := false
 
 				for _, userRole := range newUser.Roles {

@@ -27,10 +27,12 @@ import (
 	alerts "github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/appcfg"
-	"github.com/specterops/bloodhound/server/extensions"
+	"github.com/specterops/bloodhound/server/auth"
+	"github.com/specterops/bloodhound/server/dataquality"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
 	"github.com/specterops/bloodhound/server/identity"
+	"github.com/specterops/bloodhound/server/opengraphschema"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -39,12 +41,16 @@ import (
 // cutting dependencies (graph database, filesystem, caches, etc.) are added
 // here so that every module has a single, consistent place to pull from.
 type Deps struct {
-	Router              *router.Router
-	Pool                *pgxpool.Pool
-	Graph               graph.Database
+	Router         *router.Router
+	Pool           *pgxpool.Pool
+	Graph          graph.Database
+	DogTags        dogtags.Service
+	AlertPublisher alerts.Publisher
+	// Included to allow the config module to continue requesting some side effect
+	// legacy DB requests until that functionality can be migrated to onion
+	ConfigUpdateSideEffects appcfg.ConfigUpdateSideEffecter
+	// RateLimitMiddleware is installed once for matched routes before authentication.
 	RateLimitMiddleware func() mux.MiddlewareFunc
-	DogTags             dogtags.Service
-	AlertPublisher      alerts.Publisher
 }
 
 // Register wires up all feature modules with the provided infrastructure.
@@ -60,11 +66,17 @@ func Register(deps Deps) {
 	if deps.Graph == nil {
 		panic("modules: Register requires a non-nil Graph")
 	}
+	if deps.DogTags == nil {
+		panic("modules: Register requires a non-nil DogTags")
+	}
+	if deps.ConfigUpdateSideEffects == nil {
+		panic("modules: Register requires a non-nil ConfigUpdateSideEffects")
+	}
 	if deps.RateLimitMiddleware == nil {
 		panic("modules: Register requires a non-nil RateLimitMiddleware")
 	}
-	if deps.DogTags == nil {
-		panic("modules: Register requires a non-nil DogTags")
+	if err := deps.Router.EnsureMatchedRouteRateLimit(deps.RateLimitMiddleware); err != nil {
+		panic("modules: failed to install RateLimitMiddleware: " + err.Error())
 	}
 
 	if deps.AlertPublisher == nil {
@@ -72,9 +84,11 @@ func Register(deps Deps) {
 	}
 
 	analysis.Register(deps.Router, deps.Pool)
-	appcfg.Register(deps.Router, deps.Pool)
+	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects)
+	auth.Register(deps.Router, deps.Pool)
 	identity.Register(deps.Router, deps.Pool)
 	featureflags.Register(deps.Router, deps.Pool)
-	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.RateLimitMiddleware, deps.DogTags)
-	extensions.Register(deps.Router, deps.Pool, deps.RateLimitMiddleware)
+	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
+	opengraphschema.Register(deps.Router, deps.Pool)
+	dataquality.Register(deps.Router, deps.Pool)
 }

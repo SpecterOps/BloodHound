@@ -23,6 +23,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
+	"github.com/specterops/bloodhound/packages/go/duration"
 )
 
 func TestDurationValidator(t *testing.T) {
@@ -31,18 +32,25 @@ func TestDurationValidator(t *testing.T) {
 		Duration time.Duration `validate:"duration,min=P1D,max=P14D"`
 	}
 
+	type ISOEpic struct {
+		Duration duration.ISODuration `validate:"duration,min=P1D,max=P14D"`
+	}
+
 	fortnight := time.Hour * 24 * 14
 
 	minErr := fmt.Errorf("Duration: "+validation.ErrorDurationMin, "P1D")
 	maxErr := fmt.Errorf("Duration: "+validation.ErrorDurationMax, "P14D")
 
 	var cases = []struct {
-		Input  Epic
+		Input  any
 		Errors utils.Errors
 	}{
 		{Epic{time.Hour}, utils.Errors{minErr}},
 		{Epic{fortnight}, nil},
 		{Epic{fortnight + time.Hour}, utils.Errors{maxErr}},
+		{ISOEpic{duration.ISODuration(time.Hour)}, utils.Errors{minErr}},
+		{ISOEpic{duration.ISODuration(fortnight)}, nil},
+		{ISOEpic{duration.ISODuration(fortnight + time.Hour)}, utils.Errors{maxErr}},
 	}
 
 	for _, tc := range cases {

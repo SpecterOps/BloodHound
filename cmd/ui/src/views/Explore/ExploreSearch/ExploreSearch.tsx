@@ -62,7 +62,7 @@ const tabs = [
 ];
 
 const getTab = (exploreSearchTab: ExploreQueryParams['exploreSearchTab']) => {
-    if (exploreSearchTab && exploreSearchTab in tabMap) return exploreSearchTab as keyof typeof tabMap;
+    if (exploreSearchTab && Object.hasOwn(tabMap, exploreSearchTab)) return exploreSearchTab as keyof typeof tabMap;
     return 'node';
 };
 
@@ -79,6 +79,8 @@ const ExploreSearch: React.FC = () => {
     const pathfindingFilterState = usePathfindingFilters();
 
     const activeTab = getTab(exploreSearchTab);
+    const activeTabValue = tabMap[activeTab];
+    const activeTabLabel = tabs[activeTabValue].label;
 
     const [showSearchWidget, setShowSearchWidget] = useState(true);
 
@@ -188,6 +190,8 @@ const ExploreSearch: React.FC = () => {
 
     return (
         <div data-testid='explore_search-container' className='h-full min-h-0 w-[600px] flex gap-4 flex-col rounded'>
+            {/* Added for Screen Reader */}
+            <h2 className='sr-only'>{`${activeTabLabel} tab`}</h2>
             <div
                 className='h-10 pl-1 w-full flex gap-1 items-center rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
                 data-testid='explore_search-container_header'>
@@ -202,7 +206,7 @@ const ExploreSearch: React.FC = () => {
                 </IconButton>
                 <Tabs
                     variant='fullWidth'
-                    value={tabMap[activeTab]}
+                    value={activeTabValue}
                     onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
                     onClick={() => setShowSearchWidget(true)}
                     className='h-10 min-h-10 w-full'
@@ -231,7 +235,7 @@ const ExploreSearch: React.FC = () => {
                 <TabPanels
                     tabs={[
                         // This linting rule is disabled because the elements in this array do not require a key prop.
-                        /* eslint-disable react/jsx-key */
+                        /* oxlint-disable react-compat/jsx-key */
                         <NodeSearch nodeSearchState={nodeSearchState} />,
                         <PathfindingSearch
                             pathfindingSearchState={pathfindingSearchState}
@@ -245,7 +249,7 @@ const ExploreSearch: React.FC = () => {
                             setDisableQueryLimit={handleDisableTimeoutChange}
                             onQuerySuccess={handleQuerySuccess}
                         />,
-                        /* eslint-enable react/jsx-key */
+                        /* oxlint-enable react-compat/jsx-key */
                     ]}
                     activeTab={tabMap[activeTab]}
                 />

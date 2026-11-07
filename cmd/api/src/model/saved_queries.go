@@ -21,11 +21,13 @@ import (
 )
 
 type SavedQuery struct {
-	UserID      string `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
-	Name        string `json:"name" gorm:"index:,unique,composite:compositeIndex"`
-	Query       string `json:"query"`
-	Description string `json:"description"`
-
+	UserID            string  `json:"user_id" gorm:"index:,unique,composite:compositeIndex"`
+	Name              string  `json:"name" gorm:"index:,unique,composite:compositeIndex"`
+	Query             string  `json:"query"`
+	Description       string  `json:"description"`
+	Category          string  `json:"category,omitempty" gorm:"column:category"`
+	SchemaExtensionID *int32  `json:"extension_id,omitempty" gorm:"column:schema_extension_id;index:,unique,composite:compositeIndex;index:,unique,composite:extensionQueryKey"`
+	QueryKey          *string `json:"-" gorm:"column:query_key;index:,unique,composite:extensionQueryKey"`
 	BigSerial
 }
 
@@ -45,7 +47,9 @@ func (s SavedQueries) IsSortable(column string) bool {
 		"id",
 		"created_at",
 		"updated_at",
-		"deleted_at":
+		"deleted_at",
+		"category",
+		"extension_id":
 		return true
 	default:
 		return false
@@ -54,10 +58,12 @@ func (s SavedQueries) IsSortable(column string) bool {
 
 func (s SavedQueries) ValidFilters() map[string][]FilterOperator {
 	return map[string][]FilterOperator{
-		"user_id":     {Equals, NotEquals},
-		"name":        {Equals, NotEquals, ApproximatelyEquals},
-		"query":       {Equals, NotEquals},
-		"description": {Equals, NotEquals, ApproximatelyEquals},
+		"user_id":      {Equals, NotEquals},
+		"name":         {Equals, NotEquals, ApproximatelyEquals},
+		"query":        {Equals, NotEquals},
+		"description":  {Equals, NotEquals, ApproximatelyEquals},
+		"category":     {Equals, NotEquals},
+		"extension_id": {Equals, NotEquals},
 	}
 }
 
@@ -91,7 +97,8 @@ func (s SavedQueries) IsString(column string) bool {
 	switch column {
 	case "name",
 		"query",
-		"description":
+		"description",
+		"category":
 		return true
 	default:
 		return false

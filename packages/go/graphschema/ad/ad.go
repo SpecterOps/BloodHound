@@ -41,6 +41,9 @@ var (
 	NTAuthStore                 = graph.StringKind("NTAuthStore")
 	CertTemplate                = graph.StringKind("CertTemplate")
 	IssuancePolicy              = graph.StringKind("IssuancePolicy")
+	Site                        = graph.StringKind("Site")
+	SiteServer                  = graph.StringKind("SiteServer")
+	SiteSubnet                  = graph.StringKind("SiteSubnet")
 	Owns                        = graph.StringKind("Owns")
 	GenericAll                  = graph.StringKind("GenericAll")
 	GenericWrite                = graph.StringKind("GenericWrite")
@@ -52,6 +55,7 @@ var (
 	AddMember                   = graph.StringKind("AddMember")
 	HasSession                  = graph.StringKind("HasSession")
 	Contains                    = graph.StringKind("Contains")
+	ServerIs                    = graph.StringKind("ServerIs")
 	GPLink                      = graph.StringKind("GPLink")
 	AllowedToDelegate           = graph.StringKind("AllowedToDelegate")
 	CoerceToTGT                 = graph.StringKind("CoerceToTGT")
@@ -111,9 +115,11 @@ var (
 	ADCSESC10a                  = graph.StringKind("ADCSESC10a")
 	ADCSESC10b                  = graph.StringKind("ADCSESC10b")
 	ADCSESC13                   = graph.StringKind("ADCSESC13")
+	ADCSESC16                   = graph.StringKind("ADCSESC16")
 	SyncedToADUser              = graph.StringKind("SyncedToADUser")
 	CoerceAndRelayNTLMToSMB     = graph.StringKind("CoerceAndRelayNTLMToSMB")
 	CoerceAndRelayNTLMToADCS    = graph.StringKind("CoerceAndRelayNTLMToADCS")
+	CoerceAndRelayNTLMToADCSRPC = graph.StringKind("CoerceAndRelayNTLMToADCSRPC")
 	WriteOwnerLimitedRights     = graph.StringKind("WriteOwnerLimitedRights")
 	WriteOwnerRaw               = graph.StringKind("WriteOwnerRaw")
 	OwnsLimitedRights           = graph.StringKind("OwnsLimitedRights")
@@ -247,6 +253,8 @@ const (
 	MSA                                           Property = "msa"
 	DoesAnyAceGrantOwnerRights                    Property = "doesanyacegrantownerrights"
 	DoesAnyInheritedAceGrantOwnerRights           Property = "doesanyinheritedacegrantownerrights"
+	CustomExplicitDenyAcesCount                   Property = "customexplicitdenyacescount"
+	CustomInheritedDenyAcesCount                  Property = "custominheriteddenyacescount"
 	ADCSWebEnrollmentHTTP                         Property = "adcswebenrollmenthttp"
 	ADCSWebEnrollmentHTTPS                        Property = "adcswebenrollmenthttps"
 	ADCSWebEnrollmentHTTPSEPA                     Property = "adcswebenrollmenthttpsepa"
@@ -270,14 +278,21 @@ const (
 	Transitive                                    Property = "transitive"
 	GroupScope                                    Property = "groupscope"
 	NetBIOS                                       Property = "netbios"
+	RPCEncryptionEnforced                         Property = "rpcencryptionenforced"
+	RPCEncryptionCollected                        Property = "rpcencryptioncollected"
 	AdminSDHolderProtected                        Property = "adminsdholderprotected"
 	ServicePrincipalNames                         Property = "serviceprincipalnames"
+	ServerReference                               Property = "serverreference"
+	SiteObject                                    Property = "siteobject"
+	ObjectClass                                   Property = "objectclass"
 	GPOStatusRaw                                  Property = "gpostatusraw"
 	GPOStatus                                     Property = "gpostatus"
+	DisabledExtensions                            Property = "disabledextensions"
+	DisabledExtensionsCollected                   Property = "disabledextensionscollected"
 )
 
 func AllProperties() []Property {
-	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, InheritanceHash, InheritanceHashes, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SpoofSIDHistoryBlocked, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, VulnerableNetlogonSecurityDescriptor, VulnerableNetlogonSecurityDescriptorCollected, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegation, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributesInbound, TrustAttributesOutbound, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPAvailable, LDAPSAvailable, LDAPSEPA, IsDC, IsReadOnlyDC, HTTPEnrollmentEndpoints, HTTPSEnrollmentEndpoints, HasVulnerableEndpoint, RequireSecuritySignature, EnableSecuritySignature, RestrictReceivingNTLMTraffic, NTLMMinServerSec, NTLMMinClientSec, LMCompatibilityLevel, UseMachineID, ClientAllowedNTLMServers, Transitive, GroupScope, NetBIOS, AdminSDHolderProtected, ServicePrincipalNames, GPOStatusRaw, GPOStatus}
+	return []Property{AdminCount, CASecurityCollected, CAName, CertChain, CertName, CertThumbprint, CertThumbprints, HasEnrollmentAgentRestrictions, EnrollmentAgentRestrictionsCollected, IsUserSpecifiesSanEnabled, IsUserSpecifiesSanEnabledCollected, RoleSeparationEnabled, RoleSeparationEnabledCollected, HasBasicConstraints, BasicConstraintPathLength, UnresolvedPublishedTemplates, DNSHostname, CrossCertificatePair, DistinguishedName, DomainFQDN, DomainSID, Sensitive, BlocksInheritance, IsACL, IsACLProtected, InheritanceHash, InheritanceHashes, IsDeleted, Enforced, Department, HasCrossCertificatePair, HasSPN, UnconstrainedDelegation, LastLogon, LastLogonTimestamp, IsPrimaryGroup, HasLAPS, DontRequirePreAuth, LogonType, HasURA, PasswordNeverExpires, PasswordNotRequired, FunctionalLevel, TrustType, SpoofSIDHistoryBlocked, TrustedToAuth, SamAccountName, CertificateMappingMethodsRaw, CertificateMappingMethods, StrongCertificateBindingEnforcementRaw, StrongCertificateBindingEnforcement, VulnerableNetlogonSecurityDescriptor, VulnerableNetlogonSecurityDescriptorCollected, EKUs, SubjectAltRequireUPN, SubjectAltRequireDNS, SubjectAltRequireDomainDNS, SubjectAltRequireEmail, SubjectAltRequireSPN, SubjectRequireEmail, AuthorizedSignatures, ApplicationPolicies, IssuancePolicies, SchemaVersion, RequiresManagerApproval, AuthenticationEnabled, SchannelAuthenticationEnabled, EnrolleeSuppliesSubject, CertificateApplicationPolicy, CertificateNameFlag, EffectiveEKUs, EnrollmentFlag, Flags, NoSecurityExtension, RenewalPeriod, ValidityPeriod, OID, HomeDirectory, CertificatePolicy, CertTemplateOID, GroupLinkID, ObjectGUID, ExpirePasswordsOnSmartCardOnlyAccounts, MachineAccountQuota, SupportedKerberosEncryptionTypes, TGTDelegation, PasswordStoredUsingReversibleEncryption, SmartcardRequired, UseDESKeyOnly, LogonScriptEnabled, LockedOut, UserCannotChangePassword, PasswordExpired, DSHeuristics, UserAccountControl, TrustAttributesInbound, TrustAttributesOutbound, MinPwdLength, PwdProperties, PwdHistoryLength, LockoutThreshold, MinPwdAge, MaxPwdAge, LockoutDuration, LockoutObservationWindow, OwnerSid, SMBSigning, WebClientRunning, RestrictOutboundNTLM, GMSA, MSA, DoesAnyAceGrantOwnerRights, DoesAnyInheritedAceGrantOwnerRights, CustomExplicitDenyAcesCount, CustomInheritedDenyAcesCount, ADCSWebEnrollmentHTTP, ADCSWebEnrollmentHTTPS, ADCSWebEnrollmentHTTPSEPA, LDAPSigning, LDAPAvailable, LDAPSAvailable, LDAPSEPA, IsDC, IsReadOnlyDC, HTTPEnrollmentEndpoints, HTTPSEnrollmentEndpoints, HasVulnerableEndpoint, RequireSecuritySignature, EnableSecuritySignature, RestrictReceivingNTLMTraffic, NTLMMinServerSec, NTLMMinClientSec, LMCompatibilityLevel, UseMachineID, ClientAllowedNTLMServers, Transitive, GroupScope, NetBIOS, RPCEncryptionEnforced, RPCEncryptionCollected, AdminSDHolderProtected, ServicePrincipalNames, ServerReference, SiteObject, ObjectClass, GPOStatusRaw, GPOStatus, DisabledExtensions, DisabledExtensionsCollected}
 }
 func ParseProperty(source string) (Property, error) {
 	switch source {
@@ -507,6 +522,10 @@ func ParseProperty(source string) (Property, error) {
 		return DoesAnyAceGrantOwnerRights, nil
 	case "doesanyinheritedacegrantownerrights":
 		return DoesAnyInheritedAceGrantOwnerRights, nil
+	case "customexplicitdenyacescount":
+		return CustomExplicitDenyAcesCount, nil
+	case "custominheriteddenyacescount":
+		return CustomInheritedDenyAcesCount, nil
 	case "adcswebenrollmenthttp":
 		return ADCSWebEnrollmentHTTP, nil
 	case "adcswebenrollmenthttps":
@@ -553,14 +572,28 @@ func ParseProperty(source string) (Property, error) {
 		return GroupScope, nil
 	case "netbios":
 		return NetBIOS, nil
+	case "rpcencryptionenforced":
+		return RPCEncryptionEnforced, nil
+	case "rpcencryptioncollected":
+		return RPCEncryptionCollected, nil
 	case "adminsdholderprotected":
 		return AdminSDHolderProtected, nil
 	case "serviceprincipalnames":
 		return ServicePrincipalNames, nil
+	case "serverreference":
+		return ServerReference, nil
+	case "siteobject":
+		return SiteObject, nil
+	case "objectclass":
+		return ObjectClass, nil
 	case "gpostatusraw":
 		return GPOStatusRaw, nil
 	case "gpostatus":
 		return GPOStatus, nil
+	case "disabledextensions":
+		return DisabledExtensions, nil
+	case "disabledextensionscollected":
+		return DisabledExtensionsCollected, nil
 	default:
 		return "", errors.New("Invalid enumeration value: " + source)
 	}
@@ -793,6 +826,10 @@ func (s Property) String() string {
 		return string(DoesAnyAceGrantOwnerRights)
 	case DoesAnyInheritedAceGrantOwnerRights:
 		return string(DoesAnyInheritedAceGrantOwnerRights)
+	case CustomExplicitDenyAcesCount:
+		return string(CustomExplicitDenyAcesCount)
+	case CustomInheritedDenyAcesCount:
+		return string(CustomInheritedDenyAcesCount)
 	case ADCSWebEnrollmentHTTP:
 		return string(ADCSWebEnrollmentHTTP)
 	case ADCSWebEnrollmentHTTPS:
@@ -839,14 +876,28 @@ func (s Property) String() string {
 		return string(GroupScope)
 	case NetBIOS:
 		return string(NetBIOS)
+	case RPCEncryptionEnforced:
+		return string(RPCEncryptionEnforced)
+	case RPCEncryptionCollected:
+		return string(RPCEncryptionCollected)
 	case AdminSDHolderProtected:
 		return string(AdminSDHolderProtected)
 	case ServicePrincipalNames:
 		return string(ServicePrincipalNames)
+	case ServerReference:
+		return string(ServerReference)
+	case SiteObject:
+		return string(SiteObject)
+	case ObjectClass:
+		return string(ObjectClass)
 	case GPOStatusRaw:
 		return string(GPOStatusRaw)
 	case GPOStatus:
 		return string(GPOStatus)
+	case DisabledExtensions:
+		return string(DisabledExtensions)
+	case DisabledExtensionsCollected:
+		return string(DisabledExtensionsCollected)
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -1079,6 +1130,10 @@ func (s Property) Name() string {
 		return "Does Any ACE Grant Owner Rights"
 	case DoesAnyInheritedAceGrantOwnerRights:
 		return "Does Any Inherited ACE Grant Owner Rights"
+	case CustomExplicitDenyAcesCount:
+		return "Custom Explicit Deny ACEs Count"
+	case CustomInheritedDenyAcesCount:
+		return "Custom Inherited Deny ACEs Count"
 	case ADCSWebEnrollmentHTTP:
 		return "ADCS Web Enrollment HTTP"
 	case ADCSWebEnrollmentHTTPS:
@@ -1125,14 +1180,28 @@ func (s Property) Name() string {
 		return "Group Scope"
 	case NetBIOS:
 		return "NetBIOS"
+	case RPCEncryptionEnforced:
+		return "RPC Encryption Enforced"
+	case RPCEncryptionCollected:
+		return "RPC Encryption Collected"
 	case AdminSDHolderProtected:
 		return "AdminSDHolder Protected"
 	case ServicePrincipalNames:
 		return "Service Principal Names"
+	case ServerReference:
+		return "Server Reference"
+	case SiteObject:
+		return "Site Object"
+	case ObjectClass:
+		return "Object Class"
 	case GPOStatusRaw:
 		return "GPO Status (Raw)"
 	case GPOStatus:
 		return "GPO Status"
+	case DisabledExtensions:
+		return "Disabled Extensions"
+	case DisabledExtensionsCollected:
+		return "Disabled Extensions Collected"
 	default:
 		return "Invalid enumeration case: " + string(s)
 	}
@@ -1146,10 +1215,10 @@ func (s Property) Is(others ...graph.Kind) bool {
 	return false
 }
 func Nodes() []graph.Kind {
-	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate, IssuancePolicy}
+	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate, IssuancePolicy, Site, SiteServer, SiteSubnet}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, GPLink, AllowedToDelegate, CoerceToTGT, GetChanges, GetChangesAll, GetChangesInFilteredSet, CrossForestTrust, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonRight, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ExtendedByPolicy, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, WriteOwnerRaw, OwnsLimitedRights, OwnsRaw, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ProtectAdminGroups}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, Contains, ServerIs, GPLink, AllowedToDelegate, CoerceToTGT, GetChanges, GetChangesAll, GetChangesInFilteredSet, CrossForestTrust, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, LocalToComputer, MemberOfLocalGroup, RemoteInteractiveLogonRight, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, RootCAFor, DCFor, PublishedTo, ManageCertificates, ManageCA, DelegatedEnrollmentAgent, Enroll, HostsCAService, WritePKIEnrollmentFlag, WritePKINameFlag, NTAuthStoreFor, TrustedForNTAuth, EnterpriseCAFor, IssuedSignedBy, GoldenCert, EnrollOnBehalfOf, OIDGroupLink, ExtendedByPolicy, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, ADCSESC16, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, CoerceAndRelayNTLMToADCSRPC, WriteOwnerLimitedRights, WriteOwnerRaw, OwnsLimitedRights, OwnsRaw, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ProtectAdminGroups}
 }
 func ACLRelationships() []graph.Kind {
 	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, WriteOwner, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, Owns, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, WriteGPLink, SyncLAPSPassword, DCSync, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag, WriteOwnerLimitedRights, OwnsLimitedRights, WriteAltSecurityIdentities, WritePublicInformation}
@@ -1158,19 +1227,16 @@ func IngestACLRelationships() []graph.Kind {
 	return []graph.Kind{AllExtendedRights, ForceChangePassword, AddMember, AddAllowedToAct, GenericAll, WriteDACL, GenericWrite, ReadLAPSPassword, ReadGMSAPassword, AddSelf, WriteSPN, AddKeyCredentialLink, GetChanges, GetChangesAll, GetChangesInFilteredSet, WriteAccountRestrictions, WriteGPLink, ManageCertificates, ManageCA, Enroll, WritePKIEnrollmentFlag, WritePKINameFlag, WriteOwnerLimitedRights, OwnsLimitedRights, WriteAltSecurityIdentities, WritePublicInformation}
 }
 func PathfindingRelationships() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, GPLink, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, OwnsLimitedRights, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ManageCA, ManageCertificates, Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, GPLink, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, ADCSESC16, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, CoerceAndRelayNTLMToADCSRPC, WriteOwnerLimitedRights, OwnsLimitedRights, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ManageCA, ManageCertificates, ServerIs, Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation}
 }
 func PathfindingRelationshipsMatchFrontend() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, GPLink, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, OwnsLimitedRights, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ManageCA, ManageCertificates, Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation, ProtectAdminGroups}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, GPLink, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, ADCSESC16, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, CoerceAndRelayNTLMToADCSRPC, WriteOwnerLimitedRights, OwnsLimitedRights, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ManageCA, ManageCertificates, ServerIs, Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation, ProtectAdminGroups}
 }
 func InboundRelationshipKinds() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, GPLink, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, OwnsLimitedRights, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ManageCA, ManageCertificates, Contains}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, GPLink, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, ADCSESC16, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, CoerceAndRelayNTLMToADCSRPC, WriteOwnerLimitedRights, OwnsLimitedRights, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ManageCA, ManageCertificates, ServerIs, Contains}
 }
 func OutboundRelationshipKinds() []graph.Kind {
-	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, GPLink, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, WriteOwnerLimitedRights, OwnsLimitedRights, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ManageCA, ManageCertificates, Contains, DCFor}
-}
-func PostProcessedRelationships() []graph.Kind {
-	return []graph.Kind{DCSync, ProtectAdminGroups, SyncLAPSPassword, CanRDP, AdminTo, CanPSRemote, ExecuteDCOM, TrustedForNTAuth, IssuedSignedBy, EnterpriseCAFor, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC10a, ADCSESC10b, ADCSESC9a, ADCSESC9b, ADCSESC13, EnrollOnBehalfOf, SyncedToADUser, ExtendedByPolicy, CoerceAndRelayNTLMToADCS, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, GPOAppliesTo, CanApplyGPO, HasTrustKeys}
+	return []graph.Kind{Owns, GenericAll, GenericWrite, WriteOwner, WriteDACL, MemberOf, ForceChangePassword, AllExtendedRights, AddMember, HasSession, GPLink, AllowedToDelegate, CoerceToTGT, AllowedToAct, AdminTo, CanPSRemote, CanRDP, ExecuteDCOM, HasSIDHistory, AddSelf, DCSync, ReadLAPSPassword, ReadGMSAPassword, DumpSMSAPassword, SQLAdmin, AddAllowedToAct, WriteSPN, AddKeyCredentialLink, SyncLAPSPassword, WriteAccountRestrictions, WriteGPLink, GoldenCert, ADCSESC1, ADCSESC3, ADCSESC4, ADCSESC6a, ADCSESC6b, ADCSESC9a, ADCSESC9b, ADCSESC10a, ADCSESC10b, ADCSESC13, ADCSESC16, SyncedToADUser, CoerceAndRelayNTLMToSMB, CoerceAndRelayNTLMToADCS, CoerceAndRelayNTLMToADCSRPC, WriteOwnerLimitedRights, OwnsLimitedRights, ClaimSpecialIdentity, CoerceAndRelayNTLMToLDAP, CoerceAndRelayNTLMToLDAPS, ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO, HasTrustKeys, WriteAltSecurityIdentities, WritePublicInformation, ManageCA, ManageCertificates, ServerIs, Contains, DCFor}
 }
 func IsACLKind(s graph.Kind) bool {
 	for _, acl := range ACLRelationships() {
@@ -1181,5 +1247,5 @@ func IsACLKind(s graph.Kind) bool {
 	return false
 }
 func NodeKinds() []graph.Kind {
-	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate, IssuancePolicy}
+	return []graph.Kind{Entity, User, Computer, Group, GPO, OU, Container, Domain, LocalGroup, LocalUser, AIACA, RootCA, EnterpriseCA, NTAuthStore, CertTemplate, IssuancePolicy, Site, SiteServer, SiteSubnet}
 }

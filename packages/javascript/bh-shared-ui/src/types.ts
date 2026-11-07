@@ -38,6 +38,8 @@ export type MappedStringLiteral<T extends string | number, V = ''> = {
 export type SubNavItem = {
     label: string;
     path: string;
+    /** Optional route matcher when it differs from the navigation URL, such as a path with nested routes. */
+    routePath?: string;
     component: React.LazyExoticComponent<React.FC>;
     adminOnly: boolean;
     featureFlag?: string;
@@ -74,6 +76,8 @@ export type QueryLineItem = {
     query: string;
     canEdit?: boolean;
     user_id?: string;
+    category?: string;
+    schema_extension_id?: number | null;
 };
 
 export type QuerySearchType = {

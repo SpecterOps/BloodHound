@@ -154,6 +154,8 @@ public static readonly string GMSA = "gmsa";
 public static readonly string MSA = "msa";
 public static readonly string DoesAnyAceGrantOwnerRights = "doesanyacegrantownerrights";
 public static readonly string DoesAnyInheritedAceGrantOwnerRights = "doesanyinheritedacegrantownerrights";
+public static readonly string CustomExplicitDenyAcesCount = "customexplicitdenyacescount";
+public static readonly string CustomInheritedDenyAcesCount = "custominheriteddenyacescount";
 public static readonly string ADCSWebEnrollmentHTTP = "adcswebenrollmenthttp";
 public static readonly string ADCSWebEnrollmentHTTPS = "adcswebenrollmenthttps";
 public static readonly string ADCSWebEnrollmentHTTPSEPA = "adcswebenrollmenthttpsepa";
@@ -177,10 +179,17 @@ public static readonly string ClientAllowedNTLMServers = "clientallowedntlmserve
 public static readonly string Transitive = "transitive";
 public static readonly string GroupScope = "groupscope";
 public static readonly string NetBIOS = "netbios";
+public static readonly string RPCEncryptionEnforced = "rpcencryptionenforced";
+public static readonly string RPCEncryptionCollected = "rpcencryptioncollected";
 public static readonly string AdminSDHolderProtected = "adminsdholderprotected";
 public static readonly string ServicePrincipalNames = "serviceprincipalnames";
+public static readonly string ServerReference = "serverreference";
+public static readonly string SiteObject = "siteobject";
+public static readonly string ObjectClass = "objectclass";
 public static readonly string GPOStatusRaw = "gpostatusraw";
 public static readonly string GPOStatus = "gpostatus";
+public static readonly string DisabledExtensions = "disabledextensions";
+public static readonly string DisabledExtensionsCollected = "disabledextensionscollected";
 
 }
 }

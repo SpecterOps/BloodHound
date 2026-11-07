@@ -14,9 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, expectNoAccessibilityViolations, test } from 'bh-playwright-testing';
+import { expect, test } from 'bh-playwright-testing';
 
 test.describe('Login page accessibility', () => {
+    // Opt out of the shared cypher "has data" stub so the login page renders unauthenticated.
+    test.use({ installGraphDataStub: false });
+
     // The auth setup project snapshots a logged-in storageState for all other a11y specs, but
     // the login page only renders for unauthenticated users — with auth present, it redirects
     // to ROUTE_HOME. Null out `persistedState.auth.sessionToken` (which lives in localStorage,
@@ -38,13 +41,13 @@ test.describe('Login page accessibility', () => {
         });
     });
 
-    test('login form has no detectable WCAG A/AA violations', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('login form has no detectable WCAG A/AA violations', async ({ page, checkA11y }) => {
         await page.goto('/ui/login');
 
         // Wait for login form to load
         await expect(page.getByRole('textbox', { name: 'Email Address' })).toBeVisible();
 
-        const results = await makeAxeBuilder().analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        // include:null skips scope narrowing so full page is assessed
+        await checkA11y({ include: null });
     });
 });

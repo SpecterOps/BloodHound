@@ -56,7 +56,6 @@ export default defineConfig(({ mode }) => {
                 '@mona-health/react-input-mask',
                 '@mui/material',
                 '@mui/styles',
-                '@mui/lab',
                 'downshift',
                 'history',
                 'notistack',

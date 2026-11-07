@@ -18,11 +18,11 @@ import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
     DEFAULT_PINNED_COLUMN_KEYS,
+    EdgeTraversability,
     ExploreTable,
     FeatureFlag,
     GraphControls,
     GraphItemInformationPanel,
-    GraphProgress,
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
     NodeClickInfo,
@@ -36,6 +36,7 @@ import {
     useAppName,
     useAutomaticGraphActions,
     useCustomNodeKinds,
+    useEdgeTraversability,
     useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
@@ -46,6 +47,7 @@ import {
     useTheme,
     useToggle,
 } from 'bh-shared-ui';
+import { ProgressBar } from 'doodle-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -77,12 +79,20 @@ const GraphView: FC = () => {
             <title>Explore | {appName}</title>
         </Helmet>
     );
+    // For Screen Readers
+    const hiddenHeading = <h1 className='sr-only'>Explore</h1>;
 
     const { selectedItem, setSelectedItem, selectedItemQuery, previousSelectedItem, clearSelectedItem } =
         useExploreSelectedItem();
     const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
 
     const graphQuery = useSigmaExploreGraph();
+    const { data: edgeTraversability } = useEdgeTraversability();
+    // Read at graph build time so traversability updates do not rebuild the graph or rerun its layout.
+    const edgeTraversabilityRef = useRef(edgeTraversability);
+    edgeTraversabilityRef.current = edgeTraversability;
+    // The traversability map whose dashed edge styles are applied to the most recently built graph.
+    const appliedEdgeTraversabilityRef = useRef<EdgeTraversability>();
 
     // Automatically select the first node when performing a node search, or clear selection for pathfinding searches
     useAutomaticGraphActions(graphQuery.data);
@@ -136,27 +146,40 @@ const GraphView: FC = () => {
         if (graphOptions.hideNodes) {
             setGraphologyGraph(undefined);
         } else {
-            const graph = initGraph(graphData, graphOptions);
+            const currentEdgeTraversability = edgeTraversabilityRef.current;
+            const graph = initGraph(graphData, { ...graphOptions, edgeTraversability: currentEdgeTraversability });
+            appliedEdgeTraversabilityRef.current = currentEdgeTraversability;
             setGraphologyGraph(graph);
         }
     }, [graphQuery.data, graphOptions]);
+
+    // Update styles when schema metadata arrives without rebuilding the graph or its layout.
+    useEffect(() => {
+        if (!graphologyGraph || appliedEdgeTraversabilityRef.current === edgeTraversability) return;
+
+        graphologyGraph.updateEachEdgeAttributes(
+            (_edgeId, attributes) => ({ ...attributes, dashed: !edgeTraversability.get(attributes.kind) }),
+            { attributes: ['dashed'] }
+        );
+        appliedEdgeTraversabilityRef.current = edgeTraversability;
+    }, [graphologyGraph, edgeTraversability]);
 
     /* useCallback Event Handlers must appear before return statement */
     const handleContextMenu = useCallback(
         (event: SigmaNodeEventPayload) => {
             setSelectedItem(event.node);
-            setContextMenu(contextMenu === null ? { mouseX: event.event.x, mouseY: event.event.y } : null);
+            setContextMenu({ mouseX: event.event.original.clientX, mouseY: event.event.original.clientY });
         },
-        [contextMenu, setContextMenu, setSelectedItem]
+        [setContextMenu, setSelectedItem]
     );
 
-    /* Passthrough function to munge shared component callback shape into a Sigma Node event-shaped object */
     const handleKebabMenuClick = useCallback(
         (nodeInfo: NodeClickInfo) => {
             if (!nodeInfo.id) return;
-            handleContextMenu({ event: { x: nodeInfo.x, y: nodeInfo.y }, node: nodeInfo.id } as SigmaNodeEventPayload);
+            setSelectedItem(nodeInfo.id);
+            setContextMenu({ mouseX: nodeInfo.x, mouseY: nodeInfo.y });
         },
-        [handleContextMenu]
+        [setSelectedItem, setContextMenu]
     );
 
     useKeybindings({
@@ -239,14 +262,27 @@ const GraphView: FC = () => {
     if (graphHasDataQuery.isLoading) {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
-                <GraphProgress loading={graphHasDataQuery.isLoading} />
+                {hiddenHeading}
+                <ProgressBar value={null} aria-label='Loading Explore graph' className='absolute inset-x-0 top-0' />
             </div>
         );
     }
 
-    if (graphHasDataQuery.isError) return <GraphViewErrorAlert />;
+    if (graphHasDataQuery.isError)
+        return (
+            <>
+                {hiddenHeading}
+                <GraphViewErrorAlert />
+            </>
+        );
 
-    if (!isWebGLEnabledMemo) return <WebGLDisabledAlert />;
+    if (!isWebGLEnabledMemo)
+        return (
+            <>
+                {hiddenHeading}
+                <WebGLDisabledAlert />
+            </>
+        );
 
     /* Event Handlers */
     const handleCloseContextMenu = () => {
@@ -272,6 +308,7 @@ const GraphView: FC = () => {
             data-testid='explore'
             onContextMenu={(e) => e.preventDefault()}>
             {title}
+            {hiddenHeading}
             <SigmaChart
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}
@@ -322,7 +359,9 @@ const GraphView: FC = () => {
                 }
             />
 
-            <GraphProgress loading={graphQuery.isLoading} />
+            {graphQuery.isLoading && (
+                <ProgressBar value={null} aria-label='Loading Explore graph' className='absolute inset-x-0 top-0' />
+            )}
             <NoDataFileUploadDialogWithLinks open={!graphHasDataQuery.data} />
             {displayTable && (
                 <ExploreTable

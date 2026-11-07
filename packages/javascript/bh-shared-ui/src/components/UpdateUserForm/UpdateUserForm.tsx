@@ -14,10 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, CircularProgress } from '@mui/material';
+import { Alert } from '@mui/material';
 import {
     Button,
-    Card,
     DialogActions,
     DialogClose,
     DialogTitle,
@@ -28,6 +27,7 @@ import {
     FormLabel,
     FormMessage,
     Input,
+    LoadingSpinner,
     Select,
     SelectContent,
     SelectItem,
@@ -53,6 +53,11 @@ export type UpdateUserRequestForm = Omit<UpdateUserRequest, 'sso_provider_id' | 
     roles: number | undefined;
 };
 
+const formPanelClasses =
+    'rounded-md bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900 p-6';
+const formStatePanelClasses = `w-[600px] max-w-full m-auto ${formPanelClasses}`;
+const formStateContentClasses = 'flex min-h-40 items-center justify-center py-6';
+
 const UpdateUserForm: React.FC<{
     onSubmit: (user: UpdateUserRequest) => void;
     userId: string;
@@ -73,18 +78,24 @@ const UpdateUserForm: React.FC<{
         getEnvironmentsQuery.isLoading
     ) {
         return (
-            <div className='w-full h-full text-center'>
-                <CircularProgress />
+            <div className={formStatePanelClasses}>
+                <DialogTitle>Edit User</DialogTitle>
+                <div className={formStateContentClasses}>
+                    <LoadingSpinner />
+                </div>
             </div>
         );
     }
 
     if (getUserQuery.isError || getRolesQuery.isError || getSSOProvidersQuery.isError || getEnvironmentsQuery.isError) {
         return (
-            <Card className='p-6 rounded shadow w-[600px] m-auto h-[800px] flex flex-col justify-center'>
-                <div>Unable to load data required to edit this user.</div>
+            <div className={formStatePanelClasses}>
+                <DialogTitle>Edit User</DialogTitle>
+                <div className={formStateContentClasses} role='alert'>
+                    Unable to load data required to edit this user.
+                </div>
 
-                <DialogActions>
+                <DialogActions className='flex justify-end gap-4'>
                     <DialogClose asChild>
                         <Button
                             data-testid='update-user-dialog_button-cancel'
@@ -96,7 +107,7 @@ const UpdateUserForm: React.FC<{
                         </Button>
                     </DialogClose>
                 </DialogActions>
-            </Card>
+            </div>
         );
     }
     return (
@@ -173,7 +184,7 @@ const UpdateUserFormInner: React.FC<{
             }
         }
         // ignoring so we don't have to include the form element
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // oxlint-disable-next-line hooks-compat/exhaustive-deps
     }, [error]);
 
     const handleOnSave = () => {
@@ -191,9 +202,8 @@ const UpdateUserFormInner: React.FC<{
         <Form {...form}>
             <form autoComplete='off' onSubmit={form.handleSubmit(handleOnSave)}>
                 <div className='flex gap-x-4 justify-center'>
-                    <Card className='p-6 flex flex-col rounded shadow max-w-[600px] w-full'>
-                        <DialogTitle>{'Edit User'}</DialogTitle>
-
+                    <div className={`flex flex-col w-full max-w-[600px] ${formPanelClasses}`}>
+                        <DialogTitle>Edit User</DialogTitle>
                         <div className='flex flex-col mt-4 mb-8 w-full' data-testid='update-user-dialog_dialog-content'>
                             {!hasSelectedSelf && (
                                 <div className='mb-4'>
@@ -215,10 +225,8 @@ const UpdateUserFormInner: React.FC<{
                                                             data-testid='update-user-dialog_select_role-tooltip'>
                                                             <Tooltip
                                                                 tooltip='Only Read-Only and Users roles contain the environment target access control.'
-                                                                triggerProps={{ type: 'button' }}
                                                                 contentProps={{
-                                                                    className:
-                                                                        'max-w-80 dark:bg-neutral-dark-5 dark:text-white border-0 !z-[2000]',
+                                                                    className: 'max-w-80',
                                                                 }}
                                                             />
                                                         </div>
@@ -508,7 +516,7 @@ const UpdateUserFormInner: React.FC<{
                                 Save
                             </Button>
                         </DialogActions>
-                    </Card>
+                    </div>
                     {showEnvironmentAccessControls && selectedETACEnabledRole && (
                         <EnvironmentSelectPanel form={form} initialData={initialData} />
                     )}

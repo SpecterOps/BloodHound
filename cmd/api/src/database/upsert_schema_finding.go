@@ -25,33 +25,34 @@ import (
 )
 
 // resolveFindingFKs translates the FK names in a RelationshipFindingInput to their corresponding IDs.
+// To allow cross-extension findings, we upsert environment kinds if they have not been installed yet.
 func (s *BloodhoundDB) resolveFindingFKs(ctx context.Context, input model.RelationshipFindingInput) (int32, int32, error) {
 	if relKind, err := s.GetKindsByNames(ctx, input.RelationshipKindName); err != nil {
 		return 0, 0, fmt.Errorf("error retrieving relationship kind '%s': %w", input.RelationshipKindName, err)
-	} else if environment, err := s.GetEnvironmentKindName(ctx, input.EnvironmentKindName); err != nil {
-		return 0, 0, fmt.Errorf("error retrieving environment kind '%s': %w", input.EnvironmentKindName, err)
+	} else if environmentKind, err := s.UpsertKind(ctx, input.EnvironmentKindName); err != nil {
+		return 0, 0, fmt.Errorf("error registering environment kind '%s': %w", input.EnvironmentKindName, err)
 	} else {
-		return relKind[0].ID, environment.ID, nil
+		return relKind[0].ID, environmentKind.ID, nil
 	}
 }
 
 // applyFindingInput applies resolved FK IDs and mutable fields from input onto an existing finding,
 // returning the updated struct.
-func applyFindingInput(existing model.SchemaFinding, relKindId, environmentId int32, input model.RelationshipFindingInput) model.SchemaFinding {
+func applyFindingInput(existing model.SchemaFinding, relKindId, environmentKindId int32, input model.RelationshipFindingInput) model.SchemaFinding {
 	existing.Type = model.SchemaFindingTypeRelationship
 	existing.DisplayName = input.DisplayName
 	existing.PZDisplayName = null.NewString(input.PZDisplayName, input.PZDisplayName != "")
 	existing.KindId = relKindId
-	existing.EnvironmentId = environmentId
+	existing.EnvironmentId = environmentKindId
 	return existing
 }
 
 // CreateFindingWithRemediation translates FK names, creates the finding, and creates its 1:1 remediation.
 func (s *BloodhoundDB) CreateFindingWithRemediation(ctx context.Context, extensionId int32, input model.RelationshipFindingInput) (model.SchemaFinding, error) {
-	if relKindId, environmentId, err := s.resolveFindingFKs(ctx, input); err != nil {
+	if relKindId, environmentKindId, err := s.resolveFindingFKs(ctx, input); err != nil {
 		return model.SchemaFinding{}, err
 	} else if finding, err := s.CreateSchemaFinding(ctx, model.SchemaFindingTypeRelationship,
-		extensionId, relKindId, environmentId, input.Name, input.DisplayName, input.PZDisplayName); err != nil {
+		extensionId, relKindId, environmentKindId, input.Name, input.DisplayName, input.PZDisplayName); err != nil {
 		return model.SchemaFinding{}, fmt.Errorf("error creating finding: %w", err)
 	} else if _, err := s.CreateRemediation(ctx, finding.ID,
 		input.RemediationInput.ShortDescription, input.RemediationInput.LongDescription,
@@ -64,9 +65,9 @@ func (s *BloodhoundDB) CreateFindingWithRemediation(ctx context.Context, extensi
 
 // UpdateFindingWithRemediation translates FK names, updates the finding, and updates its 1:1 remediation.
 func (s *BloodhoundDB) UpdateFindingWithRemediation(ctx context.Context, existing model.SchemaFinding, input model.RelationshipFindingInput) (model.SchemaFinding, error) {
-	if relKindId, environmentId, err := s.resolveFindingFKs(ctx, input); err != nil {
+	if relKindId, environmentKindId, err := s.resolveFindingFKs(ctx, input); err != nil {
 		return model.SchemaFinding{}, err
-	} else if updated, err := s.UpdateSchemaFinding(ctx, applyFindingInput(existing, relKindId, environmentId, input)); err != nil {
+	} else if updated, err := s.UpdateSchemaFinding(ctx, applyFindingInput(existing, relKindId, environmentKindId, input)); err != nil {
 		return model.SchemaFinding{}, fmt.Errorf("error updating finding: %w", err)
 	} else if _, err := s.UpdateRemediation(ctx, updated.ID,
 		input.RemediationInput.ShortDescription, input.RemediationInput.LongDescription,

@@ -36,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
 	"github.com/specterops/dawgs/graph"
@@ -91,7 +92,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), "1", ad.Computer).
 						Return(nil, graph.ErrNoResultsFound)
 				},
 				Test: func(output apitest.Output) {
@@ -107,7 +108,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), "1", ad.Computer).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -122,15 +123,23 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 					apitest.SetContext(input, bheCtx.ConstructGoContext())
 				},
 				Setup: func() {
+					computerProperties := graph.NewProperties().
+						Set(common.ObjectID.String(), "COMPUTER-1").
+						Set("siteservernode", "SITE-SERVER-1").
+						Set("siteservernodename", "SITE-SERVER-NAME")
+					computerNode := graph.NewNode(graph.ID(1), computerProperties, ad.Computer)
+
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(nil, nil)
+						GetADEntityDetails(gomock.Any(), "1", ad.Computer).
+						Return(computerNode, nil)
 					mockGraph.EXPECT().
-						GetEntityCountResults(gomock.Any(), gomock.Any(), gomock.Any()).
-						Return(nil)
+						GetEntityCountResults(gomock.Any(), computerNode, gomock.Any()).
+						Return(map[string]any{"props": computerProperties.Map})
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, `"siteservernode":"SITE-SERVER-1"`)
+					apitest.BodyContains(output, `"siteservernodename":"SITE-SERVER-NAME"`)
 				},
 			},
 			{
@@ -142,11 +151,122 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), "1", ad.Computer).
 						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyNotContains(output, "siteservernode")
+				},
+			},
+			{
+				Name: "SuccessWithoutCountsWithSiteServer",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, "object_id", "1")
+					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
+				Setup: func() {
+					computerProperties := graph.NewProperties().
+						Set(common.ObjectID.String(), "COMPUTER-1").
+						Set("siteservernode", "SITE-SERVER-1").
+						Set("siteservernodename", "SITE-SERVER-NAME")
+
+					mockGraph.EXPECT().
+						GetADEntityDetails(gomock.Any(), "1", ad.Computer).
+						Return(graph.NewNode(graph.ID(1), computerProperties, ad.Computer), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, `"siteservernode":"SITE-SERVER-1"`)
+					apitest.BodyContains(output, `"siteservernodename":"SITE-SERVER-NAME"`)
+				},
+			},
+		})
+}
+
+func TestResources_GetSiteServerEntityInfo(t *testing.T) {
+	var (
+		mockCtrl  = gomock.NewController(t)
+		mockGraph = mocks.NewMockGraph(mockCtrl)
+		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+
+		bheCtx = bhctx.Context{
+			AuthCtx: auth.Context{
+				PermissionOverrides: auth.PermissionOverrides{},
+				Owner:               model.User{},
+				Session:             model.UserSession{},
+			},
+		}
+	)
+	defer mockCtrl.Finish()
+
+	apitest.NewHarness(t, resources.GetSiteServerEntityInfo).
+		Run([]apitest.Case{
+			{
+				Name: "SuccessWithCountsAndServerReference",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, "object_id", "1")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
+				Setup: func() {
+					siteServerProperties := graph.NewProperties().
+						Set(common.ObjectID.String(), "SITE-SERVER-1").
+						Set("serverreferencecomputer", "COMPUTER-1").
+						Set("serverreferencecomputername", "COMPUTER-NAME")
+					siteServerNode := graph.NewNode(graph.ID(1), siteServerProperties, ad.SiteServer)
+
+					mockGraph.EXPECT().
+						GetADEntityDetails(gomock.Any(), "1", ad.SiteServer).
+						Return(siteServerNode, nil)
+					mockGraph.EXPECT().
+						GetEntityCountResults(gomock.Any(), siteServerNode, gomock.Any()).
+						Return(map[string]any{"props": siteServerProperties.Map})
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, `"serverreferencecomputer":"COMPUTER-1"`)
+					apitest.BodyContains(output, `"serverreferencecomputername":"COMPUTER-NAME"`)
+				},
+			},
+			{
+				Name: "SuccessWithoutCounts",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, "object_id", "1")
+					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
+				Setup: func() {
+					mockGraph.EXPECT().
+						GetADEntityDetails(gomock.Any(), "1", ad.SiteServer).
+						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyNotContains(output, "serverreferencecomputer")
+				},
+			},
+			{
+				Name: "SuccessWithoutCountsWithServerReference",
+				Input: func(input *apitest.Input) {
+					apitest.SetURLVar(input, "object_id", "1")
+					apitest.AddQueryParam(input, "counts", "false")
+					apitest.SetContext(input, bheCtx.ConstructGoContext())
+				},
+				Setup: func() {
+					siteServerProperties := graph.NewProperties().
+						Set(common.ObjectID.String(), "SITE-SERVER-1").
+						Set("serverreferencecomputer", "COMPUTER-1").
+						Set("serverreferencecomputername", "COMPUTER-NAME")
+
+					mockGraph.EXPECT().
+						GetADEntityDetails(gomock.Any(), "1", ad.SiteServer).
+						Return(graph.NewNode(graph.ID(1), siteServerProperties, ad.SiteServer), nil)
+				},
+				Test: func(output apitest.Output) {
+					apitest.StatusCode(output, http.StatusOK)
+					apitest.BodyContains(output, `"serverreferencecomputer":"COMPUTER-1"`)
+					apitest.BodyContains(output, `"serverreferencecomputername":"COMPUTER-NAME"`)
 				},
 			},
 		})
@@ -199,7 +319,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, graph.ErrNoResultsFound)
 				},
 				Test: func(output apitest.Output) {
@@ -215,7 +335,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -231,7 +351,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, nil)
 					mockGraph.EXPECT().
 						GetEntityCountResults(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -250,7 +370,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -413,7 +533,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, graph.ErrNoResultsFound)
 				},
 				Test: func(output apitest.Output) {
@@ -429,7 +549,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -445,7 +565,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, nil)
 					mockGraph.EXPECT().
 						GetEntityCountResults(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -464,7 +584,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -521,7 +641,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, graph.ErrNoResultsFound)
 				},
 				Test: func(output apitest.Output) {
@@ -537,7 +657,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -553,7 +673,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, nil)
 					mockGraph.EXPECT().
 						GetEntityCountResults(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -572,7 +692,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -629,7 +749,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, graph.ErrNoResultsFound)
 				},
 				Test: func(output apitest.Output) {
@@ -645,7 +765,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -661,7 +781,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, nil)
 					mockGraph.EXPECT().
 						GetEntityCountResults(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -680,7 +800,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -737,7 +857,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, graph.ErrNoResultsFound)
 				},
 				Test: func(output apitest.Output) {
@@ -753,7 +873,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, errors.New("graph error"))
 				},
 				Test: func(output apitest.Output) {
@@ -769,7 +889,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(nil, nil)
 					mockGraph.EXPECT().
 						GetEntityCountResults(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -788,7 +908,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 				},
 				Setup: func() {
 					mockGraph.EXPECT().
-						GetEntityByObjectId(gomock.Any(), gomock.Any(), gomock.Any()).
+						GetADEntityDetails(gomock.Any(), gomock.Any(), gomock.Any()).
 						Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				},
 				Test: func(output apitest.Output) {
@@ -853,7 +973,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Base")).Return(nil, graph.ErrNoResultsFound)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("Base")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -874,7 +994,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Base")).Return(nil, errors.New("error"))
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("Base")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -895,7 +1015,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Base")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("Base")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				mocks.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(1), graph.NewProperties()), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -922,7 +1042,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Base")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("Base")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
 		{
@@ -941,7 +1061,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Entity},
 					Properties: props,
@@ -978,11 +1098,13 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(&graph.Node{
+				entityNode := &graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Entity},
 					Properties: props,
-				}, nil).Times(2)
+				}
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Entity).Return(entityNode, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.Entity).Return(entityNode, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1141,7 +1263,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Container")).Return(nil, graph.ErrNoResultsFound)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("Container")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -1162,7 +1284,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Container")).Return(nil, errors.New("error"))
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("Container")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -1183,7 +1305,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Container")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("Container")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				mocks.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(1), graph.NewProperties()), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1210,7 +1332,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("Container")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("Container")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
 		{
@@ -1229,7 +1351,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Container).Return(&graph.Node{
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.Container).Return(&graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Container},
 					Properties: props,
@@ -1266,11 +1388,13 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Container).Return(&graph.Node{
+				entityNode := &graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Entity, ad.Container},
 					Properties: props,
-				}, nil).Times(2)
+				}
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.Container).Return(entityNode, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.Container).Return(entityNode, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.Container.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1429,7 +1553,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("AIACA")).Return(nil, graph.ErrNoResultsFound)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("AIACA")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -1450,7 +1574,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("AIACA")).Return(nil, errors.New("error"))
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("AIACA")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -1471,7 +1595,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("AIACA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("AIACA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				mocks.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(1), graph.NewProperties()), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1498,7 +1622,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("AIACA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("AIACA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
 		{
@@ -1517,7 +1641,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.AIACA).Return(&graph.Node{
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.AIACA).Return(&graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.AIACA},
 					Properties: props,
@@ -1554,11 +1678,13 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.AIACA).Return(&graph.Node{
+				entityNode := &graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Entity, ad.AIACA},
 					Properties: props,
-				}, nil).Times(2)
+				}
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.AIACA).Return(entityNode, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.AIACA).Return(entityNode, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.AIACA.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1714,7 +1840,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("RootCA")).Return(nil, graph.ErrNoResultsFound)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("RootCA")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -1733,7 +1859,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("RootCA")).Return(nil, errors.New("error"))
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("RootCA")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -1752,7 +1878,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("RootCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("RootCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				mocks.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(1), graph.NewProperties()), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1778,7 +1904,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("RootCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("RootCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
 		{
@@ -1797,7 +1923,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.RootCA).Return(&graph.Node{
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.RootCA).Return(&graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.RootCA},
 					Properties: props,
@@ -1834,11 +1960,13 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.RootCA).Return(&graph.Node{
+				entityNode := &graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Entity, ad.RootCA},
 					Properties: props,
-				}, nil).Times(2)
+				}
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.RootCA).Return(entityNode, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.RootCA).Return(entityNode, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.RootCA.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -1998,7 +2126,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("EnterpriseCA")).Return(nil, graph.ErrNoResultsFound)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("EnterpriseCA")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -2019,7 +2147,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("EnterpriseCA")).Return(nil, errors.New("error"))
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("EnterpriseCA")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -2040,7 +2168,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("EnterpriseCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("EnterpriseCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				mocks.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(1), graph.NewProperties()), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2067,7 +2195,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("EnterpriseCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("EnterpriseCA")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
 		{
@@ -2086,7 +2214,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.EnterpriseCA).Return(&graph.Node{
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.EnterpriseCA).Return(&graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.EnterpriseCA},
 					Properties: props,
@@ -2123,11 +2251,13 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.EnterpriseCA).Return(&graph.Node{
+				entityNode := &graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Entity, ad.EnterpriseCA},
 					Properties: props,
-				}, nil).Times(2)
+				}
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.EnterpriseCA).Return(entityNode, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.EnterpriseCA).Return(entityNode, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.EnterpriseCA.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2286,7 +2416,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("NTAuthStore")).Return(nil, graph.ErrNoResultsFound)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("NTAuthStore")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -2307,7 +2437,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("NTAuthStore")).Return(nil, errors.New("error"))
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("NTAuthStore")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -2328,7 +2458,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("NTAuthStore")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("NTAuthStore")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				mocks.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(1), graph.NewProperties()), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2355,7 +2485,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("NTAuthStore")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("NTAuthStore")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
 		{
@@ -2374,7 +2504,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.NTAuthStore).Return(&graph.Node{
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.NTAuthStore).Return(&graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.NTAuthStore},
 					Properties: props,
@@ -2411,11 +2541,13 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.NTAuthStore).Return(&graph.Node{
+				entityNode := &graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Entity, ad.NTAuthStore},
 					Properties: props,
-				}, nil).Times(2)
+				}
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.NTAuthStore).Return(entityNode, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.NTAuthStore).Return(entityNode, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.NTAuthStore.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2574,7 +2706,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("CertTemplate")).Return(nil, graph.ErrNoResultsFound)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("CertTemplate")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -2595,7 +2727,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("CertTemplate")).Return(nil, errors.New("error"))
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("CertTemplate")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -2616,7 +2748,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("CertTemplate")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("CertTemplate")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				mocks.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(1), graph.NewProperties()), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2643,7 +2775,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("CertTemplate")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("CertTemplate")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
 		{
@@ -2662,7 +2794,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.CertTemplate).Return(&graph.Node{
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.CertTemplate).Return(&graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.CertTemplate},
 					Properties: props,
@@ -2699,11 +2831,13 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.CertTemplate).Return(&graph.Node{
+				entityNode := &graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Entity, ad.CertTemplate},
 					Properties: props,
-				}, nil).Times(2)
+				}
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.CertTemplate).Return(entityNode, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.CertTemplate).Return(entityNode, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.CertTemplate.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2862,7 +2996,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("IssuancePolicy")).Return(nil, graph.ErrNoResultsFound)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("IssuancePolicy")).Return(nil, graph.ErrNoResultsFound)
 			},
 			expected: expected{
 				responseCode:   http.StatusNotFound,
@@ -2883,7 +3017,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("IssuancePolicy")).Return(nil, errors.New("error"))
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("IssuancePolicy")).Return(nil, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -2904,7 +3038,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("IssuancePolicy")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("IssuancePolicy")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 				mocks.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(1), graph.NewProperties()), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{
@@ -2931,7 +3065,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mocks *mock) {
 				t.Helper()
-				mocks.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", graph.StringKind("IssuancePolicy")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
+				mocks.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", graph.StringKind("IssuancePolicy")).Return(graph.NewNode(graph.ID(1), graph.NewProperties()), nil)
 			},
 		},
 		{
@@ -2950,7 +3084,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.IssuancePolicy).Return(&graph.Node{
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.IssuancePolicy).Return(&graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.IssuancePolicy},
 					Properties: props,
@@ -2987,11 +3121,13 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 				props := graph.AsProperties(map[string]any{
 					"domainsid": "12345",
 				})
-				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.IssuancePolicy).Return(&graph.Node{
+				entityNode := &graph.Node{
 					ID:         graph.ID(16),
 					Kinds:      graph.Kinds{ad.Entity, ad.IssuancePolicy},
 					Properties: props,
-				}, nil).Times(2)
+				}
+				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "id", ad.IssuancePolicy).Return(entityNode, nil)
+				mock.mockGraphQuery.EXPECT().GetADEntityDetails(gomock.Any(), "id", ad.IssuancePolicy).Return(entityNode, nil)
 				mock.mockGraphQuery.EXPECT().GetEntityCountResults(gomock.Any(), graph.NewNode(graph.ID(16), props, graph.StringsToKinds([]string{ad.Entity.String(), ad.IssuancePolicy.String()})...), gomock.Any()).Return(map[string]any{"results": "output"})
 			},
 			expected: expected{

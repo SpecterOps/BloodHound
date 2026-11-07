@@ -26,8 +26,7 @@ import (
 )
 
 // Register builds the identity store -> service -> handler chain and attaches
-// the identity routes to the provided router. It is called from the modules
-// registry and receives only the infrastructure it directly needs.
+// the identity routes to the provided router.
 func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	var (
 		store      = appdb.NewStore(pool)
@@ -36,4 +35,15 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool) {
 	)
 
 	routes.Register(routerInst, handlerSet)
+}
+
+// RegisterUserListAlias registers the list-users endpoint at an enterprise
+// backwards-compatibility path (e.g. /api/v2/bhe-users).
+func RegisterUserListAlias(routerInst *router.Router, pool *pgxpool.Pool, path string) {
+	var (
+		store      = appdb.NewStore(pool)
+		svc        = services.NewService(store)
+		handlerSet = handlers.NewHandlersContainer(svc)
+	)
+	routes.RegisterUserListRoute(routerInst, handlerSet, path)
 }

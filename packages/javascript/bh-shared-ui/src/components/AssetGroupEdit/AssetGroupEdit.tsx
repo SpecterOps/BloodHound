@@ -14,7 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Paper } from '@mui/material';
 import {
     AssetGroup,
     AssetGroupMemberCounts,
@@ -23,7 +22,6 @@ import {
 } from 'js-client-library';
 import { FC, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
-import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../providers';
 import { apiClient } from '../../utils';
 import { SubHeader } from '../../views/Explore/fragments';
@@ -41,7 +39,6 @@ const AssetGroupEdit: FC<{
     const addRows = changelog.filter((entry) => entry.action === ChangelogAction.ADD);
     const removeRows = changelog.filter((entry) => entry.action === ChangelogAction.REMOVE);
     const { addNotification } = useNotifications();
-    const theme = useTheme();
     const queryClient = useQueryClient();
 
     const handleUpdateAssetGroupChangelog = (_event: any, changelogEntry: AssetGroupChangelogEntry) => {
@@ -94,7 +91,8 @@ const AssetGroupEdit: FC<{
     };
 
     return (
-        <Box component={Paper} elevation={0} padding={1} bgcolor={theme.neutral.secondary}>
+        <div className='p-2 rounded bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'>
+            {' '}
             <SubHeader label='Total Count' count={memberCounts?.total_count} />
             {isEditable && (
                 <>
@@ -117,7 +115,7 @@ const AssetGroupEdit: FC<{
             {Object.entries(memberCounts?.counts ?? {}).map(([kind, count]) => {
                 return <SubHeader key={kind} label={kind} count={count} />;
             })}
-        </Box>
+        </div>
     );
 };
 

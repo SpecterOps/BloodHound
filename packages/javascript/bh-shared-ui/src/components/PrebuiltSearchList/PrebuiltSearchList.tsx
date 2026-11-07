@@ -13,9 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box } from '@mui/material';
 import makeStyles from '@mui/styles/makeStyles';
-import { Button, Typography } from 'doodle-ui';
+import { Button, Tooltip, Typography } from 'doodle-ui';
 import groupBy from 'lodash/groupBy';
 import { FC, useCallback } from 'react';
 import { QueryListSection } from '../../types';
@@ -93,7 +95,14 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                         )}
                                         <ul className='list-none'>
                                             {queries?.map((lineItem, idx) => {
-                                                const { id, name, description, query, canEdit = false } = lineItem;
+                                                const {
+                                                    id,
+                                                    name,
+                                                    description,
+                                                    query,
+                                                    canEdit = false,
+                                                    schema_extension_id,
+                                                } = lineItem;
                                                 return (
                                                     <li
                                                         className={`p-2 rounded-sm flex items-center w-full cursor-pointer hover:bg-neutral-light-3 dark:hover:bg-neutral-dark-3 justify-between pl-8 list-none ${
@@ -126,15 +135,27 @@ const PrebuiltSearchList: FC<PrebuiltSearchListProps> = ({
                                                                 <p className='mb-0 leading-none'>{description}</p>
                                                             )}
                                                         </div>
-                                                        {canEdit && typeof id === 'number' && (
-                                                            <ListItemActionMenu
-                                                                id={id}
-                                                                query={query}
-                                                                deleteQuery={() => {
-                                                                    if (deleteHandler) deleteHandler(id);
-                                                                }}
-                                                            />
+                                                        {schema_extension_id != null && (
+                                                            <Tooltip tooltip='This query is managed by an extension and cannot be edited or deleted. Save as a new query instead.'>
+                                                                <button
+                                                                    type='button'
+                                                                    aria-label={`Extension-managed query: ${name}`}
+                                                                    className='ml-2 inline-flex items-center'>
+                                                                    <FontAwesomeIcon icon={faInfoCircle} size='sm' />
+                                                                </button>
+                                                            </Tooltip>
                                                         )}
+                                                        {schema_extension_id == null &&
+                                                            canEdit &&
+                                                            typeof id === 'number' && (
+                                                                <ListItemActionMenu
+                                                                    id={id}
+                                                                    query={query}
+                                                                    deleteQuery={() => {
+                                                                        if (deleteHandler) deleteHandler(id);
+                                                                    }}
+                                                                />
+                                                            )}
                                                     </li>
                                                 );
                                             })}

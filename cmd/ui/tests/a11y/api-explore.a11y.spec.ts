@@ -14,44 +14,39 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { expectNoAccessibilityViolations, test } from '../fixtures';
+import { test } from 'bh-playwright-testing';
 
 test.describe('WCAG A/AA Violations - Explore - API Explorer', () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/ui/api-explorer');
-        await page.getByRole('textbox', { name: 'Filter by tag or path' }).waitFor({ state: 'visible' });
+    test.beforeEach(async ({ goAndWaitFor, page }) => {
+        await goAndWaitFor('/ui/api-explorer', page.getByRole('textbox', { name: 'Filter by tag or path' }));
     });
 
-    test('default state', async ({ page, makeAxeBuilder }, testInfo) => {
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+    test('default state', async ({ checkA11y }) => {
+        await checkA11y();
     });
 
-    test('expanded resource', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('expanded resource', async ({ page, checkA11y }) => {
         await page.getByRole('button', { name: 'get /api/version' }).click();
         await page.getByText('Returns the supported API versions.').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('expanded disabled resource', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('expanded disabled resource', async ({ page, checkA11y }) => {
         await page.getByRole('button', { name: 'get /api/v2/saml', exact: true }).click();
         await page.getByText('Deprecated: This endpoint').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('filter with no results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('filter with no results', async ({ page, checkA11y }) => {
         await page.getByRole('textbox', { name: 'Filter by tag or path' }).fill('no-matching-api-resource');
         await page.getByRole('heading', { name: 'No operations defined in spec!' }).waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('expanded Schemas', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('expanded Schemas', async ({ page, checkA11y }) => {
         // Set filter for empty reponse for easier view of Schemas
         await page.getByRole('textbox', { name: 'Filter by tag or path' }).fill('no-matching-api-resource');
 
@@ -61,7 +56,6 @@ test.describe('WCAG A/AA Violations - Explore - API Explorer', () => {
 
         await page.getByText('The context in which the').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 });

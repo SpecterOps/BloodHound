@@ -64,6 +64,37 @@ export const CommonSearches: CommonSearchType[] = [
         ],
     },
     {
+        subheader: 'AD Sites',
+        category: categoryAD,
+        queries: [
+            {
+                name: 'Map AD site topology',
+                description: 'Shows sites and the site-server or site-subnet objects they contain.',
+                query: `MATCH p = (:Site)-[:Contains]->(n:Base)\nWHERE n:SiteServer OR n:SiteSubnet\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Map site controllers',
+                description: 'Shows sites, their controllers, and the site-server or site-subnet objects they contain.',
+                query: `MATCH p = (:Base)-[:Owns|WriteOwner|WriteDacl|GenericAll|GenericWrite|WriteGPLink]->(:Site)-[:Contains]->(n:Base)\nWHERE n:SiteServer OR n:SiteSubnet\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Map site-linked GPOs',
+                description: 'Shows site-linked GPOs and affected site-servers and site-subnets',
+                query: `MATCH p = (:GPO)-[:GPLink]->(:Site)-[:Contains]->(n:Base)\nWHERE n:SiteServer OR n:SiteSubnet\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Map site-linked GPO controllers',
+                description: 'Shows site-linked GPO controllers and affected site-servers and site-subnets',
+                query: `MATCH p = (:Base)-[:Owns|WriteOwner|WriteDacl|GenericAll|GenericWrite]->(:GPO)-[:GPLink]->(:Site)-[:Contains]->(n:Base)\nWHERE n:SiteServer OR n:SiteSubnet\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Map site servers to computers',
+                description: 'Shows SiteServer nodes and the Computer objects they resolve to through ServerIs.',
+                query: `MATCH p = (:Site)-[:Contains]->(:SiteServer)-[:ServerIs]->(:Computer)\nRETURN p\nLIMIT 1000`,
+            },
+        ],
+    },
+    {
         subheader: 'Dangerous Privileges',
         category: categoryAD,
         queries: [
@@ -236,6 +267,11 @@ RETURN p\nLIMIT 1000`,
                 query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.isuserspecifiessanenabled = True\nRETURN p\nLIMIT 1000`,
             },
             {
+                name: 'Enrollment rights on certificate templates published to Enterprise CA with disabled security extension (ESC16)',
+                description: '',
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE "1.3.6.1.4.1.311.25.2" IN eca.disabledextensions\nRETURN p\nLIMIT 1000`,
+            },
+            {
                 name: 'CA Administrators and CA Managers (ESC7)',
                 description: '',
                 query: `MATCH p = (:Base)-[:ManageCertificates|ManageCA]->(:EnterpriseCA)\nRETURN p\nLIMIT 1000`,
@@ -244,6 +280,11 @@ RETURN p\nLIMIT 1000`,
                 name: 'Enrollment rights on certificate templates published to Enterprise CA with vulnerable HTTP(S) endpoint (ESC8)',
                 description: '',
                 query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.hasvulnerableendpoint = True\nRETURN p\nLIMIT 1000`,
+            },
+            {
+                name: 'Enrollment rights on certificate templates published to Enterprise CA with vulnerable RPC endpoint (ESC11)',
+                description: '',
+                query: `MATCH p = (:Base)-[:Enroll|GenericAll|AllExtendedRights]->(ct:CertTemplate)-[:PublishedTo]->(eca:EnterpriseCA)\nWHERE eca.rpcencryptionenforced = False\nRETURN p\nLIMIT 1000`,
             },
             {
                 name: 'Domain controllers with weak certificate binding enabled',
@@ -530,12 +571,17 @@ RETURN p\nLIMIT 1000`,
             {
                 name: 'All coerce and NTLM relay edges',
                 description: '',
-                query: `MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500`,
+                query: `MATCH p = (n:Base)-[:CoerceAndRelayNTLMToLDAP|CoerceAndRelayNTLMToLDAPS|CoerceAndRelayNTLMToADCS|CoerceAndRelayNTLMToADCSRPC|CoerceAndRelayNTLMToSMB]->(:Base)\nRETURN p LIMIT 500`,
             },
             {
                 name: 'ESC8-vulnerable Enterprise CAs',
                 description: '',
                 query: `MATCH (n:EnterpriseCA)\nWHERE n.hasvulnerableendpoint=true\nRETURN n`,
+            },
+            {
+                name: 'ESC11-vulnerable Enterprise CAs',
+                description: '',
+                query: `MATCH (n:EnterpriseCA)\nWHERE n.rpcencryptionenforced = False\nRETURN n`,
             },
             {
                 name: 'Computers with the outgoing NTLM setting set to Deny all',

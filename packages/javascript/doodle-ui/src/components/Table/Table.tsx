@@ -20,8 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { faGripVertical } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Cell, Header } from '@tanstack/react-table';
-import { IconButton } from '../Button';
-import { Tooltip } from '../Tooltip';
+import { IconButton } from '../IconButton';
 import { cn } from '../utils';
 
 const Table = React.forwardRef<
@@ -36,11 +35,7 @@ Table.displayName = 'Table';
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
     ({ className, ...props }, ref) => (
-        <thead
-            ref={ref}
-            className={cn('[&_tr]:border-b bg-neutral-light-2 dark:bg-neutral-dark-2', className)}
-            {...props}
-        />
+        <thead ref={ref} className={cn('[&_tr]:border-b bg-[color:var(--table-fill)]', className)} {...props} />
     )
 );
 TableHeader.displayName = 'TableHeader';
@@ -49,7 +44,7 @@ const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes
     ({ className, ...props }, ref) => (
         <tbody
             ref={ref}
-            className={cn('[&_tr:last-child]:border-0 bg-neutral-light-2 dark:bg-neutral-dark-2', className)}
+            className={cn('[&_tr:last-child]:border-0 bg-[color:var(--table-fill)]', className)}
             {...props}
         />
     )
@@ -72,7 +67,7 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
         <tr
             ref={ref}
             className={cn(
-                'border-b dark:border-b-0 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
+                'border-b-[length:var(--table-row-border-width)] transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
                 className
             )}
             {...props}
@@ -111,7 +106,7 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
             className={cn(
                 'h-12 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0',
                 className,
-                isDragging ? '!bg-neutral-light-1 dark:!bg-neutral-dark-1' : ''
+                isDragging ? '!bg-[color:var(--table-dragging-fill)]' : ''
             )}
             {...props}
             style={{
@@ -122,15 +117,13 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
             }}>
             <div ref={ref} className='flex items-center'>
                 {enableDragging && header?.id !== 'empty-column' && (
-                    <Tooltip tooltip='Drag to reorder'>
-                        <IconButton
-                            aria-label='Drag to reorder'
-                            className={cn('rounded-sm', isDragging ? 'cursor-grabbing' : 'cursor-grab')}
-                            {...attributes}
-                            {...listeners}>
-                            <FontAwesomeIcon icon={faGripVertical} />
-                        </IconButton>
-                    </Tooltip>
+                    <IconButton
+                        aria-label='Drag to reorder'
+                        className={cn('rounded-sm', isDragging ? 'cursor-grabbing' : 'cursor-grab')}
+                        {...attributes}
+                        {...listeners}>
+                        <FontAwesomeIcon icon={faGripVertical} />
+                    </IconButton>
                 )}
                 {props.children}
             </div>
@@ -168,7 +161,7 @@ const TableCell = React.forwardRef(function TableCell<TData, TValue>(
             className={cn(
                 'p-4 pl-0 align-middle [&:has([role=checkbox])]:pr-0',
                 className,
-                isDragging ? '!bg-neutral-light-1 dark:!bg-neutral-dark-1' : ''
+                isDragging ? '!bg-[color:var(--table-dragging-fill)]' : ''
             )}
             {...props}
             style={{ ...cellStyle, ...propsStyle, zIndex: zIndex, left: leftValue }}>

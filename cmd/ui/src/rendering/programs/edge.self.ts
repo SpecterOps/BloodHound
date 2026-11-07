@@ -14,9 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable no-useless-assignment */
-/* stop strict complaints about `i` from eslint */
-
 import { Attributes } from 'graphology-types';
 import { Coordinates, NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
@@ -25,7 +22,7 @@ import CurvedEdgeProgram from './edge.curved';
 
 const RESOLUTION = 0.02,
     POINTS = 2 / RESOLUTION + 2,
-    ATTRIBUTES = 6,
+    ATTRIBUTES = 8,
     // These self edges have essentially static dimensions so we can approximate the arrowhead
     // clamp with a constant t value (instead of the approximation we use for curved edges)
     CLAMP_APPROXIMATION_T = 0.91,
@@ -38,7 +35,7 @@ export const getControlPointsFromGroupSize = (
     invertY: boolean,
     invertX: boolean
 ) => {
-    const position = groupPosition++;
+    const position = groupPosition;
     const step = Math.PI / 2;
 
     const theta2 = step * position - Math.PI / 2;
@@ -98,10 +95,18 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
             true
         );
 
+        const dashed = data.dashed ? 1 : 0;
         const points = [];
+        // Arc length from the start of the loop to each point. Only measured for dashed edges.
+        const pointDistances: number[] = [];
+        let totalDistance = 0;
 
         for (let t = 0; t <= CLAMP_APPROXIMATION_T; t += RESOLUTION) {
             const pointOnCurve = bezier.getCoordinatesAlongCubicBezier(start, control2, control3, start, t);
+            if (dashed) {
+                if (points.length > 0) totalDistance += bezier.getLineLength(points[points.length - 1], pointOnCurve);
+                pointDistances.push(totalDistance);
+            }
             points.push(pointOnCurve);
         }
 
@@ -109,7 +114,11 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
         const array = this.array;
         const color = floatColor(data.color);
 
+        // Self-loop geometry follows the zoom-scaled node radius. Keep its dash length at the default zoom.
+        const inverseSqrtZoomRatio = data.inverseSqrtZoomRatio || 1;
+
         for (let j = 0; j < points.length; j++) {
+            const dashDistance = dashed ? (totalDistance - pointDistances[j]) / inverseSqrtZoomRatio : 0;
             // Handle special cases, since we do not need to calculate a miter join for the endcaps
             const isFirstPoint = j === 0;
             const isLastPoint = j === points.length - 1;
@@ -139,6 +148,8 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
             array[i++] = vOffset.x;
             array[i++] = color;
             array[i++] = 0;
+            array[i++] = dashDistance;
+            array[i++] = dashed;
 
             // First point flipped
             array[i++] = points[j].x;
@@ -147,6 +158,8 @@ export default class SelfEdgeProgram extends CurvedEdgeProgram {
             array[i++] = -vOffset.x;
             array[i++] = color;
             array[i++] = 0;
+            array[i++] = dashDistance;
+            array[i++] = dashed;
         }
         // zero out any remaining buffer slots
         while (i < STRIDE * (offset + 1)) {

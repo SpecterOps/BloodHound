@@ -13,21 +13,20 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { expect, expectNoAccessibilityViolations, test } from '../../fixtures';
+import { expect, test } from 'bh-playwright-testing';
 
 test.describe('WCAG A/AA Violations - Explore - Search Tab', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/ui/explore');
     });
 
-    test('Search tab', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Search tab', async ({ page, checkA11y }) => {
         await page.getByText('Begin typing to search').waitFor({ state: 'visible' });
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Search with results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Search with results', async ({ page, checkA11y }) => {
         const searchTerm = 'test';
         const searchResultName = 'TEST RESULT';
 
@@ -49,11 +48,10 @@ test.describe('WCAG A/AA Violations - Explore - Search Tab', () => {
         const searchResult = page.getByRole('option').filter({ hasText: searchResultName });
         await expect(searchResult).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 
-    test('Search with no results', async ({ page, makeAxeBuilder }, testInfo) => {
+    test('Search with no results', async ({ page, checkA11y }) => {
         const searchTerm = 'zzzznonexistentnode9999';
 
         await page.route('**/api/v2/search**', async (route) => {
@@ -71,7 +69,6 @@ test.describe('WCAG A/AA Violations - Explore - Search Tab', () => {
         const noResultsMessage = `No results found for "${searchTerm}"`;
         await expect(page.getByText(noResultsMessage)).toBeVisible();
 
-        const results = await makeAxeBuilder().include('#content-wrapper').analyze();
-        await expectNoAccessibilityViolations(testInfo, results, { page });
+        await checkA11y();
     });
 });

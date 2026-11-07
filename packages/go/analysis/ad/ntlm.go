@@ -138,22 +138,37 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 		attr.Scope("process"),
 	)()
 
-	var (
-		operation = post.NewPostRelationshipOperation(ctx, db, "PostNTLM")
-	)
-
 	// NTLM must be enabled through the feature flag
 	if !ntlmEnabled {
-		operation.Done()
-		return &operation.Stats, nil
+		// Delta-tracked edges are no longer cleared up front, so prune any NTLM edges left over from when the flag was enabled
+		if ntlmSink, err := newNTLMSink(ctx, db); err != nil {
+			return &post.AtomicPostProcessingStats{}, err
+		} else {
+			err = ntlmSink.Done()
+			return ntlmSink.Stats(), err
+		}
 	}
 
 	// TODO: after adding all of our new NTLM edges, benchmark performance between submitting multiple readers per computer or single reader per computer
 	// First fetch pre-reqs + find all vulnerable computers that are not protected
-	if ntlmCache, err := NewNTLMCache(ctx, db, localGroupData); err != nil {
-		operation.Done()
+	ntlmCache, err := NewNTLMCache(ctx, db, localGroupData)
+	if err != nil {
 		return nil, err
-	} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
+	}
+
+	// The sink is created only after the prerequisites succeed so a failure above does not prune existing edges
+	ntlmSink, err := newNTLMSink(ctx, db)
+	if err != nil {
+		return nil, err
+	}
+
+	readerPool := ops.StartNewOperation[any](ops.OperationContext{
+		Parent:     ctx,
+		DB:         db,
+		NumReaders: post.MaximumDatabaseParallelWorkers,
+	})
+
+	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Nodes().Filter(query.Kind(query.Node(), ad.Computer)).Fetch(func(cursor graph.Cursor[*graph.Node]) error {
 			for computer := range cursor.Chan() {
 				innerComputer := computer
@@ -163,16 +178,15 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 				} else if authenticatedUserGroupID, ok := ntlmCache.GetAuthenticatedUserGroupForDomain(domainSid); !ok {
 					continue
 				} else {
-					if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-						return PostCoerceAndRelayNTLMToSMB(tx, outC, ntlmCache, innerComputer, authenticatedUserGroupID)
+					if err := readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
+						return PostCoerceAndRelayNTLMToSMB(ctx, tx, ntlmSink, ntlmCache, innerComputer, authenticatedUserGroupID)
 					}); err != nil {
 						slog.WarnContext(
 							ctx,
 							"Post processing failed for CoerceAndRelayNTLMToSMB",
 							attr.Error(err),
 						)
-						// Additional analysis may occur if one of our analysis errors
-						continue
+						return err
 					}
 
 					// Any computers that are restricted/protected are not valid targets for the next relays
@@ -180,15 +194,15 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 						continue
 					}
 
-					if err = operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
-						return PostCoerceAndRelayNTLMToLDAP(outC, innerComputer, authenticatedUserGroupID, ntlmCache.LdapCache)
+					if err = readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
+						return PostCoerceAndRelayNTLMToLDAP(ctx, ntlmSink, innerComputer, authenticatedUserGroupID, ntlmCache.LdapCache)
 					}); err != nil {
 						slog.WarnContext(
 							ctx,
 							"Post processing failed for CoerceAndRelayNTLMToLDAP",
 							attr.Error(err),
 						)
-						continue
+						return err
 					}
 				}
 			}
@@ -196,32 +210,75 @@ func PostNTLM(ctx context.Context, db graph.Database, localGroupData *LocalGroup
 			return cursor.Error()
 		})
 	}); err != nil {
-		operation.Done()
-		return nil, err
-	} else {
-		if err := PostCoerceAndRelayNTLMToADCS(ctx, operation, adcsCache, ntlmCache); err != nil {
-			operation.Done()
-			return nil, err
-		}
-
-		return &operation.Stats, operation.Done()
+		return nil, errors.Join(err, readerPool.Done(), ntlmSink.Abort())
 	}
+
+	if err := PostCoerceAndRelayNTLMToADCS(ctx, readerPool, ntlmSink, adcsCache, ntlmCache); err != nil {
+		return nil, errors.Join(err, readerPool.Done(), ntlmSink.Abort())
+	}
+
+	// The readers feeding the sink must finish before the sink is flushed and its stale edges are deleted
+	readerErr := readerPool.Done()
+	if readerErr != nil {
+		return ntlmSink.Stats(), errors.Join(readerErr, ntlmSink.Abort())
+	}
+
+	return ntlmSink.Stats(), ntlmSink.Done()
+}
+
+// ntlmPostProcessedEdges lists the NTLM edge kinds which are post-processed using the delta-change-apply method
+var ntlmPostProcessedEdges = graph.Kinds{
+	ad.CoerceAndRelayNTLMToADCS,
+	ad.CoerceAndRelayNTLMToADCSRPC,
+	ad.CoerceAndRelayNTLMToSMB,
+	ad.CoerceAndRelayNTLMToLDAP,
+	ad.CoerceAndRelayNTLMToLDAPS,
+}
+
+// newNTLMSink migrates any legacy NTLM edges, fetches the delta tracker and returns a sink for the migrated NTLM edge kinds
+func newNTLMSink(ctx context.Context, db graph.Database) (*post.FilteredRelationshipSink, error) {
+	// Remove legacy post-processed edges carrying `lastseen` before delta tracking.
+	if err := post.MigrationForDCAPostProcessedEdges(ctx, db, ntlmPostProcessedEdges); err != nil {
+		return nil, err
+	}
+
+	// Pull a subgraph to compare against for tracking changes
+	ntlmTracker, err := post.FetchTracker(ctx, db, ntlmPostProcessedEdges)
+	if err != nil {
+		return nil, err
+	}
+
+	return post.NewFilteredRelationshipSink(ctx, "PostNTLM", db, ntlmTracker), nil
 }
 
 func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	return getCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge, false)
+}
+
+func GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.PathSet, error) {
+	return getCoerceAndRelayNTLMtoADCSEdgeComposition(ctx, db, edge, true)
+}
+
+func getCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Database, edge *graph.Relationship, rpcRelay bool) (graph.PathSet, error) {
 	var (
 		startNode  *graph.Node
 		endNode    *graph.Node
 		domainNode *graph.Node
 		startNodes = graph.NodeSet{}
+		path1      = coerceAndRelayNTLMtoADCSPath1Pattern
 
-		traversalInst      = traversal.New(db, post.MaximumDatabaseParallelWorkers)
-		paths              = graph.PathSet{}
-		candidateSegments  = map[graph.ID][]*graph.PathSegment{}
-		path1EnterpriseCAs = cardinality.NewBitmap64()
-		path2EnterpriseCAs = cardinality.NewBitmap64()
-		lock               = &sync.Mutex{}
+		traversalInst           = traversal.New(db, post.MaximumDatabaseParallelWorkers)
+		paths                   = graph.PathSet{}
+		candidateSegments       = map[graph.ID][]*graph.PathSegment{}
+		path1EnterpriseCAs      = cardinality.NewBitmap64()
+		path2EnterpriseCAs      = cardinality.NewBitmap64()
+		hostPathsByEnterpriseCA map[graph.ID]graph.PathSet
+		lock                    = &sync.Mutex{}
 	)
+
+	if rpcRelay {
+		path1 = coerceAndRelayNTLMtoADCSRPCPath1Pattern
+	}
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if nodeSet, err := FetchAuthUsersAndEveryoneGroups(tx); err != nil {
@@ -260,7 +317,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 	for _, startNode := range startNodes.Slice() {
 		if err := traversalInst.BreadthFirst(ctx, traversal.Plan{
 			Root: startNode,
-			Driver: coerceAndRelayNTLMtoADCSPath1Pattern(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
+			Driver: path1(domainNode.ID).Do(func(terminal *graph.PathSegment) error {
 				var (
 					certTemplateNode *graph.Node
 					enterpriseCANode *graph.Node
@@ -315,11 +372,23 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 
 	// Intersect the CAs and take only those seen in both paths
 	path1EnterpriseCAs.And(path2EnterpriseCAs)
-	// Render paths from the segments
+	if qualifyingHostPaths, err := fetchQualifyingEnterpriseCAHostPaths(ctx, db, path1EnterpriseCAs); err != nil {
+		return nil, err
+	} else {
+		hostPathsByEnterpriseCA = qualifyingHostPaths
+	}
+
+	// Render paths only for CAs with an exact qualifying host.
 	path1EnterpriseCAs.Each(func(value uint64) bool {
+		hostPaths, hasQualifyingHost := hostPathsByEnterpriseCA[graph.ID(value)]
+		if !hasQualifyingHost {
+			return true
+		}
+
 		for _, segment := range candidateSegments[graph.ID(value)] {
 			paths.AddPath(segment.Path())
 		}
+		paths.AddPathSet(hostPaths)
 
 		return true
 	})
@@ -328,7 +397,7 @@ func GetCoerceAndRelayNTLMtoADCSEdgeComposition(ctx context.Context, db graph.Da
 }
 
 func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
-	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
@@ -340,45 +409,44 @@ func coerceAndRelayNTLMtoADCSPath1Pattern(domainID graph.ID) traversal.PatternCo
 			query.KindIn(query.Relationship(), ad.PublishedTo),
 			query.Kind(query.End(), ad.EnterpriseCA),
 			query.Equals(query.EndProperty(ad.HasVulnerableEndpoint.String()), true),
-		)).
-		OutboundWithDepth(0, 0, query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.KindIn(query.End(), ad.EnterpriseCA, ad.AIACA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.IssuedSignedBy, ad.EnterpriseCAFor),
-			query.Kind(query.End(), ad.RootCA),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.RootCAFor),
-			query.Equals(query.EndID(), domainID),
-		))
+		)), domainID)
 }
 
-func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
-	return traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
+func coerceAndRelayNTLMtoADCSRPCPath1Pattern(domainID graph.ID) traversal.PatternContinuation {
+	return enterpriseCAChainToDomainPattern(traversal.NewPattern().OutboundWithDepth(0, 0, query.And(
 		query.Kind(query.Relationship(), ad.MemberOf),
 		query.Kind(query.End(), ad.Group),
 	)).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.Enroll),
-			query.InIDs(query.EndID(), graph.DuplexToGraphIDs(enterpriseCAs)...),
+			query.KindIn(query.Relationship(), ad.GenericAll, ad.Enroll, ad.AllExtendedRights),
+			query.Kind(query.End(), ad.CertTemplate),
 		)).
 		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.TrustedForNTAuth),
-			query.Kind(query.End(), ad.NTAuthStore),
-		)).
-		Outbound(query.And(
-			query.KindIn(query.Relationship(), ad.NTAuthStoreFor),
-			query.Equals(query.EndID(), domainID),
-		))
+			query.KindIn(query.Relationship(), ad.PublishedTo),
+			query.Kind(query.End(), ad.EnterpriseCA),
+			query.Equals(query.EndProperty(ad.RPCEncryptionEnforced.String()), false),
+		)), domainID)
 }
 
-func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTrackedOperation[post.EnsureRelationshipJob], adcsCache *ADCSCache, ntlmCache NTLMCache) error {
-	for eca, chains := range adcsCache.GetECAHostedChainedDomains() {
-		ecaID := graph.ID(eca)
+func coerceAndRelayNTLMtoADCSPath2Pattern(domainID graph.ID, enterpriseCAs cardinality.Duplex[uint64]) traversal.PatternContinuation {
+	return adcsCAEnrollmentPathPattern(graph.DuplexToGraphIDs(enterpriseCAs), domainID)
+}
 
-		if vulnerable := hasVulnerableEndpoint(chains.EnterpriseCA); !vulnerable {
+func PostCoerceAndRelayNTLMToADCS(ctx context.Context, readerPool *ops.Operation[any], sink *post.FilteredRelationshipSink, adcsCache *ADCSCache, ntlmCache NTLMCache) error {
+	for eca, chains := range adcsCache.GetECAHostedChainedDomains() {
+		var (
+			ecaID             = graph.ID(eca)
+			relationshipKinds = graph.Kinds{}
+		)
+
+		if hasVulnerableEndpoint(chains.EnterpriseCA) {
+			relationshipKinds = append(relationshipKinds, ad.CoerceAndRelayNTLMToADCS)
+		}
+		if hasVulnerableRPCEndpoint(chains.EnterpriseCA) {
+			relationshipKinds = append(relationshipKinds, ad.CoerceAndRelayNTLMToADCSRPC)
+		}
+
+		if len(relationshipKinds) == 0 {
 			continue
 		} else if publishedCertTemplates := adcsCache.GetPublishedTemplateCache(ecaID); len(publishedCertTemplates) == 0 {
 			// If this enterprise CA has no published templates, then there's no reason to check further
@@ -406,16 +474,22 @@ func PostCoerceAndRelayNTLMToADCS(ctx context.Context, operation post.StatTracke
 					var submitErr error
 					chains.Domains.Each(func(domain uint64) bool {
 						if authUsersGroup, ok := adcsCache.GetAuthUserForDomain(graph.ID(domain)); ok {
-							if err := operation.Operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, outC chan<- post.EnsureRelationshipJob) error {
+							if err := readerPool.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
+								var relationshipSubmissionErr error
 								victims.Each(func(target uint64) bool {
-									outC <- post.EnsureRelationshipJob{
-										FromID: authUsersGroup,
-										ToID:   graph.ID(target),
-										Kind:   ad.CoerceAndRelayNTLMToADCS,
+									for _, relationshipKind := range relationshipKinds {
+										if !sink.Submit(ctx, post.EnsureRelationshipJob{
+											FromID: authUsersGroup,
+											ToID:   graph.ID(target),
+											Kind:   relationshipKind,
+										}) {
+											relationshipSubmissionErr = errors.Join(ctx.Err(), errors.New("NTLM sink stopped accepting relationships"))
+											return false
+										}
 									}
 									return true
 								})
-								return nil
+								return relationshipSubmissionErr
 							}); err != nil {
 								submitErr = err
 								return false
@@ -439,6 +513,14 @@ func hasVulnerableEndpoint(eca *graph.Node) bool {
 		return false
 	} else {
 		return vulnerable
+	}
+}
+
+func hasVulnerableRPCEndpoint(eca *graph.Node) bool {
+	if rpcEncryptionEnforced, err := eca.Properties.Get(ad.RPCEncryptionEnforced.String()).Bool(); err != nil {
+		return false
+	} else {
+		return !rpcEncryptionEnforced
 	}
 }
 
@@ -529,7 +611,7 @@ func GetCoerceAndRelayNTLMtoSMBEdgeComposition(ctx context.Context, db graph.Dat
 
 // PostCoerceAndRelayNTLMToSMB creates edges that allow a computer with unrolled admin access to one or more computers where SMB signing is disabled.
 // Comprised solely of adminTo and memberOf edges
-func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- post.EnsureRelationshipJob, ntlmCache NTLMCache, computer *graph.Node, authenticatedUserID graph.ID) error {
+func PostCoerceAndRelayNTLMToSMB(ctx context.Context, tx graph.Transaction, sink *post.FilteredRelationshipSink, ntlmCache NTLMCache, computer *graph.Node, authenticatedUserID graph.ID) error {
 	if smbSigningEnabled, err := computer.Properties.Get(ad.SMBSigning.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
 		return nil
 	} else if err != nil {
@@ -556,11 +638,11 @@ func PostCoerceAndRelayNTLMToSMB(tx graph.Transaction, outC chan<- post.EnsureRe
 			allAdminPrincipals.Remove(computer.ID.Uint64())
 
 			if allAdminPrincipals.Cardinality() > 0 {
-				outC <- post.EnsureRelationshipJob{
+				sink.Submit(ctx, post.EnsureRelationshipJob{
 					FromID: authenticatedUserID,
 					ToID:   computer.ID,
 					Kind:   ad.CoerceAndRelayNTLMToSMB,
-				}
+				})
 			}
 		}
 	}
@@ -594,6 +676,33 @@ func GetVulnerableEnterpriseCAsForRelayNTLMtoADCS(ctx context.Context, db graph.
 		return nodes, nil
 	}
 
+}
+
+func GetVulnerableEnterpriseCAsForRelayNTLMtoADCSRPC(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
+	var (
+		nodes = graph.NodeSet{}
+	)
+
+	if composition, err := GetCoerceAndRelayNTLMtoADCSRPCEdgeComposition(ctx, db, edge); err != nil {
+		return graph.NodeSet{}, err
+	} else {
+		for _, node := range composition.AllNodes().ContainingNodeKinds(ad.EnterpriseCA) {
+			if rpcEncryptionEnforced, err := node.Properties.Get(ad.RPCEncryptionEnforced.String()).Bool(); errors.Is(err, graph.ErrPropertyNotFound) {
+				continue
+			} else if err != nil {
+				slog.ErrorContext(
+					ctx,
+					"Error getting rpcencryptionenforced from node",
+					slog.Uint64("node_id", uint64(node.ID)),
+					attr.Error(err),
+				)
+			} else if !rpcEncryptionEnforced {
+				nodes.Add(node)
+			}
+		}
+
+		return nodes, nil
+	}
 }
 
 func GetVulnerableDomainControllersForRelayNTLMtoLDAP(ctx context.Context, db graph.Database, edge *graph.Relationship) (graph.NodeSet, error) {
@@ -750,7 +859,7 @@ func GetCoercionTargetsForCoerceAndRelayNTLMtoSMB(ctx context.Context, db graph.
 
 // PostCoerceAndRelayNTLMToLDAP creates edges where an authenticated user group, for a given domain, is able to target the provided computer.
 // This will create either a CoerceAndRelayNTLMToLDAP or CoerceAndRelayNTLMToLDAPS edges, depending on the ldapSigning property of the domain
-func PostCoerceAndRelayNTLMToLDAP(outC chan<- post.EnsureRelationshipJob, computer *graph.Node, authenticatedUserGroupID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
+func PostCoerceAndRelayNTLMToLDAP(ctx context.Context, sink *post.FilteredRelationshipSink, computer *graph.Node, authenticatedUserGroupID graph.ID, ldapSigningCache map[string]LDAPSigningCache) error {
 	// webclientrunning must be set to true for the computer's properties in order for this attack path to be viable
 	// If the property is not found, we will assume false
 	if webClientRunning, err := computer.Properties.Get(ad.WebClientRunning.String()).Bool(); err != nil && !errors.Is(err, graph.ErrPropertyNotFound) {
@@ -771,31 +880,31 @@ func PostCoerceAndRelayNTLMToLDAP(outC chan<- post.EnsureRelationshipJob, comput
 				// for both LDAP and LDAPS scenarios, assuming the passed in signingCache has any vulnerable paths
 				// We also ignore instances where the computer is relaying to itself
 				if len(signingCache.relayableToDCLDAP) == 1 && signingCache.relayableToDCLDAP[0] != computer.ID {
-					outC <- post.EnsureRelationshipJob{
+					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAP,
-					}
+					})
 				} else if len(signingCache.relayableToDCLDAP) > 1 {
-					outC <- post.EnsureRelationshipJob{
+					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAP,
-					}
+					})
 				}
 
 				if len(signingCache.relayableToDCLDAPS) == 1 && signingCache.relayableToDCLDAPS[0] != computer.ID {
-					outC <- post.EnsureRelationshipJob{
+					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAPS,
-					}
+					})
 				} else if len(signingCache.relayableToDCLDAPS) > 1 {
-					outC <- post.EnsureRelationshipJob{
+					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: authenticatedUserGroupID,
 						ToID:   computer.ID,
 						Kind:   ad.CoerceAndRelayNTLMToLDAPS,
-					}
+					})
 				}
 			}
 		}

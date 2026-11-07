@@ -132,7 +132,7 @@ const SSOProviderInfoPanel: FC<{
                             {ssoProvider?.name}
                         </h5>
                     </div>
-                    <div className='bg-neutral-2 overflow-x-hidden overflow-y-auto px-4 py-2 shadow-outer-1 rounded'>
+                    <div className='bg-neutral-1 overflow-x-hidden overflow-y-auto px-4 py-2 rounded border border-solid border-neutral-light-4 dark:border-neutral-900'>
                         <div className='font-bold ml-2 text-sm'>Provider Information:</div>
                         <FieldsContainer>
                             {innerInfoPanel}

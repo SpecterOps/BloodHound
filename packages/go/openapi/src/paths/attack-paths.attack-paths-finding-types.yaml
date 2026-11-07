@@ -20,6 +20,8 @@ get:
   summary: List attack path finding types
   description: |
     Returns distinct attack path finding types available to the caller.
+    Finding types are included even when all of their findings are archived
+    (remediated, deprecated, or orphaned), so every type remains searchable by status.
     Results are always returned in ascending order by `title`.
   tags:
     - Attack Paths

@@ -26,6 +26,12 @@ import {
     AssetGroupTagMember,
     AssetGroupTagSelector,
     Client,
+    CollectorJob,
+    CollectorJobHistory,
+    CollectorJobProfile,
+    CollectorJobSchedule,
+    CollectorJobSecret,
+    CollectorJobType,
     CollectorManifest,
     CommunityCollectorType,
     CustomNodeKindType,
@@ -48,7 +54,7 @@ import {
     Webhook,
     WebhookSecret,
 } from './types';
-import { ConfigurationPayload } from './utils/config';
+import { type ConfigurationPayload } from './utils';
 
 export interface BasicResponse<T> {
     data: T;
@@ -78,7 +84,7 @@ export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
 export type Environment = {
     // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
     // Needed because environment types can be provided by the user
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // oxlint-disable-next-line typescript/ban-types
     type: KnownEnvironmentType | (string & {});
     impactValue: number;
     name: string;
@@ -315,6 +321,8 @@ export type SavedQuery = {
     description: string;
     query: string;
     user_id: string;
+    category?: string;
+    extension_id?: number | null;
 };
 
 export type SavedQueryPermissionsResponse = {
@@ -365,8 +373,37 @@ export type GetScheduledJobDisplayResponse = PaginatedResponse<ScheduledJobDispl
 
 export type GetExportQueryResponse = AxiosResponse<Blob>;
 
+// ---------------------------------------------------------------------------
+//  Collectors - Clients
+// ---------------------------------------------------------------------------
 export type GetClientResponse = PaginatedResponse<Client[]>;
 
+export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Managed Collections
+// ---------------------------------------------------------------------------
+export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
+
+export type GetCollectorJobTypesResponse = PaginatedResponse<{ types: CollectorJobType[] }>;
+
+export type GetCollectorJobSchedulesResponse = PaginatedResponse<{ schedules: CollectorJobSchedule[] }>;
+
+export type GetCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+
+export type GetCollectorJobHistoryResponse = PaginatedResponse<{ records: CollectorJobHistory[] }>;
+
+export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }>;
+
+export type GetCollectorJobSecretsResponse = PaginatedResponse<{ secrets: CollectorJobSecret[] }>;
+
+export type GetCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+export type CreateCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+
+// ---------------------------------------------------------------------------
+//  Collectors - Support Bundles (Management Operations)
+// ---------------------------------------------------------------------------
 export enum ManagementOperationStatus {
     QUEUED = 'queued',
     RUNNING = 'running',
@@ -407,6 +444,7 @@ export type SupportBundleDownloadURLResponse = BasicResponse<{
     file_name: string;
     size: number;
 }>;
+// ---------------------------------------------------------------------------
 
 export type EdgeType = {
     id: number;
@@ -473,6 +511,8 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
+export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'in_progress' | 'deprecated' | 'orphaned';
+
 export type UnifiedFinding = {
     id: number;
     severity: string;
@@ -490,10 +530,11 @@ export type UnifiedFinding = {
     target_principal_id: string;
     target_principal_name: string;
     target_principal_kind: string;
-    status: string;
+    status: FindingStatus;
     first_seen: string;
     last_seen: string;
     prioritization_rank?: number | null;
+    is_cross_platform?: boolean;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
@@ -529,10 +570,11 @@ export type GetAlertEventTypesResponse = BasicResponse<{ event_types: AlertEvent
 type AlertPayload = { alert: Notification };
 export type GetAlertsResponse = PaginatedResponse<{ alerts: Notification[] }>;
 export type GetAlertResponse = BasicResponse<AlertPayload>;
-export type CreateAlertResponse = Notification;
+export type CreateAlertResponse = BasicResponse<AlertPayload>;
 export type UpdateAlertResponse = BasicResponse<AlertPayload>;
 export type GetAlertAttemptsResponse = PaginatedResponse<{ attempts: AlertAttempt[] }>;
 export type CreateAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
+export type RetryAlertAttemptResponse = BasicResponse<{ alert_attempt: AlertAttempt }>;
 
 export type GetNodeResponse = BasicResponse<NodeDetails | NodeDetailsWithInfo>;
 
@@ -545,3 +587,6 @@ export type GetNodeKindResponse = BasicResponse<NodeKindResponse>;
 export type ListRelationshipKindsResponse = BasicResponse<RelationshipKindResponse[]>;
 
 export type GetRelationshipKindResponse = BasicResponse<RelationshipKindResponse>;
+
+export type CreateCollectorJobScheduleResponse = BasicResponse<{ schedule: CollectorJobSchedule }>;
+export type UpdateCollectorJobScheduleResponse = CreateCollectorJobScheduleResponse;

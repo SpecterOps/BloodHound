@@ -26,9 +26,9 @@ describe('GraphMenu', () => {
         onSelectFn.mockClear();
     });
 
-    const setup = ({ tooltip }: { tooltip?: string } = {}) => {
+    const setup = () => {
         render(
-            <GraphMenu label='Layout' icon={faDiagramProject} tooltip={tooltip}>
+            <GraphMenu label='Layout' icon={faDiagramProject}>
                 <MenuItem onSelect={onSelectFn}>First option</MenuItem>
                 <MenuItem>Second option</MenuItem>
             </GraphMenu>
@@ -49,20 +49,13 @@ describe('GraphMenu', () => {
         expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
 
-    it('shows a tooltip on hover, defaulting to the label when no tooltip is provided', async () => {
+    it('shows the label in a tooltip on hover', async () => {
         const { user } = setup();
+        const icon = screen.getByRole('button', { name: 'Layout' }).firstElementChild as HTMLElement;
 
-        await user.hover(screen.getByRole('button', { name: 'Layout' }));
+        await user.hover(icon);
 
         expect(await screen.findByRole('tooltip', { name: 'Layout' })).toBeVisible();
-    });
-
-    it('shows the provided tooltip text when the tooltip prop is set', async () => {
-        const { user } = setup({ tooltip: 'Change layout' });
-
-        await user.hover(screen.getByRole('button', { name: 'Layout' }));
-
-        expect(await screen.findByRole('tooltip', { name: 'Change layout' })).toBeVisible();
     });
 
     it('opens the menu and renders its children when the trigger is clicked', async () => {

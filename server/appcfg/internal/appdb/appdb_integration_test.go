@@ -26,12 +26,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/appcfg/internal/appdb"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
@@ -239,5 +243,152 @@ func TestStore_GetDatapipeStatus_Integration(t *testing.T) {
 			})
 		}
 	})
+}
 
+func TestStore_GetConfigurationParameter_Integration(t *testing.T) {
+	t.Run("returns ErrNotFound when no parameter row exists", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		// Ensure the table is empty
+		_, err := pool.Exec(ctx, "DELETE FROM parameters")
+		require.NoError(t, err)
+
+		_, err = store.GetConfigurationParameter(ctx, "auth.password_expiration_window")
+		assert.ErrorIs(t, err, services.ErrNotFound)
+	})
+
+	t.Run("returns an existing parameter", func(t *testing.T) {
+		var (
+			ctx      = context.Background()
+			store, _ = setupStoreAndPool(t)
+		)
+
+		var (
+			expectedKey         = services.ParameterKey("auth.password_expiration_window")
+			expectedName        = "Local Auth Password Expiry Window"
+			expectedDescription = "This configuration parameter sets the local auth password expiry window for users that have valid auth secrets. Values for this configuration must follow the duration specification of ISO-8601."
+		)
+
+		parameter, err := store.GetConfigurationParameter(ctx, "auth.password_expiration_window")
+		require.NoError(t, err)
+		assert.NotEmpty(t, parameter.ID)
+		assert.Equal(t, expectedKey, parameter.Key)
+		assert.Equal(t, expectedName, parameter.Name)
+		assert.Equal(t, expectedDescription, parameter.Description)
+		assert.NotEmpty(t, parameter.CreatedAt)
+		assert.NotEmpty(t, parameter.UpdatedAt)
+		assert.NotEmpty(t, parameter.Value)
+
+	})
+}
+
+func TestStore_GetAllConfigurationParameters_Integration(t *testing.T) {
+	t.Run("returns empty array when no parameter rows exists", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+		)
+
+		// Ensure the table is empty
+		_, err := pool.Exec(ctx, "DELETE FROM parameters")
+		require.NoError(t, err)
+
+		parameters, err := store.GetAllConfigurationParameters(ctx)
+		assert.NoError(t, err)
+		assert.Len(t, parameters, 0)
+	})
+
+	t.Run("returns default parameters", func(t *testing.T) {
+		var (
+			ctx      = context.Background()
+			store, _ = setupStoreAndPool(t)
+		)
+
+		parameters, err := store.GetAllConfigurationParameters(ctx)
+		require.NoError(t, err)
+
+		assert.Greater(t, len(parameters), 10)
+		assert.NotEmpty(t, parameters[0].ID)
+		assert.NotEmpty(t, parameters[0].Name)
+		assert.NotEmpty(t, parameters[0])
+		assert.NotEmpty(t, parameters[0].CreatedAt)
+		assert.Empty(t, parameters[0].DeletedAt)
+		assert.NotEmpty(t, parameters[0].UpdatedAt)
+		assert.NotEmpty(t, parameters[0].Value)
+	})
+}
+
+func TestStore_UpsertConfigurationParameter_Integration(t *testing.T) {
+	var (
+		ctx               = context.Background()
+		store, pool       = setupStoreAndPool(t)
+		originalCreatedAt time.Time
+	)
+
+	// Add a user to the context for audit logging
+	userID, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	ctx = bhctx.Set(ctx, &bhctx.Context{
+		RequestID: "integration-request",
+		RequestIP: "127.0.0.1",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique:        model.Unique{ID: userID},
+				PrincipalName: "integration-user",
+			},
+		},
+	})
+
+	type passwordExpirationParamType struct {
+		Duration string
+	}
+
+	t.Run("creates a parameter if no parameter row exists", func(t *testing.T) {
+		// Ensure the table is empty
+		_, err := pool.Exec(ctx, "DELETE FROM parameters")
+		require.NoError(t, err)
+
+		value, err := types.NewJSONBObject(map[string]any{"duration": "P45D"})
+		require.NoError(t, err)
+		err = store.UpsertConfigurationParameter(ctx, "auth.password_expiration_window", value)
+		require.NoError(t, err)
+
+		got, err := store.GetConfigurationParameter(ctx, "auth.password_expiration_window")
+		require.NoError(t, err)
+		assert.WithinDuration(t, time.Now(), got.CreatedAt, time.Second)
+		assert.WithinDuration(t, time.Now(), got.UpdatedAt, time.Second)
+
+		var expected, gotValue passwordExpirationParamType
+		value.Map(&expected)
+		got.Value.Map(&gotValue)
+		require.NoError(t, err)
+		assert.Equal(t, expected, gotValue)
+
+		originalCreatedAt = got.CreatedAt
+	})
+
+	t.Run("updates an existing parameter", func(t *testing.T) {
+		// use store from last test
+
+		value, err := types.NewJSONBObject(map[string]any{"duration": "P60D"})
+		require.NoError(t, err)
+
+		err = store.UpsertConfigurationParameter(ctx, "auth.password_expiration_window", value)
+		require.NoError(t, err)
+
+		got, err := store.GetConfigurationParameter(ctx, "auth.password_expiration_window")
+		require.NoError(t, err)
+
+		assert.Equal(t, originalCreatedAt, got.CreatedAt)
+		assert.WithinDuration(t, time.Now(), got.UpdatedAt, time.Second)
+
+		var expected, gotValue passwordExpirationParamType
+		value.Map(&expected)
+		got.Value.Map(&gotValue)
+		assert.Equal(t, expected, gotValue)
+	})
 }

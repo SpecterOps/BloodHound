@@ -22,9 +22,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/params"
@@ -37,6 +35,9 @@ type Identity interface {
 	GetRole(ctx context.Context, id int32) (services.Role, error)
 	GetPermission(ctx context.Context, id int) (services.Permission, error)
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Role, error)
+	ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.User, error)
+	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error)
+	ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.UserMinimal, error)
 }
 
 // Handlers is a dependency injection container for identity handlers.
@@ -54,12 +55,16 @@ func NewHandlersContainer(identity Identity) *Handlers {
 // GetPermission returns the permission for the id in the request path.
 func (s *Handlers) GetPermission(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx             = request.Context()
-		rawPermissionID = mux.Vars(request)[api.URIPathVariablePermissionID]
+		ctx = request.Context()
 	)
 
-	permissionID, err := strconv.Atoi(rawPermissionID)
+	permissionIDValue, err := params.PathInt64(request, api.URIPathVariablePermissionID)
 	if err != nil {
+		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, response)
+		return
+	}
+	permissionID := int(permissionIDValue)
+	if int64(permissionID) != permissionIDValue {
 		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, response)
 		return
 	}
@@ -76,17 +81,16 @@ func (s *Handlers) GetPermission(response http.ResponseWriter, request *http.Req
 // GetRole returns the role for the id in the request path.
 func (s *Handlers) GetRole(response http.ResponseWriter, request *http.Request) {
 	var (
-		ctx       = request.Context()
-		rawRoleID = mux.Vars(request)[api.URIPathVariableRoleID]
+		ctx = request.Context()
 	)
 
-	roleID, err := strconv.ParseInt(rawRoleID, 10, 32)
+	roleID, err := params.PathInt32(request, api.URIPathVariableRoleID)
 	if err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, response)
 		return
 	}
 
-	role, err := s.identity.GetRole(ctx, int32(roleID))
+	role, err := s.identity.GetRole(ctx, roleID)
 	if err != nil {
 		handleIdentityError(request, response, err)
 		return
@@ -112,6 +116,55 @@ func (s *Handlers) ListRoles(response http.ResponseWriter, request *http.Request
 	}
 
 	responses.WriteBasic(ctx, BuildRoleListView(roles), http.StatusOK, response)
+}
+
+// ListUsers returns the users matching the filters and ordering parsed from the request query parameters.
+func (s *Handlers) ListUsers(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx   = request.Context()
+		bhCtx = bhctx.Get(ctx)
+	)
+
+	users, err := s.identity.ListUsers(ctx, bhCtx.Filters, bhCtx.Sort)
+	if err != nil {
+		handleIdentityError(request, response, err)
+		return
+	}
+
+	responses.WriteBasic(ctx, BuildUserListView(users), http.StatusOK, response)
+}
+
+func (s *Handlers) ListPermissions(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx   = request.Context()
+		bhCtx = bhctx.Get(ctx)
+	)
+
+	permissions, err := s.identity.ListPermissions(ctx, bhCtx.Filters, bhCtx.Sort)
+	if err != nil {
+		handleIdentityError(request, response, err)
+		return
+	}
+
+	responses.WriteBasic(ctx, BuildPermissionListView(permissions), http.StatusOK, response)
+}
+
+// ListActiveUsersMinimal returns the id, email address and name of every active,
+// non-support user matching the filters and ordering parsed from the request
+// query parameters.
+func (s *Handlers) ListActiveUsersMinimal(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx   = request.Context()
+		bhCtx = bhctx.Get(ctx)
+	)
+
+	users, err := s.identity.ListActiveUsersMinimal(ctx, bhCtx.Filters, bhCtx.Sort)
+	if err != nil {
+		handleIdentityError(request, response, err)
+		return
+	}
+
+	responses.WriteBasic(ctx, BuildUserMinimalListView(users), http.StatusOK, response)
 }
 
 func handleIdentityError(request *http.Request, response http.ResponseWriter, err error) {

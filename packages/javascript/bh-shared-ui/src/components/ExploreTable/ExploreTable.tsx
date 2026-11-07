@@ -52,10 +52,6 @@ const tableCellProps: DataTableProps['TableCellProps'] = {
     className: 'truncate group relative p-0 pl-2',
 };
 
-const tableOptions: DataTableProps['tableOptions'] = {
-    getRowId: (row) => row.bhGraphId,
-};
-
 const virtualizationOptions: DataTableProps['virtualizationOptions'] = {
     estimateSize: () => 40,
 };
@@ -89,13 +85,20 @@ const ExploreTable = ({
 
     const exploreTableData = useMemo(() => getExploreTableData(graphData), [graphData]);
 
-    const { columnOptionsForDropdown, sortedFilteredRows, tableColumns, resultsCount, columnOrder, setColumnOrder } =
-        useExploreTableRowsAndColumns({
-            onKebabMenuClick,
-            searchInput,
-            selectedColumns,
-            exploreTableData,
-        });
+    const {
+        columnOptionsForDropdown,
+        sortedFilteredRows,
+        tableColumns,
+        resultsCount,
+        columnOrder,
+        setColumnOrder,
+        tableOptions,
+    } = useExploreTableRowsAndColumns({
+        onKebabMenuClick,
+        searchInput,
+        selectedColumns,
+        exploreTableData,
+    });
 
     const effectivePinnedColumns = pinnedColumns ?? DEFAULT_EXPLORE_TABLE_COLUMN_KEYS;
 
@@ -181,7 +184,7 @@ const ExploreTable = ({
         <div
             data-testid='explore-table-container-wrapper'
             className={cn(
-                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 bg-neutral-light-2 rounded-lg shadow-outer-1 border',
+                'dark:bg-neutral-dark-5 absolute z-10 bottom-4 left-4 right-4 overflow-hidden rounded-lg border border-solid border-neutral-light-4 bg-neutral-light-2 dark:border-neutral-900',
                 {
                     'h-1/2': !isExpanded,
                     'h-[calc(100%-72px)]': isExpanded,
@@ -222,7 +225,7 @@ const ExploreTable = ({
                     onColumnOrderChange={(newOrder) => {
                         setColumnOrder(newOrder);
                     }}
-                    className='overflow-auto h-full'
+                    className='h-full overflow-auto border-0'
                     growLastColumn
                     enableResizing
                     enableDragAndDrop

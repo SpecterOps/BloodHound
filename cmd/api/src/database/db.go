@@ -102,8 +102,6 @@ type Database interface {
 	GetRoles(ctx context.Context, ids []int32) (model.Roles, error)
 	GetRole(ctx context.Context, id int32) (model.Role, error)
 
-	// Permissions
-	GetAllPermissions(ctx context.Context, order string, filter model.SQLFilter) (model.Permissions, error)
 	GetPermission(ctx context.Context, id int) (model.Permission, error)
 
 	// Users

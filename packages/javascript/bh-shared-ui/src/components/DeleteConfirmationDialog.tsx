@@ -36,7 +36,7 @@ const DeleteConfirmationDialog: React.FC<{
                     <span className='font-bold text-error'>Warning: This change is irreversible.</span>
                 </>
             }
-            challengeTxt={`Delete this ${itemType}`}
+            challengeText={`Delete this ${itemType}`}
             onCancel={onCancel}
             onConfirm={onConfirm}
             error={error}
