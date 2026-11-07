@@ -20,9 +20,13 @@ package auth_test
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"testing"
+	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -117,4 +121,113 @@ func TestLogout(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 		assert.Empty(t, resp.Header.Get("Location"), "the request must be rejected before reaching the logout handler")
 	})
+}
+
+// TestGetSelfSessionLifecycle covers auth middleware, slice registration and
+// session revocation together. Detailed JSON compatibility belongs in handler tests.
+func TestGetSelfSessionLifecycle(t *testing.T) {
+	var (
+		ctx     = context.Background()
+		harness = servertest.NewHarness(t, func(routerInstance *router.Router, databaseInstance *database.BloodhoundDB) {
+			auth.Register(routerInstance, databaseInstance.Pool())
+		})
+		client = harness.Server.Client()
+		target = harness.Server.URL + "/api/v2/self"
+		user   = model.User{
+			PrincipalName: "self-user@example.com",
+			EmailAddress:  null.StringFrom("self-user@example.com"),
+			FirstName:     null.StringFrom("Self"),
+			// No roles or EULA acceptance: reading self must not require permissions.
+		}
+		token       = servertest.MintJWT(t, ctx, harness.DB, harness.Auther, user)
+		logoutToken = servertest.MintJWT(t, ctx, harness.DB, harness.Auther, model.User{
+			PrincipalName: "self-logout-user@example.com",
+		})
+	)
+
+	client.Timeout = 10 * time.Second
+
+	testCases := []struct {
+		name       string
+		token      string
+		setup      func(t *testing.T)
+		wantStatus int
+		assertBody func(t *testing.T, body []byte)
+	}{
+		{
+			name:       "returns the authenticated user without requiring permissions",
+			token:      token,
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				var envelope struct {
+					Data *struct {
+						ID            uuid.UUID `json:"id"`
+						PrincipalName string    `json:"principal_name"`
+						EmailAddress  string    `json:"email_address"`
+						FirstName     string    `json:"first_name"`
+					} `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal(body, &envelope))
+				require.NotNil(t, envelope.Data)
+				require.NotEqual(t, uuid.Nil, envelope.Data.ID)
+
+				// Check against persistence rather than trusting a nonempty response ID.
+				persistedUser, err := harness.DB.GetUser(ctx, envelope.Data.ID)
+				require.NoError(t, err)
+				assert.Equal(t, user.PrincipalName, persistedUser.PrincipalName)
+				assert.Equal(t, user.PrincipalName, envelope.Data.PrincipalName)
+				assert.Equal(t, user.EmailAddress.String, envelope.Data.EmailAddress)
+				assert.Equal(t, user.FirstName.String, envelope.Data.FirstName)
+			},
+		},
+		{
+			name:  "rejects the session after logout",
+			token: logoutToken,
+			setup: func(t *testing.T) {
+				request, err := http.NewRequestWithContext(ctx, http.MethodPost, harness.Server.URL+"/api/v2/logout", nil)
+				require.NoError(t, err)
+				request.Header.Set("Authorization", "Bearer "+logoutToken)
+
+				response, err := client.Do(request)
+				require.NoError(t, err)
+				defer response.Body.Close()
+
+				require.Equal(t, http.StatusOK, response.StatusCode)
+			},
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "returns a null payload when credentials are omitted",
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, body []byte) {
+				assert.JSONEq(t, `{"data":null}`, string(body))
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			if testCase.setup != nil {
+				testCase.setup(t)
+			}
+
+			request, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+			require.NoError(t, err)
+			if testCase.token != "" {
+				request.Header.Set("Authorization", "Bearer "+testCase.token)
+			}
+
+			response, err := client.Do(request)
+			require.NoError(t, err)
+			defer response.Body.Close()
+
+			body, err := io.ReadAll(response.Body)
+			require.NoError(t, err)
+			require.Equal(t, testCase.wantStatus, response.StatusCode, "body: %s", body)
+			assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+			if testCase.assertBody != nil {
+				testCase.assertBody(t, body)
+			}
+		})
+	}
 }

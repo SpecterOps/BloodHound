@@ -340,11 +340,6 @@ func (s ManagementResource) GetUser(response http.ResponseWriter, request *http.
 	}
 }
 
-func (s ManagementResource) GetSelf(response http.ResponseWriter, request *http.Request) {
-	bhCtx := bhctx.FromRequest(request)
-	api.WriteBasicResponse(request.Context(), bhCtx.AuthCtx.Owner, http.StatusOK, response)
-}
-
 func (s ManagementResource) DeleteUser(response http.ResponseWriter, request *http.Request) {
 	var (
 		user      model.User
