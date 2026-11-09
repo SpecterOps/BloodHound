@@ -190,34 +190,6 @@ func TestQueries_BuildEntityQueryParams_MissingObjectID(t *testing.T) {
 	require.Contains(t, err.Error(), "error getting objectid")
 }
 
-func TestQueries_BuildEntityQueryParams_InvalidSkip(t *testing.T) {
-	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
-	require.Nil(t, err)
-
-	req = mux.SetURLVars(req, map[string]string{"object_id": "1"})
-
-	q := url.Values{}
-	q.Add("skip", "-1")
-	req.URL.RawQuery = q.Encode()
-
-	_, err = queries.BuildEntityQueryParams(req, "", nil, nil)
-	require.Contains(t, err.Error(), "invalid skip")
-}
-
-func TestQueries_BuildEntityQueryParams_InvalidLimit(t *testing.T) {
-	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
-	require.Nil(t, err)
-
-	req = mux.SetURLVars(req, map[string]string{"object_id": "1"})
-
-	q := url.Values{}
-	q.Add("limit", "-1")
-	req.URL.RawQuery = q.Encode()
-
-	_, err = queries.BuildEntityQueryParams(req, "", nil, nil)
-	require.Contains(t, err.Error(), "invalid limit")
-}
-
 func TestQueries_BuildEntityQueryParams(t *testing.T) {
 	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
 	require.Nil(t, err)
@@ -225,16 +197,11 @@ func TestQueries_BuildEntityQueryParams(t *testing.T) {
 	objectID := "S-1-5-21-570004220-2248230615-4072641716-4001"
 	req = mux.SetURLVars(req, map[string]string{"object_id": objectID})
 
-	q := url.Values{}
-	q.Add("skip", "5")
-	q.Add("limit", "120")
-	req.URL.RawQuery = q.Encode()
-
-	params, err := queries.BuildEntityQueryParams(req, "", nil, nil)
+	params, err := queries.BuildEntityQueryParams(req, "ListADEntityAdminRights", nil, nil)
 	require.Nil(t, err)
-	require.Equal(t, 5, params.Skip)
-	require.Equal(t, 120, params.Limit)
 	require.Equal(t, objectID, params.ObjectID)
+	require.Equal(t, "ListADEntityAdminRights", params.QueryName)
+	require.Equal(t, model.DataTypeList, params.RequestedType)
 }
 
 func TestQueries_BuildEntityQueryParams_DataTypeCount(t *testing.T) {
@@ -249,8 +216,7 @@ func TestQueries_BuildEntityQueryParams_DataTypeCount(t *testing.T) {
 
 	params, err := queries.BuildEntityQueryParams(req, "", nil, nil)
 	require.Nil(t, err)
-	require.Equal(t, 0, params.Skip)
-	require.Equal(t, 0, params.Limit)
+	require.Equal(t, model.DataTypeCount, params.RequestedType)
 }
 
 func TestQueries_GetEntityResults(t *testing.T) {
@@ -263,15 +229,16 @@ func TestQueries_GetEntityResults(t *testing.T) {
 
 		params = queries.EntityQueryParameters{
 			ObjectID:      "100",
-			RequestedType: 1,
-			Skip:          0,
-			Limit:         10,
+			RequestedType: model.DataTypeList,
 			PathDelegate:  nil,
 			ListDelegate: func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+				require.Zero(t, skip)
+				require.Zero(t, limit)
 				set := make([]*graph.Node, 0)
 				for i := 0; i < 20; i++ {
 					set = append(set, graph.NewNode(graph.ID(i), graph.AsProperties(map[string]any{
-						common.Name.String(): fmt.Sprintf("Node %d", i),
+						common.Name.String():  fmt.Sprintf("Node %d", i),
+						ad.DomainSID.String(): "domain-1",
 					}), ad.Entity))
 				}
 
@@ -295,8 +262,56 @@ func TestQueries_GetEntityResults(t *testing.T) {
 		return delegate(nil)
 	})
 
-	results, count, err := graphQuery.GetEntityResults(context.Background(), nil, node, params, true)
-	require.Nil(t, err)
-	require.Len(t, results, 10)
-	require.Equal(t, count, 20)
+	results, err := graphQuery.GetEntityResults(context.Background(), node, params, true)
+	require.NoError(t, err)
+	require.IsType(t, graph.NodeSet{}, results)
+	require.Len(t, results, 20)
+	domainSID, err := results.(graph.NodeSet).Get(0).Properties.Get(ad.DomainSID.String()).String()
+	require.NoError(t, err)
+	require.Equal(t, "domain-1", domainSID)
+}
+
+func TestQueries_GetEntityResults_RawGraph(t *testing.T) {
+	var (
+		mockController = gomock.NewController(t)
+		mockDatabase   = graphMocks.NewMockDatabase(mockController)
+		anchor         = graph.NewNode(1, graph.NewProperties(), ad.User)
+		relatedNode    = graph.NewNode(2, graph.AsProperties(map[string]any{
+			ad.DomainSID.String(): "domain-1",
+		}), ad.Computer)
+		relationship = graph.NewRelationship(3, anchor.ID, relatedNode.ID, graph.AsProperties(map[string]any{
+			"test_property": "preserved",
+		}), ad.AdminTo)
+		paths = graph.NewPathSet(graph.Path{
+			Nodes: []*graph.Node{anchor, relatedNode},
+			Edges: []*graph.Relationship{relationship},
+		})
+		graphQuery = queries.GraphQuery{Graph: mockDatabase}
+		params     = queries.EntityQueryParameters{
+			RequestedType: model.DataTypeGraph,
+			PathDelegate: func(transaction graph.Transaction, node *graph.Node) (graph.PathSet, error) {
+				require.Same(t, anchor, node)
+				return paths, nil
+			},
+		}
+	)
+
+	mockDatabase.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, delegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
+		return delegate(nil)
+	})
+
+	results, err := graphQuery.GetEntityResults(context.Background(), anchor, params, true)
+	require.NoError(t, err)
+	require.IsType(t, graph.PathSet{}, results)
+	require.Equal(t, paths, results)
+}
+
+func TestQueries_GetADEntityQueryResult_CountUnsupported(t *testing.T) {
+	var graphQuery queries.GraphQuery
+
+	results, err := graphQuery.GetADEntityQueryResult(context.Background(), queries.EntityQueryParameters{
+		RequestedType: model.DataTypeCount,
+	}, false)
+	require.ErrorIs(t, err, queries.ErrUnsupportedDataType)
+	require.Nil(t, results)
 }

@@ -27,7 +27,6 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -39,7 +38,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/agi"
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -85,8 +83,6 @@ type EntityQueryParameters struct {
 	QueryName     string
 	ObjectID      string
 	RequestedType model.DataType
-	Skip          int
-	Limit         int
 	PathDelegate  any
 	ListDelegate  any
 }
@@ -113,26 +109,13 @@ func GetRequestedType(params url.Values) model.DataType {
 }
 
 func BuildEntityQueryParams(request *http.Request, queryName string, pathDelegate any, listDelegate any) (EntityQueryParameters, error) {
-	var (
-		requestQueryParams = request.URL.Query()
-		dataType           = GetRequestedType(requestQueryParams)
-	)
-
 	if objectId, err := GetEntityObjectIDFromRequestPath(request); err != nil {
 		return EntityQueryParameters{}, fmt.Errorf("error getting objectid: %w", err)
-	} else if skip, limit, _, err := utils.GetPageParamsForGraphQuery(request.Context(), requestQueryParams); err != nil {
-		return EntityQueryParameters{}, fmt.Errorf("error getting paging parameters: %w", err)
 	} else {
-		if dataType == model.DataTypeCount {
-			skip = 0
-			limit = 0
-		}
 		return EntityQueryParameters{
 			QueryName:     queryName,
 			ObjectID:      objectId,
-			RequestedType: dataType,
-			Skip:          skip,
-			Limit:         limit,
+			RequestedType: GetRequestedType(request.URL.Query()),
 			PathDelegate:  pathDelegate,
 			ListDelegate:  listDelegate,
 		}, nil
@@ -146,7 +129,7 @@ type Graph interface {
 	GetAllShortestPathsWithOpenGraph(ctx context.Context, startNodeID string, endNodeID string, filter graph.Criteria) (graph.PathSet, error)
 	SearchNodesByNameOrObjectId(ctx context.Context, nodeKinds graph.Kinds, nameOrObjectIdQuery string, skip int, limit int, useRawObjectID bool, etacAllowedList []string) ([]*graph.Node, error)
 	SearchByNameOrObjectID(ctx context.Context, includeOpenGraphNodes bool, useRawObjectID bool, searchValue string, searchType string) (graph.NodeSet, error)
-	GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params EntityQueryParameters, cacheEnabled bool) (any, int, error)
+	GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, error)
 	GetADEntityDetails(ctx context.Context, objectID string, entityType graph.Kind) (*graph.Node, error)
 	GetEntityByObjectId(ctx context.Context, objectID string, kinds ...graph.Kind) (*graph.Node, error)
 	GetEntityCountResults(ctx context.Context, node *graph.Node, delegates map[string]any) map[string]any
@@ -706,19 +689,20 @@ func (s *GraphQuery) SearchByNameOrObjectID(ctx context.Context, includeOpenGrap
 	}
 }
 
-func (s *GraphQuery) GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+// GetADEntityQueryResult returns raw paths for graph requests or the complete node set for list requests.
+func (s *GraphQuery) GetADEntityQueryResult(ctx context.Context, params EntityQueryParameters, cacheEnabled bool) (any, error) {
 	if params.RequestedType == model.DataTypeGraph && params.PathDelegate == nil {
-		return nil, 0, ErrGraphUnsupported
+		return nil, ErrGraphUnsupported
 	}
 
 	if params.RequestedType == model.DataTypeCount || params.RequestedType == model.DataTypeList && params.ListDelegate == nil {
-		return nil, 0, ErrUnsupportedDataType
+		return nil, ErrUnsupportedDataType
 	}
 
 	if node, err := s.GetEntityByObjectId(ctx, params.ObjectID, ad.Entity); err != nil {
-		return nil, 0, fmt.Errorf("error getting entity node: %w", err)
+		return nil, fmt.Errorf("error getting entity node: %w", err)
 	} else {
-		return s.GetEntityResults(ctx, primaryNodeKinds, node, params, cacheEnabled)
+		return s.GetEntityResults(ctx, node, params, cacheEnabled)
 	}
 }
 
@@ -1004,16 +988,6 @@ func (s *GraphQuery) BatchNodeUpdate(ctx context.Context, nodeUpdate graph.NodeU
 	})
 }
 
-func nodeSetToOrderedSlice(nodeSet graph.NodeSet) []*graph.Node {
-	nodes := nodeSet.Slice()
-
-	sort.Slice(nodes, func(i, j int) bool {
-		return nodes[i].ID > nodes[j].ID
-	})
-
-	return nodes
-}
-
 func (s *GraphQuery) cacheQueryResult(queryStart time.Time, cacheKey string, result graph.NodeSet) {
 	queryTime := time.Since(queryStart).Milliseconds()
 
@@ -1107,31 +1081,19 @@ func (s *GraphQuery) runMaybeCachedEntityQuery(ctx context.Context, node *graph.
 	return result, nil
 }
 
-func (s *GraphQuery) runListQuery(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) ([]model.PagedNodeListEntry, int, error) {
-	var (
-		skip  = params.Skip
-		limit = params.Limit
-	)
+func (s *GraphQuery) runListQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (graph.NodeSet, error) {
+	return s.runMaybeCachedEntityQuery(ctx, node, params, cacheEnabled)
+}
 
+func (s *GraphQuery) runCountQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (int, error) {
 	if result, err := s.runMaybeCachedEntityQuery(ctx, node, params, cacheEnabled); err != nil {
-		return nil, 0, err
-	} else if skip > result.Len() {
-		return nil, 0, fmt.Errorf(utils.ErrorInvalidSkip, skip)
+		return 0, err
 	} else {
-		if skip+limit > result.Len() {
-			limit = result.Len() - skip
-		}
-
-		return fromGraphNodes(primaryDisplayKinds, graph.NewNodeSet(nodeSetToOrderedSlice(result)[skip:skip+limit]...)), result.Len(), nil
+		return result.Len(), nil
 	}
 }
 
-func (s *GraphQuery) runCountQuery(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
-	result, err := s.runMaybeCachedEntityQuery(ctx, node, params, cacheEnabled)
-	return nil, result.Len(), err
-}
-
-func (s *GraphQuery) runPathQuery(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node, pathDelegate any) (map[string]any, int, error) {
+func (s *GraphQuery) runPathQuery(ctx context.Context, node *graph.Node, pathDelegate any) (graph.PathSet, error) {
 	var (
 		result graph.PathSet
 		err    error
@@ -1155,80 +1117,23 @@ func (s *GraphQuery) runPathQuery(ctx context.Context, primaryDisplayKinds graph
 	}
 
 	if err != nil {
-		return nil, 0, err
-	} else {
-		return bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, result), result.Len(), nil
+		return nil, err
 	}
+	return result, nil
 }
 
-func (s *GraphQuery) GetEntityResults(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+func (s *GraphQuery) GetEntityResults(ctx context.Context, node *graph.Node, params EntityQueryParameters, cacheEnabled bool) (any, error) {
 	// Graph type isn't currently under a caching model and is handled separately from other supported RequestedTypes
 	switch params.RequestedType {
 	case model.DataTypeGraph:
-		return s.runPathQuery(ctx, primaryDisplayKinds, node, params.PathDelegate)
+		return s.runPathQuery(ctx, node, params.PathDelegate)
 	case model.DataTypeList:
-		return s.runListQuery(ctx, primaryDisplayKinds, node, params, cacheEnabled)
+		return s.runListQuery(ctx, node, params, cacheEnabled)
 	case model.DataTypeCount:
 		return s.runCountQuery(ctx, node, params, cacheEnabled)
 	default:
-		return nil, 0, fmt.Errorf("unknown data type requested")
+		return nil, fmt.Errorf("unknown data type requested")
 	}
-}
-
-func fromGraphNodes(primaryDisplayKinds graphschema.PrimaryDisplayKinds, nodes graph.NodeSet) []model.PagedNodeListEntry {
-	renderedNodes := make([]model.PagedNodeListEntry, 0, nodes.Len())
-
-	for _, node := range nodes {
-		var (
-			nodeEntry model.PagedNodeListEntry
-			props     = node.Properties
-		)
-
-		if objectId, err := props.Get(common.ObjectID.String()).String(); err != nil {
-			if errors.Is(err, graph.ErrPropertyNotFound) {
-				slog.Warn(
-					"Node missing objectid",
-					slog.Int("node_id", int(node.ID)),
-					attr.Error(err),
-				)
-			} else {
-				slog.Error(
-					"Error getting node objectid",
-					slog.Int("node_id", int(node.ID)),
-					attr.Error(err),
-				)
-			}
-			nodeEntry.ObjectID = ""
-		} else {
-			nodeEntry.ObjectID = objectId
-		}
-
-		if name, err := props.Get(common.Name.String()).String(); err != nil {
-			if errors.Is(err, graph.ErrPropertyNotFound) {
-				slog.Warn(
-					"Node missing name",
-					slog.Int("node_id", int(node.ID)),
-					attr.Error(err),
-				)
-			} else {
-				slog.Error(
-					"Error getting node name",
-					slog.Int("node_id", int(node.ID)),
-					attr.Error(err),
-				)
-			}
-			nodeEntry.Name = ""
-		} else {
-			nodeEntry.Name = name
-		}
-
-		nodeEntry.Label = graphschema.GetNodeKindDisplayLabel(primaryDisplayKinds, node)
-		nodeEntry.Kinds = node.Kinds.Strings()
-
-		renderedNodes = append(renderedNodes, nodeEntry)
-	}
-
-	return renderedNodes
 }
 
 func (s *GraphQuery) UpdateSelectorTags(ctx context.Context, db database.AgiData, selectors model.UpdatedAssetGroupSelectors) error {

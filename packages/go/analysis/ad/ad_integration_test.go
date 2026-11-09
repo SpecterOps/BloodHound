@@ -1246,12 +1246,14 @@ func TestCreateConstrainedDelegationListDelegate(t *testing.T) {
 func TestFetchOutboundADEntityControlPaths(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.RootADHarness.ActiveDirectoryDomainSID = integration.RandomDomainSID()
 		harness.OutboundControl.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		path, err := adAnalysis.FetchOutboundADEntityControlPaths(context.Background(), db, harness.OutboundControl.Controller)
 
 		test.RequireNilErr(t, err)
+		requireNodeDomainSIDs(t, path.AllNodes(), harness.RootADHarness.ActiveDirectoryDomainSID)
 		nodes := path.AllNodes().IDs()
 		require.Equal(t, 7, len(nodes))
 		require.Contains(t, nodes, harness.OutboundControl.Controller.ID)
@@ -1267,12 +1269,14 @@ func TestFetchOutboundADEntityControlPaths(t *testing.T) {
 func TestFetchOutboundADEntityControl(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 	testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+		harness.RootADHarness.ActiveDirectoryDomainSID = integration.RandomDomainSID()
 		harness.OutboundControl.Setup(testContext)
 		return nil
 	}, func(harness integration.HarnessDetails, db graph.Database) {
 		control, err := adAnalysis.FetchOutboundADEntityControl(context.Background(), db, harness.OutboundControl.Controller, 0, 0)
 
 		test.RequireNilErr(t, err)
+		requireNodeDomainSIDs(t, control, harness.RootADHarness.ActiveDirectoryDomainSID)
 		require.Equal(t, 4, control.Len())
 		ids := control.IDs()
 
@@ -1283,6 +1287,7 @@ func TestFetchOutboundADEntityControl(t *testing.T) {
 
 		control, err = adAnalysis.FetchOutboundADEntityControl(context.Background(), db, harness.OutboundControl.ControllerB, 0, 0)
 		test.RequireNilErr(t, err)
+		requireNodeDomainSIDs(t, control, harness.RootADHarness.ActiveDirectoryDomainSID)
 		require.Equal(t, 1, control.Len())
 	})
 }
@@ -1291,11 +1296,13 @@ func TestFetchInboundADEntityControllerPaths(t *testing.T) {
 	t.Run("User", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.RootADHarness.ActiveDirectoryDomainSID = integration.RandomDomainSID()
 			harness.InboundControl.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			path, err := adAnalysis.FetchInboundADEntityControllerPaths(context.Background(), db, harness.InboundControl.ControlledUser)
 			test.RequireNilErr(t, err)
+			requireNodeDomainSIDs(t, path.AllNodes(), harness.RootADHarness.ActiveDirectoryDomainSID)
 
 			nodes := path.AllNodes().IDs()
 			require.Equal(t, 5, len(nodes))
@@ -1310,11 +1317,13 @@ func TestFetchInboundADEntityControllerPaths(t *testing.T) {
 	t.Run("Group", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.RootADHarness.ActiveDirectoryDomainSID = integration.RandomDomainSID()
 			harness.InboundControl.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			path, err := adAnalysis.FetchInboundADEntityControllerPaths(context.Background(), db, harness.InboundControl.ControlledGroup)
 			test.RequireNilErr(t, err)
+			requireNodeDomainSIDs(t, path.AllNodes(), harness.RootADHarness.ActiveDirectoryDomainSID)
 
 			nodes := path.AllNodes().IDs()
 			require.Equal(t, 7, len(nodes))
@@ -1333,11 +1342,13 @@ func TestFetchInboundADEntityControllers(t *testing.T) {
 	t.Run("User", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.RootADHarness.ActiveDirectoryDomainSID = integration.RandomDomainSID()
 			harness.InboundControl.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			control, err := adAnalysis.FetchInboundADEntityControllers(context.Background(), db, harness.InboundControl.ControlledUser, 0, 0)
 			test.RequireNilErr(t, err)
+			requireNodeDomainSIDs(t, control, harness.RootADHarness.ActiveDirectoryDomainSID)
 			require.Equal(t, 4, control.Len())
 
 			ids := control.IDs()
@@ -1348,6 +1359,7 @@ func TestFetchInboundADEntityControllers(t *testing.T) {
 
 			control, err = adAnalysis.FetchInboundADEntityControllers(context.Background(), db, harness.InboundControl.ControlledUser, 0, 1)
 			test.RequireNilErr(t, err)
+			requireNodeDomainSIDs(t, control, harness.RootADHarness.ActiveDirectoryDomainSID)
 			require.Equal(t, 1, control.Len())
 		})
 	})
@@ -1355,11 +1367,13 @@ func TestFetchInboundADEntityControllers(t *testing.T) {
 	t.Run("Group", func(t *testing.T) {
 		testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 		testContext.DatabaseTestWithSetup(func(harness *integration.HarnessDetails) error {
+			harness.RootADHarness.ActiveDirectoryDomainSID = integration.RandomDomainSID()
 			harness.InboundControl.Setup(testContext)
 			return nil
 		}, func(harness integration.HarnessDetails, db graph.Database) {
 			control, err := adAnalysis.FetchInboundADEntityControllers(context.Background(), db, harness.InboundControl.ControlledGroup, 0, 0)
 			test.RequireNilErr(t, err)
+			requireNodeDomainSIDs(t, control, harness.RootADHarness.ActiveDirectoryDomainSID)
 			require.Equal(t, 6, control.Len())
 
 			ids := control.IDs()
@@ -1372,9 +1386,23 @@ func TestFetchInboundADEntityControllers(t *testing.T) {
 
 			control, err = adAnalysis.FetchInboundADEntityControllers(context.Background(), db, harness.InboundControl.ControlledGroup, 0, 1)
 			test.RequireNilErr(t, err)
+			requireNodeDomainSIDs(t, control, harness.RootADHarness.ActiveDirectoryDomainSID)
 			require.Equal(t, 1, control.Len())
 		})
 	})
+}
+
+func requireNodeDomainSIDs(t *testing.T, nodes graph.NodeSet, expectedDomainSID string) {
+	t.Helper()
+
+	for _, node := range nodes {
+		var (
+			domainSID, err = node.Properties.Get(ad.DomainSID.String()).String()
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, expectedDomainSID, domainSID, "node %s", node.ID)
+	}
 }
 
 func TestCreateContainedPathDelegate(t *testing.T) {

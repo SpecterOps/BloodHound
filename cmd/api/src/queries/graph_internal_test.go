@@ -150,6 +150,161 @@ func Test_runMaybeCachedEntityQuery(t *testing.T) {
 	})
 }
 
+func Test_GetEntityResults_RawListCache(t *testing.T) {
+	var testCases = []struct {
+		name                  string
+		cacheEnabled          bool
+		prepopulateCache      bool
+		expectedDelegateCalls int
+	}{
+		{name: "disabled", prepopulateCache: true, expectedDelegateCalls: 3},
+		{name: "miss then hit", cacheEnabled: true, expectedDelegateCalls: 1},
+		{name: "hit", cacheEnabled: true, prepopulateCache: true},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				mockController = gomock.NewController(t)
+				mockDatabase   = graph_mocks.NewMockDatabase(mockController)
+				anchor         = graph.NewNode(1, graph.NewProperties(), ad.User)
+				expectedNodes  = graph.NewNodeSet(
+					graph.NewNode(2, graph.AsProperties(map[string]any{
+						common.Name.String():     "Computer A",
+						common.ObjectID.String(): "computer-a",
+						ad.DomainSID.String():    "domain-a",
+					}), ad.Computer),
+					graph.NewNode(3, graph.AsProperties(map[string]any{
+						common.Name.String():     "Computer B",
+						common.ObjectID.String(): "computer-b",
+						ad.DomainSID.String():    "domain-b",
+					}), ad.Computer),
+				)
+				delegateCalls int
+				params        = EntityQueryParameters{
+					QueryName:     "RawListCache",
+					ObjectID:      "anchor",
+					RequestedType: model.DataTypeList,
+					ListDelegate: func(transaction graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+						delegateCalls++
+						require.Zero(t, skip)
+						require.Zero(t, limit)
+						return expectedNodes, nil
+					},
+				}
+			)
+
+			cacheInstance, err := cache.NewCache(cache.Config{MaxSize: 1})
+			require.NoError(t, err)
+			if testCase.prepopulateCache {
+				_, _, err = cacheInstance.Set("ad-entity-query_RawListCache_anchor_1", expectedNodes)
+				require.NoError(t, err)
+			}
+
+			graphQuery := GraphQuery{
+				Graph:              mockDatabase,
+				Cache:              cacheInstance,
+				SlowQueryThreshold: -1,
+			}
+			if testCase.expectedDelegateCalls > 0 {
+				mockDatabase.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, delegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
+					return delegate(nil)
+				}).Times(testCase.expectedDelegateCalls)
+			}
+
+			for range 3 {
+				results, err := graphQuery.GetEntityResults(context.Background(), anchor, params, testCase.cacheEnabled)
+				require.NoError(t, err)
+				require.IsType(t, graph.NodeSet{}, results)
+				require.Len(t, results, expectedNodes.Len())
+				for nodeID, expectedNode := range expectedNodes {
+					var actualNode = results.(graph.NodeSet).Get(nodeID)
+					require.NotNil(t, actualNode)
+					require.Equal(t, expectedNode.Kinds, actualNode.Kinds)
+					require.Equal(t, expectedNode.Properties.MapOrEmpty(), actualNode.Properties.MapOrEmpty())
+				}
+			}
+			require.Equal(t, testCase.expectedDelegateCalls, delegateCalls)
+		})
+	}
+}
+
+func Test_GetEntityResults_Count(t *testing.T) {
+	var (
+		delegateError = errors.New("list query failed")
+		nodes         = graph.NewNodeSet(
+			graph.NewNode(2, graph.NewProperties(), ad.User),
+			graph.NewNode(3, graph.NewProperties(), ad.Computer),
+		)
+		testCases = []struct {
+			name                  string
+			nodes                 graph.NodeSet
+			expectedError         error
+			cacheEnabled          bool
+			prepopulateCache      bool
+			retrievals            int
+			expectedDelegateCalls int
+		}{
+			{name: "nonempty", nodes: nodes, retrievals: 1, expectedDelegateCalls: 1},
+			{name: "empty", nodes: graph.NewNodeSet(), retrievals: 1, expectedDelegateCalls: 1},
+			{name: "delegate error", expectedError: delegateError, retrievals: 1, expectedDelegateCalls: 1},
+			{name: "cache miss then hit", nodes: nodes, cacheEnabled: true, retrievals: 2, expectedDelegateCalls: 1},
+			{name: "cache hit", nodes: nodes, cacheEnabled: true, prepopulateCache: true, retrievals: 1},
+		}
+	)
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				mockController            = gomock.NewController(t)
+				mockDatabase              = graph_mocks.NewMockDatabase(mockController)
+				anchor                    = graph.NewNode(1, graph.NewProperties(), ad.User)
+				cacheInstance, cacheError = cache.NewCache(cache.Config{MaxSize: 1})
+				graphQuery                = GraphQuery{
+					Graph:              mockDatabase,
+					Cache:              cacheInstance,
+					SlowQueryThreshold: -1,
+				}
+				delegateCalls int
+				params        = EntityQueryParameters{
+					QueryName:     "CountResults",
+					ObjectID:      "anchor",
+					RequestedType: model.DataTypeCount,
+					ListDelegate: func(transaction graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
+						delegateCalls++
+						require.Zero(t, skip)
+						require.Zero(t, limit)
+						return testCase.nodes, testCase.expectedError
+					},
+				}
+			)
+
+			require.NoError(t, cacheError)
+			if testCase.prepopulateCache {
+				var _, _, err = cacheInstance.Set("ad-entity-query_CountResults_anchor_2", testCase.nodes)
+				require.NoError(t, err)
+			}
+			if testCase.expectedDelegateCalls > 0 {
+				mockDatabase.EXPECT().ReadTransaction(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, delegate graph.TransactionDelegate, options ...graph.TransactionOption) error {
+					return delegate(nil)
+				}).Times(testCase.expectedDelegateCalls)
+			}
+
+			for range testCase.retrievals {
+				results, err := graphQuery.GetEntityResults(context.Background(), anchor, params, testCase.cacheEnabled)
+				if testCase.expectedError != nil {
+					require.ErrorIs(t, err, testCase.expectedError)
+				} else {
+					require.NoError(t, err)
+					require.IsType(t, 0, results)
+					require.Equal(t, testCase.nodes.Len(), results)
+				}
+			}
+			require.Equal(t, testCase.expectedDelegateCalls, delegateCalls)
+		})
+	}
+}
+
 func Test_cacheQueryResult(t *testing.T) {
 	var (
 		mockCtrl = gomock.NewController(t)

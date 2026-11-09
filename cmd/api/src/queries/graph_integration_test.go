@@ -808,13 +808,9 @@ func TestSearchByNameOrObjectID_UseRawObjectID_StartsWith_NameCasing(t *testing.
 }
 
 func TestGetEntityResults(t *testing.T) {
-	dbInst := integration.SetupDB(t)
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
-
-	primaryDisplayKinds, err := dbInst.GetPrimaryDisplayKinds(context.Background())
-	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
@@ -828,30 +824,24 @@ func TestGetEntityResults(t *testing.T) {
 		params := queries.EntityQueryParameters{
 			QueryName:     "InboundADEntityController",
 			ObjectID:      objectID,
-			Skip:          1,
-			Limit:         2,
 			RequestedType: 1,
 			PathDelegate:  adAnalysis.FetchInboundADEntityControllerPaths,
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), primaryDisplayKinds, params, false)
+		results, err := graphQuery.GetADEntityQueryResult(context.Background(), params, false)
 		require.Nil(t, err)
 
-		require.Equal(t, 4, count)
-		require.Len(t, results, 2)
+		require.IsType(t, graph.NodeSet{}, results)
+		require.Len(t, results, 4)
 		require.Equal(t, 0, queryCache.Len())
 	})
 }
 
 func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
-	dbInst := integration.SetupDB(t)
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 1})
 	require.Nil(t, err)
-
-	primaryDisplayKinds, err := dbInst.GetPrimaryDisplayKinds(context.Background())
-	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
@@ -866,18 +856,16 @@ func TestGetEntityResults_QueryShorterThanSlowQueryThreshold(t *testing.T) {
 		params := queries.EntityQueryParameters{
 			QueryName:     "InboundADEntityController",
 			ObjectID:      objectID,
-			Skip:          1,
-			Limit:         2,
 			RequestedType: 1,
 			PathDelegate:  adAnalysis.FetchInboundADEntityControllerPaths,
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), primaryDisplayKinds, params, true)
+		results, err := graphQuery.GetADEntityQueryResult(context.Background(), params, true)
 		require.Nil(t, err)
 
-		require.Equal(t, 4, count)
-		require.Len(t, results, 2)
+		require.IsType(t, graph.NodeSet{}, results)
+		require.Len(t, results, 4)
 		require.Equal(t, 0, queryCache.Len())
 	})
 }
@@ -921,13 +909,9 @@ func TestFetchNodeByGraphId(t *testing.T) {
 }
 
 func TestGetEntityResults_Cache(t *testing.T) {
-	dbInst := integration.SetupDB(t)
 	testContext := integration.NewGraphTestContext(t, schema.DefaultGraphSchema())
 	queryCache, err := cache.NewCache(cache.Config{MaxSize: 2})
 	require.Nil(t, err)
-
-	primaryDisplayKinds, err := dbInst.GetPrimaryDisplayKinds(context.Background())
-	require.NoError(t, err)
 
 	testContext.SetupActiveDirectory()
 	testContext.DatabaseTest(func(harness integration.HarnessDetails, db graph.Database) {
@@ -943,27 +927,25 @@ func TestGetEntityResults_Cache(t *testing.T) {
 		params := queries.EntityQueryParameters{
 			QueryName:     "InboundADEntityController",
 			ObjectID:      objectID,
-			Skip:          1,
-			Limit:         2,
 			RequestedType: 1,
 			PathDelegate:  adAnalysis.FetchInboundADEntityControllerPaths,
 			ListDelegate:  adAnalysis.FetchInboundADEntityControllers,
 		}
 
 		// Get results and check that an entry was added to the cache
-		results, count, err := graphQuery.GetADEntityQueryResult(context.Background(), primaryDisplayKinds, params, true)
+		results, err := graphQuery.GetADEntityQueryResult(context.Background(), params, true)
 		require.Nil(t, err)
 
-		require.Equal(t, 4, count)
-		require.Len(t, results, 2)
+		require.IsType(t, graph.NodeSet{}, results)
+		require.Len(t, results, 4)
 		require.Equal(t, 1, queryCache.Len())
 
 		// Ensure that after being cached, we get the same results
-		results, count, err = graphQuery.GetADEntityQueryResult(context.Background(), primaryDisplayKinds, params, true)
+		results, err = graphQuery.GetADEntityQueryResult(context.Background(), params, true)
 		require.Nil(t, err)
 
-		require.Equal(t, 4, count)
-		require.Len(t, results, 2)
+		require.IsType(t, graph.NodeSet{}, results)
+		require.Len(t, results, 4)
 		require.Equal(t, 1, queryCache.Len())
 	})
 }

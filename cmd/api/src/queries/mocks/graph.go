@@ -182,19 +182,18 @@ func (mr *MockGraphMockRecorder) GetADEntityDetails(ctx, objectID, entityType an
 }
 
 // GetADEntityQueryResult mocks base method.
-func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, primaryNodeKinds graphschema.PrimaryDisplayKinds, params queries.EntityQueryParameters, cacheEnabled bool) (any, int, error) {
+func (m *MockGraph) GetADEntityQueryResult(ctx context.Context, params queries.EntityQueryParameters, cacheEnabled bool) (any, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetADEntityQueryResult", ctx, primaryNodeKinds, params, cacheEnabled)
+	ret := m.ctrl.Call(m, "GetADEntityQueryResult", ctx, params, cacheEnabled)
 	ret0, _ := ret[0].(any)
-	ret1, _ := ret[1].(int)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetADEntityQueryResult indicates an expected call of GetADEntityQueryResult.
-func (mr *MockGraphMockRecorder) GetADEntityQueryResult(ctx, primaryNodeKinds, params, cacheEnabled any) *gomock.Call {
+func (mr *MockGraphMockRecorder) GetADEntityQueryResult(ctx, params, cacheEnabled any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADEntityQueryResult", reflect.TypeOf((*MockGraph)(nil).GetADEntityQueryResult), ctx, primaryNodeKinds, params, cacheEnabled)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetADEntityQueryResult", reflect.TypeOf((*MockGraph)(nil).GetADEntityQueryResult), ctx, params, cacheEnabled)
 }
 
 // GetAllShortestPaths mocks base method.

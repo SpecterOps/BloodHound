@@ -23,23 +23,28 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
+	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 )
 
 // handleAdRelatedEntityQuery is for retrieving entities related to a specific entity.
 // This endpoint returns a polymorphic response dependent upon which return type is requested
-// by the `type` parameter, which can be `list`, `count`, or `graph`.
-// Path delegates are for graphing, list delegates are for listing and counting. Endpoints
-// without a certain delegate do not support that delegate feature.
+// by the `type` parameter, which can be `list` or `graph`.
+// Path delegates are for graphing and list delegates are for listing. Endpoints
+// without a certain delegate do not support that delegate feature. Related results
+// are authorized before formatting, counting, and pagination.
 func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, request *http.Request, queryName string, pathDelegate any, listDelegate any) {
 	user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(request).AuthCtx)
 	if !isUser {
@@ -50,6 +55,8 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 
 	if params, err := queries.BuildEntityQueryParams(request, queryName, pathDelegate, listDelegate); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
+	} else if skip, limit, _, err := utils.GetPageParamsForGraphQuery(request.Context(), request.URL.Query()); err != nil {
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, fmt.Errorf("error getting paging parameters: %w", err)), request), response)
 	} else if hasAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.GraphQuery, s.DogTags, user, params.ObjectID, ad.Entity); err != nil {
 		slog.ErrorContext(request.Context(), "Error checking if user has access to node for ETAC", attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
@@ -60,7 +67,7 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), primaryDisplayKinds, params, entityPanelCachingFlag.Enabled); err != nil {
+		if results, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), params, entityPanelCachingFlag.Enabled); err != nil {
 			if errors.Is(err, queries.ErrGraphUnsupported) || errors.Is(err, queries.ErrUnsupportedDataType) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
 			} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
@@ -69,11 +76,79 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "an unknown error occurred during the request", request), response)
 			}
 		} else if params.RequestedType == model.DataTypeGraph {
-			api.WriteJSONResponse(request.Context(), results, http.StatusOK, response)
+			var (
+				paths, isPathSet = results.(graph.PathSet)
+				graphResponse    map[string]any
+			)
+
+			if !isPathSet {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				return
+			}
+
+			if ShouldFilterForETAC(s.DogTags, user) {
+				graphResponse = pathSetToBloodHoundGraphETAC(primaryDisplayKinds, paths, ExtractEnvironmentIDsFromUser(&user))
+			} else {
+				graphResponse = bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, paths)
+			}
+
+			api.WriteJSONResponse(request.Context(), graphResponse, http.StatusOK, response)
 		} else {
-			api.WriteResponseWrapperWithPagination(request.Context(), results, params.Limit, params.Skip, count, http.StatusOK, response)
+			nodes, isNodeSet := results.(graph.NodeSet)
+			if !isNodeSet {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
+				return
+			}
+
+			if ShouldFilterForETAC(s.DogTags, user) {
+				nodes = filterNodeSetByETAC(nodes, ExtractEnvironmentIDsFromUser(&user))
+			}
+
+			if paginatedNodes, err := paginateNodes(nodes, skip, limit); err != nil {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
+			} else {
+				api.WriteResponseWrapperWithPagination(request.Context(), adNodesToListEntries(primaryDisplayKinds, paginatedNodes), limit, skip, nodes.Len(), http.StatusOK, response)
+			}
 		}
 	}
+}
+
+// adNodesToListEntries formats authorized, paginated nodes for AD list responses.
+func adNodesToListEntries(primaryDisplayKinds graphschema.PrimaryDisplayKinds, nodes []*graph.Node) []model.PagedNodeListEntry {
+	var renderedNodes = make([]model.PagedNodeListEntry, 0, len(nodes))
+
+	for _, node := range nodes {
+		var (
+			nodeEntry      model.PagedNodeListEntry
+			nodeProperties = node.Properties
+		)
+
+		if objectID, err := nodeProperties.Get(common.ObjectID.String()).String(); err != nil {
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.Warn("Node missing objectid", slog.Int("node_id", int(node.ID)), attr.Error(err))
+			} else {
+				slog.Error("Error getting node objectid", slog.Int("node_id", int(node.ID)), attr.Error(err))
+			}
+		} else {
+			nodeEntry.ObjectID = objectID
+		}
+
+		if name, err := nodeProperties.Get(common.Name.String()).String(); err != nil {
+			if errors.Is(err, graph.ErrPropertyNotFound) {
+				slog.Warn("Node missing name", slog.Int("node_id", int(node.ID)), attr.Error(err))
+			} else {
+				slog.Error("Error getting node name", slog.Int("node_id", int(node.ID)), attr.Error(err))
+			}
+		} else {
+			nodeEntry.Name = name
+		}
+
+		nodeEntry.Label = graphschema.GetNodeKindDisplayLabel(primaryDisplayKinds, node)
+		nodeEntry.Kinds = node.Kinds.Strings()
+		renderedNodes = append(renderedNodes, nodeEntry)
+	}
+
+	return renderedNodes
 }
 
 func (s *Resources) ListADUserSessions(response http.ResponseWriter, request *http.Request) {

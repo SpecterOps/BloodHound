@@ -1415,7 +1415,7 @@ func FetchInboundADEntityControllerPaths(ctx context.Context, db graph.Database,
 		return nil, err
 	}
 
-	return collector.Paths, collector.PopulateNodeProperties(ctx, db, common.Name.String(), common.ObjectID.String(), common.SystemTags.String())
+	return collector.Paths, collector.PopulateNodeProperties(ctx, db, common.Name.String(), common.ObjectID.String(), common.SystemTags.String(), ad.DomainSID.String())
 }
 
 func FetchInboundADEntityControllers(ctx context.Context, db graph.Database, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
@@ -1436,7 +1436,7 @@ func FetchInboundADEntityControllers(ctx context.Context, db graph.Database, nod
 		return nil, err
 	}
 
-	return collector.Nodes, collector.PopulateProperties(ctx, db, common.Name.String(), common.ObjectID.String(), common.SystemTags.String())
+	return collector.Nodes, collector.PopulateProperties(ctx, db, common.Name.String(), common.ObjectID.String(), common.SystemTags.String(), ad.DomainSID.String())
 }
 
 func FetchOutboundADEntityControlPaths(ctx context.Context, db graph.Database, node *graph.Node) (graph.PathSet, error) {
@@ -1457,7 +1457,7 @@ func FetchOutboundADEntityControlPaths(ctx context.Context, db graph.Database, n
 		return nil, err
 	}
 
-	return collector.Paths, collector.PopulateNodeProperties(ctx, db, common.Name.String(), common.ObjectID.String(), common.SystemTags.String())
+	return collector.Paths, collector.PopulateNodeProperties(ctx, db, common.Name.String(), common.ObjectID.String(), common.SystemTags.String(), ad.DomainSID.String())
 }
 
 func FetchOutboundADEntityControl(ctx context.Context, db graph.Database, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
@@ -1478,7 +1478,7 @@ func FetchOutboundADEntityControl(ctx context.Context, db graph.Database, node *
 		return nil, err
 	}
 
-	return collector.Nodes, collector.PopulateProperties(ctx, db, common.Name.String(), common.ObjectID.String(), common.SystemTags.String())
+	return collector.Nodes, collector.PopulateProperties(ctx, db, common.Name.String(), common.ObjectID.String(), common.SystemTags.String(), ad.DomainSID.String())
 }
 
 func FetchPolicyLinkedCertTemplatePaths(tx graph.Transaction, root *graph.Node) (graph.PathSet, error) {
