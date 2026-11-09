@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Field } from '@base-ui/react/field';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, vi } from 'vitest';
@@ -140,6 +141,78 @@ describe('Slider Tests', () => {
 });
 
 describe('Slider ticks and value field', () => {
+    it.each([undefined, false])(
+        'inherits Field.Root disabled even when the Slider disabled prop is %s',
+        async (disabled) => {
+            const user = userEvent.setup();
+            const onValueChange = vi.fn();
+            const onValueCommitted = vi.fn();
+            render(
+                <Field.Root disabled>
+                    <Slider
+                        defaultValue={25}
+                        disabled={disabled}
+                        showValue
+                        thumbAriaLabel='Value'
+                        onValueChange={onValueChange}
+                        onValueCommitted={onValueCommitted}
+                    />
+                </Field.Root>
+            );
+            const input = screen.getByRole('textbox');
+
+            expect(input).toBeDisabled();
+            expect(screen.getByRole('slider')).toBeDisabled();
+
+            await user.type(input, '75{Enter}');
+            fireEvent.blur(input);
+
+            expect(input).toHaveValue('25');
+            expect(screen.getByRole('slider')).toHaveValue('25');
+            expect(onValueChange).not.toHaveBeenCalled();
+            expect(onValueCommitted).not.toHaveBeenCalled();
+        }
+    );
+
+    it('blocks pending edits when the parent field becomes disabled and supports re-enabling it', async () => {
+        const user = userEvent.setup();
+        const onValueChange = vi.fn();
+        const onValueCommitted = vi.fn();
+        const renderSlider = (disabled: boolean) => (
+            <Field.Root disabled={disabled}>
+                <Slider
+                    defaultValue={25}
+                    showValue
+                    thumbAriaLabel='Value'
+                    onValueChange={onValueChange}
+                    onValueCommitted={onValueCommitted}
+                />
+            </Field.Root>
+        );
+        const { rerender } = render(renderSlider(false));
+        const input = screen.getByRole('textbox');
+
+        await user.clear(input);
+        await user.type(input, '75');
+        rerender(renderSlider(true));
+        fireEvent.keyDown(input, { key: 'Enter' });
+        fireEvent.blur(input);
+
+        expect(input).toBeDisabled();
+        expect(screen.getByRole('slider')).toHaveValue('25');
+        expect(onValueChange).not.toHaveBeenCalled();
+        expect(onValueCommitted).not.toHaveBeenCalled();
+
+        rerender(renderSlider(false));
+        expect(input).toBeEnabled();
+        await user.click(input);
+        await user.keyboard('{Enter}');
+
+        expect(screen.getByRole('slider')).toHaveValue('75');
+        expect(onValueChange).toHaveBeenCalledOnce();
+        expect(onValueCommitted).toHaveBeenCalledOnce();
+    });
+
     it('describes the default value field with its percent suffix', () => {
         render(<Slider showValue thumbAriaLabel='Opacity' />);
 

@@ -95,7 +95,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         };
 
         const commitValue = (event: React.FocusEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) => {
-            if (draftValue === null || invalidValue || disabled) return;
+            if (draftValue === null || invalidValue || disabled || event.currentTarget.disabled) return;
 
             const nextValue = Math.min(
                 max,
@@ -194,42 +194,50 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                     )}
                 </div>
                 {showValue && (
-                    <div className='relative shrink-0'>
-                        <Input
-                            type='text'
-                            inputMode='decimal'
-                            variant='outlined'
-                            aria-label={valueAriaLabel ?? `${thumbAriaLabel ?? 'Slider'} value`}
-                            aria-describedby={
-                                [describedBy, valueSuffix ? suffixId : undefined].filter(Boolean).join(' ') || undefined
-                            }
-                            aria-invalid={invalidValue || undefined}
-                            disabled={disabled}
-                            value={draftValue ?? String(displayValue)}
-                            onChange={(event) => setDraftValue(event.target.value)}
-                            onBlur={commitValue}
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
-                                    event.preventDefault();
-                                    commitValue(event);
-                                } else if (event.key === 'Escape') {
-                                    setDraftValue(null);
-                                }
-                            }}
-                            className={cn('h-7 w-16 px-2 py-1 text-xs', valueSuffix && 'pr-5')}
-                        />
-                        {valueSuffix && (
-                            <span
-                                id={suffixId}
-                                className={cn(
-                                    'pointer-events-none absolute end-2 top-1.5 text-xs',
-                                    disabled ? 'text-disabled' : 'text-main'
-                                )}>
-                                {valueSuffix}
-                            </span>
+                    <SliderPrimitive.Value
+                        className='relative shrink-0'
+                        htmlFor={undefined}
+                        render={(valueProps, { disabled: isDisabled }) => (
+                            <div {...valueProps}>
+                                <Input
+                                    type='text'
+                                    inputMode='decimal'
+                                    variant='outlined'
+                                    aria-label={valueAriaLabel ?? `${thumbAriaLabel ?? 'Slider'} value`}
+                                    aria-describedby={
+                                        [describedBy, valueSuffix ? suffixId : undefined].filter(Boolean).join(' ') ||
+                                        undefined
+                                    }
+                                    aria-invalid={invalidValue || undefined}
+                                    disabled={isDisabled}
+                                    value={draftValue ?? String(displayValue)}
+                                    onChange={(event) => setDraftValue(event.target.value)}
+                                    onBlur={commitValue}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'Enter') {
+                                            if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)
+                                                return;
+                                            event.preventDefault();
+                                            commitValue(event);
+                                        } else if (event.key === 'Escape') {
+                                            setDraftValue(null);
+                                        }
+                                    }}
+                                    className={cn('h-7 w-16 px-2 py-1 text-xs', valueSuffix && 'pr-5')}
+                                />
+                                {valueSuffix && (
+                                    <span
+                                        id={suffixId}
+                                        className={cn(
+                                            'pointer-events-none absolute end-2 top-1.5 text-xs',
+                                            isDisabled ? 'text-disabled' : 'text-main'
+                                        )}>
+                                        {valueSuffix}
+                                    </span>
+                                )}
+                            </div>
                         )}
-                    </div>
+                    />
                 )}
                 {showValue && invalidValue && (
                     <span
