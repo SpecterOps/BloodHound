@@ -17,6 +17,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"runtime"
 	"sync"
@@ -37,7 +38,7 @@ var canRDPPostProcessedEdges = graph.Kinds{
 
 func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupData *LocalGroupData, enforceURA bool, citrixEnabled bool) (*post.AtomicPostProcessingStats, error) {
 	var (
-		ctx, done             = context.WithCancel(parentCtx)
+		ctx, done             = context.WithCancelCause(parentCtx)
 		numComputersProcessed = &atomic.Uint64{}
 		workC                 = make(chan uint64)
 		workerWG              sync.WaitGroup
@@ -59,7 +60,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 	)()
 
 	// Ensure the internal operation context is closed out
-	defer done()
+	defer done(nil)
 
 	// If we didn't get the canRDPData then we can't run post
 	if err != nil {
@@ -79,7 +80,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 
 	// Deferred after done() so that the sink is flushed before the internal context is closed
 	sink := post.NewFilteredRelationshipSink(ctx, "PostCanRDP", graphDB, canRDPTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	for workerID := 0; workerID < runtime.NumCPU()/2+1; workerID++ {
 		computerWG.Add(1)
@@ -98,7 +99,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 
 				if err != nil {
 					slog.Error("FetchCanRDPEntityBitmapForComputer Error", attr.Error(err))
-					done()
+					done(err)
 				} else {
 					rdpEntities.Each(func(fromID uint64) bool {
 						// Because reach is calculated using a component graph the code must exclude
@@ -158,7 +159,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 				return nil
 			}); err != nil {
 				slog.Error("Fetching CanRDP Computer Data", attr.Error(err))
-				done()
+				done(err)
 			}
 		}(workerID)
 	}
@@ -173,7 +174,7 @@ func PostCanRDP(parentCtx context.Context, graphDB graph.Database, localGroupDat
 	close(computerC)
 	computerWG.Wait()
 
-	return sink.Stats(), nil
+	return sink.Stats(), errors.Join(context.Cause(ctx), sink.Done())
 }
 
 var localGroupPostProcessedEdges = graph.Kinds{
@@ -196,7 +197,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 	}
 
 	var (
-		ctx, done             = context.WithCancel(parentCtx)
+		ctx, done             = context.WithCancelCause(parentCtx)
 		computerC             = make(chan uint64)
 		reachC                = make(chan reachJob, 4096)
 		numGroupsProcessed    = &atomic.Uint64{}
@@ -217,7 +218,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 	)()
 
 	// Ensure the internal operation context is closed out
-	defer done()
+	defer done(nil)
 
 	// Clear old post-processed edges that will not have a `firstseen` property
 	if err := post.MigrationForDCAPostProcessedEdges(ctx, graphDB, localGroupPostProcessedEdges); err != nil {
@@ -232,7 +233,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 
 	// Deferred after done() so that the sink is flushed before the internal context is closed
 	sink := post.NewFilteredRelationshipSink(ctx, "PostLocalGroups", graphDB, localGroupTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	// Graph path workers
 	for workerID := 0; workerID < runtime.NumCPU()/2+1; workerID += 1 {
@@ -337,7 +338,7 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 				return nil
 			}); err != nil {
 				slog.Error("Read Computer Local Groups", attr.Error(err))
-				done()
+				done(err)
 			}
 		}(workerID)
 	}
@@ -352,5 +353,5 @@ func PostLocalGroups(parentCtx context.Context, graphDB graph.Database, localGro
 	close(reachC)
 	reachWG.Wait()
 
-	return sink.Stats(), nil
+	return sink.Stats(), errors.Join(context.Cause(ctx), sink.Done())
 }
