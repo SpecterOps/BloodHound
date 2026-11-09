@@ -19447,7 +19447,7 @@
       "patch": {
         "operationId": "UpdateCollectorJobSecret",
         "summary": "Update a collector job secret",
-        "description": "Updates only supplied fields. Omitted fields are preserved. Secret values are never returned. Empty or null replacements and requests without an update field are rejected. The internal storage key and existing job snapshots remain unchanged. Existing jobs may fail if their snapshotted external key ID no longer matches the replacement value. Secret storage and database updates cannot commit atomically. A failed request can still replace the value if the provider succeeds but the database commit fails; retrying the same request reapplies the intended fields.",
+        "description": "Updates collector job secret mutable fields: name, external_key_id, and value.",
         "requestBody": {
           "required": true,
           "content": {
@@ -19458,19 +19458,13 @@
                 "minProperties": 1,
                 "properties": {
                   "name": {
-                    "type": "string",
-                    "minLength": 1,
-                    "pattern": "\\S"
+                    "type": "string"
                   },
                   "external_key_id": {
-                    "type": "string",
-                    "minLength": 1,
-                    "pattern": "\\S"
+                    "type": "string"
                   },
                   "value": {
                     "type": "string",
-                    "minLength": 1,
-                    "pattern": "\\S",
                     "writeOnly": true
                   }
                 }
@@ -19522,7 +19516,14 @@
             "$ref": "#/components/responses/not-found"
           },
           "409": {
-            "description": "The supplied name is already used by another collector job secret."
+            "description": "**Conflict**\nThe supplied `name` collides with an existing collector job secret\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
