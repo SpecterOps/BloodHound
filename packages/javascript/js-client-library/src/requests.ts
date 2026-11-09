@@ -33,7 +33,7 @@ import {
     SSOProviderConfiguration,
     WebhookType,
 } from './types';
-import { ConfigurationPayload } from './utils';
+import { ConfigurationPayload, RequireAtLeastOne } from './utils';
 
 export type RequestOptions<D = any> = AxiosRequestConfig<D>;
 
@@ -416,7 +416,7 @@ export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 
     value: string;
 };
 
-export type UpdateCollectorJobSecretRequest = Partial<
+export type UpdateCollectorJobSecretRequest = RequireAtLeastOne<
     Pick<CreateCollectorJobSecretRequest, 'value' | 'external_key_id' | 'name'>
 >;
 
