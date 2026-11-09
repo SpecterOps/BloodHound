@@ -107,10 +107,3 @@ func (s LoginResource) patchEULAAcceptance(ctx context.Context, username string)
 
 	return nil
 }
-
-func (s LoginResource) Logout(response http.ResponseWriter, request *http.Request) {
-	bhCtx := bhctx.FromRequest(request)
-	s.authenticator.Logout(request.Context(), bhCtx.AuthCtx.Session)
-	redirectURL := api.URLJoinPath(*bhCtx.Host, api.UserInterfacePath)
-	http.Redirect(response, request, redirectURL.String(), http.StatusOK)
-}

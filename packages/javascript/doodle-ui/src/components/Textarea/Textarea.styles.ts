@@ -20,5 +20,5 @@ export const textareaStyles = [
     'focus:outline-none focus:focus-ring focus:border-[color:var(--textarea-focus-border)] enabled:hover:focus:border-[color:var(--textarea-hover-focus-border)]',
     'disabled:cursor-not-allowed disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--textarea-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
     'transition-[color,box-shadow] md:text-sm',
-    'aria-[invalid=true]:border-status-error-main aria-[invalid=true]:hover:border-status-error-main aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main',
+    'enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:hover:border-status-error-main enabled:aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main disabled:aria-[invalid=true]:border-[color:var(--input-disabled-invalid-border)]',
 ];

@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/test"
@@ -1093,6 +1094,7 @@ type AZMGRoleManagementReadWriteDirectoryHarness struct {
 	Application       *graph.Node
 	Group             *graph.Node
 	Role              *graph.Node
+	SecondRole        *graph.Node
 	ServicePrincipal  *graph.Node
 	ServicePrincipalB *graph.Node
 	MicrosoftGraph    *graph.Node
@@ -1118,20 +1120,38 @@ func (s *AZMGRoleManagementReadWriteDirectoryHarness) Setup(testCtx *GraphTestCo
 	testCtx.NewRelationship(s.Tenant, s.ServicePrincipalB, azure.Contains)
 
 	testCtx.NewRelationship(s.ServicePrincipal, s.MicrosoftGraph, azure.RoleManagementReadWriteDirectory)
+}
 
-	testCtx.NewRelationship(s.ServicePrincipal, s.MicrosoftGraph, azure.AZMGAddSecret)
-	testCtx.NewRelationship(s.ServicePrincipal, s.MicrosoftGraph, azure.AZMGAddOwner)
+// SetupPostProcessing extends the fixture with another source and role, plus an
+// independent application permission. existingEdges also seeds valid and stale output.
+func (s *AZMGRoleManagementReadWriteDirectoryHarness) SetupPostProcessing(testCtx *GraphTestContext, existingEdges bool) {
+	var (
+		foreignTenantID   = RandomObjectID(testCtx.testCtx)
+		foreignTenant     = testCtx.NewAzureTenant(foreignTenantID)
+		foreignRole       = testCtx.NewAzureRole("Foreign role", RandomObjectID(testCtx.testCtx), RandomObjectID(testCtx.testCtx), foreignTenantID)
+		trackedProperties = graph.AsProperties(graph.PropertyMap{common.FirstSeen: time.Unix(1, 0).UTC()})
+	)
+	s.Setup(testCtx)
+	s.SecondRole = testCtx.NewAzureRole("Second role", RandomObjectID(testCtx.testCtx), RandomObjectID(testCtx.testCtx), testCtx.NodeObjectID(s.Tenant))
+	testCtx.NewRelationship(s.Tenant, s.SecondRole, azure.Contains)
+	testCtx.NewRelationship(foreignTenant, foreignRole, azure.Contains)
+	testCtx.NewRelationship(s.ServicePrincipal, s.ServicePrincipalB, azure.RoleManagementReadWriteDirectory)
+	testCtx.NewRelationship(s.ServicePrincipalB, s.MicrosoftGraph, azure.RoleManagementReadWriteDirectory)
+	testCtx.NewRelationship(s.ServicePrincipalB, s.MicrosoftGraph, azure.AppRoleAssignmentReadWriteAll)
 
-	testCtx.NewRelationship(s.ServicePrincipal, s.ServicePrincipalB, azure.AZMGAddSecret)
-	testCtx.NewRelationship(s.ServicePrincipal, s.ServicePrincipalB, azure.AZMGAddOwner)
-
-	testCtx.NewRelationship(s.ServicePrincipal, s.Application, azure.AZMGAddSecret)
-	testCtx.NewRelationship(s.ServicePrincipal, s.Application, azure.AZMGAddOwner)
-
-	testCtx.NewRelationship(s.ServicePrincipal, s.Group, azure.AZMGAddSecret)
-	testCtx.NewRelationship(s.ServicePrincipal, s.Group, azure.AZMGAddOwner)
-
-	testCtx.NewRelationship(s.ServicePrincipal, s.Role, azure.AZMGGrantRole)
+	if existingEdges {
+		testCtx.NewRelationship(s.ServicePrincipal, s.Role, azure.AZMGGrantRole, trackedProperties)
+		testCtx.NewRelationship(s.ServicePrincipalB, s.Tenant, azure.AZMGGrantAppRoles, trackedProperties)
+		testCtx.NewRelationship(s.ServicePrincipal, foreignRole, azure.AZMGGrantRole, trackedProperties)
+		testCtx.NewRelationship(s.ServicePrincipal, s.Tenant, azure.AZMGGrantAppRoles, trackedProperties)
+		testCtx.NewRelationship(s.ServicePrincipal, s.Group, azure.AZMGAddMember, trackedProperties)
+		for _, target := range []*graph.Node{s.Application, s.MicrosoftGraph, s.Group} {
+			testCtx.NewRelationship(s.ServicePrincipal, target, azure.AZMGAddOwner, trackedProperties)
+		}
+		for _, target := range []*graph.Node{s.Application, s.MicrosoftGraph} {
+			testCtx.NewRelationship(s.ServicePrincipal, target, azure.AZMGAddSecret, trackedProperties)
+		}
+	}
 }
 
 type AZMGServicePrincipalEndpointReadWriteAllHarness struct {
@@ -9269,6 +9289,61 @@ func (s *CoerceAndRelayNTLMtoADCS) Setup(graphTestContext *GraphTestContext) {
 	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
 }
 
+type CoerceAndRelayNTLMtoADCSRPC struct {
+	AuthenticatedUsersGroup *graph.Node
+	CertTemplate1           *graph.Node
+	Computer                *graph.Node
+	CAHost                  *graph.Node
+	Domain                  *graph.Node
+	EnterpriseCA1           *graph.Node
+	NTAuthStore             *graph.Node
+	RootCA                  *graph.Node
+}
+
+func (s *CoerceAndRelayNTLMtoADCSRPC) Setup(graphTestContext *GraphTestContext) {
+	domainSid := RandomDomainSID()
+	s.AuthenticatedUsersGroup = graphTestContext.NewActiveDirectoryGroup("Authenticated Users Group", domainSid)
+	s.CertTemplate1 = graphTestContext.NewActiveDirectoryCertTemplate("CertTemplate1", domainSid, CertTemplateData{
+		ApplicationPolicies:           []string{},
+		AuthenticationEnabled:         true,
+		AuthorizedSignatures:          0,
+		EffectiveEKUs:                 []string{},
+		EnrolleeSuppliesSubject:       false,
+		NoSecurityExtension:           false,
+		RequiresManagerApproval:       false,
+		SchannelAuthenticationEnabled: false,
+		SchemaVersion:                 1,
+		SubjectAltRequireEmail:        false,
+		SubjectAltRequireSPN:          false,
+		SubjectAltRequireUPN:          false,
+	})
+	s.CAHost = graphTestContext.NewActiveDirectoryComputer("CAHost", domainSid)
+	s.Computer = graphTestContext.NewActiveDirectoryComputer("Computer", domainSid)
+	s.Domain = graphTestContext.NewActiveDirectoryDomain("Domain", domainSid, false, true)
+	s.EnterpriseCA1 = graphTestContext.NewActiveDirectoryEnterpriseCA("EnterpriseCA1", domainSid)
+	s.NTAuthStore = graphTestContext.NewActiveDirectoryNTAuthStore("NTAuthStore", domainSid)
+	s.RootCA = graphTestContext.NewActiveDirectoryRootCA("RootCA", domainSid)
+	graphTestContext.NewRelationship(s.Computer, s.CertTemplate1, ad.Enroll)
+	graphTestContext.NewRelationship(s.Computer, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.AuthenticatedUsersGroup, s.EnterpriseCA1, ad.Enroll)
+	graphTestContext.NewRelationship(s.CAHost, s.EnterpriseCA1, ad.HostsCAService)
+	graphTestContext.NewRelationship(s.CertTemplate1, s.EnterpriseCA1, ad.PublishedTo)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.RootCA, ad.IssuedSignedBy)
+	graphTestContext.NewRelationship(s.EnterpriseCA1, s.NTAuthStore, ad.TrustedForNTAuth)
+	graphTestContext.NewRelationship(s.NTAuthStore, s.Domain, ad.NTAuthStoreFor)
+	graphTestContext.NewRelationship(s.RootCA, s.Domain, ad.RootCAFor)
+
+	s.EnterpriseCA1.Properties.Set(ad.RPCEncryptionCollected.String(), true)
+	s.EnterpriseCA1.Properties.Set(ad.RPCEncryptionEnforced.String(), false)
+	graphTestContext.UpdateNode(s.EnterpriseCA1)
+	s.Computer.Properties.Set(ad.RestrictOutboundNTLM.String(), false)
+	graphTestContext.UpdateNode(s.Computer)
+	s.CAHost.Properties.Set(common.Enabled.String(), true)
+	graphTestContext.UpdateNode(s.CAHost)
+	s.AuthenticatedUsersGroup.Properties.Set(common.ObjectID.String(), fmt.Sprintf("authenticated-users%s", wellknown.AuthenticatedUsersSIDSuffix))
+	graphTestContext.UpdateNode(s.AuthenticatedUsersGroup)
+}
+
 type CoerceAndRelayNTLMToSMB struct {
 	Computer1  *graph.Node
 	Computer10 *graph.Node
@@ -10679,6 +10754,7 @@ type HarnessDetails struct {
 	NTLMCoerceAndRelayNTLMToLDAP                    CoerceAndRelayNTLMToLDAP
 	NTLMCoerceAndRelayNTLMToLDAPS                   CoerceAndRelayNTLMToLDAPS
 	NTLMCoerceAndRelayNTLMToADCS                    CoerceAndRelayNTLMtoADCS
+	NTLMCoerceAndRelayNTLMToADCSRPC                 CoerceAndRelayNTLMtoADCSRPC
 	NTLMCoerceAndRelayToLDAPSelfRelay               CoerceAndRelayNTLMToLDAPSelfRelay
 	NTLMCoerceAndRelayToLDAPSSelfRelay              CoerceAndRelayNTLMToLDAPSSelfRelay
 	NTLMCoerceAndRelayNTLMToSMBSelfRelay            CoerceAndRelayNTLMToSMBSelfRelay

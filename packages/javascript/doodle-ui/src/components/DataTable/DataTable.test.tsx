@@ -15,13 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ColumnDef } from '@tanstack/react-table';
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { DataTable } from './DataTable';
-
-expect.extend(matchers);
 
 vi.mock('@tanstack/react-virtual', () => ({
     useVirtualizer: () => ({
@@ -49,22 +45,21 @@ describe('DataTable', () => {
         expect(container.firstChild).toHaveClass(
             'border',
             'border-solid',
-            'border-neutral-light-4',
+            'border-[color:var(--data-table-wrapper-border)]',
             'bg-neutral-1',
-            'shadow-none',
-            'dark:border-neutral-900'
+            'shadow-none'
         );
 
         expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveClass('bg-neutral-2');
 
         expect(screen.getByRole('row', { name: 'Ada Lovelace' })).toHaveClass(
             'bg-neutral-1',
-            'hover:bg-data-table-row-hover-fill'
+            'hover:bg-[color:var(--data-table-row-hover-fill)]'
         );
 
         expect(screen.getByRole('row', { name: 'Ada Lovelace' })).not.toHaveClass(
-            'bg-data-table-row-even-fill',
-            'bg-data-table-row-odd-fill'
+            'bg-[color:var(--data-table-row-even-fill)]',
+            'bg-[color:var(--data-table-row-odd-fill)]'
         );
     });
 });

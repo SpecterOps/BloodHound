@@ -366,6 +366,7 @@ describe('UpdateUserForm', () => {
                 data: MOCK_ROLES,
             },
             { key: ['listSSOProviders'], data: null },
+            { key: ['available-environments'], data: [] },
         ];
         const queryClient = setUpQueryClient(mockState);
 

@@ -15,16 +15,12 @@
 
 // SPDX-License-Identifier: Apache-2.0
 
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { afterEach, expect, vi } from 'vitest';
 import type { MultiSelectProps } from './MultiSelect';
 import { MultiSelect } from './MultiSelect';
-
-expect.extend(matchers);
 
 const options = [
     { value: 'a', label: 'Menu Item A' },
@@ -166,6 +162,7 @@ describe('MultiSelect', () => {
 
     it('filters options in any case', async () => {
         const user = userEvent.setup();
+        const onSearchValueChange = vi.fn();
 
         renderControlledMultiSelect({
             options,
@@ -174,6 +171,7 @@ describe('MultiSelect', () => {
             isSearchable: true,
             searchPlaceholder: 'Search Items',
             noResultsText: 'No matches',
+            onSearchValueChange,
         });
 
         await user.click(screen.getByRole('button', { name: 'All Items' }));
@@ -187,6 +185,33 @@ describe('MultiSelect', () => {
         expect(screen.getByRole('checkbox', { name: 'Menu Item A' })).toBeInTheDocument();
         expect(screen.queryByRole('checkbox', { name: 'Menu Item B' })).not.toBeInTheDocument();
         expect(screen.queryByRole('checkbox', { name: 'All Items' })).not.toBeInTheDocument();
+        expect(onSearchValueChange).toHaveBeenLastCalledWith('mEnU iTeM a');
+    });
+
+    it('keeps externally supplied search results selectable when their labels do not match', async () => {
+        const user = userEvent.setup();
+        const onSearchValueChange = vi.fn();
+        const onValueChange = vi.fn();
+        const props: MultiSelectProps = {
+            options: [],
+            value: [],
+            onValueChange,
+            onSearchValueChange,
+            isSearchable: true,
+            shouldFilter: false,
+            placeholder: 'All Items',
+        };
+        const { rerender } = render(<MultiSelect {...props} />);
+
+        await user.click(screen.getByRole('button', { name: 'All Items' }));
+        await user.type(screen.getByRole('textbox', { name: 'Search' }), 'asmith');
+        expect(onSearchValueChange).toHaveBeenLastCalledWith('asmith');
+
+        rerender(<MultiSelect {...props} options={[{ value: 'alice-id', label: 'Alice Smith' }]} />);
+
+        expect(screen.queryByText('No matches')).not.toBeInTheDocument();
+        await user.click(screen.getByRole('checkbox', { name: 'Alice Smith' }));
+        expect(onValueChange).toHaveBeenLastCalledWith(['alice-id']);
     });
 
     it('displays the no results state when no options match', async () => {
@@ -321,7 +346,7 @@ describe('MultiSelect', () => {
             name: /menu item a/i,
         });
 
-        expect(trigger).toHaveClass('bg-select-trigger-outlined-fill');
+        expect(trigger).toHaveClass('bg-[color:var(--select-trigger-outlined-fill)]');
         expect(trigger).toHaveClass('ring-1');
         expect(trigger).not.toHaveClass('bg-primary');
     });

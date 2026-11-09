@@ -23,17 +23,30 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/appdb"
+	"github.com/specterops/bloodhound/server/opengraphschema/internal/handlers"
+	"github.com/specterops/bloodhound/server/opengraphschema/internal/routes"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 	"github.com/specterops/dawgs/graph"
 )
+
+// Environment and EnvironmentKindsToEnvironment expose the slice-owned models
+// without requiring callers to import an internal package.
+type Environment = services.Environment
+type EnvironmentByEnvironmentKinds = services.EnvironmentByEnvironmentKinds
+
+// Extension is the schema extension model exposed to other slices.
+type Extension = services.Extension
+
+var ErrExtensionNotFound = services.ErrExtensionNotFound
 
 // OpenGraphSchemaRequestAdapter is the exported open graph schema capability
 // other feature slices depend on. It is satisfied by the internal service
 // constructed by NewOpenGraphSchemaRequestAdapter.
 type OpenGraphSchemaRequestAdapter interface {
-	GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error)
+	GetExtension(ctx context.Context, id int32) (Extension, error)
+	GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, EnvironmentByEnvironmentKinds, error)
 }
 
 // NewOpenGraphSchemaRequestAdapter builds a ready-to-use open graph schema
@@ -41,4 +54,13 @@ type OpenGraphSchemaRequestAdapter interface {
 // callers obtain the service without reaching into the persistence layer.
 func NewOpenGraphSchemaRequestAdapter(pool *pgxpool.Pool) OpenGraphSchemaRequestAdapter {
 	return services.NewService(appdb.NewStore(pool))
+}
+
+func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+	var (
+		store      = appdb.NewStore(pool)
+		service    = services.NewService(store)
+		handlerSet = handlers.NewHandlersContainer(service)
+	)
+	routes.Register(routerInst, handlerSet)
 }

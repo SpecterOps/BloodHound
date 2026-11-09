@@ -49,9 +49,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getCommonPinnedStyles, getConditionalPinnedStyles } from '../DataTable/pinnedStyles';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../Table';
 import { cn } from '../utils';
+
+import {
+    dataTableCellClasses,
+    dataTableClasses,
+    dataTableClickableRowClasses,
+    dataTableHeadClasses,
+    dataTableHeaderClasses,
+    dataTableHeaderRowClasses,
+    dataTableRowClasses,
+    dataTableSelectedRowClasses,
+    dataTableWrapperClasses,
+} from './DataTable.styles';
 import NoDataFallback from './NoDataFallback';
 import PinDialog from './components/PinDialog';
 import { ResizeIndicator } from './components/ResizeIndicator';
+import { useTableLayout } from './useTableLayout';
 import { getExpandedColWidth, updateColumnOrder } from './utils';
 
 interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
@@ -175,6 +188,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
 
     const parentRef = useRef<HTMLDivElement>(null);
     const tableHeaderRef = useRef<HTMLTableSectionElement>(null);
+    const tableBodyRef = useRef<HTMLTableSectionElement>(null);
     const tableHeadRef = useRef<HTMLTableCellElement>(null);
     const tableCellRef = useRef<HTMLTableCellElement>(null);
 
@@ -226,6 +240,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     );
 
     const virtualizer = useVirtualizer(virtualizationOptions);
+    useTableLayout(parentRef, tableHeaderRef, tableBodyRef, virtualizer.getTotalSize());
 
     const handleRowClick = useCallback(
         (row: Row<TData>) => {
@@ -444,16 +459,10 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             sensors={sensors}
             disabled={!enableDragAndDrop}
             accessibility={{ announcements, screenReaderInstructions: { draggable: 'draggable column header' } }}>
-            <div
-                className={cn(
-                    'w-full border border-solid border-neutral-light-4 bg-neutral-1 shadow-none dark:border-neutral-900',
-                    className
-                )}
-                {...wrapperRest}
-                ref={parentRef}>
+            <div className={cn(dataTableWrapperClasses, className)} {...wrapperRest} ref={parentRef}>
                 <div
                     style={{
-                        height: `${virtualizer.getTotalSize()}px`,
+                        height: 'var(--data-table-content-height)',
                     }}
                     className={cn(heightContainerClassName)}>
                     <Table
@@ -462,20 +471,20 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                             width: tableWidth,
                         }}
                         className={cn(
-                            'after:block after:h-[var(--prevent-vanishing-sticky-header)]',
+                            dataTableClasses,
                             enableResizing && haveLeftPinnedColumns && 'table-fixed',
                             tableClassName
                         )}>
                         <TableHeader
                             {...restHeaderProps}
-                            className={cn(headerClassName, '[&_tr]:border-0')}
+                            className={cn(headerClassName, dataTableHeaderClasses)}
                             ref={tableHeaderRef}>
                             {table.getHeaderGroups().map((headerGroup) => {
                                 return (
                                     <TableRow
                                         key={headerGroup.id}
                                         {...restHeaderRowProps}
-                                        className={cn(headerRowClassName, 'border-0')}>
+                                        className={cn(headerRowClassName, dataTableHeaderRowClasses)}>
                                         {headerGroup.headers.map((header, index, array) => {
                                             let propsClassName,
                                                 tableHeadRest = {};
@@ -507,7 +516,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     scope='col'
                                                     enableDragging={enableDragAndDrop && isColDraggingEnabled}
                                                     className={cn(
-                                                        'bg-neutral-2 text-nowrap group relative z-10 overflow-x-clip',
+                                                        dataTableHeadClasses,
                                                         `${header.column.getIsResizing() ? 'isResizing' : ''}`,
                                                         propsClassName
                                                     )}
@@ -531,11 +540,6 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     {header.column.getCanResize() && (
                                                         <ResizeIndicator
                                                             header={header as Header<TData, TValue>}
-                                                            tableHeight={
-                                                                tableHeaderRef.current &&
-                                                                tableHeaderRef.current?.clientHeight +
-                                                                    virtualizer.getTotalSize()
-                                                            }
                                                             onSetExpanded={setExpanded}
                                                         />
                                                     )}
@@ -557,16 +561,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                 );
                             })}
                         </TableHeader>
-                        <TableBody
-                            {...TableBodyProps}
-                            ref={(ref) => {
-                                if (!ref) return;
-                                const height = virtualizer.getTotalSize() - ref.getBoundingClientRect().height;
-                                document.documentElement.style.setProperty(
-                                    '--prevent-vanishing-sticky-header',
-                                    `${height}px`
-                                );
-                            }}>
+                        <TableBody {...TableBodyProps} ref={tableBodyRef}>
                             {tableRows.length ? (
                                 virtualizer.getVirtualItems().map((virtualRow, index) => {
                                     const row = tableRows[virtualRow.index];
@@ -615,15 +610,13 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                             tabIndex={tableBodyRowTabIndex ?? (onRowClick ? 0 : undefined)}
                                             data-state={row.getIsSelected() && 'selected'}
                                             className={cn(
-                                                'bg-neutral-1 hover:bg-data-table-row-hover-fill',
+                                                dataTableRowClasses,
                                                 {
                                                     // Border is tricky on <tr> https://github.com/TanStack/virtual/issues/620
-                                                    'shadow-[inset_0px_0px_0px_2px_var(--data-table-row-selected-outline)]':
-                                                        row.getIsSelected(),
+                                                    [dataTableSelectedRowClasses]: row.getIsSelected(),
                                                     'cursor-pointer': onRowClick,
                                                     'cursor-default': !onRowClick,
-                                                    'focus:outline-none focus-visible:focus-ring focus-visible:bg-data-table-row-hover-fill':
-                                                        onRowClick,
+                                                    [dataTableClickableRowClasses]: onRowClick,
                                                 },
 
                                                 propsClassName,
@@ -670,10 +663,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                         key={cell.id}
                                                         cell={cell}
                                                         enableDragging={enableDragAndDrop && isColDraggingEnabled}
-                                                        className={cn(
-                                                            'text-left overflow-x-clip -outline-offset-2',
-                                                            propsClassName
-                                                        )}
+                                                        className={cn(dataTableCellClasses, propsClassName)}
                                                         {...tableCellRest}
                                                         tabIndex={isCellFocused && !focusedCell?.childFocused ? 0 : -1}
                                                         data-row-index={row.index}

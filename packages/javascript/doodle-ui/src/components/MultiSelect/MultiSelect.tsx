@@ -46,14 +46,14 @@ const MultiSelectTriggerVariants = cva(
         'focus:outline-none focus-visible:focus-ring',
         'enabled:hover:bg-secondary enabled:hover:text-inverse',
         'data-[state=open]:bg-primary data-[state=open]:text-inverse',
-        'disabled:cursor-not-allowed disabled:border disabled:border-input-border-disabled disabled:bg-input-fill-disabled dark:disabled:bg-input-fill-disabled-dark disabled:text-disabled',
-        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-select-trigger-outlined-fill aria-[invalid=true]:text-input-placeholder-text aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-select-trigger-outlined-fill aria-[invalid=true]:data-[state=open]:bg-select-trigger-outlined-fill aria-[invalid=true]:enabled:hover:text-input-placeholder-text aria-[invalid=true]:data-[state=open]:text-input-placeholder-text aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main',
+        'disabled:cursor-not-allowed disabled:border disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled',
+        'aria-[invalid=true]:[&>svg]:text-main aria-[invalid=true]:border aria-[invalid=true]:border-status-error-main aria-[invalid=true]:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:enabled:hover:border-status-error-main aria-[invalid=true]:enabled:hover:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:data-[state=open]:bg-[color:var(--select-trigger-outlined-fill)] aria-[invalid=true]:enabled:hover:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:data-[state=open]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:[&:enabled:hover>svg]:text-main aria-[invalid=true]:[&[data-state=open]>svg]:text-main',
     ],
     {
         variants: {
             variant: {
                 outlined:
-                    'ring-1 ring-input-border-default bg-select-trigger-outlined-fill text-input-placeholder-text [&>svg]:text-main [&:enabled:hover>svg]:text-inverse [&[data-state=open]>svg]:text-inverse',
+                    'ring-1 ring-[color:var(--input-border-default)] bg-[color:var(--select-trigger-outlined-fill)] text-[color:var(--input-placeholder-text)] [&>svg]:text-main [&:enabled:hover>svg]:text-inverse [&[data-state=open]>svg]:text-inverse',
                 filled: 'bg-primary text-inverse',
             },
         },
@@ -73,7 +73,7 @@ const multiSelectCheckboxStyles =
 
 // Controls the default, unhovered partial-selection appearance.
 const multiSelectIndeterminateCheckboxStyles =
-    'enabled:data-[state=indeterminate]:!border-checkbox-border enabled:data-[state=indeterminate]:!bg-checkbox-unchecked-fill enabled:data-[state=indeterminate]:!text-checkbox-border';
+    'enabled:data-[state=indeterminate]:!border-[color:var(--checkbox-border)] enabled:data-[state=indeterminate]:!bg-[color:var(--checkbox-unchecked-fill)] enabled:data-[state=indeterminate]:!text-[color:var(--checkbox-border)]';
 
 interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     open?: boolean;
@@ -95,6 +95,9 @@ interface MultiSelectProps {
     options: MultiSelectOption[];
     value: string[];
     onValueChange: (values: string[]) => void;
+    onSearchValueChange?: (value: string) => void;
+    /** Set to false when options are already filtered by an external search. Defaults to true. */
+    shouldFilter?: boolean;
     placeholder?: string;
     disabled?: boolean;
     error?: boolean;
@@ -106,6 +109,10 @@ interface MultiSelectProps {
     loadingText?: string;
     emptyText?: string;
     noResultsText?: string;
+    /** Displays the no-results message alongside retained options for an external search. */
+    showNoResults?: boolean;
+    /** Displays a search failure while keeping the supplied options available. */
+    searchError?: string;
     /**
      * Controls the collapsed trigger appearance independently of its selected values.
      * Use `outlined` when a “Select All” is defaulted state. Example: Findings Table Trigger defaults to all selected.
@@ -143,10 +150,10 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
                 multiSelectRowStyles,
                 'text-base font-normal leading-4',
                 option.disabled
-                    ? 'cursor-not-allowed bg-btn-disabled-fill text-disabled'
+                    ? 'cursor-not-allowed bg-[color:var(--button-disabled-fill)] text-disabled'
                     : multiSelectInteractiveRowStyles
             )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
+            labelClassName='min-w-0 flex-1 truncate text-inherit'
         />
     </div>
 );
@@ -163,7 +170,7 @@ const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOp
                 multiSelectInteractiveRowStyles,
                 'text-base font-normal leading-4'
             )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit dark:text-inherit'
+            labelClassName='min-w-0 flex-1 truncate text-inherit'
         />
     </div>
 );
@@ -193,6 +200,8 @@ const MultiSelect = ({
     options,
     value,
     onValueChange,
+    onSearchValueChange,
+    shouldFilter = true,
     placeholder,
     disabled,
     error,
@@ -204,16 +213,23 @@ const MultiSelect = ({
     loadingText = 'Loading options',
     emptyText = 'No options available',
     noResultsText = 'No matches',
+    showNoResults = false,
+    searchError,
     variant,
 }: MultiSelectProps) => {
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState('');
 
+    const handleSearchChange = (value: string) => {
+        setSearchValue(value);
+        onSearchValueChange?.(value);
+    };
+
     const handleOpenChange = (shouldOpen: boolean) => {
         setOpen(shouldOpen);
 
-        if (!shouldOpen) {
-            setSearchValue('');
+        if (!shouldOpen && searchValue !== '') {
+            handleSearchChange('');
         }
     };
 
@@ -289,11 +305,11 @@ const MultiSelect = ({
     const searchTerm = searchValue.trim().toLowerCase();
 
     const filteredOptions = React.useMemo(() => {
-        if (!searchTerm) {
+        if (!shouldFilter || !searchTerm || searchError) {
             return options;
         }
         return options.filter((option) => option.label.toLowerCase().includes(searchTerm));
-    }, [options, searchTerm]);
+    }, [options, searchTerm, searchError, shouldFilter]);
 
     const hasOptions = options.length > 0;
     const hasSearchText = searchTerm.length > 0;
@@ -303,8 +319,10 @@ const MultiSelect = ({
 
     let listContent: React.ReactNode;
 
-    if (isLoading) {
+    if (isLoading && !hasSearchText) {
         listContent = <MultiSelectLoadingRows loadingText={loadingText} />;
+    } else if (!hasOptions && searchError) {
+        listContent = null;
     } else if (!hasOptions) {
         listContent = <MultiSelectStateRow>{emptyText}</MultiSelectStateRow>;
     } else if (isSearchResultEmpty) {
@@ -334,7 +352,7 @@ const MultiSelect = ({
                 </MultiSelectTrigger>
             </PopoverTrigger>
             <PopoverContent
-                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-select-content-fill p-0 text-main'
+                className='w-[var(--radix-popover-trigger-width)] rounded-lg bg-[color:var(--select-content-fill)] p-0 text-main'
                 align='start'>
                 {isSearchable && (
                     <div className='flex items-center gap-2 p-2'>
@@ -342,17 +360,22 @@ const MultiSelect = ({
                         <Input
                             aria-label={searchPlaceholder}
                             value={searchValue}
-                            onChange={(e) => setSearchValue(e.target.value)}
+                            onChange={(e) => handleSearchChange(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className='h-6 border-none bg-transparent px-2 text-main leading-4 placeholder:text-input-placeholder-text focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+                            className='h-6 border-none bg-transparent px-2 text-main leading-4 placeholder:text-[color:var(--input-placeholder-text)] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
                         />
                     </div>
                 )}
 
-                {/* TODO: Add theme-aware scrollbar color tokens to ScrollArea and remove this MultiSelect-specific override. */}
+                {searchError && (
+                    <div role='alert' className='px-3 py-2 text-status-error-main'>
+                        {searchError}
+                    </div>
+                )}
+
                 <ScrollArea
                     thumbColor='var(--multiselect-scrollbar-thumb)'
-                    className='max-h-60 [--multiselect-scrollbar-thumb:var(--neutral-400)] dark:[--multiselect-scrollbar-thumb:var(--input-placeholder-text)] [&_[data-radix-scroll-area-viewport]]:max-h-60'>
+                    className='max-h-60 [&_[data-radix-scroll-area-viewport]]:max-h-60'>
                     <div
                         role='group'
                         aria-label={placeholder ?? 'Select options'}
@@ -370,6 +393,9 @@ const MultiSelect = ({
                                 />
                             )}
 
+                        {showNoResults && hasOptions && !isSearchResultEmpty && !isLoading && !searchError && (
+                            <MultiSelectStateRow>{noResultsText}</MultiSelectStateRow>
+                        )}
                         {listContent}
                     </div>
                 </ScrollArea>
