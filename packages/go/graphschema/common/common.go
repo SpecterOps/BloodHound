@@ -28,13 +28,14 @@ import (
 
 var (
 	MigrationData = graph.StringKind("MigrationData")
+	SameHost      = graph.StringKind("SameHost")
 )
 
 func Nodes() []graph.Kind {
 	return []graph.Kind{MigrationData}
 }
 func Relationships() []graph.Kind {
-	return []graph.Kind{}
+	return []graph.Kind{SameHost}
 }
 func NodeKinds() []graph.Kind {
 	return []graph.Kind{MigrationData}

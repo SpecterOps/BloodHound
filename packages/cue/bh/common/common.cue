@@ -205,8 +205,13 @@ NodeKinds: [
 	MigrationData,
 ]
 
-RelationshipKinds: [
-]
+// Correlation only: deliberately excluded from the attack-path relationship lists.
+SameHost: types.#Kind & {
+	symbol: "SameHost"
+	schema: "common"
+}
+
+RelationshipKinds: [SameHost]
 
 InboundRelationshipKinds: list.Concat([ad.InboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])
 OutboundRelationshipKinds: list.Concat([ad.OutboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])

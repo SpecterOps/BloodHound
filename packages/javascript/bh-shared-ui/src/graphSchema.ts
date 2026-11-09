@@ -1378,6 +1378,17 @@ export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefin
             return undefined;
     }
 }
+export enum CommonRelationshipKind {
+    SameHost = 'SameHost',
+}
+export function CommonRelationshipKindToDisplay(value: CommonRelationshipKind): string | undefined {
+    switch (value) {
+        case CommonRelationshipKind.SameHost:
+            return 'SameHost';
+        default:
+            return undefined;
+    }
+}
 export enum CommonKindProperties {
     ObjectID = 'objectid',
     Name = 'name',
