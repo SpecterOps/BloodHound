@@ -416,6 +416,10 @@ export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 
     value: string;
 };
 
+export type UpdateCollectorJobSecretRequest = Partial<
+    Pick<CreateCollectorJobSecretRequest, 'value' | 'external_key_id' | 'name'>
+>;
+
 export interface CreateCollectorJobScheduleRequest {
     name: string;
     rrule: string;
