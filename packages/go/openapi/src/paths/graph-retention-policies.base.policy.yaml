@@ -86,3 +86,46 @@ put:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
+patch:
+  operationId: PatchBaseRetentionPolicy
+  summary: Enable/Disable Base Retention Policy
+  description: Disabling the base retention policy stops graph data pruning and causes more-specific retention policies to be ignored. The TTL remains unchanged. Requires admin permissions and the retention_policies feature flag. Returns 404 if the feature flag is disabled or the base policy does not exist.
+  tags:
+    - Graph Retention Policies
+    - Enterprise
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          additionalProperties: false
+          required:
+            - enabled
+          properties:
+            enabled:
+              type: boolean
+  responses:
+    200:
+      description: Updated base retention policy.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.graph-retention-policy.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+
