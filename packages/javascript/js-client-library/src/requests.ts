@@ -410,7 +410,7 @@ export interface UpdateCollectorJobProfileRequest {
 }
 
 // ---------------------------------------------------------------------------
-//  Collectors - Managed Collections
+//  Collectors - Cloud Collector
 // ---------------------------------------------------------------------------
 export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'external_key_id' | 'name'> & {
     value: string;

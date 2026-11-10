@@ -381,7 +381,7 @@ export type GetClientResponse = PaginatedResponse<Client[]>;
 export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
 
 // ---------------------------------------------------------------------------
-//  Collectors - Managed Collections
+//  Collectors - Cloud Collector
 // ---------------------------------------------------------------------------
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
 
@@ -535,6 +535,7 @@ export type UnifiedFinding = {
     last_seen: string;
     prioritization_rank?: number | null;
     is_cross_platform?: boolean;
+    is_regression?: boolean;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
