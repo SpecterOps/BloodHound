@@ -19,7 +19,7 @@ export const ToggleVariants = cva(
     [
         'inline-flex items-center justify-center gap-2 rounded border border-[color:var(--toggle-btn-border)] bg-[color:var(--toggle-btn-fill)] text-sm text-main transition-colors',
         '[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
-        'hover:border-[color:var(--toggle-hover-border)] hover:bg-secondary hover:text-[color:var(--toggle-highlight-text)] hover:underline',
+        'hover:border-[color:var(--toggle-hover-border)] hover:bg-secondary hover:text-[color:var(--toggle-highlight-text)]',
         'focus:outline-none focus-visible:border-[color:var(--toggle-hover-border)] focus-visible:bg-secondary focus-visible:text-[color:var(--toggle-highlight-text)] focus-visible:focus-ring',
         'active:border-[color:var(--toggle-active-border)] active:bg-primary-variant active:text-[color:var(--toggle-highlight-text)]',
         'data-[state=on]:border-[color:var(--toggle-selected-border)] data-[state=on]:bg-primary data-[state=on]:text-[color:var(--toggle-highlight-text)]',
@@ -41,4 +41,4 @@ export const ToggleVariants = cva(
 );
 
 export const toggleGroupClasses =
-    'flex items-center justify-center gap-2 p-1 rounded-lg bg-[color:var(--toggle-group-fill)] shadow-outer-1';
+    'flex items-center justify-center gap-2 p-1 rounded bg-[color:var(--toggle-group-fill)] shadow-outer-1';

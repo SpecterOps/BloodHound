@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,29 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-package v2
+package handlers
 
-import "time"
+//go:generate go tool mockery
 
-// Constants and functions relating to pagination
-
-const (
-	// DefaultTimeRangeDuration is the default time range for range query parameters: 30 days prior to now
-	DefaultTimeRangeDuration = -30 * 24 * time.Hour
+import (
+	"context"
 )
 
-func DefaultTimeRange() (time.Time, time.Time) {
-	now := time.Now()
+const UserInterfacePath = "/ui"
 
-	return now, now.Add(DefaultTimeRangeDuration)
+// Auth defines the service boundary for the auth handlers package.
+type Auth interface {
+	Logout(ctx context.Context, sessionID int64) error
+}
+
+// Handlers is a dependency injection container for auth handlers
+type Handlers struct {
+	service Auth
+}
+
+// NewHandlersContainer initializes the Handlers dependency injection container
+func NewHandlersContainer(auth Auth) *Handlers {
+	return &Handlers{
+		service: auth,
+	}
 }

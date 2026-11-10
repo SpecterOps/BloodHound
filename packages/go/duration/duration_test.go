@@ -26,17 +26,26 @@ import (
 )
 
 func TestUnmarshalJson(t *testing.T) {
-	cases := []struct {
-		input  string
-		output time.Duration
+	testCases := []struct {
+		input         string
+		output        time.Duration
+		expectedError string
 	}{
 		{
 			input:  `"PT5H"`,
 			output: 5 * time.Hour,
 		},
 		{
-			input:  `"PT5H"`,
-			output: 5 * time.Hour,
+			input:  `"PT0S"`,
+			output: 0,
+		},
+		{
+			input:  `"P1W"`,
+			output: 7 * 24 * time.Hour,
+		},
+		{
+			input:  `"P1Y"`,
+			output: 365 * 24 * time.Hour,
 		},
 		{
 			input:  `"P2D"`,
@@ -58,13 +67,26 @@ func TestUnmarshalJson(t *testing.T) {
 			input:  `"P1DT0H45M"`,
 			output: 24*time.Hour + 45*time.Minute,
 		},
+		{
+			input:         `"-P7D"`,
+			expectedError: "invalid ISO 8601 duration: bad format string",
+		},
+		{
+			input:         `"P7Dfoo"`,
+			expectedError: "invalid ISO 8601 duration: bad format string",
+		},
 	}
 
-	for _, cc := range cases {
+	for _, testCase := range testCases {
 		var d duration.ISODuration
-		err := d.UnmarshalJSON([]byte(cc.input))
-		require.NoError(t, err)
-		assert.Equal(t, duration.ISODuration(cc.output), d)
+		err := d.UnmarshalJSON([]byte(testCase.input))
+		if testCase.expectedError != "" {
+			assert.EqualError(t, err, testCase.expectedError)
+			continue
+		} else {
+			require.NoError(t, err)
+			assert.Equal(t, duration.ISODuration(testCase.output), d)
+		}
 	}
 }
 

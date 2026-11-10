@@ -17,7 +17,7 @@
 import { cva } from 'class-variance-authority';
 
 export const sliderRootStyles =
-    'relative flex w-full touch-none select-none items-center data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
+    'relative flex w-full touch-none select-none items-start gap-4 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50';
 
 export const sliderControlStyles = 'group/slider relative flex w-full grow items-center py-3';
 

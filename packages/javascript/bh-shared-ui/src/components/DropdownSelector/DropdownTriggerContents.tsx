@@ -57,7 +57,8 @@ const DropdownTriggerContents = forwardRef<HTMLButtonElement, DropdownTriggerCon
                     'uppercase group',
                     {
                         [triggerStyles]: !buttonPrimary,
-                        'bg-primary dark:bg-primary-variant text-[color:var(--button-primary-text)] border-0': open,
+                        'bg-primary dark:bg-primary-variant text-[color:var(--button-primary-text)] border-transparent':
+                            open,
                     },
                     className,
                     buttonProps?.className

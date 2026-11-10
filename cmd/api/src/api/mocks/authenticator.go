@@ -105,18 +105,6 @@ func (mr *MockAuthenticatorMockRecorder) LoginWithSecret(ctx, loginRequest any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginWithSecret", reflect.TypeOf((*MockAuthenticator)(nil).LoginWithSecret), ctx, loginRequest)
 }
 
-// Logout mocks base method.
-func (m *MockAuthenticator) Logout(ctx context.Context, userSession model.UserSession) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Logout", ctx, userSession)
-}
-
-// Logout indicates an expected call of Logout.
-func (mr *MockAuthenticatorMockRecorder) Logout(ctx, userSession any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Logout", reflect.TypeOf((*MockAuthenticator)(nil).Logout), ctx, userSession)
-}
-
 // ValidateBearerToken mocks base method.
 func (m *MockAuthenticator) ValidateBearerToken(ctx context.Context, jwtToken string) (auth.Context, error) {
 	m.ctrl.T.Helper()
