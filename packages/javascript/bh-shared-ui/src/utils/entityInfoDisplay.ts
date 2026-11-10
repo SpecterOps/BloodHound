@@ -179,7 +179,7 @@ export type EntityPropertyKind = 'ad' | 'az' | 'cm' | 'ov' | null;
 
 export type EntityField = {
     label: string | JSX.Element;
-    value: string | number | boolean | any[] | null;
+    value: string | number | boolean | any[] | Record<string, unknown> | null;
     kind?: EntityPropertyKind;
     keyprop?: string;
 };
@@ -292,7 +292,7 @@ export const EMPTY_VALUE_DISPLAY = '—';
 export const EMPTY_ARRAY_DISPLAY = 'NONE';
 
 export const formatPrimitive = (
-    value: string | number | boolean | null,
+    value: string | number | boolean | Record<string, unknown> | null,
     kind?: EntityPropertyKind,
     keyprop?: string
 ): string => {
@@ -312,7 +312,7 @@ export const formatPrimitive = (
 
             return value;
         default:
-            return value;
+            return JSON.stringify(value);
     }
 };
 
