@@ -1364,7 +1364,7 @@
             "name": "created_by",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.uuid-required"
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid-nullable-required"
             }
           },
           {
@@ -26714,10 +26714,10 @@
         "pattern": "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
         "description": "Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.\n"
       },
-      "api.params.predicate.filter.uuid-required": {
+      "api.params.predicate.filter.uuid-nullable-required": {
         "type": "string",
-        "pattern": "^(eq|neq):[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
-        "description": "Filter results by a UUID value. A predicate is required.\nValid filter predicates are `eq` and `neq`.\nExample: `eq:12345678-1234-1234-1234-123456789abc`.\n"
+        "pattern": "^((eq|neq):[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|(eq|neq):null)$",
+        "description": "Filter results by a UUID value using a required predicate.\nValid filter predicates are `eq` and `neq`.\nUse `eq:null` or `neq:null` to compare against null.\nExample: `eq:12345678-1234-1234-1234-123456789abc`\n"
       },
       "api.params.predicate.filter.time-nullable-required": {
         "type": "string",
