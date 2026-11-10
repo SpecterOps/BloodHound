@@ -18,4 +18,4 @@ export const carouselItemClasses = 'min-w-0 shrink-0 grow-0 basis-full';
 
 export const carouselIndicatorClasses =
     'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl text-main border-current focus:outline-none focus-visible:focus-ring';
-export const carouselSelectedIndicatorClasses = 'active bg-current rounded-3xl';
+export const carouselSelectedIndicatorClasses = 'active bg-current';

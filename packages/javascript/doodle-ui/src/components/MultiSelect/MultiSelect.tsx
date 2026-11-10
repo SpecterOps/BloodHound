@@ -33,7 +33,6 @@ import {
     multiSelectInteractiveRowStyles,
     multiSelectLoadingRowsClasses,
     multiSelectRowStyles,
-    multiSelectScrollAreaClasses,
     multiSelectSearchIconClasses,
     multiSelectSearchInputClasses,
     multiSelectSearchRowClasses,

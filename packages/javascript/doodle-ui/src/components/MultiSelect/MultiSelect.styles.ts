@@ -73,6 +73,3 @@ export const multiSelectSearchInputClasses = cn(
     'placeholder:text-[color:var(--input-placeholder-text)]',
     'focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
 );
-
-export const multiSelectScrollAreaClasses =
-    'max-h-60 [--multiselect-scrollbar-thumb:var(--neutral-400)] dark:[--multiselect-scrollbar-thumb:var(--input-placeholder-text)] [&_[data-radix-scroll-area-viewport]]:max-h-60';
