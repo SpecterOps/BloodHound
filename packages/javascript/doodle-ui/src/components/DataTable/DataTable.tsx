@@ -108,6 +108,7 @@ interface DataTableProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElem
     TableBodyProps?: React.ComponentPropsWithoutRef<typeof TableBody>;
     TableBodyRowProps?: React.ComponentPropsWithoutRef<typeof TableRow>;
     TableCellProps?: Omit<React.ComponentPropsWithoutRef<typeof TableCell>, 'cell' | 'enableDragging'>;
+    getRowClassName?: (row: TData) => string;
 }
 
 const DndWrapper = (props: DndContextProps & { disabled?: boolean }) => {
@@ -138,6 +139,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         TableHeadProps,
         TableBodyProps,
         TableBodyRowProps,
+        getRowClassName,
         TableCellProps,
         noResultsFallback,
         shouldFillHeight = false,
@@ -641,7 +643,8 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     [dataTableClickableRowClasses]: onRowClick,
                                                 },
 
-                                                propsClassName
+                                                propsClassName,
+                                                getRowClassName?.(row.original)
                                             )}
                                             {...restTableBodyRowAttributes}
                                             style={{
