@@ -22,9 +22,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
-	graphAzure "github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	graphazure "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
@@ -36,20 +35,20 @@ import (
 func TestUserRoleAssignmentsResetPasswordTargetRoles(t *testing.T) {
 	var (
 		suite               = setupIntegrationTestSuite(t)
-		tenantID            = integration.RandomObjectID(t)
+		tenantID            = randomObjectID(t)
 		tenant              = NewAzureTenant(t, &suite, tenantID)
-		userAdministrator   = NewAzureRole(t, &suite, "User Administrator", integration.RandomObjectID(t), graphAzure.UserAccountAdministratorRole, tenantID)
-		globalAdministrator = NewAzureRole(t, &suite, "Global Administrator", integration.RandomObjectID(t), graphAzure.CompanyAdministratorRole, tenantID)
-		reportsReader       = NewAzureRole(t, &suite, "Reports Reader", integration.RandomObjectID(t), graphAzure.ReportsReaderRole, tenantID)
+		userAdministrator   = NewAzureRole(t, &suite, "User Administrator", randomObjectID(t), graphazure.UserAccountAdministratorRole, tenantID)
+		globalAdministrator = NewAzureRole(t, &suite, "Global Administrator", randomObjectID(t), graphazure.CompanyAdministratorRole, tenantID)
+		reportsReader       = NewAzureRole(t, &suite, "Reports Reader", randomObjectID(t), graphazure.ReportsReaderRole, tenantID)
 		roleAssignableGroup = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
 			common.Name:                   "Role Assignable Group",
-			common.ObjectID:               integration.RandomObjectID(t),
-			graphAzure.TenantID:           tenantID,
-			graphAzure.IsAssignableToRole: true,
-		}), graphAzure.Entity, graphAzure.Group)
+			common.ObjectID:               randomObjectID(t),
+			graphazure.TenantID:           tenantID,
+			graphazure.IsAssignableToRole: true,
+		}), graphazure.Entity, graphazure.Group)
 		roles = map[string]*graph.Node{
-			graphAzure.CompanyAdministratorRole: globalAdministrator,
-			graphAzure.ReportsReaderRole:        reportsReader,
+			graphazure.CompanyAdministratorRole: globalAdministrator,
+			graphazure.ReportsReaderRole:        reportsReader,
 		}
 		cases = []struct {
 			name                      string
@@ -59,47 +58,47 @@ func TestUserRoleAssignmentsResetPasswordTargetRoles(t *testing.T) {
 			userAdministratorCanReset bool
 		}{
 			{name: "no target roles", userAdministratorCanReset: true},
-			{name: "eligible Global Administrator", eligibleRoles: []string{graphAzure.CompanyAdministratorRole}},
-			{name: "active Global Administrator", activeRoles: []string{graphAzure.CompanyAdministratorRole}},
-			{name: "eligible allowed role", eligibleRoles: []string{graphAzure.ReportsReaderRole}, userAdministratorCanReset: true},
-			{name: "active allowed and eligible protected", activeRoles: []string{graphAzure.ReportsReaderRole}, eligibleRoles: []string{graphAzure.CompanyAdministratorRole}},
-			{name: "active protected and eligible allowed", activeRoles: []string{graphAzure.CompanyAdministratorRole}, eligibleRoles: []string{graphAzure.ReportsReaderRole}},
-			{name: "active and eligible protected role", activeRoles: []string{graphAzure.CompanyAdministratorRole}, eligibleRoles: []string{graphAzure.CompanyAdministratorRole}},
-			{name: "active and eligible allowed role", activeRoles: []string{graphAzure.ReportsReaderRole}, eligibleRoles: []string{graphAzure.ReportsReaderRole}, userAdministratorCanReset: true},
+			{name: "eligible Global Administrator", eligibleRoles: []string{graphazure.CompanyAdministratorRole}},
+			{name: "active Global Administrator", activeRoles: []string{graphazure.CompanyAdministratorRole}},
+			{name: "eligible allowed role", eligibleRoles: []string{graphazure.ReportsReaderRole}, userAdministratorCanReset: true},
+			{name: "active allowed and eligible protected", activeRoles: []string{graphazure.ReportsReaderRole}, eligibleRoles: []string{graphazure.CompanyAdministratorRole}},
+			{name: "active protected and eligible allowed", activeRoles: []string{graphazure.CompanyAdministratorRole}, eligibleRoles: []string{graphazure.ReportsReaderRole}},
+			{name: "active and eligible protected role", activeRoles: []string{graphazure.CompanyAdministratorRole}, eligibleRoles: []string{graphazure.CompanyAdministratorRole}},
+			{name: "active and eligible allowed role", activeRoles: []string{graphazure.ReportsReaderRole}, eligibleRoles: []string{graphazure.ReportsReaderRole}, userAdministratorCanReset: true},
 			{name: "role assignable group member", roleAssignableGroupMember: true},
-			{name: "allowed role and role assignable group member", eligibleRoles: []string{graphAzure.ReportsReaderRole}, roleAssignableGroupMember: true},
+			{name: "allowed role and role assignable group member", eligibleRoles: []string{graphazure.ReportsReaderRole}, roleAssignableGroupMember: true},
 		}
 		targets = make(map[string]*graph.Node, len(cases))
 	)
 	defer teardownIntegrationTestSuite(t, &suite)
 
-	NewRelationship(t, &suite, tenant, userAdministrator, graphAzure.Contains)
-	NewRelationship(t, &suite, tenant, globalAdministrator, graphAzure.Contains)
-	NewRelationship(t, &suite, tenant, reportsReader, graphAzure.Contains)
-	NewRelationship(t, &suite, tenant, roleAssignableGroup, graphAzure.Contains)
+	NewRelationship(t, &suite, tenant, userAdministrator, graphazure.Contains)
+	NewRelationship(t, &suite, tenant, globalAdministrator, graphazure.Contains)
+	NewRelationship(t, &suite, tenant, reportsReader, graphazure.Contains)
+	NewRelationship(t, &suite, tenant, roleAssignableGroup, graphazure.Contains)
 
 	for _, testCase := range cases {
 		target := NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
 			common.Name:         testCase.name,
-			common.ObjectID:     integration.RandomObjectID(t),
-			graphAzure.TenantID: tenantID,
-		}), graphAzure.Entity, graphAzure.User)
+			common.ObjectID:     randomObjectID(t),
+			graphazure.TenantID: tenantID,
+		}), graphazure.Entity, graphazure.User)
 		targets[testCase.name] = target
-		NewRelationship(t, &suite, tenant, target, graphAzure.Contains)
+		NewRelationship(t, &suite, tenant, target, graphazure.Contains)
 
 		for _, roleTemplateID := range testCase.activeRoles {
-			NewRelationship(t, &suite, target, roles[roleTemplateID], graphAzure.HasRole)
+			NewRelationship(t, &suite, target, roles[roleTemplateID], graphazure.HasRole)
 		}
 		for _, roleTemplateID := range testCase.eligibleRoles {
-			NewRelationship(t, &suite, target, roles[roleTemplateID], graphAzure.AZRoleEligible)
+			NewRelationship(t, &suite, target, roles[roleTemplateID], graphazure.AZRoleEligible)
 		}
 		if testCase.roleAssignableGroupMember {
-			NewRelationship(t, &suite, target, roleAssignableGroup, graphAzure.MemberOf)
+			NewRelationship(t, &suite, target, roleAssignableGroup, graphazure.MemberOf)
 		}
 	}
 
 	// Verify that analysis removes an invalid relationship generated by an earlier run.
-	NewRelationship(t, &suite, userAdministrator, targets["eligible Global Administrator"], graphAzure.ResetPassword)
+	NewRelationship(t, &suite, userAdministrator, targets["eligible Global Administrator"], graphazure.ResetPassword)
 
 	_, err := azure.UserRoleAssignments(suite.Context, suite.GraphDB)
 	require.NoError(t, err)
@@ -110,7 +109,7 @@ func TestUserRoleAssignmentsResetPasswordTargetRoles(t *testing.T) {
 	)
 	err = suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
 		resetEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.Kind(query.Relationship(), graphAzure.ResetPassword)
+			return query.Kind(query.Relationship(), graphazure.ResetPassword)
 		}))
 		if err != nil {
 			return err
@@ -125,7 +124,7 @@ func TestUserRoleAssignmentsResetPasswordTargetRoles(t *testing.T) {
 		}
 
 		globalAdminEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
-			return query.Kind(query.Relationship(), graphAzure.GlobalAdmin)
+			return query.Kind(query.Relationship(), graphazure.GlobalAdmin)
 		}))
 		if err != nil {
 			return err
@@ -151,7 +150,7 @@ func TestUserRoleAssignmentsResetPasswordTargetRoles(t *testing.T) {
 			}
 			assert.Equal(t, expectedUserAdministratorEdges, resetEdgeCounts[userAdministrator.ID][targets[testCase.name].ID], "User Administrator reset edge")
 			assert.Equal(t, 1, resetEdgeCounts[globalAdministrator.ID][targets[testCase.name].ID], "Global Administrator reset edge")
-			if slices.Contains(testCase.activeRoles, graphAzure.CompanyAdministratorRole) {
+			if slices.Contains(testCase.activeRoles, graphazure.CompanyAdministratorRole) {
 				expectedGlobalAdminEdges = 1
 			}
 			assert.Equal(t, expectedGlobalAdminEdges, globalAdminEdgeCounts[targets[testCase.name].ID], "Global Administrator privilege edge")
@@ -162,7 +161,7 @@ func TestUserRoleAssignmentsResetPasswordTargetRoles(t *testing.T) {
 func TestFetchRoleAssignableGroupMembersUsersPropertyTypes(t *testing.T) {
 	var (
 		suite    = setupIntegrationTestSuite(t)
-		tenantID = integration.RandomObjectID(t)
+		tenantID = randomObjectID(t)
 		cases    = []struct {
 			name               string
 			isAssignableToRole any
@@ -180,17 +179,17 @@ func TestFetchRoleAssignableGroupMembersUsersPropertyTypes(t *testing.T) {
 			var (
 				group = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
 					common.Name:                   testCase.name,
-					common.ObjectID:               integration.RandomObjectID(t),
-					graphAzure.TenantID:           tenantID,
-					graphAzure.IsAssignableToRole: testCase.isAssignableToRole,
-				}), graphAzure.Entity, graphAzure.Group)
+					common.ObjectID:               randomObjectID(t),
+					graphazure.TenantID:           tenantID,
+					graphazure.IsAssignableToRole: testCase.isAssignableToRole,
+				}), graphazure.Entity, graphazure.Group)
 				user = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
 					common.Name:         "Group member",
-					common.ObjectID:     integration.RandomObjectID(t),
-					graphAzure.TenantID: tenantID,
-				}), graphAzure.Entity, graphAzure.User)
+					common.ObjectID:     randomObjectID(t),
+					graphazure.TenantID: tenantID,
+				}), graphazure.Entity, graphazure.User)
 			)
-			NewRelationship(t, &suite, user, group, graphAzure.MemberOf)
+			NewRelationship(t, &suite, user, group, graphazure.MemberOf)
 
 			err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
 				members, err := azure.FetchRoleAssignableGroupMembersUsers(tx, group, 0, 0)
