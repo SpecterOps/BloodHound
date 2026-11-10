@@ -44,9 +44,17 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
             <Popover onOpenChange={handleOpenChange} open={calendarOpen}>
                 <div className='relative'>
                     {InputElement ? (
-                        <InputElement {...props} className={cn(datePickerInputClasses, props.className)} ref={ref} />
+                        <InputElement
+                            {...props}
+                            className={cn(datePickerInputClasses({ variant: props.variant }), props.className)}
+                            ref={ref}
+                        />
                     ) : (
-                        <Input variant='outlined' {...props} className={cn(datePickerInputClasses, props.className)} />
+                        <Input
+                            variant='outlined'
+                            {...props}
+                            className={cn(datePickerInputClasses({ variant: props.variant }), props.className)}
+                        />
                     )}
                     <PopoverTrigger asChild>
                         <IconButton

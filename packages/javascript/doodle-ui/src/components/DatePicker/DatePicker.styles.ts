@@ -14,7 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-export const datePickerInputClasses = 'bg-[color:var(--date-picker-input-fill)] peer';
+import { cva } from 'class-variance-authority';
+
+export const datePickerInputClasses = cva('bg-[color:var(--date-picker-input-fill)] peer', {
+    variants: {
+        variant: {
+            outlined: '',
+            underlined: [
+                'px-2',
+                // Border images ignore border-radius, keeping the underline flat without changing the focus outline.
+                '[border-image:linear-gradient(var(--input-border-default),var(--input-border-default))_1]',
+                'focus:[border-image:linear-gradient(var(--input-border-focus),var(--input-border-focus))_1]',
+            ],
+        },
+    },
+});
 
 export const datePickerTriggerClasses =
     'h-6 p-0 opacity-50 hover:opacity-100 peer-hover:opacity-100 focus-visible:opacity-100';

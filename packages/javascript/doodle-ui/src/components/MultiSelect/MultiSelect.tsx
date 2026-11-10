@@ -356,7 +356,7 @@ const MultiSelect = ({
                         role='group'
                         aria-label={placeholder ?? 'Select options'}
                         aria-busy={isLoading || undefined}
-                        className='p-1'>
+                        className='p-1 pr-2'>
                         {selectAllLabel &&
                             !isLoading &&
                             !hasSearchText &&

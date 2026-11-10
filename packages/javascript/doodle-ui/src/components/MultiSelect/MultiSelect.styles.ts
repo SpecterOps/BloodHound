@@ -43,7 +43,11 @@ export const MultiSelectTriggerVariants = cva(
 
 export const multiSelectRowStyles = 'flex w-full items-center gap-2 rounded-lg p-2';
 
-export const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-secondary hover:text-inverse';
+export const multiSelectInteractiveRowStyles = cn(
+    'group cursor-pointer hover:bg-secondary hover:text-inverse',
+    '[&:has(:focus-visible)]:ring-0 [&:has(:focus-visible)]:ring-offset-0 [&:has(:focus-visible)]:outline [&:has(:focus-visible)]:outline-2',
+    '[&:has(:focus-visible)]:outline-offset-2 [&:has(:focus-visible)]:outline-[color:var(--checkbox-focus-ring)]'
+);
 
 // Override Checkbox hover styles because the entire MultiSelect row owns the hover state.
 export const multiSelectCheckboxStyles = cn(
