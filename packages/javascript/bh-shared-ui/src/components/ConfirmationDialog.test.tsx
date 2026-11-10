@@ -58,6 +58,63 @@ describe('ConfirmationDialog', () => {
         expect(testOnConfirm).toHaveBeenCalledTimes(1);
     });
 
+    it('should disable confirmation while keeping Cancel available when isConfirmDisabled is true', async () => {
+        cleanup();
+        render(
+            <ConfirmationDialog
+                open={true}
+                onConfirm={testOnConfirm}
+                onCancel={testonCancel}
+                text='text-test'
+                title='title-test'
+                isConfirmDisabled={true}
+            />
+        );
+
+        const confirmButton = screen.getByTestId('confirmation-dialog_button-yes');
+        const cancelButton = screen.getByTestId('confirmation-dialog_button-no');
+
+        expect(confirmButton).toBeDisabled();
+        await user.click(confirmButton);
+        expect(testOnConfirm).not.toHaveBeenCalled();
+
+        expect(cancelButton).toBeEnabled();
+        await user.click(cancelButton);
+        expect(testonCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+        { reply: 'DELETE', matches: true },
+        { reply: 'incorrect', matches: false },
+    ])(
+        'should require a matching challenge after enabling confirmation (reply: $reply)',
+        async ({ reply, matches }) => {
+            cleanup();
+            const props = {
+                open: true,
+                onConfirm: testOnConfirm,
+                onCancel: testonCancel,
+                text: 'text-test',
+                title: 'title-test',
+                challengeText: 'delete',
+            };
+            const { rerender } = render(<ConfirmationDialog {...props} isConfirmDisabled={true} />);
+            const confirmButton = screen.getByTestId('confirmation-dialog_button-yes');
+
+            await user.type(screen.getByTestId('confirmation-dialog_challenge-text'), reply);
+            expect(confirmButton).toBeDisabled();
+            await user.click(confirmButton);
+            expect(testOnConfirm).not.toHaveBeenCalled();
+
+            rerender(<ConfirmationDialog {...props} isConfirmDisabled={false} />);
+
+            if (matches) expect(confirmButton).toBeEnabled();
+            else expect(confirmButton).toBeDisabled();
+            await user.click(confirmButton);
+            expect(testOnConfirm).toHaveBeenCalledTimes(matches ? 1 : 0);
+        }
+    );
+
     it('should render custom button text and icons on the left', async () => {
         cleanup();
         render(

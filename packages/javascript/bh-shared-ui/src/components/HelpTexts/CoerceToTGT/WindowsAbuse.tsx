@@ -32,11 +32,11 @@ const WindowsAbuse: FC<EdgeInfoProps> = ({ sourceName, sourceType }) => {
                 protected principals with this Cypher query:
             </Typography>
             <CodeController>
-                {`MATCH (g:Group)
+                {`OPTIONAL MATCH (n:Base)
+                WHERE n.sensitive = TRUE
+                OPTIONAL MATCH p = (:Base)-[:MemberOf*..]->(g:Group)
                 WHERE g.objectid ENDS WITH "-525"
-                MATCH (n:Base)
-                WHERE n.sensitive = TRUE OR (n)-[:MemberOf*..]->(g)
-                RETURN n
+                RETURN n,p
                 LIMIT 1000`}
             </CodeController>
             <Typography variant='body2'>
