@@ -26,11 +26,11 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-// Principal contains the authentication attributes commonly needed to identify
+// AuthenticatedUser contains the authentication attributes commonly needed to identify
 // and authorize the caller of a request. This type is intended to stay small.
 // feature-specific user data belongs in the owning slice's domain types rather
 // than being added here.
-type Principal struct {
+type AuthenticatedUser struct {
 	ID              uuid.UUID
 	PrincipalName   string
 	EmailAddress    string
@@ -38,15 +38,15 @@ type Principal struct {
 	AllEnvironments bool
 }
 
-func (s Principal) GetID() uuid.UUID {
+func (s AuthenticatedUser) GetID() uuid.UUID {
 	return s.ID
 }
 
-func (s Principal) IsAdministrator() bool {
+func (s AuthenticatedUser) IsAdministrator() bool {
 	return s.Administrator
 }
 
-func (s Principal) HasAllEnvironments() bool {
+func (s AuthenticatedUser) HasAllEnvironments() bool {
 	return s.AllEnvironments
 }
 
@@ -60,7 +60,7 @@ type User interface {
 // for reading authentication context, validating credentials, and returning the
 // authenticated user.
 type Resolver interface {
-	Resolve(ctx context.Context) (Principal, bool)
+	Resolve(ctx context.Context) (AuthenticatedUser, bool)
 }
 
 // RequestContextResolver is the production implementation of Resolver that
@@ -73,7 +73,7 @@ func NewResolver() *RequestContextResolver {
 }
 
 // Resolve extracts a Principal from the request's BloodHound context.
-func (s *RequestContextResolver) Resolve(ctx context.Context) (Principal, bool) {
+func (s *RequestContextResolver) Resolve(ctx context.Context) (AuthenticatedUser, bool) {
 	var (
 		bhContext = bhctx.Get(ctx)
 		modelUser model.User
@@ -82,10 +82,10 @@ func (s *RequestContextResolver) Resolve(ctx context.Context) (Principal, bool) 
 
 	modelUser, ok = auth.GetUserFromAuthCtx(bhContext.AuthCtx)
 	if !ok {
-		return Principal{}, false
+		return AuthenticatedUser{}, false
 	}
 
-	return Principal{
+	return AuthenticatedUser{
 		ID:              modelUser.ID,
 		PrincipalName:   modelUser.PrincipalName,
 		EmailAddress:    modelUser.EmailAddress.ValueOrZero(),

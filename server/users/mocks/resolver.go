@@ -39,22 +39,22 @@ func (_m *MockResolver) EXPECT() *MockResolver_Expecter {
 }
 
 // Resolve provides a mock function for the type MockResolver
-func (_mock *MockResolver) Resolve(ctx context.Context) (users.Principal, bool) {
+func (_mock *MockResolver) Resolve(ctx context.Context) (users.AuthenticatedUser, bool) {
 	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Resolve")
 	}
 
-	var r0 users.Principal
+	var r0 users.AuthenticatedUser
 	var r1 bool
-	if returnFunc, ok := ret.Get(0).(func(context.Context) (users.Principal, bool)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (users.AuthenticatedUser, bool)); ok {
 		return returnFunc(ctx)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) users.Principal); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context) users.AuthenticatedUser); ok {
 		r0 = returnFunc(ctx)
 	} else {
-		r0 = ret.Get(0).(users.Principal)
+		r0 = ret.Get(0).(users.AuthenticatedUser)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context) bool); ok {
 		r1 = returnFunc(ctx)
@@ -88,12 +88,12 @@ func (_c *MockResolver_Resolve_Call) Run(run func(ctx context.Context)) *MockRes
 	return _c
 }
 
-func (_c *MockResolver_Resolve_Call) Return(principal users.Principal, b bool) *MockResolver_Resolve_Call {
+func (_c *MockResolver_Resolve_Call) Return(principal users.AuthenticatedUser, b bool) *MockResolver_Resolve_Call {
 	_c.Call.Return(principal, b)
 	return _c
 }
 
-func (_c *MockResolver_Resolve_Call) RunAndReturn(run func(ctx context.Context) (users.Principal, bool)) *MockResolver_Resolve_Call {
+func (_c *MockResolver_Resolve_Call) RunAndReturn(run func(ctx context.Context) (users.AuthenticatedUser, bool)) *MockResolver_Resolve_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const expectedGetSavedQuerySQL = `SELECT sq.id, sq.user_id, sq.name, sq.query, sq.description, sq.category, sq.schema_extension_id, sq.created_at, sq.updated_at, sq.deleted_at, EXISTS (SELECT 1 FROM saved_queries_permissions sqp WHERE sqp.query_id = sq.id AND (sqp.public = TRUE OR sqp.shared_to_user_id = $1)) AS public_or_shared FROM saved_queries sq WHERE sq.id = $2 LIMIT $3`
+const expectedGetSavedQuerySQL = `SELECT sq.id, sq.user_id, sq.name, sq.query, sq.description, sq.category, sq.schema_extension_id, sq.created_at, sq.updated_at, EXISTS (SELECT 1 FROM saved_queries_permissions sqp WHERE sqp.query_id = sq.id AND (sqp.public = TRUE OR sqp.shared_to_user_id = $1)) AS public_or_shared FROM saved_queries sq WHERE sq.id = $2 LIMIT $3`
 
 func TestStore_GetSavedQuery(t *testing.T) {
 	type mock struct {
@@ -72,7 +72,7 @@ func TestStore_GetSavedQuery(t *testing.T) {
 		}
 	)
 
-	rowColumns := []string{"id", "user_id", "name", "query", "description", "category", "schema_extension_id", "created_at", "updated_at", "deleted_at", "public_or_shared"}
+	rowColumns := []string{"id", "user_id", "name", "query", "description", "category", "schema_extension_id", "created_at", "updated_at", "public_or_shared"}
 	tt := []testData{
 		{
 			name: "Success: query and actor-relative access are returned - 200",
@@ -88,7 +88,6 @@ func TestStore_GetSavedQuery(t *testing.T) {
 						savedQuery.SchemaExtensionID,
 						savedQuery.CreatedAt,
 						savedQuery.UpdatedAt,
-						nil,
 						true,
 					),
 				)
@@ -125,7 +124,6 @@ func TestStore_GetSavedQuery(t *testing.T) {
 						savedQuery.SchemaExtensionID,
 						savedQuery.CreatedAt,
 						savedQuery.UpdatedAt,
-						nil,
 						true,
 					).RowError(0, unexpectedErr),
 				)

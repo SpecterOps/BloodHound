@@ -35,7 +35,7 @@ type SavedQueries interface {
 }
 
 type UserResolver interface {
-	Resolve(ctx context.Context) (users.Principal, bool)
+	Resolve(ctx context.Context) (users.AuthenticatedUser, bool)
 }
 
 type Handlers struct {

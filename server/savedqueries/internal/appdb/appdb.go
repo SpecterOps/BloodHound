@@ -46,7 +46,6 @@ type savedQueryRow struct {
 	SchemaExtensionID *int32         `db:"schema_extension_id"`
 	CreatedAt         sql.NullTime   `db:"created_at"`
 	UpdatedAt         sql.NullTime   `db:"updated_at"`
-	DeletedAt         sql.NullTime   `db:"deleted_at"`
 	PublicOrShared    bool           `db:"public_or_shared"`
 }
 
@@ -81,7 +80,6 @@ func (s *Store) GetSavedQuery(ctx context.Context, savedQueryID int64, actorUser
 		"sq.schema_extension_id",
 		"sq.created_at",
 		"sq.updated_at",
-		"sq.deleted_at",
 		publicOrSharedExpression,
 	).From(tableSavedQueries + " sq").Where(queryBuilder.Equal("sq.id", savedQueryID)).Limit(1)
 
@@ -109,6 +107,5 @@ func (s *Store) GetSavedQuery(ctx context.Context, savedQueryID int64, actorUser
 		SchemaExtensionID: row.SchemaExtensionID,
 		CreatedAt:         row.CreatedAt.Time,
 		UpdatedAt:         row.UpdatedAt.Time,
-		DeletedAt:         row.DeletedAt,
 	}, services.SavedQueryAccess{PublicOrShared: row.PublicOrShared}, nil
 }
