@@ -539,6 +539,7 @@ export type UnifiedFinding = {
     last_seen: string;
     prioritization_rank?: number | null;
     is_cross_platform?: boolean;
+    is_regression?: boolean;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
