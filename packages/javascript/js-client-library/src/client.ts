@@ -922,6 +922,9 @@ class BHEAPIClient {
             options
         );
 
+    deleteCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collie-job-secrets/${secretId}`, options);
+
     /* clients */
 
     getClients = (
