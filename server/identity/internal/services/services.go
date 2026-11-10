@@ -133,6 +133,11 @@ type UserMinimal struct {
 	LastName     sql.NullString
 }
 
+// AuthTokenReader lists tokens using the supplied requester-scoped filters.
+type AuthTokenReader interface {
+	ListAuthTokens(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]AuthToken, error)
+}
+
 type Database interface {
 	GetRole(ctx context.Context, id int32) (Role, error)
 	GetPermission(ctx context.Context, id int) (Permission, error)
@@ -144,11 +149,27 @@ type Database interface {
 }
 
 type Service struct {
-	db Database
+	db              Database
+	authTokenReader AuthTokenReader
 }
 
-func NewService(databaseInterface Database) *Service {
-	return &Service{db: databaseInterface}
+type Option func(*Service)
+
+func WithAuthTokenReader(reader AuthTokenReader) Option {
+	if reader == nil {
+		panic("identity: auth token reader must not be nil")
+	}
+	return func(service *Service) {
+		service.authTokenReader = reader
+	}
+}
+
+func NewService(databaseInterface Database, options ...Option) *Service {
+	var service = &Service{db: databaseInterface, authTokenReader: databaseInterface}
+	for _, option := range options {
+		option(service)
+	}
+	return service
 }
 
 func (s *Service) GetRole(ctx context.Context, id int32) (Role, error) {
@@ -192,7 +213,7 @@ func (s *Service) ListAuthTokens(ctx context.Context, requester AuthTokenRequest
 		return nil, err
 	}
 
-	return s.db.ListAuthTokens(ctx, scopedFilters, sortItems)
+	return s.authTokenReader.ListAuthTokens(ctx, scopedFilters, sortItems)
 }
 
 func scopeAuthTokenFilters(requester AuthTokenRequester, queryFilters params.Filters) (params.Filters, error) {

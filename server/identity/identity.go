@@ -25,12 +25,26 @@ import (
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 )
 
+type AuthToken = services.AuthToken
+
+// AuthTokenReader allows applications to enforce additional token visibility
+// rules without replacing identity's requester authorization and scoping.
+type AuthTokenReader = services.AuthTokenReader
+
+// Option configures the dependencies used by the identity routes.
+type Option = services.Option
+
+// WithAuthTokenReader supplies an application-specific token reader
+func WithAuthTokenReader(reader AuthTokenReader) Option {
+	return services.WithAuthTokenReader(reader)
+}
+
 // Register builds the identity store -> service -> handler chain and attaches
 // the identity routes to the provided router.
-func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, options ...Option) {
 	var (
 		store      = appdb.NewStore(pool)
-		svc        = services.NewService(store)
+		svc        = services.NewService(store, options...)
 		handlerSet = handlers.NewHandlersContainer(svc)
 	)
 
