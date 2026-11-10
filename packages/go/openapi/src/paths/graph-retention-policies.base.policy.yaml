@@ -102,10 +102,16 @@ patch:
           type: object
           additionalProperties: false
           required:
-            - enabled
+            - data
           properties:
-            enabled:
-              type: boolean
+            data:
+              type: object
+              additionalProperties: false
+              required:
+                - enabled
+              properties:
+                enabled:
+                  type: boolean
   responses:
     200:
       description: Updated base retention policy.
