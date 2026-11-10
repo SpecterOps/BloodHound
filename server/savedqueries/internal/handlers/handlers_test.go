@@ -88,7 +88,7 @@ func TestHandlers_GetSavedQuery(t *testing.T) {
 				return buildRequest(t, "41")
 			},
 			setupMocks: func(mock mock, ctx context.Context) {
-				mock.userResolver.EXPECT().Resolve(ctx).Return(users.Principal{ID: userID}, true)
+				mock.userResolver.EXPECT().Resolve(ctx).Return(users.AuthenticatedUser{ID: userID}, true)
 				mock.savedQueries.EXPECT().GetSavedQuery(ctx, int64(41), services.Actor{UserID: userID.String()}).Return(services.SavedQuery{
 					ID:          41,
 					UserID:      userID.String(),
@@ -108,7 +108,7 @@ func TestHandlers_GetSavedQuery(t *testing.T) {
 				return buildRequest(t, "42")
 			},
 			setupMocks: func(mock mock, ctx context.Context) {
-				mock.userResolver.EXPECT().Resolve(ctx).Return(users.Principal{ID: userID}, true)
+				mock.userResolver.EXPECT().Resolve(ctx).Return(users.AuthenticatedUser{ID: userID}, true)
 				mock.savedQueries.EXPECT().GetSavedQuery(ctx, int64(42), services.Actor{UserID: userID.String()}).Return(savedQuery, nil)
 			},
 			expected: expected{
@@ -122,7 +122,7 @@ func TestHandlers_GetSavedQuery(t *testing.T) {
 				return buildRequest(t, "42")
 			},
 			setupMocks: func(mock mock, ctx context.Context) {
-				mock.userResolver.EXPECT().Resolve(ctx).Return(users.Principal{ID: adminID, Administrator: true}, true)
+				mock.userResolver.EXPECT().Resolve(ctx).Return(users.AuthenticatedUser{ID: adminID, Administrator: true}, true)
 				mock.savedQueries.EXPECT().GetSavedQuery(ctx, int64(42), services.Actor{UserID: adminID.String(), IsAdministrator: true}).Return(savedQuery, nil)
 			},
 			expected: expected{responseCode: http.StatusOK},
@@ -133,7 +133,7 @@ func TestHandlers_GetSavedQuery(t *testing.T) {
 				return buildRequest(t, "42")
 			},
 			setupMocks: func(mock mock, ctx context.Context) {
-				mock.userResolver.EXPECT().Resolve(ctx).Return(users.Principal{}, false)
+				mock.userResolver.EXPECT().Resolve(ctx).Return(users.AuthenticatedUser{}, false)
 			},
 			expected: expected{responseCode: http.StatusBadRequest, errorMessage: "no associated user found"},
 		},
@@ -143,7 +143,7 @@ func TestHandlers_GetSavedQuery(t *testing.T) {
 				return buildRequest(t, "invalid")
 			},
 			setupMocks: func(mock mock, ctx context.Context) {
-				mock.userResolver.EXPECT().Resolve(ctx).Return(users.Principal{ID: userID}, true)
+				mock.userResolver.EXPECT().Resolve(ctx).Return(users.AuthenticatedUser{ID: userID}, true)
 			},
 			expected: expected{responseCode: http.StatusBadRequest, errorMessage: api.ErrorResponseDetailsIDMalformed},
 		},
@@ -153,7 +153,7 @@ func TestHandlers_GetSavedQuery(t *testing.T) {
 				return buildRequest(t, "42")
 			},
 			setupMocks: func(mock mock, ctx context.Context) {
-				mock.userResolver.EXPECT().Resolve(ctx).Return(users.Principal{ID: userID}, true)
+				mock.userResolver.EXPECT().Resolve(ctx).Return(users.AuthenticatedUser{ID: userID}, true)
 				mock.savedQueries.EXPECT().GetSavedQuery(ctx, int64(42), services.Actor{UserID: userID.String()}).Return(services.SavedQuery{}, services.ErrSavedQueryNotFound)
 			},
 			expected: expected{responseCode: http.StatusNotFound, errorMessage: "query not found"},
@@ -164,7 +164,7 @@ func TestHandlers_GetSavedQuery(t *testing.T) {
 				return buildRequest(t, "42")
 			},
 			setupMocks: func(mock mock, ctx context.Context) {
-				mock.userResolver.EXPECT().Resolve(ctx).Return(users.Principal{ID: userID}, true)
+				mock.userResolver.EXPECT().Resolve(ctx).Return(users.AuthenticatedUser{ID: userID}, true)
 				mock.savedQueries.EXPECT().GetSavedQuery(ctx, int64(42), services.Actor{UserID: userID.String()}).Return(services.SavedQuery{}, context.DeadlineExceeded)
 			},
 			expected: expected{responseCode: http.StatusInternalServerError, errorMessage: api.ErrorResponseRequestTimeout},
@@ -175,7 +175,7 @@ func TestHandlers_GetSavedQuery(t *testing.T) {
 				return buildRequest(t, "42")
 			},
 			setupMocks: func(mock mock, ctx context.Context) {
-				mock.userResolver.EXPECT().Resolve(ctx).Return(users.Principal{ID: userID}, true)
+				mock.userResolver.EXPECT().Resolve(ctx).Return(users.AuthenticatedUser{ID: userID}, true)
 				mock.savedQueries.EXPECT().GetSavedQuery(ctx, int64(42), services.Actor{UserID: userID.String()}).Return(services.SavedQuery{}, unexpectedErr)
 			},
 			expected: expected{responseCode: http.StatusInternalServerError, errorMessage: "an internal error has occurred that is preventing the service from servicing this request"},

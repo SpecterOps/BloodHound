@@ -56,11 +56,21 @@ type User interface {
 	HasAllEnvironments() bool
 }
 
-// Resolver extracts a Principal from a request context. Implementations are responsible
+type administrator interface {
+	IsAdministrator() bool
+}
+
+// IsAdministrator reports whether the user exposes and has administrator access.
+func IsAdministrator(user User) bool {
+	administratorUser, ok := user.(administrator)
+	return ok && administratorUser.IsAdministrator()
+}
+
+// Resolver extracts a User from a request context. Implementations are responsible
 // for reading authentication context, validating credentials, and returning the
 // authenticated user.
 type Resolver interface {
-	Resolve(ctx context.Context) (AuthenticatedUser, bool)
+	Resolve(ctx context.Context) (User, bool)
 }
 
 // RequestContextResolver is the production implementation of Resolver that
@@ -72,8 +82,8 @@ func NewResolver() *RequestContextResolver {
 	return &RequestContextResolver{}
 }
 
-// Resolve extracts a Principal from the request's BloodHound context.
-func (s *RequestContextResolver) Resolve(ctx context.Context) (AuthenticatedUser, bool) {
+// Resolve extracts a User from the request's BloodHound context.
+func (s *RequestContextResolver) Resolve(ctx context.Context) (User, bool) {
 	var (
 		bhContext = bhctx.Get(ctx)
 		modelUser model.User

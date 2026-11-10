@@ -29,9 +29,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type user struct{}
+
+func (s user) GetID() uuid.UUID {
+	return uuid.Nil
+}
+
+func (s user) HasAllEnvironments() bool {
+	return false
+}
+
+type administratorUser struct {
+	user
+	administrator bool
+}
+
+func (s administratorUser) IsAdministrator() bool {
+	return s.administrator
+}
+
 func TestRequestContextResolver_Resolve(t *testing.T) {
 	type expected struct {
-		principal users.Principal
+		principal users.AuthenticatedUser
 		isUser    bool
 	}
 
@@ -56,7 +75,7 @@ func TestRequestContextResolver_Resolve(t *testing.T) {
 					}}})
 				},
 				expected: expected{
-					principal: users.Principal{
+					principal: users.AuthenticatedUser{
 						ID:              userID,
 						PrincipalName:   "admin@example.com",
 						EmailAddress:    "admin@example.com",
@@ -71,7 +90,7 @@ func TestRequestContextResolver_Resolve(t *testing.T) {
 				buildCtx: func() context.Context {
 					return context.Background()
 				},
-				expected: expected{principal: users.Principal{}, isUser: false},
+				expected: expected{principal: users.AuthenticatedUser{}, isUser: false},
 			},
 		}
 	)
@@ -84,6 +103,40 @@ func TestRequestContextResolver_Resolve(t *testing.T) {
 
 			assert.Equal(t, testCase.expected.principal, principal)
 			assert.Equal(t, testCase.expected.isUser, isUser)
+		})
+	}
+}
+
+func TestIsAdministrator(t *testing.T) {
+	type testData struct {
+		name     string
+		user     users.User
+		expected bool
+	}
+
+	var tt = []testData{
+		{
+			name:     "Success: administrator capability returns true",
+			user:     administratorUser{administrator: true},
+			expected: true,
+		},
+		{
+			name:     "Success: non-administrator capability returns false",
+			user:     administratorUser{administrator: false},
+			expected: false,
+		},
+		{
+			name:     "Success: user without administrator capability returns false",
+			user:     user{},
+			expected: false,
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, testCase.expected, users.IsAdministrator(testCase.user))
 		})
 	}
 }

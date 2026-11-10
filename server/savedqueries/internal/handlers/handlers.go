@@ -35,7 +35,7 @@ type SavedQueries interface {
 }
 
 type UserResolver interface {
-	Resolve(ctx context.Context) (users.AuthenticatedUser, bool)
+	Resolve(ctx context.Context) (users.User, bool)
 }
 
 type Handlers struct {
@@ -66,8 +66,8 @@ func (s *Handlers) GetSavedQuery(response http.ResponseWriter, request *http.Req
 	}
 
 	actor := services.Actor{
-		UserID:          principal.ID.String(),
-		IsAdministrator: principal.IsAdministrator(),
+		UserID:          principal.GetID().String(),
+		IsAdministrator: users.IsAdministrator(principal),
 	}
 	savedQuery, err := s.savedQueries.GetSavedQuery(ctx, savedQueryID, actor)
 	if err != nil {
