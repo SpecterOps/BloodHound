@@ -14,6 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import userEvent from '@testing-library/user-event';
+import {
+    serializeISO8601PropertyValue,
+    serializeRawPropertyValue,
+} from '../../components/EntityInfo/EntityPropertyCopyMenu';
 import { render, screen } from '../../test-utils';
 import { EntityField } from '../../utils';
 import { Field, ObjectInfoFields, exclusionList } from './fragments';
@@ -90,6 +95,90 @@ describe('Field', () => {
         expect(screen.getByText('NONE')).not.toHaveAttribute('aria-hidden');
         expect(screen.queryByText('Empty array, zero values')).not.toBeInTheDocument();
     });
+
+    it('copies the raw property key and value rather than their display formatting', async () => {
+        const user = userEvent.setup();
+        render(<Field label='Last logon:' value={0} keyprop='lastlogon' />);
+
+        await user.click(screen.getByRole('button', { name: 'Copy lastlogon' }));
+        await user.click(screen.getByRole('menuitem', { name: 'Copy field name' }));
+        expect(await navigator.clipboard.readText()).toBe('lastlogon');
+
+        await user.click(screen.getByRole('button', { name: 'Copy lastlogon' }));
+        await user.click(screen.getByRole('menuitem', { name: 'Copy raw value' }));
+        expect(await navigator.clipboard.readText()).toBe('0');
+    });
+
+    it('supports object properties by displaying and copying their JSON value', async () => {
+        const user = userEvent.setup();
+        render(<Field label='Custom property:' value={{ nested: ['value'] }} keyprop='customProperty' />);
+
+        expect(screen.getByText('{"nested":["value"]}')).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Copy customProperty' }));
+        await user.click(screen.getByRole('menuitem', { name: 'Copy raw value' }));
+        expect(await navigator.clipboard.readText()).toBe('{"nested":["value"]}');
+    });
+
+    it('announces clipboard failures', async () => {
+        const user = userEvent.setup();
+        const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('denied'));
+        render(<Field label='Test field:' value='value' keyprop='testfield' />);
+
+        await user.click(screen.getByRole('button', { name: 'Copy testfield' }));
+        await user.click(screen.getByRole('menuitem', { name: 'Copy raw value' }));
+
+        expect(await screen.findByText('Unable to copy raw value')).toBeInTheDocument();
+        writeText.mockRestore();
+    });
+
+    it('opens the copy menu with the keyboard', async () => {
+        const user = userEvent.setup();
+        render(<Field label='Test field:' value='value' keyprop='testfield' />);
+
+        const trigger = screen.getByRole('button', { name: 'Copy testfield' });
+        trigger.focus();
+        await user.keyboard('{Enter}');
+
+        expect(screen.getByRole('menuitem', { name: 'Copy field name' })).toBeInTheDocument();
+        expect(screen.getByRole('menuitem', { name: 'Copy raw value' })).toBeInTheDocument();
+    });
+
+    it('offers ISO 8601 copying for date properties', async () => {
+        const user = userEvent.setup();
+        render(<Field label='Last logon:' value={1694549003} keyprop='lastlogon' />);
+
+        await user.click(screen.getByRole('button', { name: 'Copy lastlogon' }));
+        await user.click(screen.getByRole('menuitem', { name: 'Copy ISO 8601 value' }));
+
+        expect(await navigator.clipboard.readText()).toBe('2023-09-12T20:03:23.000Z');
+    });
+});
+
+describe('serializeRawPropertyValue', () => {
+    it.each([
+        [false, 'false'],
+        [null, 'null'],
+        ['', ''],
+        [[], '[]'],
+        [{ nested: ['value'] }, '{"nested":["value"]}'],
+    ])('serializes %j as an underlying clipboard value', (value, expected) => {
+        expect(serializeRawPropertyValue(value as EntityField['value'])).toBe(expected);
+    });
+});
+
+describe('serializeISO8601PropertyValue', () => {
+    it('serializes date strings and timestamp date fields as UTC ISO 8601', () => {
+        expect(serializeISO8601PropertyValue('customDate', '2023-09-12T20:03:23-07:00')).toBe(
+            '2023-09-13T03:03:23.000Z'
+        );
+        expect(serializeISO8601PropertyValue('lastlogon', 1694549003)).toBe('2023-09-12T20:03:23.000Z');
+    });
+
+    it('does not offer ISO 8601 for non-date values or date sentinels', () => {
+        expect(serializeISO8601PropertyValue('name', 'not-a-date')).toBeNull();
+        expect(serializeISO8601PropertyValue('lastlogon', 0)).toBeNull();
+    });
 });
 
 describe('ObjectInfoFields', () => {
@@ -107,5 +196,7 @@ describe('ObjectInfoFields', () => {
         exclusionList.forEach((property) => {
             expect(screen.queryByText(property)).not.toBeInTheDocument();
         });
+
+        expect(screen.queryByRole('button', { name: 'Copy undefined' })).not.toBeInTheDocument();
     });
 });

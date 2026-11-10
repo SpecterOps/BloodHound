@@ -16,6 +16,7 @@
 
 import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
+import { EntityPropertyCopyMenu } from '../../components/EntityInfo/EntityPropertyCopyMenu';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -156,9 +157,12 @@ export const Field: React.FC<EntityField> = (entityField) => {
     if (typeof formattedValue === 'string') {
         content = (
             <div className='flex flex-wrap items-baseline justify-between p-2 text-left'>
-                <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                    {formattedLabel}
-                </Typography>
+                <span className='group inline-flex items-center'>
+                    <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                        {formattedLabel}
+                    </Typography>
+                    <EntityPropertyCopyMenu property={keyprop} value={value} />
+                </span>
                 <Typography
                     component='span'
                     variant='body2'
@@ -188,9 +192,12 @@ export const Field: React.FC<EntityField> = (entityField) => {
                     key={`${keyprop}-${index}`}>
                     {/* Only render the label for the first item, since it kicks the list */}
                     {index === 0 ? (
-                        <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                            {formattedLabel}
-                        </Typography>
+                        <span className='group inline-flex items-center'>
+                            <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
+                                {formattedLabel}
+                            </Typography>
+                            <EntityPropertyCopyMenu property={keyprop} value={entityField.value} />
+                        </span>
                     ) : (
                         <span aria-hidden='true' />
                     )}
@@ -227,7 +234,7 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
                         kind={field.kind}
                         label={field.label}
                         value={field.value}
-                        keyprop={`${field.keyprop}`}
+                        keyprop={field.keyprop}
                         key={`${field.keyprop}-${field.label}`}
                     />
                 );

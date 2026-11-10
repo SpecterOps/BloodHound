@@ -128,3 +128,23 @@ describe('BasicObjectInfoFields related kind fields', () => {
         });
     });
 });
+
+describe('BasicObjectInfoFields copy affordance', () => {
+    it('copies a real basic property key without offering copy for computed fields', async () => {
+        const user = userEvent.setup();
+        render(
+            <BasicObjectInfoFields
+                properties={{ objectid: 'object-id', zone: 'raw-zone' }}
+                nodeType='Computer'
+                zone='derived-zone'
+            />
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Copy objectid' }));
+        await user.click(screen.getByRole('menuitem', { name: 'Copy field name' }));
+
+        expect(await navigator.clipboard.readText()).toBe('objectid');
+        expect(screen.queryByRole('button', { name: 'Copy nodeType' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Copy zone' })).not.toBeInTheDocument();
+    });
+});
