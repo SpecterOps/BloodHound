@@ -47,8 +47,8 @@ export const multiSelectInteractiveRowStyles = 'group cursor-pointer hover:bg-se
 
 // Override Checkbox hover styles because the entire MultiSelect row owns the hover state.
 export const multiSelectCheckboxStyles = cn(
-    'enabled:data-[state=unchecked]:!border-current',
-    'group-hover:enabled:!border-current group-hover:enabled:data-[state=checked]:!bg-transparent group-hover:enabled:data-[state=checked]:!text-inverse group-hover:enabled:data-[state=indeterminate]:!bg-transparent group-hover:enabled:data-[state=indeterminate]:!text-inverse'
+    'enabled:data-[state=unchecked]:!border-[color:var(--input-border-default)]',
+    'group-hover:enabled:!border-current group-hover:enabled:data-[state=checked]:!bg-primary group-hover:enabled:data-[state=checked]:!text-[color:var(--checkbox-check)] group-hover:enabled:data-[state=indeterminate]:!bg-transparent group-hover:enabled:data-[state=indeterminate]:!text-inverse'
 );
 
 // Controls the default, unhovered partial-selection appearance.
