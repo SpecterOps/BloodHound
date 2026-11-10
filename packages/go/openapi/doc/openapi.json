@@ -19447,7 +19447,7 @@
       "patch": {
         "operationId": "UpdateCollectorJobSecret",
         "summary": "Update a collector job secret",
-        "description": "Updates collector job secret mutable fields: name, external_key_id, and value.",
+        "description": "Updates collector job secret mutable fields: name, external_key_id, and value.\nIn-flight jobs retain their snapshotted key reference.\n",
         "requestBody": {
           "required": true,
           "content": {
