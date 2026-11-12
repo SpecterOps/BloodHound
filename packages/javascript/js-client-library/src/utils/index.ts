@@ -17,4 +17,5 @@
 import { isAxiosError as isError } from 'axios';
 
 export * from './config';
+export * from './type';
 export const isAxiosError = isError;
