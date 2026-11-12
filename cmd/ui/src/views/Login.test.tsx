@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { DeepPartial } from 'bh-shared-ui';
+import { DeepPartial, LoginRedirectState } from 'bh-shared-ui';
 import { createAuthStateWithPermissions } from 'bh-shared-ui/testing';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { LoginRedirectState } from 'src/routes/loginRedirect';
 import { AppState } from 'src/store';
 import { render, waitFor } from 'src/test-utils';
 

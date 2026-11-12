@@ -14,13 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Routable } from 'bh-shared-ui';
+import { Routable, getLoginRedirectState } from 'bh-shared-ui';
 import { Badge } from 'doodle-ui';
 import { useMemo } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { authExpiredSelector } from 'src/ducks/auth/authSlice';
 import { ROUTE_EXPIRED_PASSWORD, ROUTE_LOGIN } from 'src/routes/constants';
-import { LoginRedirectState } from 'src/routes/loginRedirect';
 import { useAppSelector } from 'src/store';
 
 type AuthenticatedRouteProps = {
@@ -33,9 +32,7 @@ const AuthenticatedRoute: React.FC<AuthenticatedRouteProps> = ({ children, disal
     const isAuthExpired = useAppSelector(authExpiredSelector);
     const location = useLocation();
     // Keep the original destination when login or password reset adds an intermediate route.
-    const redirectState: LoginRedirectState = {
-        from: (location.state as LoginRedirectState | null)?.from ?? location,
-    };
+    const redirectState = getLoginRedirectState(location);
 
     const invalidRolesForThisUser = useMemo(
         () =>

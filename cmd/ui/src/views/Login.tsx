@@ -14,7 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient, useAppName } from 'bh-shared-ui';
+import {
+    LoginForm,
+    LoginViaSSOForm,
+    OneTimePasscodeForm,
+    apiClient,
+    getLoginDestination,
+    saveLoginRedirect,
+    useAppName,
+} from 'bh-shared-ui';
 import { LoadingSpinner } from 'doodle-ui';
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -23,8 +31,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/routes/constants';
-import { getLoginDestination, saveLoginRedirect } from 'src/routes/loginRedirect';
+import { ROUTE_HOME, ROUTE_USER_DISABLED, loginRedirectOptions } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const Login: React.FC = () => {
@@ -79,7 +86,7 @@ const Login: React.FC = () => {
     };
 
     const handleSubmitLoginViaSSOForm = (providerSlug: string) => {
-        saveLoginRedirect(getLoginDestination(location.state));
+        saveLoginRedirect(getLoginDestination(location.state, loginRedirectOptions));
         window.location.assign(`/api/v2/sso/${providerSlug}/login`);
     };
 

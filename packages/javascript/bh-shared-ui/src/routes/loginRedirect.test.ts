@@ -18,10 +18,16 @@ import {
     LOGIN_REDIRECT_STORAGE_KEY,
     clearLoginRedirect,
     getLoginDestination,
+    getLoginRedirectState,
+    resolveLoginDestination,
     saveLoginRedirect,
 } from './loginRedirect';
 
 const destination = '/explore?searchType=pathfinding#graph';
+const options = {
+    fallback: '/explore',
+    excludedPaths: ['/', '/login', '/expired-password', '/user-disabled', '/accept-eula', '/accept-fed-eula'],
+};
 
 describe('login destinations', () => {
     beforeEach(() => sessionStorage.clear());
@@ -34,7 +40,10 @@ describe('login destinations', () => {
         sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, destination);
 
         expect(
-            getLoginDestination({ from: { pathname: '/my-profile', search: '?tab=details', hash: '#settings' } })
+            getLoginDestination(
+                { from: { pathname: '/my-profile', search: '?tab=details', hash: '#settings' } },
+                options
+            )
         ).toBe('/my-profile?tab=details#settings');
         expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBe(destination);
     });
@@ -42,30 +51,36 @@ describe('login destinations', () => {
     it('restores a saved destination when router state is absent', () => {
         sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, destination);
 
-        expect(getLoginDestination(null)).toBe(destination);
+        expect(getLoginDestination(null, options)).toBe(destination);
         expect(sessionStorage.getItem(LOGIN_REDIRECT_STORAGE_KEY)).toBe(destination);
     });
 
-    it.each(['/', '/login', '/expired-password', '/user-disabled', '//example.com', '/\\example.com'])(
-        'uses the saved destination when the router destination is unsafe or would loop: %s',
-        (pathname) => {
-            sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, destination);
+    it.each([
+        '/',
+        '/login',
+        '/expired-password',
+        '/user-disabled',
+        '/accept-eula',
+        '/accept-fed-eula',
+        '//example.com',
+        '/\\example.com',
+    ])('uses the saved destination when the router destination is unsafe or would loop: %s', (pathname) => {
+        sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, destination);
 
-            expect(getLoginDestination({ from: { pathname, search: '', hash: '' } })).toBe(destination);
-        }
-    );
+        expect(getLoginDestination({ from: { pathname, search: '', hash: '' } }, options)).toBe(destination);
+    });
 
     it.each(['/', '/?query=value', '//example.com', '/\\example.com', '/login', '/expired-password', '/user-disabled'])(
         'falls back when the saved destination is unsafe or would loop: %s',
         (savedDestination) => {
             sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, savedDestination);
 
-            expect(getLoginDestination(null, '/fallback')).toBe('/fallback');
+            expect(getLoginDestination(null, { ...options, fallback: '/fallback' })).toBe('/fallback');
         }
     );
 
-    it('defaults to Explore when no destination exists', () => {
-        expect(getLoginDestination(null)).toBe('/explore');
+    it.each(['/explore', '/graphview'])('uses the app-specific fallback %s when no destination exists', (fallback) => {
+        expect(getLoginDestination(null, { ...options, fallback })).toBe(fallback);
     });
 
     it('uses the fallback when reading storage fails', () => {
@@ -73,7 +88,7 @@ describe('login destinations', () => {
             throw new Error('Storage blocked');
         });
 
-        expect(getLoginDestination(null, '/fallback')).toBe('/fallback');
+        expect(getLoginDestination(null, { ...options, fallback: '/fallback' })).toBe('/fallback');
     });
 
     it('allows SSO to continue when saving the destination fails', () => {
@@ -90,5 +105,24 @@ describe('login destinations', () => {
         });
 
         expect(() => clearLoginRedirect()).not.toThrow();
+    });
+
+    it('captures the original location and preserves it through intermediate redirects', () => {
+        const location = { pathname: '/explore', search: '?searchType=pathfinding', hash: '#graph', state: null };
+        const state = getLoginRedirectState(location);
+        expect(state.from).toEqual({ pathname: location.pathname, search: location.search, hash: location.hash });
+        expect(getLoginRedirectState({ pathname: '/', search: '', hash: '', state })).toEqual(state);
+    });
+
+    it('resolves destinations from explicit inputs without browser storage', () => {
+        const input = { state: null, savedDestination: destination, origin: 'https://example.com', options };
+        expect(resolveLoginDestination(input)).toBe(destination);
+        expect(resolveLoginDestination({ ...input, savedDestination: '//other.example' })).toBe(options.fallback);
+        expect(
+            resolveLoginDestination({
+                ...input,
+                state: { from: { pathname: '/my-profile', search: '?tab=details', hash: '#settings' } },
+            })
+        ).toBe('/my-profile?tab=details#settings');
     });
 });

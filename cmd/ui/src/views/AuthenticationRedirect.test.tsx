@@ -15,12 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
-import { DeepPartial, apiClient } from 'bh-shared-ui';
+import { DeepPartial, LOGIN_REDIRECT_STORAGE_KEY, apiClient } from 'bh-shared-ui';
 import { createAuthStateWithPermissions } from 'bh-shared-ui/testing';
 import { Route, Routes } from 'react-router-dom';
 import AuthenticatedRoute from 'src/components/AuthenticatedRoute/AuthenticatedRoute';
 import { initialState as initialAuthState } from 'src/ducks/auth/authSlice';
-import { LOGIN_REDIRECT_STORAGE_KEY } from 'src/routes/loginRedirect';
 import { AppState } from 'src/store';
 import { render, screen, waitFor } from 'src/test-utils';
 import ExpiredPassword from './ExpiredPassword';

@@ -69,3 +69,5 @@ export type Routable = {
     exact?: boolean;
     disallowedRoles?: { name: string; notification: string }[];
 };
+
+export * from './loginRedirect';

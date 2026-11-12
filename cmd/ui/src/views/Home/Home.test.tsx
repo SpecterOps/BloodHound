@@ -15,9 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react';
+import { LOGIN_REDIRECT_STORAGE_KEY } from 'bh-shared-ui';
 import { StrictMode } from 'react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { LOGIN_REDIRECT_STORAGE_KEY } from 'src/routes/loginRedirect';
 import Home from './Home';
 
 const Destination = (): JSX.Element => {

@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Path, createPath } from 'react-router-dom';
-import { ROUTE_EXPIRED_PASSWORD, ROUTE_EXPLORE, ROUTE_HOME, ROUTE_LOGIN, ROUTE_USER_DISABLED } from './constants';
 
 export const LOGIN_REDIRECT_STORAGE_KEY = 'loginRedirect';
 
@@ -23,15 +22,30 @@ export type LoginRedirectState = {
     from?: Path;
 };
 
-const isValidDestination = (destination: string | undefined): destination is string => {
+export type LoginRedirectOptions = {
+    fallback: string;
+    excludedPaths: readonly string[];
+};
+
+/** Preserve the original URL when authentication adds another intermediate route. */
+export const getLoginRedirectState = (location: Path & { state: LoginRedirectState | null }): LoginRedirectState => ({
+    from: location.state?.from ?? {
+        pathname: location.pathname,
+        search: location.search,
+        hash: location.hash,
+    },
+});
+
+const isValidDestination = (
+    destination: string | undefined,
+    origin: string,
+    excludedPaths: readonly string[]
+): destination is string => {
     if (!destination || !destination.startsWith('/') || destination.startsWith('//') || destination.includes('\\'))
         return false;
 
-    const url = new URL(destination, window.location.origin);
-    return (
-        url.origin === window.location.origin &&
-        ![ROUTE_HOME, ROUTE_LOGIN, ROUTE_EXPIRED_PASSWORD, ROUTE_USER_DISABLED].includes(url.pathname)
-    );
+    const url = new URL(destination, origin);
+    return url.origin === origin && !excludedPaths.includes(url.pathname);
 };
 
 export const saveLoginRedirect = (destination: string): void => {
@@ -58,13 +72,32 @@ export const clearLoginRedirect = (): void => {
     }
 };
 
-/** Resolves the original destination without consuming it. Only Home clears the saved destination. */
-export const getLoginDestination = (state: LoginRedirectState | null, fallback = ROUTE_EXPLORE): string => {
-    const routeDestination = state?.from && createPath(state.from);
-    if (isValidDestination(routeDestination)) return routeDestination;
+type ResolveLoginDestinationInput = {
+    state: LoginRedirectState | null;
+    savedDestination: string | undefined;
+    origin: string;
+    options: LoginRedirectOptions;
+};
 
-    const savedDestination = getSavedDestination();
-    if (isValidDestination(savedDestination)) return savedDestination;
+export const resolveLoginDestination = ({
+    state,
+    savedDestination,
+    origin,
+    options: { fallback, excludedPaths },
+}: ResolveLoginDestinationInput): string => {
+    const routeDestination = state?.from && createPath(state.from);
+    if (isValidDestination(routeDestination, origin, excludedPaths)) return routeDestination;
+
+    if (isValidDestination(savedDestination, origin, excludedPaths)) return savedDestination;
 
     return fallback;
 };
+
+/** Resolves without consuming storage; clear it only after all authentication requirements are met. */
+export const getLoginDestination = (state: LoginRedirectState | null, options: LoginRedirectOptions): string =>
+    resolveLoginDestination({
+        state,
+        savedDestination: getSavedDestination(),
+        origin: window.location.origin,
+        options,
+    });
