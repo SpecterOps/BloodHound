@@ -45,6 +45,48 @@ func (s hostIndex) add(identifier string, nodeID graph.ID) {
 	}
 }
 
+// lookup avoids allocating a normalized string for common ASCII identifiers.
+// The temporary string conversion stays in the map lookup so the buffer can
+// remain on the stack. Longer and non-ASCII identifiers retain hostIdentifier's
+// normalization semantics; identifier syntax is not validated.
+func (s hostIndex) lookup(value any) []graph.ID {
+	var (
+		identifier, isString = value.(string)
+		buffer               [64]byte
+		firstLower           = -1
+	)
+	if len(s) == 0 || !isString || identifier == "" {
+		return nil
+	}
+	if len(identifier) > len(buffer) {
+		return s[strings.ToUpper(identifier)]
+	}
+	for offset := range len(identifier) {
+		var character = identifier[offset]
+		if character >= 128 {
+			return s[strings.ToUpper(identifier)]
+		}
+		if character >= 'a' && character <= 'z' {
+			firstLower = offset
+			break
+		}
+	}
+	if firstLower == -1 {
+		return s[identifier]
+	}
+	copy(buffer[:], identifier)
+	for offset := firstLower; offset < len(identifier); offset++ {
+		var character = identifier[offset]
+		if character >= 128 {
+			return s[strings.ToUpper(identifier)]
+		}
+		if character >= 'a' && character <= 'z' {
+			buffer[offset] = character - ('a' - 'A')
+		}
+	}
+	return s[string(buffer[:len(identifier)])]
+}
+
 // azureHostIndexes caches only Azure identifiers and node IDs. Projected rows
 // are discarded after indexing; AD computers are matched one row at a time.
 type azureHostIndexes struct {
@@ -169,10 +211,10 @@ func (s azureHostIndexes) matchDevices(matches *hostPairSubmitter) error {
 
 func (s azureHostIndexes) matchComputer(nodeID graph.ID, sid, vmID any, matches *hostPairSubmitter) error {
 	// SharpHound's AzureRegistry collection provides azvmid on AD computers.
-	if err := matches.submitMatches(nodeID, s.vmsByVMID[hostIdentifier(vmID)]); err != nil {
+	if err := matches.submitMatches(nodeID, s.vmsByVMID.lookup(vmID)); err != nil {
 		return err
 	}
-	return matches.submitMatches(nodeID, s.devicesBySID[hostIdentifier(sid)])
+	return matches.submitMatches(nodeID, s.devicesBySID.lookup(sid))
 }
 
 type hostPairSubmitter struct {

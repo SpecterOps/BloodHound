@@ -318,3 +318,54 @@ func TestHostMatchingDeduplicatesAcrossRules(t *testing.T) {
 	}
 	require.Equal(t, []hostPair{{FirstID: 1, SecondID: 2}}, collectMatchingHostPairs(t, nodes))
 }
+
+func TestHostIndexLookup(t *testing.T) {
+	var (
+		identifiers = []any{nil, "", 123, true, []string{"wrong type"}, hostTestVMID,
+			strings.ToUpper(hostTestVMID), hostTestSID, strings.ToLower(hostTestSID),
+			"Mixed-ASCII", "éàσıſK", "aé", "éa", "ß", "a\xff", "\xffa",
+			strings.Repeat("x", 64), strings.Repeat("x", 65),
+		}
+		nodeIDs = []graph.ID{0, 1, 1, 2}
+	)
+	for _, identifier := range identifiers {
+		t.Run(fmt.Sprintf("%T_%v", identifier, identifier), func(t *testing.T) {
+			var index = make(hostIndex)
+			for _, nodeID := range nodeIDs {
+				index.add(hostIdentifier(identifier), nodeID)
+			}
+			require.Equal(t, index[hostIdentifier(identifier)], index.lookup(identifier))
+			require.Nil(t, index.lookup("unmatched identifier"))
+			require.Nil(t, index.lookup(nil))
+			require.Nil(t, hostIndex(nil).lookup(identifier))
+		})
+	}
+}
+
+func TestHostIndexLookupAllocations(t *testing.T) {
+	var (
+		index  = make(hostIndex)
+		actual []graph.ID
+	)
+	index.add(strings.ToUpper(hostTestVMID), 1)
+	index.add(hostTestSID, 2)
+	for _, identifier := range []any{hostTestVMID, strings.ToUpper(hostTestVMID), strings.ToLower(hostTestSID), "unmatched-guid", nil, ""} {
+		require.Zero(t, testing.AllocsPerRun(100, func() { actual = index.lookup(identifier) }))
+		require.Equal(t, index[hostIdentifier(identifier)], actual)
+	}
+	require.Zero(t, testing.AllocsPerRun(100, func() { actual = hostIndex(nil).lookup("éhost") }))
+	require.Nil(t, actual)
+}
+
+func FuzzHostIndexLookup(f *testing.F) {
+	for _, identifier := range []string{"", hostTestVMID, hostTestSID, "éàσıſK", "aé", "ß", "a\xff", strings.Repeat("x", 64), strings.Repeat("x", 65)} {
+		f.Add(identifier, identifier)
+	}
+	f.Add(hostTestVMID, "unmatched-guid")
+	f.Fuzz(func(t *testing.T, key, identifier string) {
+		var index = make(hostIndex)
+		index.add(hostIdentifier(key), 0)
+		index.add(hostIdentifier(key), 1)
+		require.Equal(t, index[hostIdentifier(identifier)], index.lookup(identifier))
+	})
+}
