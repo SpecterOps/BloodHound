@@ -53,7 +53,10 @@ func SearchTierNodes(tieringEnabled bool, tierKinds ...graph.Kind) graph.Criteri
 		}
 		return query.KindIn(query.Node(), tierKinds...)
 	} else {
-		return query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero)
+		return query.And(
+			query.IsNotNull(query.NodeProperty(common.SystemTags.String())),
+			query.StringContains(query.NodeProperty(common.SystemTags.String()), ad.AdminTierZero),
+		)
 	}
 }
 
@@ -65,6 +68,9 @@ func searchTierNodesRel(tieringEnabled bool, tierKinds ...graph.Kind) graph.Crit
 		}
 		return query.KindIn(query.Start(), tierKinds...)
 	} else {
-		return query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero)
+		return query.And(
+			query.IsNotNull(query.StartProperty(common.SystemTags.String())),
+			query.StringContains(query.StartProperty(common.SystemTags.String()), ad.AdminTierZero),
+		)
 	}
 }
