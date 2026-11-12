@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
@@ -42,9 +43,9 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphretention"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/cache"
@@ -121,15 +122,15 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		return nil, fmt.Errorf("file service resolver is required")
 	}
 
-	dogtagsService := dogtags.NewDefaultService()
+	featureClient := openfeature.NewDefaultClient()
 
-	slog.InfoContext(ctx, "DogTags provider initialized",
-		slog.String("namespace", "dogtags"),
-		slog.String("provider", dogtagsService.ProviderName()))
+	slog.InfoContext(ctx, "Product feature provider initialized",
+		slog.String("namespace", "productfeatures"),
+		slog.String("provider", openfeature.ProviderMetadata().Name))
 
-	flags := dogtagsService.GetAllDogTags()
-	slog.InfoContext(ctx, "DogTags Configuration",
-		slog.String("namespace", "dogtags"),
+	flags := productfeatures.AllValues(ctx, featureClient)
+	slog.InfoContext(ctx, "Product feature configuration",
+		slog.String("namespace", "productfeatures"),
 		slog.Any("flags", flags))
 
 	if !cfg.DisableMigrations {
@@ -186,13 +187,13 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		)
 
 		registration.RegisterFossGlobalMiddleware(&routerInst, cfg, auth.NewIdentityResolver(), authenticator, connections.RDMS)
-		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
+		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, featureClient, openGraphSchemaService, alertPublisher)
 
 		modules.Register(modules.Deps{
-			Router:  &routerInst,
-			Pool:    connections.RDMS.Pool(),
-			Graph:   connections.Graph,
-			DogTags: dogtagsService,
+			Router:       &routerInst,
+			Pool:         connections.RDMS.Pool(),
+			Graph:        connections.Graph,
+			FeatureFlags: featureClient,
 			RateLimitMiddleware: func() mux.MiddlewareFunc {
 				return middleware.MatchedRouteRateLimitMiddleware(connections.RDMS, []string{api.UserInterfacePath}, map[string]int64{
 					"/api/v2/login": 1,

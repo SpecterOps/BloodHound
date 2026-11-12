@@ -197,7 +197,7 @@ func (s *Resources) GetDataQualityStats(response http.ResponseWriter, request *h
 	} else if skip, err := ParseSkipQueryParameter(queryParams, 0); err != nil {
 		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(utils.ErrorInvalidSkip, queryParams["skip"]), request), response)
 	} else {
-		if ShouldFilterForETAC(s.DogTags, user) {
+		if ShouldFilterForETAC(s.FeatureFlags, user) {
 			hasAccess, err := CheckUserAccessToEnvironments(ctx, s.DB, user, environmentId)
 			if err != nil {
 				api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request), response)

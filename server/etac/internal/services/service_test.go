@@ -21,7 +21,9 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/open-feature/go-sdk/openfeature"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/server/etac/internal/services"
 	"github.com/specterops/bloodhound/server/users"
 	"github.com/stretchr/testify/assert"
@@ -52,19 +54,19 @@ func (f fakeETACDatabase) GetEnvironmentTargetedAccessControlForUser(_ context.C
 	return f.rows, f.err
 }
 
-// dogtagsWith returns a real dogtags Service whose ETAC_ENABLED flag is set to
-// the supplied value, exercising the production GetFlagAsBool path.
-func dogtagsWith(etacEnabled bool) dogtags.Service {
-	return dogtags.NewTestService(dogtags.TestOverrides{
-		Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: etacEnabled},
+// featureClientWith returns an OpenFeature client whose ETAC_ENABLED flag is set to
+// the supplied value, exercising the production SDK evaluation path.
+func featureClientWith(t *testing.T, etacEnabled bool) *openfeature.Client {
+	return featuretest.NewClient(t, featuretest.Overrides{
+		Bools: map[string]bool{productfeatures.ETAC_ENABLED: etacEnabled},
 	})
 }
 
 func TestNewService(t *testing.T) {
 	t.Parallel()
 	type args struct {
-		appdb          services.AppDatabase
-		dogtagsService dogtags.Service
+		appdb         services.AppDatabase
+		featureClient *openfeature.Client
 	}
 	type want struct {
 		panic string
@@ -78,24 +80,24 @@ func TestNewService(t *testing.T) {
 		{
 			name: "Error: panics with nil appdb",
 			args: args{
-				appdb:          nil,
-				dogtagsService: dogtagsWith(false),
+				appdb:         nil,
+				featureClient: featureClientWith(t, false),
 			},
 			want: want{panic: "etac: service requires a non-nil appdb"},
 		},
 		{
-			name: "Error: panics with nil dogtags service",
+			name: "Error: panics with nil feature client",
 			args: args{
-				appdb:          fakeETACDatabase{},
-				dogtagsService: nil,
+				appdb:         fakeETACDatabase{},
+				featureClient: nil,
 			},
-			want: want{panic: "etac: service requires a non-nil dogtagsService"},
+			want: want{panic: "etac: service requires a non-nil featureClient"},
 		},
 		{
 			name: "Success: returns service with valid dependencies",
 			args: args{
-				appdb:          fakeETACDatabase{},
-				dogtagsService: dogtagsWith(false),
+				appdb:         fakeETACDatabase{},
+				featureClient: featureClientWith(t, false),
 			},
 		},
 	}
@@ -105,12 +107,12 @@ func TestNewService(t *testing.T) {
 			t.Parallel()
 			if test.want.panic != "" {
 				assert.PanicsWithValue(t, test.want.panic, func() {
-					services.NewService(test.args.appdb, test.args.dogtagsService)
+					services.NewService(test.args.appdb, test.args.featureClient)
 				})
 				return
 			}
 
-			assert.NotNil(t, services.NewService(test.args.appdb, test.args.dogtagsService))
+			assert.NotNil(t, services.NewService(test.args.appdb, test.args.featureClient))
 		})
 	}
 }
@@ -198,7 +200,7 @@ func TestService_CheckUserAccess(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			svc := services.NewService(tt.args.db, dogtagsWith(tt.args.etacEnabled))
+			svc := services.NewService(tt.args.db, featureClientWith(t, tt.args.etacEnabled))
 			got, err := svc.CheckUserAccess(ctx, tt.args.user, tt.args.environments...)
 
 			if tt.want.err != nil {
@@ -316,7 +318,7 @@ func TestService_FilterEnvironmentsByAccess(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			svc := services.NewService(tt.args.db, dogtagsWith(tt.args.etacEnabled))
+			svc := services.NewService(tt.args.db, featureClientWith(t, tt.args.etacEnabled))
 			got, err := svc.FilterEnvironmentsByAccess(ctx, tt.args.user, tt.args.requestedEnvIDs)
 
 			if tt.want.err != nil {
@@ -334,7 +336,7 @@ func TestService_FilterEnvironmentsByAccess(t *testing.T) {
 // shouldFilterForETAC already excludes all-environment users).
 func TestService_checkUserAccessToEnvironments_AllEnvironments(t *testing.T) {
 	t.Parallel()
-	svc := services.NewService(fakeETACDatabase{err: errors.New("should not be called")}, dogtagsWith(true))
+	svc := services.NewService(fakeETACDatabase{err: errors.New("should not be called")}, featureClientWith(t, true))
 
 	got, err := svc.CheckUserAccessToEnvironments(context.Background(), &fakeUser{AllEnvironments: true}, "env-1")
 

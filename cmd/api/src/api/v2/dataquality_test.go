@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
@@ -38,7 +40,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
@@ -541,8 +542,8 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 
 	defaultResources := func(mockCtrl *gomock.Controller, mock mockResources) v2.Resources {
 		return v2.Resources{
-			DB:      mock.Database,
-			DogTags: dogtags.NewTestService(dogtags.TestOverrides{}),
+			DB:           mock.Database,
+			FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}),
 		}
 	}
 
@@ -591,9 +592,9 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 
 				return v2.Resources{
 					DB: mock.Database,
-					DogTags: dogtags.NewTestService(dogtags.TestOverrides{
-						Bools: map[dogtags.BoolDogTag]bool{
-							dogtags.ETAC_ENABLED: true,
+					FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{
+						Bools: map[string]bool{
+							productfeatures.ETAC_ENABLED: true,
 						},
 					}),
 				}
@@ -618,9 +619,9 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 
 				return v2.Resources{
 					DB: mock.Database,
-					DogTags: dogtags.NewTestService(dogtags.TestOverrides{
-						Bools: map[dogtags.BoolDogTag]bool{
-							dogtags.ETAC_ENABLED: true,
+					FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{
+						Bools: map[string]bool{
+							productfeatures.ETAC_ENABLED: true,
 						},
 					}),
 				}
@@ -811,16 +812,16 @@ func TestGetDataQualityStats_Failure(t *testing.T) {
 func TestGetDataQualityStats_Success(t *testing.T) {
 	environmentID := "environment-1"
 	endpoint := "/api/v2/data-quality-stats%s"
-	etacEnabled := dogtags.TestOverrides{
-		Bools: map[dogtags.BoolDogTag]bool{
-			dogtags.ETAC_ENABLED: true,
+	etacEnabled := featuretest.Overrides{
+		Bools: map[string]bool{
+			productfeatures.ETAC_ENABLED: true,
 		},
 	}
 
 	type Input struct {
 		Params           url.Values
 		User             model.User
-		DogTagsOverrides dogtags.TestOverrides
+		FeatureOverrides featuretest.Overrides
 	}
 
 	type Expected struct {
@@ -966,7 +967,7 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 					user.AllEnvironments = true
 					return user
 				}(),
-				DogTagsOverrides: etacEnabled,
+				FeatureOverrides: etacEnabled,
 			},
 			Expected: Expected{
 				Code: http.StatusOK,
@@ -978,7 +979,7 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 				Params: url.Values{
 					api.QueryParameterEnvironmentId: []string{environmentID},
 				},
-				DogTagsOverrides: etacEnabled,
+				FeatureOverrides: etacEnabled,
 			},
 			Setup: func(mockDB *mocks.MockDatabase, user model.User) {
 				successfulAccessCheck := mockDB.EXPECT().GetEnvironmentTargetedAccessControlForUser(gomock.Any(), user).Return([]model.EnvironmentTargetedAccessControl{
@@ -1011,8 +1012,8 @@ func TestGetDataQualityStats_Success(t *testing.T) {
 			}
 
 			resources := v2.Resources{
-				DB:      mockDB,
-				DogTags: dogtags.NewTestService(tc.Input.DogTagsOverrides),
+				DB:           mockDB,
+				FeatureFlags: featuretest.NewClient(t, tc.Input.FeatureOverrides),
 			}
 			params := fmt.Sprintf("?%s", tc.Input.Params.Encode())
 			req, err := http.NewRequest("GET", fmt.Sprintf(endpoint, params), nil)
