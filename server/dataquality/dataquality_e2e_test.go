@@ -34,7 +34,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/server/internal/servertest"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
@@ -48,7 +48,7 @@ func TestE2E_GetDataQualityAggregations(t *testing.T) {
 		harness = servertest.NewHarness(t, func(routerInst *router.Router, databaseInstance *database.BloodhoundDB) {
 			modules.Register(modules.Deps{
 				Router: routerInst, Pool: databaseInstance.Pool(), Graph: &graph.DatabaseSwitch{},
-				DogTags: dogtags.NewTestService(dogtags.TestOverrides{}), ConfigUpdateSideEffects: databaseInstance,
+				FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}), ConfigUpdateSideEffects: databaseInstance,
 				IdentityResolver:    auth.NewIdentityResolver(),
 				RateLimitMiddleware: func() mux.MiddlewareFunc { return middleware.DefaultRateLimitMiddleware(databaseInstance) },
 			})

@@ -22,9 +22,9 @@ package modules
 import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	apiauth "github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphretention"
 	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
@@ -48,7 +48,7 @@ type Deps struct {
 	Router           *router.Router
 	Pool             *pgxpool.Pool
 	Graph            graph.Database
-	DogTags          dogtags.Service
+	FeatureFlags     *openfeature.Client
 	AlertPublisher   alerts.Publisher
 	IdentityOptions  []identity.Option
 	IdentityResolver apiauth.IdentityResolver
@@ -74,8 +74,8 @@ func Register(deps Deps) {
 	if deps.Graph == nil {
 		panic("modules: Register requires a non-nil Graph")
 	}
-	if deps.DogTags == nil {
-		panic("modules: Register requires a non-nil DogTags")
+	if deps.FeatureFlags == nil {
+		panic("modules: Register requires a non-nil FeatureFlags")
 	}
 	if deps.ConfigUpdateSideEffects == nil {
 		panic("modules: Register requires a non-nil ConfigUpdateSideEffects")
@@ -102,7 +102,7 @@ func Register(deps Deps) {
 	serverauth.Register(deps.Router, deps.Pool)
 	identity.Register(deps.Router, deps.Pool, deps.IdentityOptions...)
 	featureflags.Register(deps.Router, deps.Pool, auditLogAdapter)
-	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
+	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.FeatureFlags)
 	opengraphschema.Register(deps.Router, deps.Pool, featureFlagAdapter)
 	dataquality.Register(deps.Router, deps.Pool)
 	savedqueries.Register(deps.Router, deps.Pool)

@@ -316,7 +316,7 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 		}
 
 		// convert node paths to BloodhoundGraph nodes/edges; redact for ETAC if conditions apply
-		if ShouldFilterForETAC(s.DogTags, user) {
+		if ShouldFilterForETAC(s.FeatureFlags, user) {
 			graphResponse = pathSetToBloodHoundGraphETAC(primaryDisplayKinds, pathSet, allowList)
 		} else {
 			graphResponse = bloodhoundgraph.PathSetToBloodHoundGraph(primaryDisplayKinds, pathSet)
@@ -345,7 +345,7 @@ func (s *Resources) GetAZRelatedEntities(ctx context.Context, response http.Resp
 		}
 
 		// for type=list responses, if ETAC conditions apply, nodes outside the user's allowed environments are dropped, not redacted
-		if ShouldFilterForETAC(s.DogTags, user) {
+		if ShouldFilterForETAC(s.FeatureFlags, user) {
 			nodeSet = filterNodeSetByETAC(nodeSet, allowList)
 		}
 
@@ -459,7 +459,7 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 			slog.String("entity_type", entityType),
 			attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-	} else if hasAnchorNodeAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.GraphQuery, s.DogTags, user, objectID, azKind); err != nil {
+	} else if hasAnchorNodeAccess, err := CheckUserHasAccessToNodeById(request.Context(), s.GraphQuery, s.FeatureFlags, user, objectID, azKind); err != nil {
 		slog.ErrorContext(request.Context(), "Error checking if user has access to node for ETAC", attr.Error(err))
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !hasAnchorNodeAccess {
@@ -475,7 +475,7 @@ func (s *Resources) GetAZEntity(response http.ResponseWriter, request *http.Requ
 		entityType,
 		objectID,
 		// count hydration is disabled for ETAC-restricted users since those counts are not ETAC-aware
-		includeCounts && !ShouldFilterForETAC(s.DogTags, user)); err != nil {
+		includeCounts && !ShouldFilterForETAC(s.FeatureFlags, user)); err != nil {
 		if graph.IsErrNotFound(err) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, "not found", request), response)
 		} else {

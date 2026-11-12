@@ -44,7 +44,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
@@ -70,9 +71,9 @@ func TestResources_GetAssetGroupTags(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:         mockDB,
-			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
+			DB:           mockDB,
+			GraphQuery:   mockGraphDb,
+			FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}),
 		}
 	)
 
@@ -395,9 +396,9 @@ func TestResources_CreateAssetGroupTagSelector(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:         mockDB,
-			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
+			DB:           mockDB,
+			GraphQuery:   mockGraphDb,
+			FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}),
 		}
 		user          = setupUser()
 		userCtx       = setupUserCtx(user)
@@ -1005,9 +1006,9 @@ func TestResources_UpdateAssetGroupTagSelector(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:         mockDB,
-			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
+			DB:           mockDB,
+			GraphQuery:   mockGraphDb,
+			FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}),
 		}
 		user    = setupUser()
 		userCtx = setupUserCtx(user)
@@ -1390,9 +1391,9 @@ func TestResources_GetAssetGroupTagSelectors(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:         mockDB,
-			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
+			DB:           mockDB,
+			GraphQuery:   mockGraphDb,
+			FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}),
 		}
 	)
 	defer mockCtrl.Finish()
@@ -1537,8 +1538,8 @@ func TestResources_UpdateAssetGroupTag(t *testing.T) {
 		resourcesInst = v2.Resources{
 			DB:    mockDB,
 			Graph: mockGraphDB,
-			DogTags: dogtags.NewTestService(dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.PZ_MULTI_TIER_ANALYSIS: true},
+			FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{
+				Bools: map[string]bool{productfeatures.PZ_MULTI_TIER_ANALYSIS: true},
 			}),
 		}
 		userCtx = setupUserCtx(setupUser())
@@ -1877,9 +1878,9 @@ func TestResources_DeleteAssetGroupTagSelector(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:         mockDB,
-			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
+			DB:           mockDB,
+			GraphQuery:   mockGraphDb,
+			FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}),
 		}
 		user    = setupUser()
 		userCtx = setupUserCtx(user)
@@ -2177,9 +2178,9 @@ func TestResources_GetAssetGroupTagMemberInfo(t *testing.T) {
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		mockGraphDb   = mocks_graph.NewMockGraph(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:         mockDB,
-			GraphQuery: mockGraphDb,
-			DogTags:    dogtags.NewDefaultService(),
+			DB:           mockDB,
+			GraphQuery:   mockGraphDb,
+			FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}),
 		}
 		testNode = &graph.Node{
 			ID:           0,
@@ -4081,8 +4082,8 @@ func TestResources_GetAssetGroupTagHistory(t *testing.T) {
 		mockCtrl      = gomock.NewController(t)
 		mockDB        = mocks_db.NewMockDatabase(mockCtrl)
 		resourcesInst = v2.Resources{
-			DB:      mockDB,
-			DogTags: dogtags.NewDefaultService(),
+			DB:           mockDB,
+			FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}),
 		}
 
 		expectedHistoryRecs = []model.AssetGroupHistory{

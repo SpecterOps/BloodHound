@@ -25,7 +25,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/server/etac/internal/appdb"
 	"github.com/specterops/bloodhound/server/etac/internal/services"
 	"github.com/specterops/bloodhound/server/users"
@@ -38,8 +38,8 @@ type Service interface {
 }
 
 // Register wires the ETAC service to its PostgreSQL store and the supplied
-// dogtags service, returning the constructed service for use by BHE feature
+// OpenFeature client, returning the constructed service for use by BHE feature
 // slices.
-func Register(pool *pgxpool.Pool, dogtagsService dogtags.Service) Service {
-	return services.NewService(appdb.NewStore(pool), dogtagsService)
+func Register(pool *pgxpool.Pool, featureClient *openfeature.Client) Service {
+	return services.NewService(appdb.NewStore(pool), featureClient)
 }
