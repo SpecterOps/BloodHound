@@ -19,7 +19,7 @@ package appdb_test
 import (
 	"testing"
 
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/pashagolub/pgxmock/v6"
 	"github.com/specterops/bloodhound/server/auth/internal/appdb"
 	"github.com/stretchr/testify/require"
 )

@@ -24,7 +24,7 @@ import (
 
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/pashagolub/pgxmock/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
