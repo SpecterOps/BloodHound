@@ -19,20 +19,19 @@ parameters:
 get:
   operationId: GetDataQualityStats
   summary: Get environment-specific data quality stats
-  description: Time series list of data quality stats for a given environment
+  description: Time series list of data quality stats, optionally scoped to an environment
   tags:
     - Data Quality
     - Community
     - Enterprise
   parameters:
     - name: environment_id
-      description: Required. Filters results to the given environment.
-      required: true
+      description: Optional. Filters results to the given environment.
       in: query
       schema: 
         type: string
     - name: sort_by
-      description: Sortable columns are created_at, updated_at.
+      description: Sortable columns are created_at, updated_at, metric_value.
       in: query
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'

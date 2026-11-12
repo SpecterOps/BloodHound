@@ -21,18 +21,22 @@ get:
   summary: Get data quality aggregations by environment kind
   description: >
     Returns data quality metric counts aggregated per environment kind, optionally scoped to an
-    OpenGraph schema extension, combined across environment instances for each
+    OpenGraph schema extension or environment, combined across environment instances for each
     collection run. Results can be filtered, sorted, and paginated.
   tags:
     - Data Quality
     - Community
     - Enterprise
   parameters:
+    - name: environment_id
+      description: Optional. Scopes the aggregation to a single environment.
+      in: query
+      schema:
+        type: string
     - name: schema_environment_kind_id
       description: >
-        Required. Scopes the aggregation to a single environment kind id.
+        Optional. Scopes the aggregation to a single environment kind id.
       in: query
-      required: true
       schema:
         type: integer
         format: int32
@@ -46,7 +50,7 @@ get:
         format: int32
     - name: sort_by
       description: >
-        Sortable columns are created_at, updated_at.
+        Sortable columns are created_at, updated_at, metric_value.
       in: query
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'

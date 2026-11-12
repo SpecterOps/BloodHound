@@ -14843,7 +14843,7 @@
       "get": {
         "operationId": "GetDataQualityStats",
         "summary": "Get environment-specific data quality stats",
-        "description": "Time series list of data quality stats for a given environment",
+        "description": "Time series list of data quality stats, optionally scoped to an environment",
         "tags": [
           "Data Quality",
           "Community",
@@ -14852,8 +14852,7 @@
         "parameters": [
           {
             "name": "environment_id",
-            "description": "Required. Filters results to the given environment.",
-            "required": true,
+            "description": "Optional. Filters results to the given environment.",
             "in": "query",
             "schema": {
               "type": "string"
@@ -14861,7 +14860,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are created_at, updated_at.",
+            "description": "Sortable columns are created_at, updated_at, metric_value.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -15133,7 +15132,7 @@
       "get": {
         "operationId": "GetDataQualityAggregations",
         "summary": "Get data quality aggregations by environment kind",
-        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
+        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension or environment, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
         "tags": [
           "Data Quality",
           "Community",
@@ -15141,10 +15140,17 @@
         ],
         "parameters": [
           {
-            "name": "schema_environment_kind_id",
-            "description": "Required. Scopes the aggregation to a single environment kind id.\n",
+            "name": "environment_id",
+            "description": "Optional. Scopes the aggregation to a single environment.",
             "in": "query",
-            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "schema_environment_kind_id",
+            "description": "Optional. Scopes the aggregation to a single environment kind id.\n",
+            "in": "query",
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -15161,7 +15167,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are created_at, updated_at.\n",
+            "description": "Sortable columns are created_at, updated_at, metric_value.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
