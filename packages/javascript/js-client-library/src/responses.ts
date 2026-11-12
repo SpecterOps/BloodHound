@@ -381,7 +381,7 @@ export type GetClientResponse = PaginatedResponse<Client[]>;
 export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
 
 // ---------------------------------------------------------------------------
-//  Collectors - Managed Collections
+//  Collectors - Cloud Collector
 // ---------------------------------------------------------------------------
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
 
@@ -397,9 +397,13 @@ export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }
 
 export type GetCollectorJobSecretsResponse = PaginatedResponse<{ secrets: CollectorJobSecret[] }>;
 
-export type GetCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+type CollectorJobSecretBody = { secret: CollectorJobSecret };
 
-export type CreateCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+export type GetCollectorJobSecretResponse = BasicResponse<CollectorJobSecretBody>;
+
+export type CreateCollectorJobSecretResponse = BasicResponse<CollectorJobSecretBody>;
+
+export type UpdateCollectorJobSecretResponse = BasicResponse<CollectorJobSecretBody>;
 
 // ---------------------------------------------------------------------------
 //  Collectors - Support Bundles (Management Operations)
@@ -535,6 +539,7 @@ export type UnifiedFinding = {
     last_seen: string;
     prioritization_rank?: number | null;
     is_cross_platform?: boolean;
+    is_regression?: boolean;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;

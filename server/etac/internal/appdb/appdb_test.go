@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/pashagolub/pgxmock/v6"
 	"github.com/specterops/bloodhound/server/etac/internal/appdb"
 	"github.com/specterops/bloodhound/server/etac/internal/services"
 	"github.com/stretchr/testify/assert"

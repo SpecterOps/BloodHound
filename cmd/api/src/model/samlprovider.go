@@ -156,19 +156,11 @@ func assertionFindString(assertion *saml.Assertion, names ...string) (string, er
 func (s SAMLProvider) GetSAMLUserPrincipalNameFromAssertion(assertion *saml.Assertion) (string, error) {
 	for _, attrStmt := range assertion.AttributeStatements {
 		for _, attr := range attrStmt.Attributes {
-			for _, value := range attr.Values {
-				slog.Info(
-					"[SAML] Assertion contains attribute",
-					slog.String("name_format", attr.NameFormat),
-					slog.String("name", attr.Name),
-				)
-				slog.Debug(
-					"[SAML] Assertion attribute raw value",
-					slog.String("name_format", attr.NameFormat),
-					slog.String("name", attr.Name),
-					slog.String("value", value.Value),
-				)
-			}
+			slog.Info(
+				"[SAML] Assertion contains attribute",
+				slog.String("name_format", attr.NameFormat),
+				slog.String("name", attr.Name),
+			)
 		}
 	}
 

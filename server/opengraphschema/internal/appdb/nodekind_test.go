@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/pashagolub/pgxmock/v6"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/appdb"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"

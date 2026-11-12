@@ -33,7 +33,7 @@ import {
     SSOProviderConfiguration,
     WebhookType,
 } from './types';
-import { ConfigurationPayload } from './utils';
+import { ConfigurationPayload, RequireAtLeastOne } from './utils';
 
 export type RequestOptions<D = any> = AxiosRequestConfig<D>;
 
@@ -410,11 +410,15 @@ export interface UpdateCollectorJobProfileRequest {
 }
 
 // ---------------------------------------------------------------------------
-//  Collectors - Managed Collections
+//  Collectors - Cloud Collector
 // ---------------------------------------------------------------------------
 export type CreateCollectorJobSecretRequest = Pick<CollectorJobSecret, 'type' | 'external_key_id' | 'name'> & {
     value: string;
 };
+
+export type UpdateCollectorJobSecretRequest = RequireAtLeastOne<
+    Pick<CreateCollectorJobSecretRequest, 'value' | 'external_key_id' | 'name'>
+>;
 
 export interface CreateCollectorJobScheduleRequest {
     name: string;

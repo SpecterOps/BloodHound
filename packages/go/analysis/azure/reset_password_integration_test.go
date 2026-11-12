@@ -1,0 +1,205 @@
+// Copyright 2026 Specter Ops, Inc.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+//go:build integration
+
+package azure_test
+
+import (
+	"slices"
+	"testing"
+
+	"github.com/specterops/bloodhound/packages/go/analysis/azure"
+	graphazure "github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
+	"github.com/specterops/dawgs/graph"
+	"github.com/specterops/dawgs/ops"
+	"github.com/specterops/dawgs/query"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestUserRoleAssignmentsResetPasswordTargetRoles(t *testing.T) {
+	var (
+		suite               = setupIntegrationTestSuite(t)
+		tenantID            = randomObjectID(t)
+		tenant              = NewAzureTenant(t, &suite, tenantID)
+		userAdministrator   = NewAzureRole(t, &suite, "User Administrator", randomObjectID(t), graphazure.UserAccountAdministratorRole, tenantID)
+		globalAdministrator = NewAzureRole(t, &suite, "Global Administrator", randomObjectID(t), graphazure.CompanyAdministratorRole, tenantID)
+		reportsReader       = NewAzureRole(t, &suite, "Reports Reader", randomObjectID(t), graphazure.ReportsReaderRole, tenantID)
+		roleAssignableGroup = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+			common.Name:                   "Role Assignable Group",
+			common.ObjectID:               randomObjectID(t),
+			graphazure.TenantID:           tenantID,
+			graphazure.IsAssignableToRole: true,
+		}), graphazure.Entity, graphazure.Group)
+		roles = map[string]*graph.Node{
+			graphazure.CompanyAdministratorRole: globalAdministrator,
+			graphazure.ReportsReaderRole:        reportsReader,
+		}
+		cases = []struct {
+			name                      string
+			activeRoles               []string
+			eligibleRoles             []string
+			roleAssignableGroupMember bool
+			userAdministratorCanReset bool
+		}{
+			{name: "no target roles", userAdministratorCanReset: true},
+			{name: "eligible Global Administrator", eligibleRoles: []string{graphazure.CompanyAdministratorRole}},
+			{name: "active Global Administrator", activeRoles: []string{graphazure.CompanyAdministratorRole}},
+			{name: "eligible allowed role", eligibleRoles: []string{graphazure.ReportsReaderRole}, userAdministratorCanReset: true},
+			{name: "active allowed and eligible protected", activeRoles: []string{graphazure.ReportsReaderRole}, eligibleRoles: []string{graphazure.CompanyAdministratorRole}},
+			{name: "active protected and eligible allowed", activeRoles: []string{graphazure.CompanyAdministratorRole}, eligibleRoles: []string{graphazure.ReportsReaderRole}},
+			{name: "active and eligible protected role", activeRoles: []string{graphazure.CompanyAdministratorRole}, eligibleRoles: []string{graphazure.CompanyAdministratorRole}},
+			{name: "active and eligible allowed role", activeRoles: []string{graphazure.ReportsReaderRole}, eligibleRoles: []string{graphazure.ReportsReaderRole}, userAdministratorCanReset: true},
+			{name: "role assignable group member", roleAssignableGroupMember: true},
+			{name: "allowed role and role assignable group member", eligibleRoles: []string{graphazure.ReportsReaderRole}, roleAssignableGroupMember: true},
+		}
+		targets = make(map[string]*graph.Node, len(cases))
+	)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	NewRelationship(t, &suite, tenant, userAdministrator, graphazure.Contains)
+	NewRelationship(t, &suite, tenant, globalAdministrator, graphazure.Contains)
+	NewRelationship(t, &suite, tenant, reportsReader, graphazure.Contains)
+	NewRelationship(t, &suite, tenant, roleAssignableGroup, graphazure.Contains)
+
+	for _, testCase := range cases {
+		target := NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+			common.Name:         testCase.name,
+			common.ObjectID:     randomObjectID(t),
+			graphazure.TenantID: tenantID,
+		}), graphazure.Entity, graphazure.User)
+		targets[testCase.name] = target
+		NewRelationship(t, &suite, tenant, target, graphazure.Contains)
+
+		for _, roleTemplateID := range testCase.activeRoles {
+			NewRelationship(t, &suite, target, roles[roleTemplateID], graphazure.HasRole)
+		}
+		for _, roleTemplateID := range testCase.eligibleRoles {
+			NewRelationship(t, &suite, target, roles[roleTemplateID], graphazure.AZRoleEligible)
+		}
+		if testCase.roleAssignableGroupMember {
+			NewRelationship(t, &suite, target, roleAssignableGroup, graphazure.MemberOf)
+		}
+	}
+
+	// Verify that analysis removes an invalid relationship generated by an earlier run.
+	NewRelationship(t, &suite, userAdministrator, targets["eligible Global Administrator"], graphazure.ResetPassword)
+
+	_, err := azure.UserRoleAssignments(suite.Context, suite.GraphDB)
+	require.NoError(t, err)
+
+	var (
+		resetEdgeCounts       map[graph.ID]map[graph.ID]int
+		globalAdminEdgeCounts map[graph.ID]int
+	)
+	err = suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		resetEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), graphazure.ResetPassword)
+		}))
+		if err != nil {
+			return err
+		}
+
+		resetEdgeCounts = map[graph.ID]map[graph.ID]int{}
+		for _, edge := range resetEdges {
+			if resetEdgeCounts[edge.StartID] == nil {
+				resetEdgeCounts[edge.StartID] = map[graph.ID]int{}
+			}
+			resetEdgeCounts[edge.StartID][edge.EndID]++
+		}
+
+		globalAdminEdges, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
+			return query.Kind(query.Relationship(), graphazure.GlobalAdmin)
+		}))
+		if err != nil {
+			return err
+		}
+		globalAdminEdgeCounts = map[graph.ID]int{}
+		for _, edge := range globalAdminEdges {
+			if edge.EndID == tenant.ID {
+				globalAdminEdgeCounts[edge.StartID]++
+			}
+		}
+		return nil
+	})
+	require.NoError(t, err)
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				expectedUserAdministratorEdges int
+				expectedGlobalAdminEdges       int
+			)
+			if testCase.userAdministratorCanReset {
+				expectedUserAdministratorEdges = 1
+			}
+			assert.Equal(t, expectedUserAdministratorEdges, resetEdgeCounts[userAdministrator.ID][targets[testCase.name].ID], "User Administrator reset edge")
+			assert.Equal(t, 1, resetEdgeCounts[globalAdministrator.ID][targets[testCase.name].ID], "Global Administrator reset edge")
+			if slices.Contains(testCase.activeRoles, graphazure.CompanyAdministratorRole) {
+				expectedGlobalAdminEdges = 1
+			}
+			assert.Equal(t, expectedGlobalAdminEdges, globalAdminEdgeCounts[targets[testCase.name].ID], "Global Administrator privilege edge")
+		})
+	}
+}
+
+func TestFetchRoleAssignableGroupMembersUsersPropertyTypes(t *testing.T) {
+	var (
+		suite    = setupIntegrationTestSuite(t)
+		tenantID = randomObjectID(t)
+		cases    = []struct {
+			name               string
+			isAssignableToRole any
+			wantMember         bool
+		}{
+			{name: "boolean true", isAssignableToRole: true, wantMember: true},
+			{name: "string true", isAssignableToRole: "true", wantMember: true},
+			{name: "boolean false", isAssignableToRole: false},
+		}
+	)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				group = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+					common.Name:                   testCase.name,
+					common.ObjectID:               randomObjectID(t),
+					graphazure.TenantID:           tenantID,
+					graphazure.IsAssignableToRole: testCase.isAssignableToRole,
+				}), graphazure.Entity, graphazure.Group)
+				user = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+					common.Name:         "Group member",
+					common.ObjectID:     randomObjectID(t),
+					graphazure.TenantID: tenantID,
+				}), graphazure.Entity, graphazure.User)
+			)
+			NewRelationship(t, &suite, user, group, graphazure.MemberOf)
+
+			err := suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+				members, err := azure.FetchRoleAssignableGroupMembersUsers(tx, group, 0, 0)
+				if err != nil {
+					return err
+				}
+				assert.Equal(t, testCase.wantMember, members.Contains(user))
+				return nil
+			})
+			require.NoError(t, err)
+		})
+	}
+}

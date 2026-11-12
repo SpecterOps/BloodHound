@@ -51,3 +51,45 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
+put:
+  operationId: UpdateExtensionRetentionPolicy
+  summary: Update Extension Retention Policy
+  description: Creates or updates the given extension policy and returns the saved policy with 200 OK.
+  tags:
+    - Graph Retention Policies
+    - Enterprise
+  requestBody:
+    required: true
+    description: TTL must be an ISO 8601 duration between 4 and 30 days inclusive (P4D to P30D).
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: './../schemas/model.graph-retention-policy.yaml'
+  responses:
+    200:
+      description: Saved extension retention policy.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: './../schemas/model.graph-retention-policy.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

@@ -37,6 +37,57 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestHandlers_Logout(t *testing.T) {
+	t.Parallel()
+
+	var (
+		sessionID       = int64(42)
+		host            = &url.URL{Scheme: "https", Host: "bloodhound.example.com"}
+		wantRedirectURL = "https://bloodhound.example.com" + handlers.UserInterfacePath
+		serviceErr      = errors.New("db unavailable")
+	)
+
+	tests := []struct {
+		name      string
+		sessionID int64
+		svcErr    error
+	}{
+		{
+			name:      "redirects to the UI on success",
+			sessionID: sessionID,
+		},
+		{
+			name:      "still redirects to the UI when ending the session fails",
+			sessionID: sessionID,
+			svcErr:    serviceErr,
+		},
+		{
+			name:      "still redirects to the UI when the request has no session",
+			sessionID: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				authMock   = mocks.NewMockAuth(t)
+				handlerSet = handlers.NewHandlersContainer(authMock)
+				recorder   = httptest.NewRecorder()
+				request    = newSessionRequest(t, tt.sessionID, host)
+			)
+
+			authMock.EXPECT().Logout(request.Context(), tt.sessionID).Return(tt.svcErr)
+
+			handlerSet.Logout(recorder, request)
+
+			assert.Equal(t, http.StatusOK, recorder.Code)
+			assert.Equal(t, wantRedirectURL, recorder.Header().Get("Location"))
+		})
+	}
+}
+
 func TestHandlers_GetSelf_PreservesLegacyResponse(t *testing.T) {
 	t.Parallel()
 
@@ -168,55 +219,4 @@ func TestHandlers_GetSelf_WithoutRequestContext(t *testing.T) {
 	assert.Equal(t, http.StatusOK, recorder.Code)
 	assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
 	assert.JSONEq(t, `{"data":null}`, recorder.Body.String())
-}
-
-func TestHandlers_Logout(t *testing.T) {
-	t.Parallel()
-
-	var (
-		sessionID       = int64(42)
-		host            = &url.URL{Scheme: "https", Host: "bloodhound.example.com"}
-		wantRedirectURL = "https://bloodhound.example.com" + handlers.UserInterfacePath
-		serviceErr      = errors.New("db unavailable")
-	)
-
-	tests := []struct {
-		name      string
-		sessionID int64
-		svcErr    error
-	}{
-		{
-			name:      "redirects to the UI on success",
-			sessionID: sessionID,
-		},
-		{
-			name:      "still redirects to the UI when ending the session fails",
-			sessionID: sessionID,
-			svcErr:    serviceErr,
-		},
-		{
-			name:      "still redirects to the UI when the request has no session",
-			sessionID: 0,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			var (
-				authMock   = mocks.NewMockAuth(t)
-				handlerSet = handlers.NewHandlersContainer(authMock)
-				recorder   = httptest.NewRecorder()
-				request    = newSessionRequest(t, tt.sessionID, host)
-			)
-
-			authMock.EXPECT().Logout(request.Context(), tt.sessionID).Return(tt.svcErr)
-
-			handlerSet.Logout(recorder, request)
-
-			assert.Equal(t, http.StatusOK, recorder.Code)
-			assert.Equal(t, wantRedirectURL, recorder.Header().Get("Location"))
-		})
-	}
 }
