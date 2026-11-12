@@ -24,6 +24,7 @@ get:
     - Collector Jobs (Experimental)
     - Enterprise
   parameters:
+    - $ref: './../parameters/query.jobs.hydrate-last-job.yaml'
     - $ref: './../parameters/query.skip.yaml'
     - $ref: './../parameters/query.limit.yaml'
     - name: sort_by
@@ -66,7 +67,18 @@ get:
                       profiles:
                         type: array
                         items:
-                          $ref: './../schemas/model.collector-job-profile.yaml'
+                          allOf:
+                            - $ref: './../schemas/model.collector-job-profile.yaml'
+                            - type: object
+                              properties:
+                                last_job:
+                                  type: object
+                                  nullable: true
+                                  description: >
+                                    The most recent job record for this collector job profile.
+                                    Omitted when hydrateLastJob is false or not supplied. When true, null if no job record exists.
+                                  allOf:
+                                    - $ref: './../schemas/model.collector-job-history.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:

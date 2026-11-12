@@ -15045,7 +15045,53 @@
                             "runs": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/model.data-quality-stats-counts-run"
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/model.data-quality-count-run"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "environments"
+                                    ],
+                                    "properties": {
+                                      "environments": {
+                                        "type": "object",
+                                        "description": "Environments keyed by environment ID.",
+                                        "additionalProperties": {
+                                          "type": "object",
+                                          "required": [
+                                            "environment_id",
+                                            "extension_id",
+                                            "environment_kind_id",
+                                            "metrics"
+                                          ],
+                                          "properties": {
+                                            "environment_id": {
+                                              "type": "string",
+                                              "description": "The environment ID used as this entry's map key."
+                                            },
+                                            "extension_id": {
+                                              "type": "integer",
+                                              "format": "int32"
+                                            },
+                                            "environment_kind_id": {
+                                              "type": "integer",
+                                              "format": "int32"
+                                            },
+                                            "metrics": {
+                                              "type": "object",
+                                              "description": "Metrics keyed by metric name.",
+                                              "additionalProperties": {
+                                                "$ref": "#/components/schemas/model.data-quality-metric"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             }
                           }
@@ -15300,7 +15346,44 @@
                             "runs": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/model.data-quality-aggregations-counts-run"
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/model.data-quality-count-run"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "extensions"
+                                    ],
+                                    "properties": {
+                                      "extensions": {
+                                        "type": "object",
+                                        "description": "Extensions keyed by the string representation of their extension ID.",
+                                        "additionalProperties": {
+                                          "type": "object",
+                                          "required": [
+                                            "extension_id",
+                                            "metrics"
+                                          ],
+                                          "properties": {
+                                            "extension_id": {
+                                              "type": "integer",
+                                              "format": "int32",
+                                              "description": "The extension ID represented by this entry's map key."
+                                            },
+                                            "metrics": {
+                                              "type": "object",
+                                              "description": "Metrics keyed by metric name, combined across all environment kinds and instances within the extension.",
+                                              "additionalProperties": {
+                                                "$ref": "#/components/schemas/model.data-quality-metric"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             }
                           }
@@ -15914,6 +15997,9 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.jobs.hydrate-last-job"
+          },
+          {
             "$ref": "#/components/parameters/query.created-at"
           },
           {
@@ -16036,7 +16122,26 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.client-display"
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/model.client-display"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "last_job": {
+                                    "type": "object",
+                                    "nullable": true,
+                                    "description": "The most recent job record for this client. Omitted when hydrateLastJob is false or not supplied. When true, null if no job record exists.\n",
+                                    "allOf": [
+                                      {
+                                        "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
                           }
                         }
                       }
@@ -18536,6 +18641,9 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.jobs.hydrate-last-job"
+          },
+          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
@@ -18602,7 +18710,26 @@
                             "profiles": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/model.collector-job-profile"
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/model.collector-job-profile"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "last_job": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "description": "The most recent job record for this collector job profile. Omitted when hydrateLastJob is false or not supplied. When true, null if no job record exists.\n",
+                                        "allOf": [
+                                          {
+                                            "$ref": "#/components/schemas/model.collector-job-history"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             }
                           }
@@ -25889,6 +26016,16 @@
           "type": "integer"
         }
       },
+      "query.jobs.hydrate-last-job": {
+        "name": "hydrateLastJob",
+        "in": "query",
+        "required": false,
+        "description": "When true, includes a last_job field containing the most recent job record for each returned client or collector job profile. When false or not supplied, last_job is omitted entirely.",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
       "query.clients.hydrate-domains": {
         "name": "hydrate_domains",
         "description": "When a value of `true` is passed, any Domains associated with scheduled and finished jobs for each client will have expanded properties including `name` and `type`. When a value of `false` is passed, these same Domains will only return as a list of `objectid`s.",
@@ -29674,11 +29811,11 @@
           }
         }
       },
-      "model.data-quality-count-metric": {
+      "model.data-quality-metric": {
         "type": "object",
         "required": [
           "metric_type",
-          "value",
+          "metric_value",
           "kind_id"
         ],
         "properties": {
@@ -29686,7 +29823,7 @@
             "type": "string",
             "description": "The category of the metric."
           },
-          "value": {
+          "metric_value": {
             "type": "number",
             "format": "double"
           },
@@ -29697,50 +29834,6 @@
             "description": "The associated graph kind ID, or null when the metric has no associated kind."
           }
         }
-      },
-      "model.data-quality-stats-counts-run": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.data-quality-count-run"
-          },
-          {
-            "type": "object",
-            "required": [
-              "environments"
-            ],
-            "properties": {
-              "environments": {
-                "type": "object",
-                "description": "Environments keyed by environment ID.",
-                "additionalProperties": {
-                  "type": "object",
-                  "required": [
-                    "extension_id",
-                    "environment_kind_id",
-                    "metrics"
-                  ],
-                  "properties": {
-                    "extension_id": {
-                      "type": "integer",
-                      "format": "int32"
-                    },
-                    "environment_kind_id": {
-                      "type": "integer",
-                      "format": "int32"
-                    },
-                    "metrics": {
-                      "type": "object",
-                      "description": "Metrics keyed by metric name.",
-                      "additionalProperties": {
-                        "$ref": "#/components/schemas/model.data-quality-count-metric"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
       },
       "model.data-quality-aggregation": {
         "allOf": [
@@ -29783,40 +29876,6 @@
                 "type": "integer",
                 "format": "int32",
                 "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "model.data-quality-aggregations-counts-run": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.data-quality-count-run"
-          },
-          {
-            "type": "object",
-            "required": [
-              "extensions"
-            ],
-            "properties": {
-              "extensions": {
-                "type": "object",
-                "description": "Extensions keyed by the string representation of their extension ID.",
-                "additionalProperties": {
-                  "type": "object",
-                  "required": [
-                    "metrics"
-                  ],
-                  "properties": {
-                    "metrics": {
-                      "type": "object",
-                      "description": "Metrics keyed by metric name, combined across all environment kinds and instances within the extension.",
-                      "additionalProperties": {
-                        "$ref": "#/components/schemas/model.data-quality-count-metric"
-                      }
-                    }
-                  }
-                }
               }
             }
           }
@@ -30421,86 +30480,6 @@
           }
         ]
       },
-      "model.collector-job-schedule": {
-        "description": "Recurring schedule that materializes jobs for its linked profiles.",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.collector-job-schedule-minimal"
-          },
-          {
-            "type": "object",
-            "required": [
-              "disabled_at",
-              "disabled_by",
-              "profiles",
-              "created_at",
-              "updated_at"
-            ],
-            "properties": {
-              "disabled_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              },
-              "disabled_by": {
-                "$ref": "#/components/schemas/null.string.response"
-              },
-              "profiles": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/model.collector-job-profile-minimal"
-                }
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
-          }
-        ]
-      },
-      "model.collector-job-secret": {
-        "type": "object",
-        "description": "Reference to collector credentials held externally, secret values are never stored.",
-        "required": [
-          "id",
-          "type",
-          "key_id",
-          "external_key_id",
-          "name",
-          "created_at"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "auth_key"
-            ]
-          },
-          "key_id": {
-            "type": "string",
-            "description": "Identifier redeemed by the collector against external secret manager."
-          },
-          "external_key_id": {
-            "type": "string",
-            "description": "Operator-facing identifier for the referenced key."
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the secret reference."
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "model.collector-job-history": {
         "type": "object",
         "description": "Immutable terminal record for a collector job queue entry.",
@@ -30592,6 +30571,86 @@
           },
           "failure_reason": {
             "$ref": "#/components/schemas/null.string.response"
+          }
+        }
+      },
+      "model.collector-job-schedule": {
+        "description": "Recurring schedule that materializes jobs for its linked profiles.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.collector-job-schedule-minimal"
+          },
+          {
+            "type": "object",
+            "required": [
+              "disabled_at",
+              "disabled_by",
+              "profiles",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "disabled_at": {
+                "$ref": "#/components/schemas/null.time.response"
+              },
+              "disabled_by": {
+                "$ref": "#/components/schemas/null.string.response"
+              },
+              "profiles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.collector-job-profile-minimal"
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "model.collector-job-secret": {
+        "type": "object",
+        "description": "Reference to collector credentials held externally, secret values are never stored.",
+        "required": [
+          "id",
+          "type",
+          "key_id",
+          "external_key_id",
+          "name",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "auth_key"
+            ]
+          },
+          "key_id": {
+            "type": "string",
+            "description": "Identifier redeemed by the collector against external secret manager."
+          },
+          "external_key_id": {
+            "type": "string",
+            "description": "Operator-facing identifier for the referenced key."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the secret reference."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
