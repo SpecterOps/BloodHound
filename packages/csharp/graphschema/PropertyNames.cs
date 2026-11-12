@@ -179,6 +179,8 @@ public static readonly string ClientAllowedNTLMServers = "clientallowedntlmserve
 public static readonly string Transitive = "transitive";
 public static readonly string GroupScope = "groupscope";
 public static readonly string NetBIOS = "netbios";
+public static readonly string RPCEncryptionEnforced = "rpcencryptionenforced";
+public static readonly string RPCEncryptionCollected = "rpcencryptioncollected";
 public static readonly string AdminSDHolderProtected = "adminsdholderprotected";
 public static readonly string ServicePrincipalNames = "serviceprincipalnames";
 public static readonly string ServerReference = "serverreference";
@@ -186,6 +188,8 @@ public static readonly string SiteObject = "siteobject";
 public static readonly string ObjectClass = "objectclass";
 public static readonly string GPOStatusRaw = "gpostatusraw";
 public static readonly string GPOStatus = "gpostatus";
+public static readonly string DisabledExtensions = "disabledextensions";
+public static readonly string DisabledExtensionsCollected = "disabledextensionscollected";
 
 }
 }

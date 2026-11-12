@@ -24,6 +24,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/api/dbpool"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -202,4 +203,14 @@ func NewAzureRole(t *testing.T, suite *IntegrationTestSuite, name, objectID, rol
 		azure.RoleTemplateID: roleTemplateID,
 		azure.TenantID:       tenantID,
 	}), azure.Entity, azure.Role)
+}
+
+func randomObjectID(t *testing.T) string {
+	newUUID, err := uuid.NewV4()
+
+	if err != nil {
+		t.Fatalf("Failed to generate a new UUID: %v", err)
+	}
+
+	return newUUID.String()
 }
