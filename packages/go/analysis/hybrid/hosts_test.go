@@ -296,14 +296,14 @@ func TestHostPairSubmitterDeduplicatesWithinRun(t *testing.T) {
 	require.NoError(t, matches.submitMatches(2, []graph.ID{2, 1, 1}))
 	require.NoError(t, matches.submitMatches(1, []graph.ID{2}))
 	require.Equal(t, []post.EnsureRelationshipJob{
-		{FromID: 1, ToID: 2, Kind: common.SameHost},
-		{FromID: 2, ToID: 1, Kind: common.SameHost},
+		{FromID: 1, ToID: 2, Kind: common.SameHostAs},
+		{FromID: 2, ToID: 1, Kind: common.SameHostAs},
 	}, relationships)
 }
 
 func TestHostPairSubmitterPropagatesSinkFailure(t *testing.T) {
 	var matches = newHostPairSubmitter(func(post.EnsureRelationshipJob) bool { return false })
-	require.ErrorContains(t, matches.submitMatches(1, []graph.ID{2}), "unable to submit SameHost relationship")
+	require.ErrorContains(t, matches.submitMatches(1, []graph.ID{2}), "unable to submit SameHostAs relationship")
 }
 
 func TestHostMatchingDeduplicatesAcrossRules(t *testing.T) {

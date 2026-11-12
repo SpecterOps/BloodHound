@@ -49,12 +49,14 @@ describe('useEdgeTraversability', () => {
 
         const { result } = renderHook(() => useEdgeTraversability());
         expect(result.current.data.get('AdminTo')).toBe(true);
+        expect(result.current.data.get('SameHostAs')).toBe(true);
         expect(result.current.data.get('Enroll')).toBe(false);
         expect(result.current.data.get('CustomFact')).toBe(false);
         expect(result.current.data.get('CustomAttack')).toBe(false);
         expect(result.current.data.get('Unknown')).toBe(false);
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
         expect(result.current.data.get('AdminTo')).toBe(true);
+        expect(result.current.data.get('SameHostAs')).toBe(true);
         expect(result.current.data.get('Enroll')).toBe(false);
         expect(result.current.data.get('CustomFact')).toBe(false);
         expect(result.current.data.get('CustomAttack')).toBe(true);
@@ -79,6 +81,7 @@ describe('useEdgeTraversability', () => {
         expect(result.current.traversabilityQuery.data.get('Enroll')).toBe(false);
         await waitFor(() => expect(result.current.featureQuery.isSuccess).toBe(true));
         expect(result.current.traversabilityQuery.data.get('AdminTo')).toBe(true);
+        expect(result.current.traversabilityQuery.data.get('SameHostAs')).toBe(true);
         expect(result.current.traversabilityQuery.data.get('Unknown')).toBe(false);
         expect(requestMetadata).not.toHaveBeenCalled();
     });
@@ -89,6 +92,7 @@ describe('useEdgeTraversability', () => {
         const { result } = renderHook(() => useEdgeTraversability());
         await waitFor(() => expect(result.current.isError).toBe(true));
         expect(result.current.data.get('AdminTo')).toBe(true);
+        expect(result.current.data.get('SameHostAs')).toBe(true);
         expect(result.current.data.get('Enroll')).toBe(false);
         expect(result.current.data.get('Unknown')).toBe(false);
     });

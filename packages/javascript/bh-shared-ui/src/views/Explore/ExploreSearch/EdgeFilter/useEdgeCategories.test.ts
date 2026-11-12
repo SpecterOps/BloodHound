@@ -58,7 +58,9 @@ describe('useEdgeCategories', async () => {
         const hook = renderHook(() => useEdgeCategories());
 
         // wait until the OpenGraph category is available in the hook's return data
-        await waitFor(() => expect(hook.result.current.edgeCategories.length).toEqual(3));
+        await waitFor(() =>
+            expect(hook.result.current.edgeCategories.length).toEqual(BUILTIN_EDGE_CATEGORIES.length + 1)
+        );
 
         const edgeList = getEdgeListFromCategory('OpenGraph', hook.result.current.edgeCategories);
 
@@ -82,7 +84,9 @@ describe('useEdgeCategories', async () => {
 
         const hook = renderHook(() => useEdgeCategories());
 
-        await waitFor(() => expect(hook.result.current.edgeCategories.length).toEqual(3));
+        await waitFor(() =>
+            expect(hook.result.current.edgeCategories.length).toEqual(BUILTIN_EDGE_CATEGORIES.length + 1)
+        );
 
         const adEdges = getEdgeListFromCategory('Active Directory', hook.result.current.edgeCategories);
         const azEdges = getEdgeListFromCategory('Azure', hook.result.current.edgeCategories);

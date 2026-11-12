@@ -1367,6 +1367,9 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
         AzureRelationshipKind.AZAuthenticatesTo,
     ];
 }
+export function CommonPathfindingEdges(): CommonRelationshipKind[] {
+    return [CommonRelationshipKind.SameHostAs];
+}
 export enum CommonNodeKind {
     MigrationData = 'MigrationData',
 }
@@ -1379,12 +1382,12 @@ export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefin
     }
 }
 export enum CommonRelationshipKind {
-    SameHost = 'SameHost',
+    SameHostAs = 'SameHostAs',
 }
 export function CommonRelationshipKindToDisplay(value: CommonRelationshipKind): string | undefined {
     switch (value) {
-        case CommonRelationshipKind.SameHost:
-            return 'SameHost';
+        case CommonRelationshipKind.SameHostAs:
+            return 'SameHostAs';
         default:
             return undefined;
     }

@@ -197,11 +197,11 @@ func (s *hostPairSubmitter) submitMatches(sourceID graph.ID, targetIDs []graph.I
 		// across every matching rule, and keep no additional slice of matched pairs.
 		s.seen[pair] = struct{}{}
 		for _, relationship := range [...]post.EnsureRelationshipJob{
-			{FromID: pair.FirstID, ToID: pair.SecondID, Kind: common.SameHost},
-			{FromID: pair.SecondID, ToID: pair.FirstID, Kind: common.SameHost},
+			{FromID: pair.FirstID, ToID: pair.SecondID, Kind: common.SameHostAs},
+			{FromID: pair.SecondID, ToID: pair.FirstID, Kind: common.SameHostAs},
 		} {
 			if !s.submitRelationship(relationship) {
-				return fmt.Errorf("unable to submit %s relationship to the sink", common.SameHost)
+				return fmt.Errorf("unable to submit %s relationship to the sink", common.SameHostAs)
 			}
 		}
 	}

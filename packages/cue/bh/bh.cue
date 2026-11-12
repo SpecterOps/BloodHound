@@ -25,6 +25,7 @@ import (
 
 // Schema
 #Common: {
+	PathfindingRelationships: [...types.#Kind]
 	Properties: [...types.#StringEnum]
 	NodeKinds: [...types.#Kind]
 	RelationshipKinds: [...types.#Kind]
@@ -59,6 +60,7 @@ import (
 
 // Definitons
 Common: #Common & {
+	PathfindingRelationships: common.PathfindingRelationships
 	Properties:        common.Properties
 	NodeKinds:         common.NodeKinds
 	RelationshipKinds: common.RelationshipKinds

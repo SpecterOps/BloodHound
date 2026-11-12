@@ -175,7 +175,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 var hybridPostProcessedEdges = graph.Kinds{
 	azure.SyncedToEntraUser,
 	adSchema.SyncedToADUser,
-	common.SameHost,
+	common.SameHostAs,
 }
 
 // hasOnPremUser takes a node and returns the OnPremID as a string, whether the node has an onPrem user defined as a bool

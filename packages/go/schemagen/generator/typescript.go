@@ -98,6 +98,7 @@ func GenerateTypeScriptPathfindingEdgesFn(
 }
 
 func GenerateTypeScriptCommon(root tsgen.File, schema model.Graph) {
+	GenerateTypeScriptPathfindingEdgesFn(root, "CommonPathfindingEdges", "CommonRelationshipKind", schema.PathfindingRelationships)
 	GenerateTypeScriptStringEnum(root, "CommonNodeKind", schema.NodeKinds)
 	GenerateTypeScriptStringEnum(root, "CommonRelationshipKind", schema.RelationshipKinds)
 

@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/slicesext"
 	"github.com/specterops/dawgs/graph"
@@ -100,7 +101,7 @@ func parseRelationshipKindsParam(acceptableKinds graph.Kinds, relationshipKindsP
 
 // kindIsValidBuiltIn determines if a kind exists in the built-in graph
 func kindIsValidBuiltIn(kind graph.Kind) bool {
-	return graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships()).ContainsOneOf(kind)
+	return graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships()).Concatenate(common.Relationships()).ContainsOneOf(kind)
 }
 
 func createRelationshipKindFilterCriteria(relationshipKindsParam string, onlyIncludeTraversableKinds bool, validKinds graph.Kinds) (graph.Criteria, error) {
@@ -133,7 +134,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		paths                  graph.PathSet
 		apiError               *api.ErrorWrapper
 		// note: this uses relationships from cue files, not from schema database
-		validBuiltInKinds = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
+		validBuiltInKinds = graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships()).Concatenate(common.Relationships())
 	)
 
 	onlyIncludeTraversableKinds, err := api.ParseOptionalBool(request.URL.Query().Get(api.QueryParameterIncludeOnlyTraversableKinds), false)
@@ -151,7 +152,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 		api.HandleDatabaseError(request, response, err)
 	} else {
 		if onlyIncludeTraversableKinds {
-			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
+			validBuiltInKinds = graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships()).Concatenate(common.PathfindingRelationships())
 		}
 		if ogExtensionManagementFeatureFlag.Enabled {
 			if paths, apiError = s.getAllShortestPathsWithOpenGraph(requestContext, relationshipKindsParam, startNode, endNode, onlyIncludeTraversableKinds, validBuiltInKinds, request); apiError != nil {

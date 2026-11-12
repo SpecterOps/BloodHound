@@ -129,7 +129,7 @@ func fetchHostCorrelationEdges(t *testing.T, database graph.Database) map[[2]str
 	t.Helper()
 	var edges = make(map[[2]string]graph.ID)
 	require.NoError(t, database.ReadTransaction(t.Context(), func(tx graph.Transaction) error {
-		var relationships, err = ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), common.SameHost)))
+		var relationships, err = ops.FetchRelationships(tx.Relationships().Filter(query.Kind(query.Relationship(), common.SameHostAs)))
 		if err != nil {
 			return err
 		}
@@ -177,8 +177,8 @@ func TestHostCorrelation(t *testing.T) {
 				var stats, err = hybrid.PostHybrid(t.Context(), database)
 				require.NoError(t, err)
 				if len(testCase.pairs) > 0 {
-					require.Contains(t, stats.RelationshipsCreated, common.SameHost)
-					require.Equal(t, int32(len(testCase.pairs)*2), *stats.RelationshipsCreated[common.SameHost], "new edges must be submitted only once per run")
+					require.Contains(t, stats.RelationshipsCreated, common.SameHostAs)
+					require.Equal(t, int32(len(testCase.pairs)*2), *stats.RelationshipsCreated[common.SameHostAs], "new edges must be submitted only once per run")
 				}
 				var firstRun = fetchHostCorrelationEdges(t, database)
 				require.Len(t, firstRun, len(testCase.pairs)*2)
