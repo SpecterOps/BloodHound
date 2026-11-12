@@ -191,8 +191,9 @@ func (s *Handlers) SetApplicationConfiguration(response http.ResponseWriter, req
 	// handle backcompat cases which interact with different sources of truth
 	handlePruneTTLCase := false
 	if setConfigBody.Key == services.PruneTTL {
-		retentionPoliciesFeatureEnabled, _ := s.ffReader.IsEnabled(ctx, "retention_policies")
-		if retentionPoliciesFeatureEnabled {
+		if retentionPoliciesFeatureEnabled, err := s.ffReader.IsEnabled(ctx, "retention_policies"); err != nil {
+			slog.ErrorContext(ctx, "Error fetching `retention_policies` feature flag; defaulting to false", attr.Error(err))
+		} else if retentionPoliciesFeatureEnabled {
 			handlePruneTTLCase = true
 		}
 	}
@@ -257,8 +258,9 @@ func (s *Handlers) updateNextScheduledAnalysisStartTime(ctx context.Context, val
 func (s *Handlers) handleGetBackcompat(ctx context.Context, parameters []services.Parameter) error {
 	for i := range parameters {
 		if parameters[i].Key == services.PruneTTL {
-			retentionPoliciesFeatureEnabled, _ := s.ffReader.IsEnabled(ctx, "retention_policies")
-			if retentionPoliciesFeatureEnabled {
+			if retentionPoliciesFeatureEnabled, err := s.ffReader.IsEnabled(ctx, "retention_policies"); err != nil {
+				slog.ErrorContext(ctx, "Error fetching `retention_policies` feature flag; defaulting to false", attr.Error(err))
+			} else if retentionPoliciesFeatureEnabled {
 				var err error
 				parameters[i].Value, err = s.getPruneTTLBackcompat(ctx, parameters[i].Value)
 				if err != nil {
