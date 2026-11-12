@@ -20,9 +20,10 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 )
 
-// GetDogTags returns all dogtag flags and their current values
-func (s Resources) GetDogTags(response http.ResponseWriter, request *http.Request) {
-	api.WriteBasicResponse(request.Context(), s.DogTags.GetAllDogTags(), http.StatusOK, response)
+// GetProductFeatures returns all product entitlements and their current values.
+func (s Resources) GetProductFeatures(response http.ResponseWriter, request *http.Request) {
+	api.WriteBasicResponse(request.Context(), productfeatures.AllValues(request.Context(), s.FeatureFlags), http.StatusOK, response)
 }

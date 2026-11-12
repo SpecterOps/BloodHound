@@ -107,7 +107,7 @@ func TestManagementResource_ListAuthProviders(t *testing.T) {
 
 	var (
 		mockCtrl             = gomock.NewController(t)
-		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(t, mockCtrl)
 		reqCtx               = &bhctx.Context{Host: &url.URL{}}
 
 		oidcProvider = model.OIDCProvider{
@@ -227,7 +227,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 	var (
 		ssoDeleteURL         = "/api/v2/sso-providers/%s"
 		mockCtrl             = gomock.NewController(t)
-		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(t, mockCtrl)
 	)
 
 	t.Run("successfully delete an SSOProvider", func(t *testing.T) {
@@ -318,7 +318,7 @@ func TestManagementResource_DeleteOIDCProvider(t *testing.T) {
 func TestManagementResource_SanitizeAndGetRoles(t *testing.T) {
 	var (
 		mockCtrl     = gomock.NewController(t)
-		_, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		_, mockDB, _ = apitest.NewAuthManagementResource(t, mockCtrl)
 		testCtx      = context.Background()
 
 		dbRoles = model.Roles{

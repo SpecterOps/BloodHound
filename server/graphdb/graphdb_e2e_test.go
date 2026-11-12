@@ -40,7 +40,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	graphschema "github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -167,7 +167,7 @@ func newGraphDBHarness(t *testing.T) graphDBHarness {
 	seedRelationshipKindInfo(t, ctx, bhDatabase, dbPool, &harness)
 
 	store := appdb.NewStore(graphDatabase, dbPool)
-	etacService := etac.Register(dbPool, dogtags.NewDefaultService())
+	etacService := etac.Register(dbPool, featuretest.NewClient(t, featuretest.Overrides{}))
 	nodeAuthorizer := authz.NewNodeAuthorizer(etacService)
 	handlerSet := handlers.NewHandlersContainer(services.NewService(store, nodeAuthorizer))
 

@@ -31,13 +31,14 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -297,7 +298,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		api.RedirectToLoginURL(response, request, fmt.Sprintf("Exchange failed: %s", err.Error()))
 	} else {
 		if ssoProvider.Config.AutoProvision.Enabled {
-			if err := jitOIDCUserUpsert(request.Context(), ssoProvider, claims, s.db, s.DogTags); err != nil {
+			if err := jitOIDCUserUpsert(request.Context(), ssoProvider, claims, s.db, s.FeatureFlags); err != nil {
 				// It is safe to let this request drop into the CreateSSOSession function below to ensure proper audit logging
 				slog.ErrorContext(request.Context(), "[OIDC] Error during JIT User Creation", attr.Error(err))
 			}
@@ -398,14 +399,14 @@ func getOIDCClaims(reqCtx context.Context, provider *oidc.Provider, ssoProvider 
 	}
 }
 
-func jitOIDCUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, claims oidcClaims, u jitUserUpserter, dogTagsService dogtags.Service) error {
+func jitOIDCUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, claims oidcClaims, u jitUserUpserter, featureClient *openfeature.Client) error {
 	if roles, err := SanitizeAndGetRoles(ctx, ssoProvider.Config.AutoProvision, claims.Roles, u); err != nil {
 		return fmt.Errorf("sanitize roles: %v", err)
 	} else if len(roles) != 1 {
 		return fmt.Errorf("invalid roles")
 	} else if user, err := u.LookupUser(ctx, claims.Email); err != nil {
 		if errors.Is(err, database.ErrNotFound) {
-			return jitOIDCUserCreate(ctx, ssoProvider, claims, u, roles, dogTagsService)
+			return jitOIDCUserCreate(ctx, ssoProvider, claims, u, roles, featureClient)
 		}
 		return fmt.Errorf("user lookup: %v", err)
 	} else if ssoProvider.Config.AutoProvision.RoleProvision && !user.Roles.Has(roles[0]) {
@@ -419,7 +420,7 @@ func jitOIDCUserUpsert(ctx context.Context, ssoProvider model.SSOProvider, claim
 	return nil
 }
 
-func jitOIDCUserCreate(ctx context.Context, ssoProvider model.SSOProvider, claims oidcClaims, u jitUserUpserter, roles model.Roles, dogTagsService dogtags.Service) error {
+func jitOIDCUserCreate(ctx context.Context, ssoProvider model.SSOProvider, claims oidcClaims, u jitUserUpserter, roles model.Roles, featureClient *openfeature.Client) error {
 	user := model.User{
 		EmailAddress:  null.StringFrom(claims.Email),
 		PrincipalName: claims.Email,
@@ -430,7 +431,7 @@ func jitOIDCUserCreate(ctx context.Context, ssoProvider model.SSOProvider, claim
 		LastName:      null.StringFrom(claims.LastName),
 	}
 
-	if dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED) {
+	if featureClient.Boolean(ctx, productfeatures.ETAC_ENABLED, false, openfeature.EvaluationContext{}) {
 		user.AllEnvironments = !hasValidRolesForETAC(roles)
 	} else {
 		user.AllEnvironments = true

@@ -30,7 +30,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	querymocks "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	graphmocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -365,7 +366,7 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 		request          http.Request
 		expected         httpValues
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		testSetup        func(t *testing.T, ctx context.Context, mocks mock)
 	}{
 		{
@@ -583,8 +584,8 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			request: http.Request{
 				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{productfeatures.ETAC_ENABLED: true},
 			},
 			user: model.User{EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}}},
 			expected: httpValues{
@@ -612,8 +613,8 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			request: http.Request{
 				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{productfeatures.ETAC_ENABLED: true},
 			},
 			user: model.User{EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}}},
 			expected: httpValues{
@@ -644,8 +645,8 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			request: http.Request{
 				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{productfeatures.ETAC_ENABLED: true},
 			},
 			user: model.User{EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}}},
 			expected: httpValues{
@@ -677,8 +678,8 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 			request: http.Request{
 				URL: &url.URL{RawQuery: "edge_type=AZBase&source_node=1&target_node=2"},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{productfeatures.ETAC_ENABLED: true},
 			},
 			user: model.User{EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}}},
 			expected: httpValues{
@@ -810,9 +811,9 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 					RawQuery: "edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2",
 				},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -895,9 +896,9 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 					RawQuery: "edge_type=CoerceAndRelayNTLMToLDAP&source_node=1&target_node=2",
 				},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: false,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: false,
 				},
 			},
 			user: model.User{
@@ -986,10 +987,10 @@ func TestResources_GetEdgeRelayTargets(t *testing.T) {
 				mockGraphQuery = querymocks.NewMockGraph(ctrl)
 				mockDb         = mocks.NewMockDatabase(ctrl)
 				resources      = v2.Resources{
-					Graph:      mockGraph,
-					GraphQuery: mockGraphQuery,
-					DB:         mockDb,
-					DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+					Graph:        mockGraph,
+					GraphQuery:   mockGraphQuery,
+					DB:           mockDb,
+					FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 				}
 				request = testCase.request.WithContext(setupUserCtx(testCase.user))
 			)
@@ -1028,7 +1029,7 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 		name             string
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		user             model.User
 		withoutUser      bool
 		expected         expected
@@ -1342,8 +1343,8 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 				setupNodeAccess(mock)
 				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "source-object-id", ad.User).Return(nil, errors.New("source access error"))
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{productfeatures.ETAC_ENABLED: true},
 			},
 			expected: expected{
 				responseCode:   http.StatusBadRequest,
@@ -1370,8 +1371,8 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 				}), ad.User, ad.Entity), nil)
 				mock.mockGraphQuery.EXPECT().GetEntityByObjectId(gomock.Any(), "target-object-id", ad.Computer).Return(nil, errors.New("target access error"))
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{productfeatures.ETAC_ENABLED: true},
 			},
 			user: model.User{
 				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}},
@@ -1400,8 +1401,8 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 					ad.DomainSID.String(): "S-1-5-21-DENIED",
 				}), ad.User, ad.Entity), nil)
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{productfeatures.ETAC_ENABLED: true},
 			},
 			user: model.User{
 				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}},
@@ -1433,8 +1434,8 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 					ad.DomainSID.String(): "S-1-5-21-DENIED",
 				}), ad.Computer, ad.Entity), nil)
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{dogtags.ETAC_ENABLED: true},
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{productfeatures.ETAC_ENABLED: true},
 			},
 			user: model.User{
 				EnvironmentTargetedAccessControl: []model.EnvironmentTargetedAccessControl{{EnvironmentID: "S-1-5-21-ALLOWED"}},
@@ -1636,9 +1637,9 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 
 				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1744,9 +1745,9 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 
 				mock.mockDb.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: false,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: false,
 				},
 			},
 			user: model.User{
@@ -1780,10 +1781,10 @@ func TestResources_GetEdgeACLInheritancePath(t *testing.T) {
 			testCase.setupMocks(t, mock)
 
 			resources := v2.Resources{
-				Graph:      mock.mockGraph,
-				GraphQuery: mock.mockGraphQuery,
-				DB:         mock.mockDb,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				Graph:        mock.mockGraph,
+				GraphQuery:   mock.mockGraphQuery,
+				DB:           mock.mockDb,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()

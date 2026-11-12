@@ -21,20 +21,21 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	v2 "github.com/specterops/bloodhound/cmd/api/src/api/v2"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 )
 
 // SupportsETACMiddleware will check a user's environment access control to determine if they have access to the environment provided in the url
 // If a user has the AllEnvironments flag set to true, they will be given access to all environments
-func SupportsETACMiddleware(db database.Database, dogTagsService dogtags.Service) mux.MiddlewareFunc {
+func SupportsETACMiddleware(db database.Database, featureClient *openfeature.Client) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
+			if etacEnabled := featureClient.Boolean(request.Context(), productfeatures.ETAC_ENABLED, false, openfeature.EvaluationContext{}); !etacEnabled {
 				next.ServeHTTP(response, request)
 			} else if bhCtx := bhctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)
@@ -56,10 +57,10 @@ func SupportsETACMiddleware(db database.Database, dogTagsService dogtags.Service
 }
 
 // RequireAllEnvironmentAccessMiddleware will check if a user's all environments flag is true and return a forbidden response code if set to false
-func RequireAllEnvironmentAccessMiddleware(dogTagsService dogtags.Service) mux.MiddlewareFunc {
+func RequireAllEnvironmentAccessMiddleware(featureClient *openfeature.Client) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-			if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
+			if etacEnabled := featureClient.Boolean(request.Context(), productfeatures.ETAC_ENABLED, false, openfeature.EvaluationContext{}); !etacEnabled {
 				next.ServeHTTP(response, request)
 			} else if bhCtx := bhctx.FromRequest(request); !bhCtx.AuthCtx.Authenticated() {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusUnauthorized, "not authenticated", request), response)

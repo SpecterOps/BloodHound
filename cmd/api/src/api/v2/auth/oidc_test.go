@@ -46,7 +46,7 @@ import (
 func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 	var (
 		mockCtrl             = gomock.NewController(t)
-		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(t, mockCtrl)
 	)
 	defer mockCtrl.Finish()
 
@@ -167,7 +167,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 	var (
 		mockCtrl             = gomock.NewController(t)
-		resources, mockDB, _ = apitest.NewAuthManagementResource(mockCtrl)
+		resources, mockDB, _ = apitest.NewAuthManagementResource(t, mockCtrl)
 		baseProvider         = model.SSOProvider{
 			Type: model.SessionAuthProviderOIDC,
 			Name: "Gotham Net",

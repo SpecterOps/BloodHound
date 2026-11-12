@@ -23,12 +23,12 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/params"
 )
 
@@ -165,13 +165,13 @@ func (s *Route) RequireUserId() *Route {
 }
 
 // SupportsETAC wraps the ETAC middleware which allows or denies a user access to an environment (domainid, tenantid), when it is used in a route's path parameter
-func (s *Route) SupportsETAC(db database.Database, dogTagsService dogtags.Service) *Route {
-	s.handler.Use(middleware.SupportsETACMiddleware(db, dogTagsService))
+func (s *Route) SupportsETAC(db database.Database, featureClient *openfeature.Client) *Route {
+	s.handler.Use(middleware.SupportsETACMiddleware(db, featureClient))
 	return s
 }
 
-func (s *Route) RequireAllEnvironmentAccess(dogTagsService dogtags.Service) *Route {
-	s.handler.Use(middleware.RequireAllEnvironmentAccessMiddleware(dogTagsService))
+func (s *Route) RequireAllEnvironmentAccess(featureClient *openfeature.Client) *Route {
+	s.handler.Use(middleware.RequireAllEnvironmentAccessMiddleware(featureClient))
 	return s
 }
 

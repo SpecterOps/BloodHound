@@ -29,7 +29,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/dawgs/graph"
@@ -63,7 +64,7 @@ func TestResources_CypherQuery(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		expected         expected
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 	}
 
 	primaryDisplayKinds := graphschema.PrimaryDisplayKinds{graph.StringKind("KindA"): graphschema.DisplayKind{}}
@@ -532,9 +533,9 @@ func TestResources_CypherQuery(t *testing.T) {
 				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
 				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), successAuditEntry).Times(1)
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expected: expected{
@@ -615,9 +616,9 @@ func TestResources_CypherQuery(t *testing.T) {
 				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
 				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), successAuditEntry).Times(1)
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expected: expected{
@@ -688,9 +689,9 @@ func TestResources_CypherQuery(t *testing.T) {
 				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), intentAuditEntry).Times(1)
 				mocks.mockDatabase.EXPECT().AppendAuditLog(gomock.Any(), successAuditEntry).Times(1)
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expected: expected{
@@ -714,10 +715,10 @@ func TestResources_CypherQuery(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				Authorizer: auth.NewAuthorizer(mocks.mockDatabase),
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				Authorizer:   auth.NewAuthorizer(mocks.mockDatabase),
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -810,10 +811,10 @@ func TestResources_CypherQuery_CanceledRequestKeepsAuditOutcomeContextActive(t *
 			testCase.setupMocks(requestContext, ctxCancelFunc, mocks, &auditOutcome)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.graphQuery,
-				DB:         mocks.database,
-				Authorizer: auth.NewAuthorizer(mocks.database),
-				DogTags:    dogtags.NewTestService(dogtags.TestOverrides{}),
+				GraphQuery:   mocks.graphQuery,
+				DB:           mocks.database,
+				Authorizer:   auth.NewAuthorizer(mocks.database),
+				FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{}),
 			}
 			resources.CypherQuery(httptest.NewRecorder(), request)
 

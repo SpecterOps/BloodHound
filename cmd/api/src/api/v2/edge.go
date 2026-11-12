@@ -21,12 +21,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/analysis"
 	"github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/ein"
@@ -65,7 +65,7 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for startID: %s", sourceNode[0]), request), response)
 	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for endID: %s", targetNode[0]), request), response)
-	} else if apiError := validateNodeAccess(request, s.GraphQuery, s.DogTags, user, startID, endID); apiError != nil {
+	} else if apiError := validateNodeAccess(request, s.GraphQuery, s.FeatureFlags, user, startID, endID); apiError != nil {
 		api.WriteErrorResponse(request.Context(), apiError, response)
 	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
@@ -79,7 +79,7 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 			unifiedGraph.AddNode(primaryDisplayKinds, node, true)
 		}
 
-		if ShouldFilterForETAC(s.DogTags, user) {
+		if ShouldFilterForETAC(s.FeatureFlags, user) {
 			if filteredGraph, err := filterETACGraph(unifiedGraph, user); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
 				return
@@ -92,7 +92,7 @@ func (s *Resources) GetEdgeRelayTargets(response http.ResponseWriter, request *h
 	}
 }
 
-func validateNodeAccess(request *http.Request, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, startID, endID int64) *api.ErrorWrapper {
+func validateNodeAccess(request *http.Request, graphQuery queries.Graph, featureClient *openfeature.Client, user model.User, startID, endID int64) *api.ErrorWrapper {
 	if sourceGraphNode, err := graphQuery.FetchNodeByGraphId(request.Context(), graph.ID(startID)); err != nil {
 		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
 	} else if targetGraphNode, err := graphQuery.FetchNodeByGraphId(request.Context(), graph.ID(endID)); err != nil {
@@ -101,11 +101,11 @@ func validateNodeAccess(request *http.Request, graphQuery queries.Graph, dogTags
 		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
 	} else if targetNodeObjectID, err := targetGraphNode.Properties.Get(common.ObjectID.String()).String(); err != nil {
 		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
-	} else if hasSourceAccess, err := CheckUserHasAccessToNodeById(request.Context(), graphQuery, dogTagsService, user, sourceNodeObjectID, sourceGraphNode.Kinds[0]); err != nil {
+	} else if hasSourceAccess, err := CheckUserHasAccessToNodeById(request.Context(), graphQuery, featureClient, user, sourceNodeObjectID, sourceGraphNode.Kinds[0]); err != nil {
 		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
 	} else if !hasSourceAccess {
 		return api.BuildErrorResponse(http.StatusNotFound, "not found", request)
-	} else if hasTargetAccess, err := CheckUserHasAccessToNodeById(request.Context(), graphQuery, dogTagsService, user, targetNodeObjectID, targetGraphNode.Kinds[0]); err != nil {
+	} else if hasTargetAccess, err := CheckUserHasAccessToNodeById(request.Context(), graphQuery, featureClient, user, targetNodeObjectID, targetGraphNode.Kinds[0]); err != nil {
 		return api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request)
 	} else if !hasTargetAccess {
 		return api.BuildErrorResponse(http.StatusNotFound, "not found", request)
@@ -175,7 +175,7 @@ func (s *Resources) GetEdgeACLInheritancePath(response http.ResponseWriter, requ
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for startID: %s", sourceNode[0]), request), response)
 	} else if endID, err := strconv.ParseInt(targetNode[0], 10, 64); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid value for endID: %s", targetNode[0]), request), response)
-	} else if apiError := validateNodeAccess(request, s.GraphQuery, s.DogTags, user, startID, endID); apiError != nil {
+	} else if apiError := validateNodeAccess(request, s.GraphQuery, s.FeatureFlags, user, startID, endID); apiError != nil {
 		api.WriteErrorResponse(request.Context(), apiError, response)
 	} else if edge, err := analysis.FetchEdgeByStartAndEnd(request.Context(), s.Graph, graph.ID(startID), graph.ID(endID), kind); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Could not find edge matching criteria: %v", err), request), response)
@@ -187,7 +187,7 @@ func (s *Resources) GetEdgeACLInheritancePath(response http.ResponseWriter, requ
 		unifiedGraph := model.NewUnifiedGraph()
 		unifiedGraph.AddPathSet(primaryDisplayKinds, pathSet, true)
 
-		if ShouldFilterForETAC(s.DogTags, user) {
+		if ShouldFilterForETAC(s.FeatureFlags, user) {
 			if filteredGraph, err := filterETACGraph(unifiedGraph, user); err != nil {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
 				return

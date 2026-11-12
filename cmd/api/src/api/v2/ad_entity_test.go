@@ -33,7 +33,8 @@ import (
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -48,7 +49,7 @@ func TestResources_GetComputerEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 
 		bheCtx = bhctx.Context{
 			AuthCtx: auth.Context{
@@ -189,7 +190,7 @@ func TestResources_GetSiteServerEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 
 		bheCtx = bhctx.Context{
 			AuthCtx: auth.Context{
@@ -276,7 +277,7 @@ func TestResources_GetDomainEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
@@ -490,7 +491,7 @@ func TestResources_GetGPOEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
@@ -598,7 +599,7 @@ func TestResources_GetOUEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
@@ -706,7 +707,7 @@ func TestResources_GetUserEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
@@ -814,7 +815,7 @@ func TestResources_GetGroupEntityInfo(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 		bheCtx    = bhctx.Context{
 			AuthCtx: auth.Context{
 				PermissionOverrides: auth.PermissionOverrides{},
@@ -934,7 +935,7 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 		name             string
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		user             model.User
 		expected         expected
 	}
@@ -1073,9 +1074,9 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1112,9 +1113,9 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1151,9 +1152,9 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1180,9 +1181,9 @@ func TestResources_GetBaseEntityInfo(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -1225,7 +1226,7 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 		name             string
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		user             model.User
 		expected         expected
 	}
@@ -1363,9 +1364,9 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1402,9 +1403,9 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1441,9 +1442,9 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1479,9 +1480,9 @@ func TestResources_GetContainerEntityInfo(t *testing.T) {
 			requestWithCtx := request.WithContext(bheCtx.ConstructGoContext())
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -1516,7 +1517,7 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		expected         expected
 	}
 
@@ -1653,9 +1654,9 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1692,9 +1693,9 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1731,9 +1732,9 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1769,9 +1770,9 @@ func TestResources_GetAIACAEntityInfo(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -1806,7 +1807,7 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		expected         expected
 	}
 
@@ -1935,9 +1936,9 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1974,9 +1975,9 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2013,9 +2014,9 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2052,9 +2053,9 @@ func TestResources_GetRootCAEntityInfo(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -2089,7 +2090,7 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		expected         expected
 	}
 
@@ -2226,9 +2227,9 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2265,9 +2266,9 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2304,9 +2305,9 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2342,9 +2343,9 @@ func TestResources_GetEnterpriseCAEntityInfo(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -2379,7 +2380,7 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		expected         expected
 	}
 
@@ -2516,9 +2517,9 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2555,9 +2556,9 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2594,9 +2595,9 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2632,9 +2633,9 @@ func TestResources_GetNTAuthStoreEntityInfo(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -2669,7 +2670,7 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		expected         expected
 	}
 
@@ -2806,9 +2807,9 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2845,9 +2846,9 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2884,9 +2885,9 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -2922,9 +2923,9 @@ func TestResources_GetCertTemplateEntityInfo(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -2959,7 +2960,7 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		expected         expected
 	}
 
@@ -3096,9 +3097,9 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -3135,9 +3136,9 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 				responseBody:   `{"data":{"results":"output"}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -3174,9 +3175,9 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -3212,9 +3213,9 @@ func TestResources_GetIssuancePolicyEntityInfo(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()

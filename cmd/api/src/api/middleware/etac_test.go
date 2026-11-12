@@ -29,7 +29,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -49,7 +50,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 		bhCtx            bhctx.Context
 		expectedCode     int
 		expectNextHit    bool
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 	}{
 		{
 			name: "Success ETAC disabled",
@@ -57,9 +58,9 @@ func TestSupportsETACMiddleware(t *testing.T) {
 			},
 			expectedCode:  http.StatusOK,
 			expectNextHit: true,
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: false,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: false,
 				},
 			},
 		},
@@ -77,9 +78,9 @@ func TestSupportsETACMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expectedCode:  http.StatusOK,
@@ -104,9 +105,9 @@ func TestSupportsETACMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expectedCode:  http.StatusOK,
@@ -127,9 +128,9 @@ func TestSupportsETACMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expectedCode:  http.StatusInternalServerError,
@@ -150,9 +151,9 @@ func TestSupportsETACMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expectedCode:  http.StatusForbidden,
@@ -170,7 +171,7 @@ func TestSupportsETACMiddleware(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 			})
 
-			handler := SupportsETACMiddleware(mockDB, dogtags.NewTestService(tt.dogTagsOverrides))(next)
+			handler := SupportsETACMiddleware(mockDB, featuretest.NewClient(t, tt.featureOverrides))(next)
 
 			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/test/12345", nil)
 			req = bhctx.SetRequestContext(req, &tt.bhCtx)
@@ -202,7 +203,7 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 		bhCtx            bhctx.Context
 		expectedCode     int
 		expectNextHit    bool
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 	}{
 		{
 			name: "Success ETAC disabled",
@@ -210,9 +211,9 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 			},
 			expectedCode:  http.StatusOK,
 			expectNextHit: true,
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: false,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: false,
 				},
 			},
 		},
@@ -230,9 +231,9 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expectedCode:  http.StatusOK,
@@ -252,9 +253,9 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 					Session: model.UserSession{},
 				},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expectedCode:  http.StatusForbidden,
@@ -272,7 +273,7 @@ func TestRequireAllEnvironmentAccessMiddleware(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 			})
 
-			handler := RequireAllEnvironmentAccessMiddleware(dogtags.NewTestService(tt.dogTagsOverrides))(next)
+			handler := RequireAllEnvironmentAccessMiddleware(featuretest.NewClient(t, tt.featureOverrides))(next)
 
 			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/test/12345", nil)
 			req = bhctx.SetRequestContext(req, &tt.bhCtx)

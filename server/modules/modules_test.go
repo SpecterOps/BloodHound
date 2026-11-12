@@ -24,11 +24,13 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
@@ -45,10 +47,10 @@ func (mockConfigUpdateSideEffecter) UpdateAuthTokenExpiration(ctx context.Contex
 	return nil
 }
 
-func dogTagsService(etacEnabled bool) dogtags.Service {
-	return dogtags.NewTestService(dogtags.TestOverrides{
-		Bools: map[dogtags.BoolDogTag]bool{
-			dogtags.ETAC_ENABLED: etacEnabled,
+func featureClient(t *testing.T, etacEnabled bool) *openfeature.Client {
+	return featuretest.NewClient(t, featuretest.Overrides{
+		Bools: map[string]bool{
+			productfeatures.ETAC_ENABLED: etacEnabled,
 		},
 	})
 }
@@ -56,10 +58,10 @@ func dogTagsService(etacEnabled bool) dogtags.Service {
 func TestRegister_PanicsOnNilRouter(t *testing.T) {
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router:  nil,
-			Pool:    new(pgxpool.Pool),
-			Graph:   &graph.DatabaseSwitch{},
-			DogTags: dogTagsService(false),
+			Router:       nil,
+			Pool:         new(pgxpool.Pool),
+			Graph:        &graph.DatabaseSwitch{},
+			FeatureFlags: featureClient(t, false),
 		})
 	})
 }
@@ -73,10 +75,10 @@ func TestRegister_PanicsOnNilPool(t *testing.T) {
 
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router:  &routerInst,
-			Pool:    nil,
-			Graph:   &graph.DatabaseSwitch{},
-			DogTags: dogTagsService(false),
+			Router:       &routerInst,
+			Pool:         nil,
+			Graph:        &graph.DatabaseSwitch{},
+			FeatureFlags: featureClient(t, false),
 		})
 	})
 }
@@ -90,15 +92,15 @@ func TestRegister_PanicsOnNilGraph(t *testing.T) {
 
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router:  &routerInst,
-			Pool:    new(pgxpool.Pool),
-			Graph:   nil,
-			DogTags: dogTagsService(false),
+			Router:       &routerInst,
+			Pool:         new(pgxpool.Pool),
+			Graph:        nil,
+			FeatureFlags: featureClient(t, false),
 		})
 	})
 }
 
-func TestRegister_PanicsOnNilDogTags(t *testing.T) {
+func TestRegister_PanicsOnNilFeatureFlags(t *testing.T) {
 	var (
 		cfg        = config.Configuration{}
 		authorizer = auth.NewAuthorizer(nil)
@@ -107,10 +109,10 @@ func TestRegister_PanicsOnNilDogTags(t *testing.T) {
 
 	assert.Panics(t, func() {
 		modules.Register(modules.Deps{
-			Router:  &routerInst,
-			Pool:    new(pgxpool.Pool),
-			Graph:   &graph.DatabaseSwitch{},
-			DogTags: nil,
+			Router:       &routerInst,
+			Pool:         new(pgxpool.Pool),
+			Graph:        &graph.DatabaseSwitch{},
+			FeatureFlags: nil,
 		})
 	})
 }
@@ -129,7 +131,7 @@ func TestRegister_PanicsOnNilRateLimitMiddleware(t *testing.T) {
 			Router:                  &routerInst,
 			Pool:                    new(pgxpool.Pool),
 			Graph:                   &graph.DatabaseSwitch{},
-			DogTags:                 dogTagsService(false),
+			FeatureFlags:            featureClient(t, false),
 			ConfigUpdateSideEffects: mockConfigUpdateSideEffecter{},
 		})
 	})
@@ -149,7 +151,7 @@ func TestRegister_PanicsWhenRateLimitMiddlewareFactoryReturnsNil(t *testing.T) {
 			Router:                  &routerInst,
 			Pool:                    new(pgxpool.Pool),
 			Graph:                   &graph.DatabaseSwitch{},
-			DogTags:                 dogTagsService(false),
+			FeatureFlags:            featureClient(t, false),
 			ConfigUpdateSideEffects: mockConfigUpdateSideEffecter{},
 			RateLimitMiddleware: func() mux.MiddlewareFunc {
 				return nil
@@ -173,7 +175,7 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 			Router:                  &routerInst,
 			Pool:                    new(pgxpool.Pool),
 			Graph:                   &graph.DatabaseSwitch{},
-			DogTags:                 dogTagsService(false),
+			FeatureFlags:            featureClient(t, false),
 			ConfigUpdateSideEffects: mockConfigUpdateSideEffecter{},
 			RateLimitMiddleware: func() mux.MiddlewareFunc {
 				rateLimitFactoryCalls++

@@ -23,8 +23,8 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/server/etac"
 	"github.com/specterops/bloodhound/server/graphdb/internal/appdb"
 	"github.com/specterops/bloodhound/server/graphdb/internal/authz"
@@ -49,11 +49,11 @@ func NewGraphDBRequestAdapter(graphDatabase graph.Database, pool *pgxpool.Pool) 
 // Register builds the graphdb store -> service -> handler chain and attaches the graphdb
 // routes to the provided router. It is called from the modules registry and receives
 // only the infrastructure it directly needs: the router, the pgx pool (for kind
-// resolution), the graph database (for graph reads) and the DogTags service.
-func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph.Database, dogTags dogtags.Service) {
+// resolution), the graph database (for graph reads) and an OpenFeature client.
+func Register(routerInst *router.Router, pool *pgxpool.Pool, graphDatabase graph.Database, featureClient *openfeature.Client) {
 	var (
 		store          = appdb.NewStore(graphDatabase, pool)
-		etacService    = etac.Register(pool, dogTags)
+		etacService    = etac.Register(pool, featureClient)
 		nodeAuthorizer = authz.NewNodeAuthorizer(etacService)
 		service        = services.NewService(store, nodeAuthorizer)
 		handlerSet     = handlers.NewHandlersContainer(service)

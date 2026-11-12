@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -37,7 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/server/internal/servertest"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
@@ -51,8 +52,8 @@ type datapipeStatusResponseEnvelope struct {
 	Data model.DatapipeStatusWrapper `json:"data"`
 }
 
-func testDogTags() dogtags.Service {
-	return dogtags.NewTestService(dogtags.TestOverrides{})
+func testFeatureClient(t *testing.T) *openfeature.Client {
+	return featuretest.NewClient(t, featuretest.Overrides{})
 }
 
 func assertDatapipeStatusWireContract(t *testing.T, body []byte, expectedStatus model.DatapipeStatus) {
@@ -92,7 +93,7 @@ func TestGetDatapipeStatus(t *testing.T) {
 				Router:                  routerInst,
 				Pool:                    db.Pool(),
 				Graph:                   &graph.DatabaseSwitch{},
-				DogTags:                 testDogTags(),
+				FeatureFlags:            testFeatureClient(t),
 				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
@@ -270,7 +271,7 @@ func TestGetAppConfigs(t *testing.T) {
 				Router:                  routerInst,
 				Pool:                    db.Pool(),
 				Graph:                   &graph.DatabaseSwitch{},
-				DogTags:                 testDogTags(),
+				FeatureFlags:            testFeatureClient(t),
 				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
@@ -430,7 +431,7 @@ func TestSetAppConfigs(t *testing.T) {
 				Router:                  routerInst,
 				Pool:                    db.Pool(),
 				Graph:                   &graph.DatabaseSwitch{},
-				DogTags:                 testDogTags(),
+				FeatureFlags:            testFeatureClient(t),
 				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)

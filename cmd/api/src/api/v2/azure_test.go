@@ -25,12 +25,14 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	mocks_db "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/packages/go/analysis/azure"
 	azure_schema "github.com/specterops/bloodhound/packages/go/graphschema/azure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -65,7 +67,7 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		expected         expected
 	}
 
@@ -364,9 +366,9 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 				responseBody:   `{"count":0,"limit":1,"skip":0,"data":[]}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -402,9 +404,9 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 				responseBody:   `{"count":0,"limit":1,"skip":0,"data":[]}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -443,9 +445,9 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -482,10 +484,10 @@ func TestResources_GetAZRelatedEntities(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				Graph:      mocks.mockGraphDB,
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				Graph:        mocks.mockGraphDB,
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -1197,7 +1199,7 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		expected         expected
 	}
 
@@ -1363,9 +1365,9 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "kinds":null, "pim_assignments":0}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1402,9 +1404,9 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 				responseBody:   `{"data":{"isOwnedObject":false, "isTierZero":false, "kind":"","props":null,"active_assignments":0,"approvers":0, "kinds":null, "pim_assignments":0}}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1442,9 +1444,9 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1481,10 +1483,10 @@ func TestManagementResource_GetAZEntity(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				Graph:      mocks.mockGraphDB,
-				GraphQuery: mocks.mockGraphQuery,
-				DB:         mocks.mockDatabase,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				Graph:        mocks.mockGraphDB,
+				GraphQuery:   mocks.mockGraphQuery,
+				DB:           mocks.mockDatabase,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()
@@ -1559,10 +1561,10 @@ func TestResources_GetAZEntity_ETACFiltersRelatedEntities(t *testing.T) {
 			setupAZMixedTenantOutboundControlTraversal(t, ctrl, mockGraphDB)
 
 			resources := v2.Resources{
-				Graph:      mockGraphDB,
-				GraphQuery: mockGraphQuery,
-				DB:         mockDatabase,
-				DogTags:    etacEnabledDogTags(),
+				Graph:        mockGraphDB,
+				GraphQuery:   mockGraphQuery,
+				DB:           mockDatabase,
+				FeatureFlags: etacEnabledFeatureClient(t),
 			}
 
 			router.HandleFunc("/api/v2/azure/{entity_type}", resources.GetAZEntity).Methods(requestWithCtx.Method)
@@ -1633,9 +1635,9 @@ func TestResources_GetAZRelatedEntities_ETACFiltersForeignTenants(t *testing.T) 
 			setupAZMixedTenantOutboundControlTraversal(t, ctrl, mockGraphDB)
 
 			resources := v2.Resources{
-				Graph:   mockGraphDB,
-				DB:      mockDatabase,
-				DogTags: etacEnabledDogTags(),
+				Graph:        mockGraphDB,
+				DB:           mockDatabase,
+				FeatureFlags: etacEnabledFeatureClient(t),
 			}
 
 			user, isUser := auth.GetUserFromAuthCtx(bhctx.FromRequest(requestWithCtx).AuthCtx)
@@ -1716,9 +1718,9 @@ func TestResources_GetAZEntity_ETACPermissions(t *testing.T) {
 						Graph:      mockGraphDB,
 						GraphQuery: mockGraphQuery,
 						DB:         mockDatabase,
-						DogTags: dogtags.NewTestService(dogtags.TestOverrides{
-							Bools: map[dogtags.BoolDogTag]bool{
-								dogtags.ETAC_ENABLED: testCase.etacEnabled,
+						FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{
+							Bools: map[string]bool{
+								productfeatures.ETAC_ENABLED: testCase.etacEnabled,
 							},
 						}),
 					}
@@ -1871,10 +1873,10 @@ func etacRestrictedRequest(rawQuery string) *http.Request {
 	return request.WithContext(bheCtx.ConstructGoContext())
 }
 
-func etacEnabledDogTags() dogtags.Service {
-	return dogtags.NewTestService(dogtags.TestOverrides{
-		Bools: map[dogtags.BoolDogTag]bool{
-			dogtags.ETAC_ENABLED: true,
+func etacEnabledFeatureClient(t *testing.T) *openfeature.Client {
+	return featuretest.NewClient(t, featuretest.Overrides{
+		Bools: map[string]bool{
+			productfeatures.ETAC_ENABLED: true,
 		},
 	})
 }

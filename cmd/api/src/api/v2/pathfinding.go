@@ -186,7 +186,7 @@ func (s Resources) GetShortestPath(response http.ResponseWriter, request *http.R
 				return edge.Source + edge.Kind + edge.Target
 			})
 
-			if ShouldFilterForETAC(s.DogTags, user) {
+			if ShouldFilterForETAC(s.FeatureFlags, user) {
 				if filteredGraph, err := filterETACGraph(graphResponse, user); err != nil {
 					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, "error filtering graph for ETAC", request), response)
 					return
@@ -294,8 +294,8 @@ func (s *Resources) GetSearchResult(response http.ResponseWriter, request *http.
 				bhGraph[node.ID.String()] = bloodhoundgraph.NodeToBloodHoundGraph(primaryDisplayKinds, node)
 			}
 
-			// ETAC DogTags filtering
-			if ShouldFilterForETAC(s.DogTags, user) {
+			// ETAC product entitlement filtering
+			if ShouldFilterForETAC(s.FeatureFlags, user) {
 				accessList := ExtractEnvironmentIDsFromUser(&user)
 				filteredGraph, err = filterSearchResultMap(bhGraph, accessList)
 				if err != nil {

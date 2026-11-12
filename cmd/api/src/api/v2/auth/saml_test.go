@@ -37,7 +37,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	bhceSAML "github.com/specterops/bloodhound/cmd/api/src/services/saml"
 	samlmocks "github.com/specterops/bloodhound/cmd/api/src/services/saml/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
@@ -2518,7 +2519,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		expected         expected
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 	}
 
 	tt := []testData{
@@ -3110,9 +3111,9 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				}
 				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
@@ -3215,9 +3216,9 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 				}
 				return request.WithContext(context.WithValue(context.Background(), bhctx.ValueKey, bhContext))
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
@@ -3409,7 +3410,7 @@ func TestManagementResource_SAMLCallbackHandler(t *testing.T) {
 					ServiceProviderKey:                ValidKey,
 					ServiceProviderCertificateCAChain: "",
 				},
-			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, dogtags.NewTestService(testCase.dogTagsOverrides), nil)
+			}, mocks.mockDatabase, auth.NewAuthorizer(mocks.mockDatabase), api.NewAuthenticator(config.Configuration{}, mocks.mockDatabase, nil), nil, featuretest.NewClient(t, testCase.featureOverrides), nil)
 			resources.SAML = mocks.mockSAML
 			response := httptest.NewRecorder()
 

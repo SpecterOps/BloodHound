@@ -19,6 +19,7 @@ package apitest
 import (
 	"log/slog"
 	"os"
+	"testing"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
@@ -27,13 +28,13 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/server/alerts"
 	"go.uber.org/mock/gomock"
 )
 
-func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementResource, *mocks.MockDatabase, *mocks_graph.MockGraph) {
+func NewAuthManagementResource(t testing.TB, mockCtrl *gomock.Controller) (auth.ManagementResource, *mocks.MockDatabase, *mocks_graph.MockGraph) {
 	cfg, err := config.NewDefaultConfiguration()
 	if err != nil {
 		slog.Error("Failed to create default configuration", attr.Error(err))
@@ -45,9 +46,9 @@ func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementReso
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 	mockGraphDB := mocks_graph.NewMockGraph(mockCtrl)
-	mockDogTagsService := dogtags.NewTestService(dogtags.TestOverrides{})
+	featureClient := featuretest.NewClient(t, featuretest.Overrides{})
 	mockAlertPublisher := alerts.NewAlertEventPublisher()
-	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, apimocks.NewMockAuthExtensions(mockCtrl)), mockGraphDB, mockDogTagsService, mockAlertPublisher)
+	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, apimocks.NewMockAuthExtensions(mockCtrl)), mockGraphDB, featureClient, mockAlertPublisher)
 
 	return resources, mockDB, mockGraphDB
 }

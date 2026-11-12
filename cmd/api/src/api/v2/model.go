@@ -18,6 +18,7 @@ package v2
 
 import (
 	"github.com/gorilla/schema"
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
@@ -26,7 +27,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/chow/payload"
@@ -106,7 +106,7 @@ type Resources struct {
 	IngestSchema               payload.Schema
 	FileServiceResolver        storage.FileServiceResolver
 	OpenGraphSchemaService     OpenGraphSchemaService
-	DogTags                    dogtags.Service
+	FeatureFlags               *openfeature.Client
 	AlertPublisher             alerts.Publisher
 }
 
@@ -121,7 +121,7 @@ func NewResources(
 	authenticator api.Authenticator,
 	ingestSchema payload.Schema,
 	fileServiceResolver storage.FileServiceResolver,
-	dogtagsService dogtags.Service,
+	featureClient *openfeature.Client,
 	openGraphSchemaService OpenGraphSchemaService,
 	alertPublisher alerts.Publisher,
 ) Resources {
@@ -138,7 +138,7 @@ func NewResources(
 		Authenticator:              authenticator,
 		IngestSchema:               ingestSchema,
 		FileServiceResolver:        fileServiceResolver,
-		DogTags:                    dogtagsService,
+		FeatureFlags:               featureClient,
 		OpenGraphSchemaService:     openGraphSchemaService,
 		AlertPublisher:             alertPublisher,
 	}

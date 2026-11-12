@@ -20,6 +20,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
@@ -30,7 +31,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/cache"
 	"github.com/specterops/bloodhound/packages/go/chow/payload"
@@ -68,7 +68,7 @@ func RegisterFossRoutes(
 	authorizer auth.Authorizer,
 	ingestSchema payload.Schema,
 	fileServiceResolver storage.FileServiceResolver,
-	dogtagsService dogtags.Service,
+	featureClient *openfeature.Client,
 	openGraphSchemaService v2.OpenGraphSchemaService,
 	alertPublisher alerts.Publisher,
 ) {
@@ -81,6 +81,6 @@ func RegisterFossRoutes(
 
 	// Static UI assets are exempt from the matched-route API rate limit.
 	routerInst.PathPrefix(api.UserInterfacePath, static.AssetHandler)
-	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
+	var resources = v2.NewResources(rdms, graphDB, cfg, apiCache, graphQuery, collectorManifests, authorizer, authenticator, ingestSchema, fileServiceResolver, featureClient, openGraphSchemaService, alertPublisher)
 	NewV2API(resources, routerInst)
 }

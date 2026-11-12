@@ -21,7 +21,8 @@ import (
 	"context"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/open-feature/go-sdk/openfeature"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 	"github.com/specterops/bloodhound/server/users"
 )
 
@@ -38,26 +39,26 @@ type AppDatabase interface {
 	GetEnvironmentTargetedAccessControlForUser(ctx context.Context, userID uuid.UUID) ([]EnvironmentTargetedAccessControl, error)
 }
 
-// Service wraps a Database and dogtags.Service to provide a higher-level ETAC
+// Service wraps a Database and an OpenFeature client to provide a higher-level ETAC
 // access-check suitable for consumption by BHE feature slices. Callers do not
-// need to hold a reference to dogtags or to the low-level Database interface.
+// need to hold a reference to the feature client or to the low-level Database interface.
 type Service struct {
-	appdb   AppDatabase
-	dogtags dogtags.Service
+	appdb        AppDatabase
+	featureFlags *openfeature.Client
 }
 
 // NewService constructs an ETAC Service from the supplied Database port and
-// dogtags service. The PostgreSQL implementation (Store) lives alongside in
+// OpenFeature client. The PostgreSQL implementation (Store) lives alongside in
 // sql.go so the library exposes a ready-to-use service without leaking a
 // storage-layer dependency.
-func NewService(appdb AppDatabase, dogtagsService dogtags.Service) *Service {
+func NewService(appdb AppDatabase, featureClient *openfeature.Client) *Service {
 	if appdb == nil {
 		panic("etac: service requires a non-nil appdb")
-	} else if dogtagsService == nil {
-		panic("etac: service requires a non-nil dogtagsService")
+	} else if featureClient == nil {
+		panic("etac: service requires a non-nil featureClient")
 	}
 
-	return &Service{appdb: appdb, dogtags: dogtagsService}
+	return &Service{appdb: appdb, featureFlags: featureClient}
 }
 
 // CheckUserAccess reports whether the user may access all of the supplied
@@ -74,7 +75,7 @@ func (s *Service) CheckUserAccess(ctx context.Context, user users.User, environm
 // on the feature flag and the user's environment access. Filtering is skipped
 // when the feature is disabled or when the user has access to all environments.
 func (s *Service) ShouldFilterForETAC(user users.User) bool {
-	if etacEnabled := s.dogtags.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
+	if etacEnabled := s.featureFlags.Boolean(context.Background(), productfeatures.ETAC_ENABLED, false, openfeature.EvaluationContext{}); !etacEnabled {
 		return false
 	} else if user.HasAllEnvironments() {
 		return false
