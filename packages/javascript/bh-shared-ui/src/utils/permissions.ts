@@ -40,6 +40,7 @@ export enum Permission {
     OPENGRAPH_WRITE,
     ALERTS_READ,
     ALERTS_MANAGE,
+    AUDIT_LOG_READ,
 }
 
 export type PermissionDefinition = {
@@ -67,6 +68,10 @@ export const PERMISSIONS: PermissionDefinitions = {
     [Permission.APS_MANAGE_APS]: {
         authority: 'risks',
         name: 'ManageRisks',
+    },
+    [Permission.AUDIT_LOG_READ]: {
+        authority: 'audit_log',
+        name: 'Read',
     },
     [Permission.AUTH_ACCEPT_EULA]: {
         authority: 'auth',
