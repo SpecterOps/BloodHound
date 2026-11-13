@@ -100,9 +100,16 @@ describe('useSubNavRoutes', () => {
             expect(renderRoutes(sections)[0].items).toHaveLength(1);
         });
 
-        it('hides items while permissions are loading', () => {
+        it('keeps permission-gated routes loading until permissions resolve', () => {
             setPermissions({ granted: [Permission.ALERTS_READ], isLoading: true });
-            expect(renderRoutes(sections)).toEqual([]);
+            const { result, rerender } = renderHook(() => useSubNavRoutes(sections, true));
+            expect(result.current.areRoutesLoading).toBe(true);
+            expect(result.current.routes).toEqual([]);
+
+            setPermissions({ granted: [Permission.ALERTS_READ] });
+            rerender();
+            expect(result.current.areRoutesLoading).toBe(false);
+            expect(result.current.routes[0].items).toHaveLength(1);
         });
     });
 
