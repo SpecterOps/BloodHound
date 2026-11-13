@@ -18,6 +18,7 @@ type: object
 required:
   - run_id
   - created_at
+  - metrics
 properties:
   run_id:
     type: string
@@ -27,3 +28,8 @@ properties:
     type: string
     format: date-time
     description: Collection timestamp for the run.
+  metrics:
+    type: object
+    description: Run-wide metric totals keyed by metric name, combined across all included environments and extensions within the request filters and access scope.
+    additionalProperties:
+      $ref: './model.data-quality-metric.yaml'

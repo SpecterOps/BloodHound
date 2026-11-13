@@ -15045,7 +15045,53 @@
                             "runs": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/model.data-quality-stats-counts-run"
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/model.data-quality-count-run"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "environments"
+                                    ],
+                                    "properties": {
+                                      "environments": {
+                                        "type": "object",
+                                        "description": "Environments keyed by environment ID.",
+                                        "additionalProperties": {
+                                          "type": "object",
+                                          "required": [
+                                            "environment_id",
+                                            "extension_id",
+                                            "environment_kind_id",
+                                            "metrics"
+                                          ],
+                                          "properties": {
+                                            "environment_id": {
+                                              "type": "string",
+                                              "description": "The environment ID used as this entry's map key."
+                                            },
+                                            "extension_id": {
+                                              "type": "integer",
+                                              "format": "int32"
+                                            },
+                                            "environment_kind_id": {
+                                              "type": "integer",
+                                              "format": "int32"
+                                            },
+                                            "metrics": {
+                                              "type": "object",
+                                              "description": "Metrics keyed by metric name.",
+                                              "additionalProperties": {
+                                                "$ref": "#/components/schemas/model.data-quality-metric"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             }
                           }
@@ -15300,7 +15346,44 @@
                             "runs": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/model.data-quality-aggregations-counts-run"
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/model.data-quality-count-run"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "required": [
+                                      "extensions"
+                                    ],
+                                    "properties": {
+                                      "extensions": {
+                                        "type": "object",
+                                        "description": "Extensions keyed by the string representation of their extension ID.",
+                                        "additionalProperties": {
+                                          "type": "object",
+                                          "required": [
+                                            "extension_id",
+                                            "metrics"
+                                          ],
+                                          "properties": {
+                                            "extension_id": {
+                                              "type": "integer",
+                                              "format": "int32",
+                                              "description": "The extension ID represented by this entry's map key."
+                                            },
+                                            "metrics": {
+                                              "type": "object",
+                                              "description": "Metrics keyed by metric name, combined across all environment kinds and instances within the extension.",
+                                              "additionalProperties": {
+                                                "$ref": "#/components/schemas/model.data-quality-metric"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             }
                           }
@@ -29655,30 +29738,11 @@
           }
         ]
       },
-      "model.data-quality-count-run": {
-        "type": "object",
-        "required": [
-          "run_id",
-          "created_at"
-        ],
-        "properties": {
-          "run_id": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Identifies the collection run."
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Collection timestamp for the run."
-          }
-        }
-      },
-      "model.data-quality-count-metric": {
+      "model.data-quality-metric": {
         "type": "object",
         "required": [
           "metric_type",
-          "value",
+          "metric_value",
           "kind_id"
         ],
         "properties": {
@@ -29686,7 +29750,7 @@
             "type": "string",
             "description": "The category of the metric."
           },
-          "value": {
+          "metric_value": {
             "type": "number",
             "format": "double"
           },
@@ -29698,49 +29762,32 @@
           }
         }
       },
-      "model.data-quality-stats-counts-run": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.data-quality-count-run"
+      "model.data-quality-count-run": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "created_at",
+          "metrics"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identifies the collection run."
           },
-          {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Collection timestamp for the run."
+          },
+          "metrics": {
             "type": "object",
-            "required": [
-              "environments"
-            ],
-            "properties": {
-              "environments": {
-                "type": "object",
-                "description": "Environments keyed by environment ID.",
-                "additionalProperties": {
-                  "type": "object",
-                  "required": [
-                    "extension_id",
-                    "environment_kind_id",
-                    "metrics"
-                  ],
-                  "properties": {
-                    "extension_id": {
-                      "type": "integer",
-                      "format": "int32"
-                    },
-                    "environment_kind_id": {
-                      "type": "integer",
-                      "format": "int32"
-                    },
-                    "metrics": {
-                      "type": "object",
-                      "description": "Metrics keyed by metric name.",
-                      "additionalProperties": {
-                        "$ref": "#/components/schemas/model.data-quality-count-metric"
-                      }
-                    }
-                  }
-                }
-              }
+            "description": "Run-wide metric totals keyed by metric name, combined across all included environments and extensions within the request filters and access scope.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/model.data-quality-metric"
             }
           }
-        ]
+        }
       },
       "model.data-quality-aggregation": {
         "allOf": [
@@ -29783,40 +29830,6 @@
                 "type": "integer",
                 "format": "int32",
                 "nullable": true
-              }
-            }
-          }
-        ]
-      },
-      "model.data-quality-aggregations-counts-run": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.data-quality-count-run"
-          },
-          {
-            "type": "object",
-            "required": [
-              "extensions"
-            ],
-            "properties": {
-              "extensions": {
-                "type": "object",
-                "description": "Extensions keyed by the string representation of their extension ID.",
-                "additionalProperties": {
-                  "type": "object",
-                  "required": [
-                    "metrics"
-                  ],
-                  "properties": {
-                    "metrics": {
-                      "type": "object",
-                      "description": "Metrics keyed by metric name, combined across all environment kinds and instances within the extension.",
-                      "additionalProperties": {
-                        "$ref": "#/components/schemas/model.data-quality-count-metric"
-                      }
-                    }
-                  }
-                }
               }
             }
           }
