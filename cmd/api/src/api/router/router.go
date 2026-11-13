@@ -223,6 +223,11 @@ func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
 	s.postroutingMiddleware.AppendAfterAuthentication(middleware...)
 }
 
+// Authorizer returns the configured authorization policy.
+func (s Router) Authorizer() auth.Authorizer {
+	return s.authorizer
+}
+
 // UsePanicRecovery registers post-routing middleware that wraps all subsequent
 // post-routing stages, including rate limiting and authentication.
 func (s Router) UsePanicRecovery(middleware ...mux.MiddlewareFunc) {

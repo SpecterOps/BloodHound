@@ -26,9 +26,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/packages/go/params"
+	"github.com/specterops/bloodhound/server/identity"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
@@ -215,4 +219,40 @@ func TestRegister_WiresFeatureModuleRoutes(t *testing.T) {
 			assert.True(t, muxRouter.Match(request, &match), "%s %s route should be registered by Register", tc.method, tc.path)
 		})
 	}
+}
+
+type authTokenReader struct {
+	called bool
+}
+
+func (s *authTokenReader) ListAuthTokens(context.Context, params.Filters, params.SortItems) ([]identity.AuthToken, error) {
+	s.called = true
+	return []identity.AuthToken{}, nil
+}
+
+func TestRegister_ForwardsIdentityOptions(t *testing.T) {
+	var (
+		routerInst  = router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
+		reader      = &authTokenReader{}
+		permissions = auth.Permissions()
+		request     = httptest.NewRequest(http.MethodGet, "/api/v2/tokens", nil)
+		recorder    = httptest.NewRecorder()
+	)
+	modules.Register(modules.Deps{
+		Router:                  &routerInst,
+		Pool:                    new(pgxpool.Pool),
+		Graph:                   &graph.DatabaseSwitch{},
+		DogTags:                 dogTagsService(false),
+		ConfigUpdateSideEffects: mockConfigUpdateSideEffecter{},
+		RateLimitMiddleware: func() mux.MiddlewareFunc {
+			return func(next http.Handler) http.Handler { return next }
+		},
+		IdentityOptions: []identity.Option{identity.WithAuthTokenReader(reader)},
+	})
+	request = bhctx.SetRequestContext(request, &bhctx.Context{AuthCtx: auth.Context{Owner: model.User{
+		Roles: model.Roles{{Permissions: model.Permissions{permissions.AuthCreateToken, permissions.AuthManageSelf, permissions.AuthManageUsers}}},
+	}}})
+	routerInst.Handler().ServeHTTP(recorder, request)
+	assert.Equal(t, http.StatusOK, recorder.Code, recorder.Body.String())
+	assert.True(t, reader.called)
 }

@@ -32,7 +32,7 @@ get:
         $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
     - name: sort_by
       description: |
-        Sortable columns are `user_id`, `client_id`, `name`, `last_access`, `created_at`, `updated_at`, `deleted_at`.
+        Sortable columns are `name`, `last_access`, `created_at`, `updated_at`, `expires_at`.
       in: query
       schema:
         $ref: './../schemas/api.params.query.sort-by.yaml'
@@ -40,10 +40,14 @@ get:
       in: query
       schema:
         $ref: './../schemas/api.params.predicate.filter.string.yaml'
-    - name: key
+    - name: created_by
       in: query
       schema:
-        $ref: './../schemas/api.params.predicate.filter.string.yaml'
+        $ref: './../schemas/api.params.predicate.filter.uuid-nullable-required.yaml'
+    - name: expires_at
+      in: query
+      schema:
+        $ref: './../schemas/api.params.predicate.filter.time-nullable-required.yaml'
     - name: hmac_method
       in: query
       schema:
@@ -58,7 +62,6 @@ get:
         $ref: './../schemas/api.params.predicate.filter.uuid.yaml'
     - $ref: './../parameters/query.created-at.yaml'
     - $ref: './../parameters/query.updated-at.yaml'
-    - $ref: './../parameters/query.deleted-at.yaml'
   responses:
     200:
       description: OK

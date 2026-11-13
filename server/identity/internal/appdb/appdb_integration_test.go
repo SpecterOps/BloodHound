@@ -753,6 +753,85 @@ func seedDisabledUser(t *testing.T, ctx context.Context, pool *pgxpool.Pool, pri
 	return id
 }
 
+// seedAuthToken inserts an auth token owned by the supplied user and returns its id.
+func seedAuthToken(t *testing.T, ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, name string) uuid.UUID {
+	t.Helper()
+
+	id, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx,
+		`INSERT INTO auth_tokens (id, user_id, name, key, hmac_method, last_access, created_by, created_at, updated_at)
+		 VALUES ($1, $2, $3, 'secret-key', 'hmac-sha2-256', now(), $2, now(), now())`,
+		id.String(), userID.String(), name,
+	)
+	require.NoError(t, err)
+
+	return id
+}
+
+func TestStore_ListAuthTokens_Integration(t *testing.T) {
+	t.Run("returns tokens filtered by user_id", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			ownerID     = seedUser(t, ctx, pool, "list-tokens-owner", false)
+			otherID     = seedUser(t, ctx, pool, "list-tokens-other", false)
+			tokenID     = seedAuthToken(t, ctx, pool, ownerID, "owner-token")
+		)
+
+		seedAuthToken(t, ctx, pool, otherID, "other-token")
+
+		authTokens, err := store.ListAuthTokens(ctx, params.Filters{
+			"user_id": {{Field: "user_id", Operator: params.Equals, Value: ownerID.String(), SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		require.Len(t, authTokens, 1)
+		assert.Equal(t, tokenID, authTokens[0].ID)
+		assert.Equal(t, uuid.NullUUID{UUID: ownerID, Valid: true}, authTokens[0].UserID)
+		assert.Equal(t, uuid.NullUUID{UUID: ownerID, Valid: true}, authTokens[0].CreatedBy)
+		assert.Equal(t, "owner-token", authTokens[0].Name.String)
+		assert.Equal(t, "hmac-sha2-256", authTokens[0].HmacMethod)
+		assert.False(t, authTokens[0].ExpiresAt.Valid)
+	})
+
+	t.Run("returns tokens filtered by a timestamp range", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			ownerID     = seedUser(t, ctx, pool, "list-tokens-range", false)
+		)
+
+		seedAuthToken(t, ctx, pool, ownerID, "range-token")
+
+		authTokens, err := store.ListAuthTokens(ctx, params.Filters{
+			"created_at": {{Field: "created_at", Operator: params.GreaterThan, Value: "2000-01-01T00:00:00Z", SetOperator: params.FilterAnd}},
+		}, params.SortItems{})
+		require.NoError(t, err)
+		require.Len(t, authTokens, 1)
+		assert.Equal(t, "range-token", authTokens[0].Name.String)
+	})
+
+	t.Run("returns tokens sorted by name descending", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			ownerID     = seedUser(t, ctx, pool, "list-tokens-sort", false)
+		)
+
+		seedAuthToken(t, ctx, pool, ownerID, "aaa-token")
+		seedAuthToken(t, ctx, pool, ownerID, "zzz-token")
+		seedAuthToken(t, ctx, pool, ownerID, "eee-token")
+
+		authTokens, err := store.ListAuthTokens(ctx, params.Filters{}, params.SortItems{{Field: "name", Direction: params.Descending}})
+		require.NoError(t, err)
+		require.Len(t, authTokens, 3)
+		assert.Equal(t, "zzz-token", authTokens[0].Name.String)
+		assert.Equal(t, "eee-token", authTokens[1].Name.String)
+		assert.Equal(t, "aaa-token", authTokens[2].Name.String)
+	})
+}
+
 // seedUserWithNullDetails inserts a user row whose first_name, last_name and
 // email_address are left NULL and returns its id.
 func seedUserWithNullDetails(t *testing.T, ctx context.Context, pool *pgxpool.Pool, principalName string) uuid.UUID {
