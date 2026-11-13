@@ -57,6 +57,8 @@ jobs:
         run: |
           export CI=false
           go tool stbernard deps
+          yarn workspace bloodhound-ui playwright install --with-deps chromium
+          yarn workspace bh-playwright-testing test:codegen
           go tool stbernard test -y
 
       - name: Upload Allure Results
