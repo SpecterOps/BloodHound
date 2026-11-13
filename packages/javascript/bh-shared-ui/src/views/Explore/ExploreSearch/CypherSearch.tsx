@@ -17,7 +17,7 @@ import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { AccessibleIcon, Button, ButtonVariants, CheckboxWithLabel } from 'doodle-ui';
+import { AccessibleIcon, Button, ButtonGroup, ButtonVariants, CheckboxWithLabel } from 'doodle-ui';
 import { FlatGraphResponse, GraphResponse, UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { UncommonSearches } from '../../../commonSearchesAGT';
@@ -375,17 +375,17 @@ const CypherSearchInner = ({
                             {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
                                 <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
                             )}
-                            <div className='flex'>
+                            <ButtonGroup aria-label='Save query actions'>
                                 <Button
                                     variant='secondary'
                                     onClick={handleClickSave}
                                     aria-label='Save query'
                                     size='small'
-                                    className='rounded-r-none px-4 text-base/none'>
+                                    className='px-4 text-base/none'>
                                     Save
                                 </Button>
                                 <SaveQueryActionMenu saveAs={handleSaveAs} />
-                            </div>
+                            </ButtonGroup>
 
                             {/* below is a link, rather than a Button, as it launches to a new page */}
                             <a
