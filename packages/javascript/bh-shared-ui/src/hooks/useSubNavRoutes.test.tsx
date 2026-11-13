@@ -86,6 +86,34 @@ describe('useSubNavRoutes', () => {
         });
     });
 
+    describe('hideWhenFeatureFlagEnabled gate', () => {
+        const sections: SubNavSection[] = [
+            { title: 's', items: [makeItem({ hideWhenFeatureFlagEnabled: 'collector_health' })] },
+        ];
+
+        it('shows items when the flag is disabled', () => {
+            mockUseFeatureFlags.mockReturnValue({
+                data: [{ key: 'collector_health', enabled: false }],
+                isLoading: false,
+            });
+            expect(renderRoutes(sections)[0].items).toHaveLength(1);
+        });
+
+        it('shows items when the flag is absent', () => {
+            expect(renderRoutes(sections)[0].items).toHaveLength(1);
+        });
+
+        it('hides items when the flag is enabled', () => {
+            setFeatureFlags({ enabledKeys: ['collector_health'] });
+            expect(renderRoutes(sections)).toEqual([]);
+        });
+
+        it('hides items while feature flags are loading', () => {
+            setFeatureFlags({ isLoading: true });
+            expect(renderRoutes(sections)).toEqual([]);
+        });
+    });
+
     describe('permissions gate', () => {
         const sections: SubNavSection[] = [
             { title: 's', items: [makeItem({ permissions: [Permission.ALERTS_READ] })] },
