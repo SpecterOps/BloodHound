@@ -23,6 +23,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/responses"
 )
 
 func (s *Handlers) Logout(response http.ResponseWriter, request *http.Request) {
@@ -37,4 +38,13 @@ func (s *Handlers) Logout(response http.ResponseWriter, request *http.Request) {
 
 	redirectURL := api.URLJoinPath(*bhCtx.Host, UserInterfacePath)
 	http.Redirect(response, request, redirectURL.String(), http.StatusOK)
+}
+
+func (s *Handlers) GetSelf(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx   = request.Context()
+		bhCtx = bhctx.Get(ctx)
+	)
+
+	responses.WriteBasic(ctx, buildSelfView(bhCtx.AuthCtx), http.StatusOK, response)
 }
