@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ROUTE_PRIVILEGE_ZONES, SubNavSection } from 'bh-shared-ui';
+import { type LoginRedirectOptions, ROUTE_PRIVILEGE_ZONES, SubNavSection } from 'bh-shared-ui';
 import { lazy } from 'react';
 
 export const ROUTE_HOME = '/';
@@ -119,3 +119,8 @@ export const adminSections: SubNavSection[] = [
         ],
     },
 ];
+
+export const loginRedirectOptions: LoginRedirectOptions = {
+    fallback: ROUTE_EXPLORE,
+    excludedPaths: [ROUTE_HOME, ROUTE_LOGIN, ROUTE_EXPIRED_PASSWORD, ROUTE_USER_DISABLED],
+};
