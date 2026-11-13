@@ -24,6 +24,7 @@ get:
     - Clients
     - Enterprise
   parameters:
+    - $ref: './../parameters/query.jobs.hydrate-last-job.yaml'
     - $ref: './../parameters/query.created-at.yaml'
     - $ref: './../parameters/query.updated-at.yaml'
     - $ref: './../parameters/query.deleted-at.yaml'
@@ -94,7 +95,18 @@ get:
                   data:
                     type: array
                     items:
-                      $ref: './../schemas/model.client-display.yaml'
+                      allOf:
+                        - $ref: './../schemas/model.client-display.yaml'
+                        - type: object
+                          properties:
+                            last_job:
+                              type: object
+                              nullable: true
+                              description: >
+                                The most recent job record for this client.
+                                Omitted when hydrateLastJob is false or not supplied. When true, null if no job record exists.
+                              allOf:
+                                - $ref: './../schemas/model.client-scheduled-job-display.yaml'
     400:
       $ref: './../responses/bad-request.yaml'
     401:
