@@ -176,6 +176,13 @@ func TestHandlers_GetSelf_PreservesLegacyResponse(t *testing.T) {
 				},
 			},
 			{
+				name: "non-user requester preserves its own response shape",
+				owner: struct {
+					ID   uuid.UUID `json:"id"`
+					Name string    `json:"name"`
+				}{ID: userID, Name: "collector"},
+			},
+			{
 				name: "unauthenticated request",
 			},
 		}

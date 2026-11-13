@@ -23,6 +23,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/packages/go/responses"
 )
 
 type UserView struct {
@@ -42,9 +43,9 @@ type UserView struct {
 	TimestampsView
 }
 
-// buildSelfView reads the authentication boundary and projects the user onto the
-// existing self response schema. A missing user produces a null response payload.
-func buildSelfView(authContext auth.Context) *UserView {
+// buildSelfView projects users onto the explicit user response schema and
+// preserves other authentication owners such as Enterprise clients/collectors
+func buildSelfView(authContext auth.Context) responses.JSONViewer {
 	var (
 		authSecret        *AuthSecretView
 		roles             []RoleView
@@ -52,7 +53,7 @@ func buildSelfView(authContext auth.Context) *UserView {
 	)
 
 	if user, found := auth.GetUserFromAuthCtx(authContext); !found {
-		return nil
+		return ownerView{authContext: authContext}
 	} else {
 		if user.AuthSecret != nil {
 			authSecret = &AuthSecretView{
@@ -133,6 +134,15 @@ func buildSelfView(authContext auth.Context) *UserView {
 			EULAAccepted:                     user.EULAAccepted,
 		}
 	}
+}
+
+// ownerView preserves non-user owner JSON, including null, without Enterprise dependencies
+type ownerView struct {
+	authContext auth.Context
+}
+
+func (s ownerView) JSONView() ([]byte, error) {
+	return json.Marshal(s.authContext.Owner)
 }
 
 func (s *UserView) JSONView() ([]byte, error) {
