@@ -126,6 +126,13 @@ describe('Formatting number properties', () => {
         // Honors specified padding
         expect(formatNumber(4, 'ad', 'certificatemappingmethodsraw')).toEqual('4 (0x04)');
     });
+
+    it.each(['ntlmminclientsec', 'ntlmminserversec'])(
+        'displays %s as an eight-digit hexadecimal NTLM session security mask',
+        (property) => {
+            expect(formatNumber(537395200, 'ad', property)).toEqual('537395200 (0x20080000)');
+        }
+    );
 });
 
 describe('Formatting boolean properties', () => {
