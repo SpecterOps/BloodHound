@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ColumnDef } from '@tanstack/react-table';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { DataTable } from './DataTable';
 
@@ -39,6 +39,35 @@ const columns: ColumnDef<Person>[] = [
 ];
 
 describe('DataTable', () => {
+    it('preserves caller-controlled multiple selection when a row is clicked', () => {
+        const onRowClick = vi.fn();
+        const onRowSelectionChange = vi.fn();
+        const data = [{ name: 'Ada Lovelace' }, { name: 'Grace Hopper' }];
+        const { rerender } = render(
+            <DataTable
+                columns={columns}
+                data={data}
+                onRowClick={onRowClick}
+                tableOptions={{ state: { rowSelection: { 0: true, 1: true } }, onRowSelectionChange }}
+            />
+        );
+
+        const firstRow = screen.getByRole('row', { name: 'Ada Lovelace' });
+        const secondRow = screen.getByRole('row', { name: 'Grace Hopper' });
+
+        fireEvent.click(firstRow);
+
+        expect(firstRow).toHaveAttribute('data-state', 'selected');
+        expect(secondRow).toHaveAttribute('data-state', 'selected');
+        expect(onRowClick).toHaveBeenCalledWith(data[0]);
+        expect(onRowSelectionChange).not.toHaveBeenCalled();
+
+        rerender(<DataTable columns={columns} data={data} tableOptions={{ state: { rowSelection: { 1: true } } }} />);
+
+        expect(firstRow).not.toHaveAttribute('data-state', 'selected');
+        expect(secondRow).toHaveAttribute('data-state', 'selected');
+    });
+
     it('keeps the default empty table content-sized', () => {
         render(<DataTable columns={columns} data={[]} />);
 
