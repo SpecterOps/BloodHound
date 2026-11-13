@@ -146,6 +146,19 @@ describe('ManageColumnsComboBox', () => {
         expect(screen.getByText('Custom Column 1')).toBeInTheDocument();
     });
 
+    it('toggles a column only once when its checkbox label is clicked', async () => {
+        const { user, onChange } = setup();
+        await user.click(screen.getByRole('button', { name: /columns/i }));
+        onChange.mockClear();
+
+        await user.click(screen.getByText('Kind', { exact: true }));
+
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange).toHaveBeenCalledWith(
+            allColumns.filter((column) => defaultSelectedColumns[column.id] && column.id !== 'kind')
+        );
+    });
+
     it('filters unselected columns when typing in the filter input', async () => {
         const { user } = setup({ selectedColumns: {} });
         await user.click(screen.getByRole('button', { name: /columns/i }));
