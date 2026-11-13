@@ -200,7 +200,7 @@ x-tagGroups:
       - Asset Scores
       - Meta Entities
       - Alerts
-      # - Graph Retention Policies
+      - Graph Retention Policies
 paths:
   ##
   # Community + Enterprise Endpoints
@@ -393,10 +393,10 @@ paths:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
 
   # graph retention policies
-  # /api/v2/graph-retention-policies/base/policy:
-  #   $ref: './paths/graph-retention-policies.base.policy.yaml'
-  # /api/v2/graph-retention-policies/extensions/{extension_id}/policy:
-  #   $ref: './paths/graph-retention-policies.extensions.id.policy.yaml'
+  /api/v2/graph-retention-policies/base/policy:
+    $ref: './paths/graph-retention-policies.base.policy.yaml'
+  /api/v2/graph-retention-policies/extensions/{extension_id}/policy:
+    $ref: './paths/graph-retention-policies.extensions.id.policy.yaml'
 
   # opengraph extensions
   /api/v2/extensions:

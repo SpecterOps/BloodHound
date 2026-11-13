@@ -7822,6 +7822,317 @@
         }
       }
     },
+    "/api/v2/graph-retention-policies/base/policy": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetBaseRetentionPolicy",
+        "summary": "Get Base Retention Policy",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "UpdateBaseRetentionPolicy",
+        "summary": "Update Base Retention Policy",
+        "description": "Creates the base policy if it is missing; otherwise updates it, and returns the saved policy with 200 OK.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "TTL must be an ISO 8601 duration between 4 and 30 days inclusive (P4D to P30D).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/model.graph-retention-policy"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved base retention policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "PatchBaseRetentionPolicy",
+        "summary": "Enable/Disable Base Retention Policy",
+        "description": "Disabling the base retention policy stops graph data pruning and causes more-specific retention policies to be ignored. The TTL remains unchanged. Requires admin permissions and the retention_policies feature flag. Returns 404 if the feature flag is disabled or the base policy does not exist.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "enabled"
+                    ],
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated base retention policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/graph-retention-policies/extensions/{extension_id}/policy": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "extension_id",
+          "description": "Extension ID",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetExtensionRetentionPolicy",
+        "summary": "Get Extension Retention Policy",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-extension-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "UpdateExtensionRetentionPolicy",
+        "summary": "Update Extension Retention Policy",
+        "description": "Creates or updates the given extension policy and returns the saved policy with 200 OK.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "TTL must be an ISO 8601 duration between 4 and 30 days inclusive (P4D to P30D).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/model.graph-retention-policy"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved extension retention policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/extensions": {
       "put": {
         "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP bundle must contain `schema.json`, without embedded optional components, and may contain `pz_rules.json` and `saved_queries.json`. Recognized components may be at the ZIP root or one folder deep. For ZIP bundles, findings require `pz_rules.json` with at least one rule. Duplicate components and unexpected files are rejected.\n\nThe root `__MACOSX` entry and everything under `__MACOSX/`, along with hidden files at the ZIP root, are ignored. Top-level directory entries are ignored; deeper directory entries and files more than one folder deep are rejected. All other files remain subject to normal component validation.\n\nEach recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.\n",
@@ -28513,6 +28824,41 @@
           }
         }
       },
+      "model.graph-retention-policy": {
+        "type": "object",
+        "description": "The core data to describe a retention policy",
+        "required": [
+          "enabled",
+          "ttl"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "ttl": {
+            "type": "string",
+            "description": "Retention duration expressed as an ISO 8601 duration string, between 4 and 30 days inclusive (P4D to P30D).",
+            "example": "P14D"
+          }
+        }
+      },
+      "model.graph-extension-retention-policy": {
+        "type": "object",
+        "description": "The data to describe an extension retention policy",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.graph-retention-policy"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "extension_id": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      },
       "api.response.graph-extensions-info": {
         "type": "object",
         "properties": {
@@ -31703,7 +32049,8 @@
         "Risk Posture",
         "Asset Scores",
         "Meta Entities",
-        "Alerts"
+        "Alerts",
+        "Graph Retention Policies"
       ]
     }
   ]
