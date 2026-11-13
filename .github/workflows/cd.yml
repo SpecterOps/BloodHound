@@ -42,7 +42,7 @@ jobs:
         590372943691.dkr.ecr.us-east-1.amazonaws.com/bhce/deployment
       build_target: bloodhound
       build_context: .
-      image_sbom: true
+      image_sbom: ${{ 'true' }}
       image_provenance: mode=max
       build_outputs: type=image,push=true
       dockerfile: dockerfiles/bloodhound.Dockerfile
@@ -78,6 +78,52 @@ jobs:
       gh_access_token: ${{ secrets.GITHUB_TOKEN }}
       ecr_aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
       ecr_aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
+
+  scan-container-image:
+    name: Scan Published BloodHound Image (${{ matrix.architecture }})
+    needs: bloodhound-container-image
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [amd64, arm64]
+    steps:
+      - name: Checkout source code for scanner configuration
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Authenticate with DockerHub Registry
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # ratchet:docker/login-action@v4.7.0
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # DockerHub and ECR receive the same image; scan the published digest.
+      - name: Scan published image
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # ratchet:anchore/scan-action@v7.4.2
+        env:
+          GRYPE_PLATFORM: linux/${{ matrix.architecture }}
+        with:
+          image: registry:docker.io/specterops/bloodhound@${{ needs.bloodhound-container-image.outputs.image_digest }}
+          grype-version: v0.121.1
+          config: .grype.yaml
+          severity-cutoff: high
+          only-fixed: false
+          fail-build: false
+          cache-db: false
+          output-format: json
+          output-file: grype-${{ matrix.architecture }}.json
+
+      - name: Upload container vulnerability report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # ratchet:actions/upload-artifact@v7
+        with:
+          name: container-vulnerability-reports-${{ matrix.architecture }}
+          path: grype-${{ matrix.architecture }}.json
+          if-no-files-found: warn
+          retention-days: 30
 
   cosign-image-signing:
     needs: bloodhound-container-image
