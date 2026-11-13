@@ -225,6 +225,10 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
     });
 
     useEffect(() => {
+        if (tableOptions.state?.rowSelection !== undefined) {
+            return;
+        }
+
         if (!selectedRow && table.getIsSomeRowsSelected()) {
             table.setRowSelection({});
         }
@@ -232,7 +236,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         if (selectedRow && !table.getState().rowSelection[selectedRow]) {
             table.setRowSelection({ [selectedRow]: true });
         }
-    }, [selectedRow, table]);
+    }, [selectedRow, table, tableOptions.state?.rowSelection]);
 
     const virtualizationOptions = useMemo(
         () => ({
@@ -252,7 +256,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
         (row: Row<TData>) => {
             if (typeof onRowClick === 'function') {
                 // When selectedRow is provided the parent controls selection.
-                if (selectedRow === undefined) {
+                if (selectedRow === undefined && tableOptions.state?.rowSelection === undefined) {
                     const isAlreadySelected = table.getState().rowSelection[row.id];
 
                     if (isAlreadySelected) {
@@ -265,7 +269,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                 onRowClick(row?.original);
             }
         },
-        [onRowClick, selectedRow, table]
+        [onRowClick, selectedRow, table, tableOptions.state?.rowSelection]
     );
 
     const isCrossBoundaryDrag = useCallback(
