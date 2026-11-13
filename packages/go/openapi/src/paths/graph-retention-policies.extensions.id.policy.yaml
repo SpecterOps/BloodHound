@@ -17,7 +17,7 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - name: extension_id
-    description: Required positive identifier of the extension whose policy is being updated.
+    description: Required positive identifier of the extension whose policy is being interacted with.
     in: path
     required: true
     schema:
