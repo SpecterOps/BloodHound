@@ -32,6 +32,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
@@ -93,6 +94,7 @@ func TestGetDatapipeStatus(t *testing.T) {
 				Pool:                    db.Pool(),
 				Graph:                   &graph.DatabaseSwitch{},
 				DogTags:                 testDogTags(),
+				IdentityResolver:        auth.NewIdentityResolver(),
 				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
@@ -271,6 +273,7 @@ func TestGetAppConfigs(t *testing.T) {
 				Pool:                    db.Pool(),
 				Graph:                   &graph.DatabaseSwitch{},
 				DogTags:                 testDogTags(),
+				IdentityResolver:        auth.NewIdentityResolver(),
 				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
@@ -431,6 +434,7 @@ func TestSetAppConfigs(t *testing.T) {
 				Pool:                    db.Pool(),
 				Graph:                   &graph.DatabaseSwitch{},
 				DogTags:                 testDogTags(),
+				IdentityResolver:        auth.NewIdentityResolver(),
 				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)

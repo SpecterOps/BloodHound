@@ -24,12 +24,14 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/server/appcfg/internal/adapter"
 	"github.com/specterops/bloodhound/server/appcfg/internal/appdb"
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 	"github.com/specterops/bloodhound/server/appcfg/internal/routes"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
+	"github.com/specterops/bloodhound/server/audit"
 	"github.com/specterops/bloodhound/server/featureflags"
 )
 
@@ -43,8 +45,9 @@ type ConfigurationAdapter interface {
 
 func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
 	var (
-		store   = appdb.NewStore(pool)
-		service = services.NewService(store)
+		store        = appdb.NewStore(pool)
+		auditService = audit.Register(pool, auth.NewIdentityResolver())
+		service      = services.NewService(store, auditService)
 	)
 
 	return adapter.NewConfigurationAdapter(store, service)
@@ -60,11 +63,11 @@ type ConfigUpdateSideEffecter interface {
 // Register builds the appcfg store -> service -> handler chain and attaches
 // the appcfg routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
-func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter, auditor audit.Service) {
 	var (
 		ffReader   = featureflags.NewFeatureFlagRequestAdapter(pool)
 		store      = appdb.NewStore(pool)
-		service    = services.NewService(store)
+		service    = services.NewService(store, auditor)
 		handlerSet = handlers.NewHandlers(service, ffReader, configUpdateSideEffecter, configUpdateSideEffecter)
 	)
 

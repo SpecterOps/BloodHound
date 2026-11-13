@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/server/audit"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -101,7 +102,7 @@ func TestRegister(t *testing.T) {
 
 	// Should not panic
 	require.NotPanics(t, func() {
-		featureflags.Register(&routerInst, pool)
+		featureflags.Register(&routerInst, pool, audit.Register(pool, auth.NewIdentityResolver()))
 	})
 
 	muxRouter := routerInst.MuxRouter()

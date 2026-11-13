@@ -19,7 +19,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/server/audit"
 )
 
 var (
@@ -33,10 +35,23 @@ type Database interface {
 	UpsertConfigurationParameter(ctx context.Context, parameterKey ParameterKey, value types.JSONBObject) error
 }
 
-type Service struct {
-	db Database
+type Auditor interface {
+	Begin(ctx context.Context, entry audit.Entry) (uuid.UUID, error)
+	Complete(ctx context.Context, commitID uuid.UUID, entry audit.Entry, operationErr error) error
 }
 
-func NewService(databaseInterface Database) *Service {
-	return &Service{db: databaseInterface}
+type Service struct {
+	db      Database
+	auditor Auditor
+}
+
+func NewService(databaseInterface Database, auditor Auditor) *Service {
+	if databaseInterface == nil {
+		panic("appcfg: service requires a non-nil Database")
+	}
+	if auditor == nil {
+		panic("appcfg: service requires a non-nil Auditor")
+	}
+
+	return &Service{db: databaseInterface, auditor: auditor}
 }

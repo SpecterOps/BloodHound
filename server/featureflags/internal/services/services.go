@@ -21,10 +21,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/server/audit"
 )
 
 // Feature-flag keys referenced by BHE feature slices. These mirror the keys
@@ -86,23 +89,32 @@ type AnalysisRequestSubmitter interface {
 	SubmitAnalysisRequest(ctx context.Context, requestedBy string, analysisMode model.AnalysisMode) error
 }
 
+type Auditor interface {
+	Begin(ctx context.Context, entry audit.Entry) (uuid.UUID, error)
+	Complete(ctx context.Context, commitID uuid.UUID, entry audit.Entry, operationErr error) error
+}
+
 // Service implements feature-flag use cases on top of a Database implementation.
 type Service struct {
 	db                Database
 	analysisRequester AnalysisRequestSubmitter
+	auditor           Auditor
 }
 
 // NewService constructs a Service from the supplied Database port. The
 // PostgreSQL implementation (Store) lives alongside in sql.go so callers obtain
 // a ready-to-use service without taking on a storage-layer dependency directly.
-func NewService(db Database, analysisRequester AnalysisRequestSubmitter) *Service {
+func NewService(db Database, analysisRequester AnalysisRequestSubmitter, auditor Auditor) *Service {
 	if db == nil {
 		panic("feature-flag: service requires a non-nil Database")
 	}
 	if analysisRequester == nil {
 		panic("feature-flag: service requires a non-nil AnalysisRequestSubmitter")
 	}
-	return &Service{db: db, analysisRequester: analysisRequester}
+	if auditor == nil {
+		panic("feature-flag: service requires a non-nil Auditor")
+	}
+	return &Service{db: db, analysisRequester: analysisRequester, auditor: auditor}
 }
 
 // GetFlagByKey returns the feature flag for the supplied key, or ErrNotFound
@@ -144,7 +156,7 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 
 	flag.Enabled = !flag.Enabled
 
-	if err := s.db.SetFlag(ctx, flag); err != nil {
+	if err := s.setFlag(ctx, flag); err != nil {
 		return flag, err
 	}
 
@@ -156,7 +168,7 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 		if err := s.analysisRequester.SubmitAnalysisRequest(ctx, analysisRequestSource, model.AnalysisModeNoPostProcessing); err != nil {
 			flag.Enabled = !flag.Enabled
 
-			if rollbackErr := s.db.SetFlag(ctx, flag); rollbackErr != nil {
+			if rollbackErr := s.setFlag(ctx, flag); rollbackErr != nil {
 				return flag, errors.Join(err, rollbackErr)
 			}
 
@@ -165,4 +177,27 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 	}
 
 	return flag, nil
+}
+
+func (s *Service) setFlag(ctx context.Context, flag FeatureFlag) error {
+	var (
+		entry = audit.Entry{
+			Action: model.AuditLogActionToggleEarlyAccessFeatureFlag,
+			Fields: flag.AuditData(),
+		}
+		commitID     uuid.UUID
+		operationErr error
+		err          error
+	)
+
+	if commitID, err = s.auditor.Begin(ctx, entry); err != nil {
+		return fmt.Errorf("writing toggle feature flag audit intent: %w", err)
+	}
+
+	operationErr = s.db.SetFlag(ctx, flag)
+	if err = s.auditor.Complete(ctx, commitID, entry, operationErr); err != nil {
+		return fmt.Errorf("writing toggle feature flag audit outcome: %w", err)
+	}
+
+	return operationErr
 }

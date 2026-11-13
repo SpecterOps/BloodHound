@@ -17,26 +17,18 @@ package appdb
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
 )
 
-const (
-	tableFeatureFlags = "feature_flags"
-	tableAuditLogs    = "audit_logs"
-)
+const tableFeatureFlags = "feature_flags"
 
 // queryExecer is the minimal pgx surface the feature-flag store relies on. It is
 // satisfied by both *pgxpool.Pool and the test doubles used in unit tests.
@@ -194,52 +186,7 @@ func (s *Store) GetAllFlags(ctx context.Context) ([]services.FeatureFlag, error)
 	return flags, nil
 }
 
-// TODO: This will be used in middleware and will need to be removed when implemented
-func insertAuditLog(ctx context.Context, querier queryExecer, flag services.FeatureFlag) error {
-	var (
-		commitID, err = uuid.NewV4()
-		bheCtx        = bhctx.Get(ctx)
-		user, isUser  = auth.GetUserFromAuthCtx(bheCtx.AuthCtx)
-	)
-	if err != nil {
-		return fmt.Errorf("generating commit id: %w", err)
-	}
-	if !isUser {
-		return fmt.Errorf("no authenticated user on context")
-	}
-
-	fields, err := json.Marshal(flag.AuditData())
-	if err != nil {
-		return fmt.Errorf("marshalling audit fields: %w", err)
-	}
-
-	insertBuilder := sqlbuilder.PostgreSQL.NewInsertBuilder()
-	insertBuilder.InsertInto(tableAuditLogs)
-	insertBuilder.Cols(
-		"created_at", "actor_id", "actor_name", "actor_email",
-		"action", "fields", "request_id", "source_ip_address",
-		"status", "commit_id",
-	)
-	insertBuilder.Values(
-		time.Now().UTC(),
-		user.ID.String(),
-		user.PrincipalName,
-		user.EmailAddress.ValueOrZero(),
-		string(model.AuditLogActionToggleEarlyAccessFeatureFlag),
-		string(fields),
-		bheCtx.RequestID,
-		bheCtx.RequestIP,
-		string(model.AuditLogStatusSuccess),
-		commitID.String(),
-	)
-
-	sqlQuery, args := insertBuilder.Build()
-	_, err = querier.Exec(ctx, sqlQuery, args...)
-	return err
-}
-
-// SetFlag updates a feature flag's enablement. When the flag is user-updatable,
-// an audit log entry is written in the same transaction as the update.
+// SetFlag updates a feature flag's enablement.
 func (s *Store) SetFlag(ctx context.Context, flag services.FeatureFlag) error {
 	var (
 		updateBuilder = sqlbuilder.PostgreSQL.NewUpdateBuilder()
@@ -271,12 +218,6 @@ func (s *Store) SetFlag(ctx context.Context, flag services.FeatureFlag) error {
 	}
 	if commandTag.RowsAffected() == 0 {
 		return services.ErrNotFound
-	}
-
-	if flag.UserUpdatable {
-		if err = insertAuditLog(ctx, tx, flag); err != nil {
-			return err
-		}
 	}
 
 	return tx.Commit(ctx)

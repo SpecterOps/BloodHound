@@ -41,6 +41,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/analysis"
+	"github.com/specterops/bloodhound/server/audit"
 	"github.com/specterops/bloodhound/server/featureflags/internal/appdb"
 	"github.com/specterops/bloodhound/server/featureflags/internal/handlers"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
@@ -141,7 +142,7 @@ func getFeatureFlagsPostgresConfig(t *testing.T) pgtestdb.Config {
 // and returns its GET handler.
 func newGetAllFlagsHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
-	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()))
+	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()), audit.Register(db.Pool(), auth.NewIdentityResolver()))
 	return handlers.NewHandlersContainer(svc).GetAllFlags
 }
 
@@ -149,7 +150,7 @@ func newGetAllFlagsHandler(db *database.BloodhoundDB) http.HandlerFunc {
 // by a pgx-backed featureflags stack and wrapped with auth-injecting middleware.
 func newToggleFlagHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
-	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()))
+	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()), audit.Register(db.Pool(), auth.NewIdentityResolver()))
 	return injectAuthMiddleware(handlers.NewHandlersContainer(svc).ToggleFlag, userID)
 }
 

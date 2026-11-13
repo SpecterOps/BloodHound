@@ -23,11 +23,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/duration"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services/mocks"
+	"github.com/specterops/bloodhound/server/audit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -35,6 +38,45 @@ import (
 var (
 	ErrDB = errors.New("database error")
 )
+
+func TestNewService_NilDependenciesPanic(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		construct     func(*mocks.MockDatabase, *mocks.MockAuditor)
+		expectedPanic string
+	}{
+		{
+			name: "Error: nil Database",
+			construct: func(_ *mocks.MockDatabase, auditor *mocks.MockAuditor) {
+				services.NewService(nil, auditor)
+			},
+			expectedPanic: "appcfg: service requires a non-nil Database",
+		},
+		{
+			name: "Error: nil Auditor",
+			construct: func(database *mocks.MockDatabase, _ *mocks.MockAuditor) {
+				services.NewService(database, nil)
+			},
+			expectedPanic: "appcfg: service requires a non-nil Auditor",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			var (
+				database = mocks.NewMockDatabase(t)
+				auditor  = mocks.NewMockAuditor(t)
+			)
+
+			assert.PanicsWithValue(t, testCase.expectedPanic, func() {
+				testCase.construct(database, auditor)
+			})
+		})
+	}
+}
 
 func TestService_GetDatapipeStatus(t *testing.T) {
 	var (
@@ -88,7 +130,7 @@ func TestService_GetDatapipeStatus(t *testing.T) {
 			mockDB := mocks.NewMockDatabase(t)
 			tt.setupMock(mockDB)
 
-			svc := services.NewService(mockDB)
+			svc := services.NewService(mockDB, mocks.NewMockAuditor(t))
 			result, err := svc.GetDatapipeStatus(ctx)
 
 			if tt.wantErr != nil {
@@ -113,12 +155,12 @@ func setUpMockWithParam(t *testing.T, ctx context.Context, paramKey services.Par
 	}
 	mockDB := mocks.NewMockDatabase(t)
 	mockDB.EXPECT().GetConfigurationParameter(ctx, paramKey).Return(parameter, error(nil))
-	return services.NewService(mockDB)
+	return services.NewService(mockDB, mocks.NewMockAuditor(t))
 }
 
 func TestService_ValidateValue(t *testing.T) {
 	mockDB := mocks.NewMockDatabase(t)
-	svc := services.NewService(mockDB)
+	svc := services.NewService(mockDB, mocks.NewMockAuditor(t))
 
 	// specific validator tag rules are already tested elsewhere
 	var cases = []struct {
@@ -280,7 +322,7 @@ func TestService_GetConfig(t *testing.T) {
 		)
 		mockDB := mocks.NewMockDatabase(t)
 		mockDB.EXPECT().GetConfigurationParameter(ctx, fixtureKey1).Return(services.Parameter{}, ErrDB)
-		service := services.NewService(mockDB)
+		service := services.NewService(mockDB, mocks.NewMockAuditor(t))
 
 		parameterVal, err := service.GetConfig[fixtureParam1](ctx, fixtureKey1)
 
@@ -313,7 +355,7 @@ func TestService_GetConfig(t *testing.T) {
 			ctx = context.Background()
 		)
 		mockDB := mocks.NewMockDatabase(t)
-		service := services.NewService(mockDB)
+		service := services.NewService(mockDB, mocks.NewMockAuditor(t))
 		_, err := service.GetConfig[fixtureParam2](ctx, fixtureKey1)
 
 		require.Error(t, err)
@@ -329,7 +371,7 @@ func TestService_IsAPIAllowedKey(t *testing.T) {
 
 	var (
 		mockDB  = mocks.NewMockDatabase(t)
-		service = services.NewService(mockDB)
+		service = services.NewService(mockDB, mocks.NewMockAuditor(t))
 	)
 
 	t.Run("true case", func(t *testing.T) {
@@ -339,4 +381,84 @@ func TestService_IsAPIAllowedKey(t *testing.T) {
 	t.Run("false case", func(t *testing.T) {
 		assert.False(t, service.IsAPIAllowedKey(services.TrustedProxiesConfig))
 	})
+}
+
+func TestService_UpsertApplicationConfiguration(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx          = context.Background()
+		parameterKey = services.ParameterKey("test-key")
+		value        = types.JSONBObject{Object: map[string]any{"enabled": true}}
+		entry        = audit.Entry{
+			Action: model.AuditLogActionUpdateParameter,
+			Fields: map[string]any{"key": parameterKey, "value": value},
+		}
+		commitID        = uuid.Must(uuid.NewV4())
+		databaseErr     = errors.New("upsert failed")
+		auditIntentErr  = errors.New("audit intent failed")
+		auditOutcomeErr = errors.New("audit outcome failed")
+	)
+
+	tests := []struct {
+		name       string
+		setupMocks func(*mocks.MockDatabase, *mocks.MockAuditor)
+		expected   struct {
+			error error
+		}
+	}{
+		{
+			name: "Success: records intent and success outcome",
+			setupMocks: func(database *mocks.MockDatabase, auditor *mocks.MockAuditor) {
+				auditor.EXPECT().Begin(ctx, entry).Return(commitID, nil)
+				database.EXPECT().UpsertConfigurationParameter(ctx, parameterKey, value).Return(nil)
+				auditor.EXPECT().Complete(ctx, commitID, entry, nil).Return(nil)
+			},
+		},
+		{
+			name: "Error: does not upsert when audit intent fails",
+			setupMocks: func(_ *mocks.MockDatabase, auditor *mocks.MockAuditor) {
+				auditor.EXPECT().Begin(ctx, entry).Return(uuid.Nil, auditIntentErr)
+			},
+			expected: struct{ error error }{error: auditIntentErr},
+		},
+		{
+			name: "Error: records a failure outcome when upsert fails",
+			setupMocks: func(database *mocks.MockDatabase, auditor *mocks.MockAuditor) {
+				auditor.EXPECT().Begin(ctx, entry).Return(commitID, nil)
+				database.EXPECT().UpsertConfigurationParameter(ctx, parameterKey, value).Return(databaseErr)
+				auditor.EXPECT().Complete(ctx, commitID, entry, databaseErr).Return(nil)
+			},
+			expected: struct{ error error }{error: databaseErr},
+		},
+		{
+			name: "Error: returns audit outcome failure after successful upsert",
+			setupMocks: func(database *mocks.MockDatabase, auditor *mocks.MockAuditor) {
+				auditor.EXPECT().Begin(ctx, entry).Return(commitID, nil)
+				database.EXPECT().UpsertConfigurationParameter(ctx, parameterKey, value).Return(nil)
+				auditor.EXPECT().Complete(ctx, commitID, entry, nil).Return(auditOutcomeErr)
+			},
+			expected: struct{ error error }{error: auditOutcomeErr},
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			var (
+				database = mocks.NewMockDatabase(t)
+				auditor  = mocks.NewMockAuditor(t)
+				service  = services.NewService(database, auditor)
+			)
+			testCase.setupMocks(database, auditor)
+
+			err := service.UpsertApplicationConfiguration(ctx, parameterKey, value)
+
+			if testCase.expected.error != nil {
+				assert.ErrorIs(t, err, testCase.expected.error)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

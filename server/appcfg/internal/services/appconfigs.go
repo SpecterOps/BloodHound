@@ -27,10 +27,13 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/server/audit"
 )
 
 type ParameterKey string
@@ -96,7 +99,29 @@ func (s Service) GetAllApplicationConfigurations(ctx context.Context) (Parameter
 }
 
 func (s Service) UpsertApplicationConfiguration(ctx context.Context, parameterKey ParameterKey, value types.JSONBObject) error {
-	return s.db.UpsertConfigurationParameter(ctx, parameterKey, value)
+	var (
+		entry = audit.Entry{
+			Action: model.AuditLogActionUpdateParameter,
+			Fields: map[string]any{
+				"key":   parameterKey,
+				"value": value,
+			},
+		}
+		commitID     uuid.UUID
+		operationErr error
+		err          error
+	)
+
+	if commitID, err = s.auditor.Begin(ctx, entry); err != nil {
+		return fmt.Errorf("writing update parameter audit intent: %w", err)
+	}
+
+	operationErr = s.db.UpsertConfigurationParameter(ctx, parameterKey, value)
+	if err = s.auditor.Complete(ctx, commitID, entry, operationErr); err != nil {
+		return fmt.Errorf("writing update parameter audit outcome: %w", err)
+	}
+
+	return operationErr
 }
 
 type GetConfigError struct {

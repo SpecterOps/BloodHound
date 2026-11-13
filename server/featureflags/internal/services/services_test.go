@@ -20,7 +20,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/server/audit"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -32,6 +34,7 @@ import (
 type serviceMocks struct {
 	database *mocks.MockDatabase
 	analysis *mocks.MockAnalysisRequestSubmitter
+	auditor  *mocks.MockAuditor
 }
 
 // newServiceUnderTest builds a Service backed by freshly-created mocks, returning
@@ -42,10 +45,24 @@ func newServiceUnderTest(t *testing.T) (*services.Service, serviceMocks) {
 		m = serviceMocks{
 			database: mocks.NewMockDatabase(t),
 			analysis: mocks.NewMockAnalysisRequestSubmitter(t),
+			auditor:  mocks.NewMockAuditor(t),
 		}
-		svc = services.NewService(m.database, m.analysis)
+		svc = services.NewService(m.database, m.analysis, m.auditor)
 	)
 	return svc, m
+}
+
+func expectAudit(m serviceMocks, ctx context.Context, flag services.FeatureFlag, operationErr error) {
+	var (
+		commitID = uuid.Must(uuid.NewV4())
+		entry    = audit.Entry{
+			Action: model.AuditLogActionToggleEarlyAccessFeatureFlag,
+			Fields: flag.AuditData(),
+		}
+	)
+
+	m.auditor.EXPECT().Begin(ctx, entry).Return(commitID, nil)
+	m.auditor.EXPECT().Complete(ctx, commitID, entry, operationErr).Return(nil)
 }
 
 func TestNewService(t *testing.T) {
@@ -66,16 +83,23 @@ func TestNewService_NilDependenciesPanic(t *testing.T) {
 		{
 			name: "Error: nil Database",
 			construct: func(m serviceMocks) {
-				services.NewService(nil, m.analysis)
+				services.NewService(nil, m.analysis, m.auditor)
 			},
 			wantPanic: "feature-flag: service requires a non-nil Database",
 		},
 		{
 			name: "Error: nil AnalysisRequestSubmitter",
 			construct: func(m serviceMocks) {
-				services.NewService(m.database, nil)
+				services.NewService(m.database, nil, m.auditor)
 			},
 			wantPanic: "feature-flag: service requires a non-nil AnalysisRequestSubmitter",
+		},
+		{
+			name: "Error: nil Auditor",
+			construct: func(m serviceMocks) {
+				services.NewService(m.database, m.analysis, nil)
+			},
+			wantPanic: "feature-flag: service requires a non-nil Auditor",
 		},
 	}
 
@@ -85,6 +109,7 @@ func TestNewService_NilDependenciesPanic(t *testing.T) {
 			m := serviceMocks{
 				database: mocks.NewMockDatabase(t),
 				analysis: mocks.NewMockAnalysisRequestSubmitter(t),
+				auditor:  mocks.NewMockAuditor(t),
 			}
 			assert.PanicsWithValue(t, test.wantPanic, func() {
 				test.construct(m)
@@ -281,6 +306,8 @@ func TestService_ToggleFlag(t *testing.T) {
 		setFlagErr         = errors.New("set flag failed")
 		rollbackErr        = errors.New("rollback set flag failed")
 		requestAnalysisErr = errors.New("request analysis failed")
+		auditIntentErr     = errors.New("audit intent failed")
+		auditOutcomeErr    = errors.New("audit outcome failed")
 		updatableFlag      = services.FeatureFlag{
 			ID:            7,
 			Key:           services.FeatureOpenHoundSupport,
@@ -329,6 +356,7 @@ func TestService_ToggleFlag(t *testing.T) {
 			args: args{ctx: ctx, featureID: updatableFlag.ID},
 			setupMocks: func(m serviceMocks) {
 				m.database.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+				expectAudit(m, ctx, toggledUpdatableFlag, nil)
 				m.database.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(nil)
 			},
 			want: want{flag: toggledUpdatableFlag},
@@ -338,6 +366,7 @@ func TestService_ToggleFlag(t *testing.T) {
 			args: args{ctx: ctx, featureID: findingsPrioritizationFlag.ID},
 			setupMocks: func(m serviceMocks) {
 				m.database.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
+				expectAudit(m, ctx, enabledFindingsPrioritizationFlag, nil)
 				m.database.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
 				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
 			},
@@ -348,10 +377,34 @@ func TestService_ToggleFlag(t *testing.T) {
 			args: args{ctx: ctx, featureID: enabledFindingsPrioritizationFlag.ID},
 			setupMocks: func(m serviceMocks) {
 				m.database.EXPECT().GetFlagByID(ctx, enabledFindingsPrioritizationFlag.ID).Return(enabledFindingsPrioritizationFlag, nil)
+				expectAudit(m, ctx, findingsPrioritizationFlag, nil)
 				m.database.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
 				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(nil)
 			},
 			want: want{flag: findingsPrioritizationFlag},
+		},
+		{
+			name: "Error: does not update the flag when audit intent fails",
+			args: args{ctx: ctx, featureID: updatableFlag.ID},
+			setupMocks: func(m serviceMocks) {
+				m.database.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+				entry := audit.Entry{Action: model.AuditLogActionToggleEarlyAccessFeatureFlag, Fields: toggledUpdatableFlag.AuditData()}
+				m.auditor.EXPECT().Begin(ctx, entry).Return(uuid.Nil, auditIntentErr)
+			},
+			want: want{flag: toggledUpdatableFlag, err: auditIntentErr},
+		},
+		{
+			name: "Error: returns audit outcome failure after updating the flag",
+			args: args{ctx: ctx, featureID: updatableFlag.ID},
+			setupMocks: func(m serviceMocks) {
+				commitID := uuid.Must(uuid.NewV4())
+				entry := audit.Entry{Action: model.AuditLogActionToggleEarlyAccessFeatureFlag, Fields: toggledUpdatableFlag.AuditData()}
+				m.database.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+				m.auditor.EXPECT().Begin(ctx, entry).Return(commitID, nil)
+				m.database.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(nil)
+				m.auditor.EXPECT().Complete(ctx, commitID, entry, nil).Return(auditOutcomeErr)
+			},
+			want: want{flag: toggledUpdatableFlag, err: auditOutcomeErr},
 		},
 		{
 			name: "Error: returns ErrNotUserUpdatable when the flag is not user updatable",
@@ -374,6 +427,7 @@ func TestService_ToggleFlag(t *testing.T) {
 			args: args{ctx: ctx, featureID: updatableFlag.ID},
 			setupMocks: func(m serviceMocks) {
 				m.database.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
+				expectAudit(m, ctx, toggledUpdatableFlag, setFlagErr)
 				m.database.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(setFlagErr)
 			},
 			want: want{flag: toggledUpdatableFlag, err: setFlagErr},
@@ -383,8 +437,10 @@ func TestService_ToggleFlag(t *testing.T) {
 			args: args{ctx: ctx, featureID: findingsPrioritizationFlag.ID},
 			setupMocks: func(m serviceMocks) {
 				m.database.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
+				expectAudit(m, ctx, enabledFindingsPrioritizationFlag, nil)
 				m.database.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
 				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(requestAnalysisErr)
+				expectAudit(m, ctx, findingsPrioritizationFlag, nil)
 				m.database.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(nil)
 			},
 			want: want{flag: findingsPrioritizationFlag, err: requestAnalysisErr},
@@ -394,8 +450,10 @@ func TestService_ToggleFlag(t *testing.T) {
 			args: args{ctx: ctx, featureID: findingsPrioritizationFlag.ID},
 			setupMocks: func(m serviceMocks) {
 				m.database.EXPECT().GetFlagByID(ctx, findingsPrioritizationFlag.ID).Return(findingsPrioritizationFlag, nil)
+				expectAudit(m, ctx, enabledFindingsPrioritizationFlag, nil)
 				m.database.EXPECT().SetFlag(ctx, enabledFindingsPrioritizationFlag).Return(nil)
 				m.analysis.EXPECT().SubmitAnalysisRequest(ctx, services.PrioritizationFlagRequestSource, model.AnalysisModeNoPostProcessing).Return(requestAnalysisErr)
+				expectAudit(m, ctx, findingsPrioritizationFlag, rollbackErr)
 				m.database.EXPECT().SetFlag(ctx, findingsPrioritizationFlag).Return(rollbackErr)
 			},
 			want: want{flag: findingsPrioritizationFlag, err: requestAnalysisErr, rollbackErr: rollbackErr},

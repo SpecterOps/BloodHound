@@ -25,7 +25,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/server/analysis"
+	"github.com/specterops/bloodhound/server/audit"
 	"github.com/specterops/bloodhound/server/featureflags/internal/appdb"
 	"github.com/specterops/bloodhound/server/featureflags/internal/handlers"
 	"github.com/specterops/bloodhound/server/featureflags/internal/routes"
@@ -47,18 +49,19 @@ func NewFeatureFlagRequestAdapter(pool *pgxpool.Pool) FeatureFlagRequestAdapter 
 	var (
 		store             = appdb.NewStore(pool)
 		analysisRequester = analysis.NewAnalysisRequestSubmitter(pool)
-		svc               = services.NewService(store, analysisRequester)
+		auditService      = audit.Register(pool, auth.NewIdentityResolver())
+		svc               = services.NewService(store, analysisRequester, auditService)
 		handlerSet        = handlers.NewHandlersContainer(svc)
 	)
 
 	return handlerSet
 }
 
-func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, auditor audit.Service) {
 	var (
 		store             = appdb.NewStore(pool)
 		analysisRequester = analysis.NewAnalysisRequestSubmitter(pool)
-		svc               = services.NewService(store, analysisRequester)
+		svc               = services.NewService(store, analysisRequester, auditor)
 		handlerSet        = handlers.NewHandlersContainer(svc)
 	)
 
