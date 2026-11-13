@@ -127,7 +127,7 @@ func newIdentityHandlers(db *database.BloodhoundDB) *handlers.Handlers {
 	var (
 		store      = appdb.NewStore(db.Pool())
 		svc        = services.NewService(store)
-		handlerSet = handlers.NewHandlersContainer(svc)
+		handlerSet = handlers.NewHandlersContainer(svc, auth.NewAuthorizer(nil))
 	)
 	return handlerSet
 }

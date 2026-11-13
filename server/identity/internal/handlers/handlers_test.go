@@ -117,7 +117,7 @@ func TestHandlers_GetPermission(t *testing.T) {
 
 			var (
 				identityMock = mocks.NewMockIdentity(t)
-				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				handlerSet   = handlers.NewHandlersContainer(identityMock, auth.NewAuthorizer(nil))
 				muxRouter    = mux.NewRouter()
 				recorder     = httptest.NewRecorder()
 				request      = testCase.buildRequest()
@@ -216,7 +216,7 @@ func TestHandlers_GetRole(t *testing.T) {
 
 			var (
 				identityMock = mocks.NewMockIdentity(t)
-				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				handlerSet   = handlers.NewHandlersContainer(identityMock, auth.NewAuthorizer(nil))
 				muxRouter    = mux.NewRouter()
 				recorder     = httptest.NewRecorder()
 				request      = testCase.buildRequest()
@@ -329,7 +329,7 @@ func TestHandlers_ListRoles(t *testing.T) {
 
 			var (
 				identityMock = mocks.NewMockIdentity(t)
-				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				handlerSet   = handlers.NewHandlersContainer(identityMock, auth.NewAuthorizer(nil))
 				muxRouter    = mux.NewRouter()
 				recorder     = httptest.NewRecorder()
 				request      = testCase.buildRequest()
@@ -444,7 +444,7 @@ func TestHandlers_ListPermissions(t *testing.T) {
 
 			var (
 				identityMock = mocks.NewMockIdentity(t)
-				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				handlerSet   = handlers.NewHandlersContainer(identityMock, auth.NewAuthorizer(nil))
 				muxRouter    = mux.NewRouter()
 				recorder     = httptest.NewRecorder()
 			)
@@ -643,7 +643,7 @@ func TestHandlers_ListUsers(t *testing.T) {
 
 			var (
 				identityMock = mocks.NewMockIdentity(t)
-				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				handlerSet   = handlers.NewHandlersContainer(identityMock, auth.NewAuthorizer(nil))
 				muxRouter    = mux.NewRouter()
 				recorder     = httptest.NewRecorder()
 			)
@@ -745,7 +745,7 @@ func TestHandlers_ListActiveUsersMinimal(t *testing.T) {
 
 			var (
 				identityMock = mocks.NewMockIdentity(t)
-				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				handlerSet   = handlers.NewHandlersContainer(identityMock, auth.NewAuthorizer(nil))
 				recorder     = httptest.NewRecorder()
 				request      = bhctx.SetRequestContext(
 					httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users-minimal", nil),
@@ -980,7 +980,7 @@ func TestHandlers_ListAuthTokens(t *testing.T) {
 
 			var (
 				identityMock = mocks.NewMockIdentity(t)
-				handlerSet   = handlers.NewHandlersContainer(identityMock)
+				handlerSet   = handlers.NewHandlersContainer(identityMock, auth.NewAuthorizer(nil))
 				muxRouter    = mux.NewRouter()
 				recorder     = httptest.NewRecorder()
 			)

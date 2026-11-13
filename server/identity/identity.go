@@ -45,7 +45,7 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool, options ...Option) 
 	var (
 		store      = appdb.NewStore(pool)
 		svc        = services.NewService(store, options...)
-		handlerSet = handlers.NewHandlersContainer(svc)
+		handlerSet = handlers.NewHandlersContainer(svc, routerInst.Authorizer())
 	)
 
 	routes.Register(routerInst, handlerSet)
@@ -57,7 +57,7 @@ func RegisterUserListAlias(routerInst *router.Router, pool *pgxpool.Pool, path s
 	var (
 		store      = appdb.NewStore(pool)
 		svc        = services.NewService(store)
-		handlerSet = handlers.NewHandlersContainer(svc)
+		handlerSet = handlers.NewHandlersContainer(svc, routerInst.Authorizer())
 	)
 	routes.RegisterUserListRoute(routerInst, handlerSet, path)
 }

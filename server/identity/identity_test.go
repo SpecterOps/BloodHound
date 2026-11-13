@@ -200,3 +200,60 @@ func TestRegister_WithAuthTokenReader(t *testing.T) {
 		})
 	}
 }
+
+func TestRegister_AuthTokenScopingUsesConfiguredAuthorizer(t *testing.T) {
+	var (
+		ownerID     = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		permissions = auth.Permissions()
+	)
+
+	for _, testCase := range []struct {
+		name            string
+		storedAdmin     bool
+		authorizedAdmin bool
+	}{
+		{name: "custom authorizer restricts stored admin", storedAdmin: true},
+		{name: "custom authorizer grants management access", authorizedAdmin: true},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				storedPermissions    = model.Permissions{permissions.AuthCreateToken, permissions.AuthManageSelf}
+				effectivePermissions = model.Permissions{permissions.AuthCreateToken, permissions.AuthManageSelf}
+				called               bool
+			)
+			if testCase.storedAdmin {
+				storedPermissions = append(storedPermissions, permissions.AuthManageUsers)
+			}
+			if testCase.authorizedAdmin {
+				effectivePermissions = append(effectivePermissions, permissions.AuthManageUsers)
+			}
+
+			var (
+				authorizer = auth.NewCustomAuthorizer(nil, func(auth.Context) (model.Permissions, bool) {
+					return effectivePermissions, true
+				})
+				routerInst = router.NewRouter(config.Configuration{}, authorizer, "")
+				request    = bhctx.SetRequestContext(httptest.NewRequest(http.MethodGet, "/api/v2/tokens", nil), &bhctx.Context{AuthCtx: auth.Context{Owner: model.User{
+					Unique: model.Unique{ID: ownerID}, Roles: model.Roles{{Permissions: storedPermissions}},
+				}}})
+				recorder = httptest.NewRecorder()
+				reader   = authTokenReaderFunc(func(ctx context.Context, filters params.Filters, sortItems params.SortItems) ([]identity.AuthToken, error) {
+					called = true
+					if testCase.authorizedAdmin {
+						assert.Empty(t, filters)
+					} else {
+						assert.Equal(t, params.Filters{
+							"user_id": {{Field: "user_id", Operator: params.Equals, Value: ownerID.String(), SetOperator: params.FilterAnd}},
+						}, filters)
+					}
+					return []identity.AuthToken{}, nil
+				})
+			)
+
+			identity.Register(&routerInst, new(pgxpool.Pool), identity.WithAuthTokenReader(reader))
+			routerInst.Handler().ServeHTTP(recorder, request)
+			require.Equal(t, http.StatusOK, recorder.Code, recorder.Body.String())
+			assert.True(t, called)
+		})
+	}
+}

@@ -44,13 +44,15 @@ type Identity interface {
 
 // Handlers is a dependency injection container for identity handlers.
 type Handlers struct {
-	identity Identity
+	identity   Identity
+	authorizer auth.Authorizer
 }
 
 // NewHandlersContainer initializes the Handlers dependency injection container
-func NewHandlersContainer(identity Identity) *Handlers {
+func NewHandlersContainer(identity Identity, authorizer auth.Authorizer) *Handlers {
 	return &Handlers{
-		identity: identity,
+		identity:   identity,
+		authorizer: authorizer,
 	}
 }
 
@@ -162,7 +164,7 @@ func (s *Handlers) ListAuthTokens(response http.ResponseWriter, request *http.Re
 		requester = services.AuthTokenRequester{
 			UserID:         user.ID,
 			IsUser:         true,
-			CanManageUsers: auth.NewAuthorizer(nil).AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers),
+			CanManageUsers: s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers),
 		}
 	}
 

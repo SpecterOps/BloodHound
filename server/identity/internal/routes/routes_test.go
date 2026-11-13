@@ -149,7 +149,7 @@ func TestRegister_ListAuthTokens_QueryParameters(t *testing.T) {
 				).Return([]services.AuthToken{}, nil).Once()
 			}
 
-			routes.Register(&routerInst, handlers.NewHandlersContainer(identityMock))
+			routes.Register(&routerInst, handlers.NewHandlersContainer(identityMock, routerInst.Authorizer()))
 			routerInst.Handler().ServeHTTP(recorder, request)
 
 			require.Equal(t, testCase.responseCode, recorder.Code, recorder.Body.String())
@@ -255,7 +255,7 @@ func TestRegister_RegistersRoutes(t *testing.T) {
 				authorizer = auth.NewAuthorizer(nil)
 				routerInst = router.NewRouter(cfg, authorizer, "")
 				mock       = mock{identity: mocks.NewMockIdentity(t)}
-				handlerSet = handlers.NewHandlersContainer(mock.identity)
+				handlerSet = handlers.NewHandlersContainer(mock.identity, authorizer)
 				match      mux.RouteMatch
 			)
 
@@ -355,7 +355,7 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 				authorizer = auth.NewAuthorizer(nil)
 				routerInst = router.NewRouter(cfg, authorizer, "")
 				mock       = mock{identity: mocks.NewMockIdentity(t)}
-				handlerSet = handlers.NewHandlersContainer(mock.identity)
+				handlerSet = handlers.NewHandlersContainer(mock.identity, authorizer)
 				recorder   = httptest.NewRecorder()
 			)
 
@@ -427,7 +427,7 @@ func TestRegister_RateLimitingReturns429(t *testing.T) {
 				cfg        = config.Configuration{}
 				authorizer = auth.NewAuthorizer(nil)
 				routerInst = router.NewRouter(cfg, authorizer, "")
-				handlerSet = handlers.NewHandlersContainer(mock.identity)
+				handlerSet = handlers.NewHandlersContainer(mock.identity, authorizer)
 			)
 
 			testCase.setupMocks(mock)
