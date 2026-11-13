@@ -43,3 +43,22 @@ func TestSiteDataTypes(t *testing.T) {
 		})
 	}
 }
+
+func TestDMSADataType(t *testing.T) {
+	var (
+		dmsaDataType      ingest.DataType = "dmsas"
+		originalDataTypes                 = ingest.AllOriginalIngestDataTypes()
+	)
+
+	if !dmsaDataType.IsValidOriginalType() {
+		t.Fatalf("%q is not a valid original type", dmsaDataType)
+	}
+
+	for _, originalDataType := range originalDataTypes {
+		if originalDataType == dmsaDataType {
+			return
+		}
+	}
+
+	t.Fatalf("%q is missing from AllOriginalIngestDataTypes", dmsaDataType)
+}

@@ -63,6 +63,14 @@ func TestFilteredRelationshipSink_CallersCompleteOnlySuccessfulGenerations(t *te
 			name: "user role assignments", trackedKind: azure.ResetPassword, producerKind: azure.Contains,
 			process: azureAnalysis.UserRoleAssignments,
 		},
+		{
+			name: "dMSA successor", trackedKind: ad.BadSuccessor, producerKind: ad.CreateDMSA,
+			process: adAnalysis.PostBadSuccessor,
+		},
+		{
+			name: "dMSA self enrollment", trackedKind: ad.OuroborosSelfEnroll, producerKind: ad.Owns,
+			process: adAnalysis.PostOuroborosSelfEnroll,
+		},
 	}
 	for _, processor := range processors {
 		t.Run(processor.name, func(t *testing.T) {
@@ -211,6 +219,11 @@ func (s *sinkCallerNodeQuery) Filterf(provider graph.CriteriaProvider) graph.Nod
 func (s *sinkCallerNodeQuery) Fetch(delegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
 	if sinkCallerCriteriaHasKind(s.criteria, azure.Tenant) {
 		return delegate(newSinkCallerCursor(graph.NewNode(3, graph.NewProperties(), azure.Tenant)))
+	}
+	if sinkCallerCriteriaHasKind(s.criteria, ad.Domain) {
+		var properties = graph.NewProperties()
+		properties.Set(ad.DomainSID.String(), "S-1-5-21-1-2-3")
+		return delegate(newSinkCallerCursor(graph.NewNode(4, properties, ad.Domain)))
 	}
 	return delegate(newSinkCallerCursor[*graph.Node]())
 }
