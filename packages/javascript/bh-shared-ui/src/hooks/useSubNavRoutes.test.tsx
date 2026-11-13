@@ -86,6 +86,34 @@ describe('useSubNavRoutes', () => {
         });
     });
 
+    describe('hideWhenFeatureFlagEnabled gate', () => {
+        const sections: SubNavSection[] = [
+            { title: 's', items: [makeItem({ hideWhenFeatureFlagEnabled: 'collector_health' })] },
+        ];
+
+        it('shows items when the flag is disabled', () => {
+            mockUseFeatureFlags.mockReturnValue({
+                data: [{ key: 'collector_health', enabled: false }],
+                isLoading: false,
+            });
+            expect(renderRoutes(sections)[0].items).toHaveLength(1);
+        });
+
+        it('shows items when the flag is absent', () => {
+            expect(renderRoutes(sections)[0].items).toHaveLength(1);
+        });
+
+        it('hides items when the flag is enabled', () => {
+            setFeatureFlags({ enabledKeys: ['collector_health'] });
+            expect(renderRoutes(sections)).toEqual([]);
+        });
+
+        it('hides items while feature flags are loading', () => {
+            setFeatureFlags({ isLoading: true });
+            expect(renderRoutes(sections)).toEqual([]);
+        });
+    });
+
     describe('permissions gate', () => {
         const sections: SubNavSection[] = [
             { title: 's', items: [makeItem({ permissions: [Permission.ALERTS_READ] })] },
@@ -100,9 +128,16 @@ describe('useSubNavRoutes', () => {
             expect(renderRoutes(sections)[0].items).toHaveLength(1);
         });
 
-        it('hides items while permissions are loading', () => {
+        it('keeps permission-gated routes loading until permissions resolve', () => {
             setPermissions({ granted: [Permission.ALERTS_READ], isLoading: true });
-            expect(renderRoutes(sections)).toEqual([]);
+            const { result, rerender } = renderHook(() => useSubNavRoutes(sections, true));
+            expect(result.current.areRoutesLoading).toBe(true);
+            expect(result.current.routes).toEqual([]);
+
+            setPermissions({ granted: [Permission.ALERTS_READ] });
+            rerender();
+            expect(result.current.areRoutesLoading).toBe(false);
+            expect(result.current.routes[0].items).toHaveLength(1);
         });
     });
 

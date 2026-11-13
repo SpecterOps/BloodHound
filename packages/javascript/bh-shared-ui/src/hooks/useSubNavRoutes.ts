@@ -26,6 +26,7 @@ import { usePermissions } from './usePermissions';
  *
  * Each configured gate on an item must pass for the item to be visible:
  *   - `featureFlag` must be enabled (and feature flags must be loaded)
+ *   - `hideWhenFeatureFlagEnabled` must be disabled (and feature flags must be loaded)
  *   - `permissions` must all be granted (and permissions must be loaded)
  *   - `adminOnly` requires application configuration read/write permissions
  * Items with no gates are always visible. Sections with no visible items are omitted.
@@ -34,7 +35,7 @@ import { usePermissions } from './usePermissions';
  * @param isAuthenticated - Whether the current user is authenticated. Controls whether
  *   feature flags are fetched.
  * @returns An object containing the filtered `routes` and an `areRoutesLoading` boolean
- *   indicating whether the feature flags are still being fetched.
+ *   indicating whether feature flags or permissions are still being fetched.
  */
 export function useSubNavRoutes(sections: SubNavSection[], isAuthenticated: boolean) {
     const { data: featureFlags, isLoading: areRoutesLoading } = useFeatureFlags({ enabled: isAuthenticated });
@@ -48,6 +49,12 @@ export function useSubNavRoutes(sections: SubNavSection[], isAuthenticated: bool
     const routes = useMemo(() => {
         const isItemVisible = (item: SubNavItem) => {
             if (item.featureFlag && (areRoutesLoading || !isFeatureFlagEnabled(item.featureFlag, featureFlags))) {
+                return false;
+            }
+            if (
+                item.hideWhenFeatureFlagEnabled &&
+                (areRoutesLoading || isFeatureFlagEnabled(item.hideWhenFeatureFlagEnabled, featureFlags))
+            ) {
                 return false;
             }
             if (item.permissions && (arePermissionsLoading || !checkAllPermissions(item.permissions))) {
@@ -64,5 +71,5 @@ export function useSubNavRoutes(sections: SubNavSection[], isAuthenticated: bool
             .filter((section) => section.items.length > 0);
     }, [sections, featureFlags, areRoutesLoading, arePermissionsLoading, hasAdminPermissions, checkAllPermissions]);
 
-    return { routes, areRoutesLoading };
+    return { routes, areRoutesLoading: areRoutesLoading || arePermissionsLoading };
 }
