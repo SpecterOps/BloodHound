@@ -35,7 +35,7 @@ import { usePermissions } from './usePermissions';
  * @param isAuthenticated - Whether the current user is authenticated. Controls whether
  *   feature flags are fetched.
  * @returns An object containing the filtered `routes` and an `areRoutesLoading` boolean
- *   indicating whether the feature flags are still being fetched.
+ *   indicating whether feature flags or permissions are still being fetched.
  */
 export function useSubNavRoutes(sections: SubNavSection[], isAuthenticated: boolean) {
     const { data: featureFlags, isLoading: areRoutesLoading } = useFeatureFlags({ enabled: isAuthenticated });
@@ -71,5 +71,5 @@ export function useSubNavRoutes(sections: SubNavSection[], isAuthenticated: bool
             .filter((section) => section.items.length > 0);
     }, [sections, featureFlags, areRoutesLoading, arePermissionsLoading, hasAdminPermissions, checkAllPermissions]);
 
-    return { routes, areRoutesLoading };
+    return { routes, areRoutesLoading: areRoutesLoading || arePermissionsLoading };
 }
