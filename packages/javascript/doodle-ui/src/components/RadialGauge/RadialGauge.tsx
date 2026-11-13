@@ -13,9 +13,12 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { useEffect, useState } from 'react';
 import { ColorOptions } from '../../types';
 import { cn, getCssColor } from '../utils';
+
+import { radialGaugeIndicatorClasses, radialGaugeTrackClasses } from './RadialGauge.styles';
 import { clampNumber, getCircumference } from './utils';
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
@@ -48,7 +51,7 @@ function RadialGauge(props: Props) {
         <div className='relative' style={{ width: containerDimension, height: containerDimension }} {...rest}>
             <svg className='w-full h-full' viewBox='0 0 100 100'>
                 <circle
-                    className='text-neutral-light-4 stroke-current'
+                    className={radialGaugeTrackClasses}
                     strokeWidth={strokeWidth}
                     cx='50'
                     cy='50'
@@ -57,7 +60,7 @@ function RadialGauge(props: Props) {
                 />
                 <circle
                     style={{ color: fillColor }}
-                    className={cn('transform -rotate-90 origin-center stroke-current', {
+                    className={cn(radialGaugeIndicatorClasses, {
                         'transition-[stroke-dashoffset] duration-300': !hideAnimation,
                     })}
                     strokeWidth={strokeWidth}
