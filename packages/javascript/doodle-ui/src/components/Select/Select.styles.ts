@@ -14,40 +14,68 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { invalidControlClasses } from '../formControl.styles';
+import { cn } from '../utils';
+
+const outlinedSelectBaseClasses = cn(
+    'rounded-md border border-[color:var(--input-outlined-border-default)] bg-[color:var(--select-trigger-outlined-fill)] px-3 py-2 text-sm',
+    'focus:outline-none focus:focus-ring focus:border-[color:var(--select-outlined-focus-border)] enabled:hover:focus:border-[color:var(--select-outlined-hover-focus-border)]'
+);
+
+const outlinedSelectHoverClasses = cn(
+    'enabled:hover:border-[color:var(--input-outlined-border-hover)] enabled:hover:bg-[color:var(--input-outlined-border-hover)] enabled:hover:text-[color:var(--select-highlight-text)]',
+    'data-[placeholder]:enabled:hover:text-[color:var(--select-highlight-text)]'
+);
+
+const outlinedSelectOpenClasses = cn(
+    'data-[state=open]:border-primary data-[state=open]:bg-[color:var(--select-open-fill)] enabled:data-[state=open]:text-[color:var(--select-open-text)]',
+    'enabled:data-[placeholder]:data-[state=open]:text-[color:var(--select-open-placeholder-text)]',
+    'data-[state=open]:enabled:hover:border-primary data-[state=open]:enabled:hover:bg-primary data-[state=open]:enabled:hover:text-[color:var(--select-highlight-text)]',
+    'data-[placeholder]:data-[state=open]:enabled:hover:text-[color:var(--select-highlight-text)]',
+    'data-[state=open]:focus:border-[color:var(--select-open-focus-border)]'
+);
+
+const outlinedSelectInvalidClasses = cn(
+    invalidControlClasses,
+    'aria-[invalid=true]:data-[placeholder]:data-[state=closed]:text-[color:var(--input-placeholder-text)]',
+    'aria-[invalid=true]:data-[placeholder]:enabled:hover:text-[color:var(--select-highlight-text)]',
+    '[&[aria-invalid=true][data-state=closed]:enabled:not([data-placeholder])>span]:text-status-error-main',
+    '[&[aria-invalid=true][data-state=closed]:not([data-placeholder]):enabled:hover>span]:text-[color:var(--select-highlight-text)]',
+    'enabled:aria-[invalid=true]:data-[placeholder]:data-[state=open]:text-[color:var(--select-invalid-placeholder-open-text)]',
+    'aria-[invalid=true]:data-[state=open]:focus:border-status-error-main',
+    'aria-[invalid=true]:data-[state=open]:enabled:hover:focus:border-[color:var(--select-open-invalid-hover-focus-border)]'
+);
+
+const outlinedSelectDisabledClasses = cn(
+    'disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--select-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
+    'disabled:data-[state=open]:bg-[color:var(--select-open-disabled-fill)]',
+    'disabled:data-[placeholder]:text-[color:var(--select-disabled-placeholder-text)] disabled:data-[placeholder]:data-[state=open]:text-[color:var(--select-disabled-placeholder-text)]'
+);
 
 export const SelectTriggerVariants = cva(
-    [
+    cn(
         'flex h-10 w-full items-center justify-between rounded-lg p-2',
         'bg-[color:var(--select-trigger-fill)]',
         'placeholder:text-[color:var(--select-trigger-placeholder-text)] data-[placeholder]:text-[color:var(--select-placeholder-text)]',
         'focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        '[&>span]:line-clamp-1 [&[data-state=open]>svg]:rotate-180',
-    ],
+        '[&>span]:line-clamp-1 [&[data-state=open]>svg]:rotate-180'
+    ),
     {
         variants: {
             variant: {
-                outlined: [
-                    'rounded-md border border-[color:var(--input-outlined-border-default)] bg-[color:var(--input-fill)] px-3 py-2 text-sm',
-                    'enabled:hover:border-[color:var(--input-outlined-border-hover)] enabled:hover:bg-[color:var(--input-outlined-border-hover)] enabled:hover:text-[color:var(--select-highlight-text)] data-[placeholder]:enabled:hover:text-[color:var(--select-highlight-text)]',
-                    'focus:outline-none focus:focus-ring focus:border-[color:var(--select-outlined-focus-border)] enabled:hover:focus:border-[color:var(--select-outlined-hover-focus-border)]',
-                    'disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--select-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
-                    'enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:hover:border-status-error-main enabled:aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main disabled:aria-[invalid=true]:border-[color:var(--input-disabled-invalid-border)]',
-                    'aria-[invalid=true]:data-[placeholder]:data-[state=closed]:text-[color:var(--input-placeholder-text)] aria-[invalid=true]:data-[placeholder]:enabled:hover:text-[color:var(--select-highlight-text)]',
-                    '[&[aria-invalid=true][data-state=closed]:enabled:not([data-placeholder])>span]:text-status-error-main [&[aria-invalid=true][data-state=closed]:not([data-placeholder]):enabled:hover>span]:text-[color:var(--select-highlight-text)]',
-                    'data-[state=open]:border-primary data-[state=open]:bg-[color:var(--select-open-fill)] enabled:data-[state=open]:text-[color:var(--select-open-text)] enabled:data-[placeholder]:data-[state=open]:text-[color:var(--select-open-placeholder-text)]',
-                    'data-[state=open]:enabled:hover:border-primary data-[state=open]:enabled:hover:bg-primary data-[state=open]:enabled:hover:text-[color:var(--select-highlight-text)] data-[placeholder]:data-[state=open]:enabled:hover:text-[color:var(--select-highlight-text)]',
-                    'bg-[color:var(--select-trigger-outlined-fill)]',
-                    'disabled:data-[state=open]:bg-[color:var(--select-open-disabled-fill)] disabled:data-[placeholder]:text-[color:var(--select-disabled-placeholder-text)] disabled:data-[placeholder]:data-[state=open]:text-[color:var(--select-disabled-placeholder-text)]',
-                    'enabled:aria-[invalid=true]:data-[placeholder]:data-[state=open]:text-[color:var(--select-invalid-placeholder-open-text)]',
-                    'data-[state=open]:focus:border-[color:var(--select-open-focus-border)] aria-[invalid=true]:data-[state=open]:focus:border-status-error-main',
-                    'aria-[invalid=true]:data-[state=open]:enabled:hover:focus:border-[color:var(--select-open-invalid-hover-focus-border)]',
-                ],
-                underlined: [
+                outlined: cn(
+                    outlinedSelectBaseClasses,
+                    outlinedSelectHoverClasses,
+                    outlinedSelectOpenClasses,
+                    outlinedSelectInvalidClasses,
+                    outlinedSelectDisabledClasses
+                ),
+                underlined: cn(
                     'rounded-sm border-b border-b-[color:var(--select-border-default)] bg-transparent ring-none',
                     'hover:border-b-2',
-                    'focus-visible:border-b-2 focus-visible:border-[color:var(--select-border-focus)]',
-                ],
+                    'focus-visible:border-b-2 focus-visible:border-[color:var(--select-border-focus)]'
+                ),
             },
         },
         defaultVariants: {
@@ -58,40 +86,42 @@ export const SelectTriggerVariants = cva(
 
 export const selectIconClasses = 'h-3 w-3';
 
+export const selectLoadingIconClasses = 'size-3 shrink-0 text-inherit';
+
 export const selectScrollButtonClasses = 'flex cursor-default items-center justify-center py-1';
 
-export const selectContentClasses = [
+export const selectContentClasses = cn(
     'relative z-[1500] max-h-96 overflow-hidden rounded-lg border',
     'border-[color:var(--select-content-border)] bg-[color:var(--select-content-fill)] text-main shadow-outer-2',
     'data-[state=open]:animate-in data-[state=closed]:animate-out',
     'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
     'data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
     'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
-    'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2',
-];
+    'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2'
+);
 
-export const selectPopperContentClasses = [
+export const selectPopperContentClasses = cn(
     'data-[side=bottom]:-translate-y-1 data-[side=top]:-translate-y-1',
-    'data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1',
-];
+    'data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1'
+);
 
 export const selectViewportClasses = 'p-1';
 
-export const selectPopperViewportClasses = [
+export const selectPopperViewportClasses = cn(
     'h-[var(--radix-select-trigger-height)]',
-    'w-full min-w-[var(--radix-select-trigger-width)]',
-];
+    'w-full min-w-[var(--radix-select-trigger-width)]'
+);
 
 export const selectLabelClasses = 'py-1.5 pl-8 pr-2 font-semibold';
 
-export const selectItemClasses = [
+export const selectItemClasses = cn(
     'relative flex w-full cursor-default select-none items-center rounded-lg p-2 outline-none',
     'data-[highlighted]:bg-secondary data-[highlighted]:text-[color:var(--select-highlight-text)]',
     'data-[highlighted]:shadow-[inset_3px_0_0_var(--focus-ring)]',
     'data-[disabled]:pointer-events-none data-[disabled]:bg-[color:var(--select-item-disabled-fill)] data-[disabled]:data-[highlighted]:bg-[color:var(--select-disabled-highlighted-fill)]',
     'data-[disabled]:text-disabled data-[disabled]:opacity-100',
     'data-[state=checked]:font-bold data-[state=checked]:text-[color:var(--select-item-checked-text)]',
-    'data-[highlighted]:data-[state=checked]:text-[color:var(--select-highlight-text)]',
-];
+    'data-[highlighted]:data-[state=checked]:text-[color:var(--select-highlight-text)]'
+);
 
 export const selectSeparatorClasses = '-mx-1 my-1 h-px bg-[color:var(--select-separator-fill)]';

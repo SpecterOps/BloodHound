@@ -190,7 +190,7 @@ describe('IconButton', () => {
         );
 
         const button = screen.getByRole('button', { name: `${variant} action` });
-        const expectedClasses = variantClasses.flatMap((classNames) => classNames.split(' '));
+        const expectedClasses = variantClasses.split(' ');
 
         expect(expectedClasses.every((className) => button.classList.contains(className))).toBe(true);
     });
