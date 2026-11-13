@@ -17,12 +17,15 @@
 type: object
 required:
   - metric_type
+  - metric_name
   - metric_value
   - kind_id
 properties:
   metric_type:
     type: string
     description: The category of the metric.
+  metric_name:
+    type: string
   metric_value:
     type: number
     format: double
