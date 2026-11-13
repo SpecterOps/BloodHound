@@ -25,6 +25,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/packages/go/params"
+	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 )
 
 // pgxQuerier lists only the pgx methods this package actually calls against PostgreSQL.
@@ -95,4 +96,106 @@ func applyFilters(builder *sqlbuilder.SelectBuilder, filters params.Filters) err
 	}
 
 	return nil
+}
+
+// applySorts applies the given sorts to the builder in the order listed
+func applySorts(builder *sqlbuilder.SelectBuilder, sorts params.SortItems) {
+	for _, sortItem := range sorts {
+		if sortItem.Direction == params.Descending {
+			builder.OrderByDesc(sortItem.Field)
+		} else {
+			builder.OrderByAsc(sortItem.Field)
+		}
+	}
+}
+
+func applyLimitSkip(builder *sqlbuilder.SelectBuilder, limit, skip int) {
+	if limit > 0 {
+		builder.Limit(limit)
+	}
+	if skip > 0 {
+		builder.Offset(skip)
+	}
+}
+
+// buildEntityLister returns a function which applies filters, sorts, and pagination params
+// to retrieve the given entity. RowType must be a DB-row-readable struct type corresponding with SelectBuilder.
+func (s *Store) buildEntityLister[RowType any](
+	selectBuilder, countBuilder *sqlbuilder.SelectBuilder,
+	columnAliases map[string]string,
+	defaultSortField string,
+) func(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]RowType, int, error) {
+	return func(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]RowType, int, error) {
+		var (
+			totalRowCount int
+		)
+
+		aliasedFilters, aliasedSort, err := normalizeFilterSort(columnAliases, defaultSortField, extensionFilters, sort)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		for _, builder := range []*sqlbuilder.SelectBuilder{selectBuilder, countBuilder} {
+			if err := applyFilters(builder, aliasedFilters); err != nil {
+				return nil, 0, err
+			}
+		}
+
+		applySorts(selectBuilder, aliasedSort)
+		applyLimitSkip(selectBuilder, limit, skip)
+
+		typedRows := []RowType{}
+		sqlQuery, args := selectBuilder.Build()
+		if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+			return nil, 0, fmt.Errorf("error fetching data: %w", err)
+		} else if typedRows, err = pgx.CollectRows(rows, pgx.RowToStructByName[RowType]); err != nil {
+			return nil, 0, fmt.Errorf("error reading rows: %w", err)
+		}
+
+		totalRowCount = len(typedRows)
+		if limit > 0 || skip > 0 {
+			countQuery, countArgs := countBuilder.Build()
+			if rows, err := s.db.Query(ctx, countQuery, countArgs...); err != nil {
+				return nil, 0, fmt.Errorf("error counting data: %w", err)
+			} else if totalRowCount, err = pgx.CollectOneRow(rows, pgx.RowTo[int]); err != nil {
+				return nil, 0, fmt.Errorf("error reading row count: %w", err)
+			}
+		}
+
+		return typedRows, totalRowCount, nil
+	}
+}
+
+// normalizeFilterSort takes the given filters and sorts and applies the columnAliases and defaults provided,
+// returning a normalized version of the filter and sort parameter lists.
+func normalizeFilterSort(columnAliases map[string]string, defaultSortField string, filters params.Filters, sort params.SortItems) (params.Filters, params.SortItems, error) {
+	aliasedFilters := make(params.Filters, len(filters))
+	aliasedSorts := make(params.SortItems, 0, len(sort))
+
+	if len(filters) > 0 {
+		for filterColumn, filter := range filters {
+			aliasedColumn, ok := columnAliases[filterColumn]
+			if !ok {
+				return nil, nil, fmt.Errorf("node kind filter references unknown field %q", filterColumn)
+			}
+			aliasedFilters[aliasedColumn] = filter
+		}
+	}
+	if len(sort) > 0 {
+		for _, sortItem := range sort {
+			aliasedColumn, ok := columnAliases[sortItem.Field]
+			if !ok {
+				return nil, nil, fmt.Errorf("node kind sort references unknown field %q", sortItem.Field)
+			}
+			sortItem.Field = aliasedColumn
+			if sortItem.Direction != params.Ascending && sortItem.Direction != params.Descending {
+				return nil, nil, fmt.Errorf("%w: %q", services.ErrInvalidSortDirection, sortItem.Direction)
+			}
+			aliasedSorts = append(aliasedSorts, sortItem)
+		}
+	} else {
+		aliasedSorts = append(aliasedSorts, params.SortItem{Field: defaultSortField, Direction: params.Ascending})
+	}
+
+	return aliasedFilters, aliasedSorts, nil
 }

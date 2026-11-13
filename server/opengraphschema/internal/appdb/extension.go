@@ -23,6 +23,7 @@ import (
 
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 )
 
@@ -71,4 +72,38 @@ func (s *Store) GetExtension(ctx context.Context, id int32) (services.Extension,
 	} else {
 		return toExtension(row), nil
 	}
+}
+
+// GetExtensions gets all the rows from the extensions table that match the given filter,
+// sorted by the given sorts and paged by the given pagination params.
+// It returns a slice of Extension structs populated with the data,
+// as well as an integer giving the total number of rows returned by the query (excluding any given pagination)
+func (s *Store) GetExtensions(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]services.Extension, int, error) {
+	var (
+		extensions = []services.Extension{}
+	)
+
+	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	selectBuilder.Select("id", "name", "display_name", "version", "is_builtin", "namespace")
+	selectBuilder.From(tableSchemaExtensions)
+
+	countBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	countBuilder.Select("COUNT(*)")
+	countBuilder.From(tableSchemaExtensions)
+
+	// TODO: define the columns we want to support filter/pagination on
+	columnAliases := map[string]string{}
+
+	listExtensions := s.buildEntityLister[extensionRow](selectBuilder, countBuilder, columnAliases, "id")
+
+	extensionRows, count, err := listExtensions(ctx, extensionFilters, sort, skip, limit)
+	if err != nil {
+		return extensions, 0, err
+	}
+
+	for _, row := range extensionRows {
+		extensions = append(extensions, toExtension(row))
+	}
+
+	return extensions, count, nil
 }
