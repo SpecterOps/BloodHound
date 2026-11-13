@@ -64,6 +64,23 @@ const renderControlledMultiSelect = (
 };
 
 describe('MultiSelect', () => {
+    it('uses the input border token and preserves selected colors on row hover', async () => {
+        const user = userEvent.setup();
+
+        render(<MultiSelect options={options} value={['a']} onValueChange={vi.fn()} />);
+        await user.click(screen.getByRole('button', { name: 'Menu Item A' }));
+
+        const checkbox = screen.getByRole('checkbox', { name: 'Menu Item A' });
+
+        expect(checkbox.closest('label')).toHaveClass('group');
+        expect(checkbox).toHaveClass(
+            'enabled:data-[state=unchecked]:!border-[color:var(--input-border-default)]',
+            'group-hover:enabled:!border-current',
+            'group-hover:enabled:data-[state=checked]:!bg-primary',
+            'group-hover:enabled:data-[state=checked]:!text-[color:var(--checkbox-check)]'
+        );
+    });
+
     it.each([
         { value: [], triggerText: 'All Items' },
         { value: ['a'], triggerText: 'Menu Item A' },

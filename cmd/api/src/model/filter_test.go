@@ -35,6 +35,21 @@ func TestBuildSQLFilter(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			name: "qualified column",
+			input: model.Filters{
+				"se.schema_extension_id": {{Operator: model.Equals, Value: "3"}},
+			},
+			output: model.SQLFilter{SQLString: "se.schema_extension_id = 3"},
+		},
+		{
+			name: "explicit alias preserves dots in column name",
+			input: model.Filters{
+				"literal.name": {{Operator: model.Equals, Value: "3"}},
+			},
+			alias:  models.OptionalValue("se"),
+			output: model.SQLFilter{SQLString: `se."literal.name" = 3`},
+		},
+		{
 			name: "greater than",
 			input: model.Filters{
 				"foo": []model.Filter{{

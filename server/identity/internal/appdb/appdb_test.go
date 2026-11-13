@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/pashagolub/pgxmock/v6"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
 	"github.com/specterops/bloodhound/server/identity/internal/services"

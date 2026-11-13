@@ -23,6 +23,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/specterops/dawgs/cypher/frontend"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,9 +42,10 @@ func Test_validateGraphExtension(t *testing.T) {
 		graphExtension GraphExtensionInput
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr error
+		name      string
+		args      args
+		wantErr   error
+		wantCause error
 	}{
 		{
 			name: "fail - empty extension name",
@@ -907,7 +909,24 @@ func Test_validateGraphExtension(t *testing.T) {
 					}},
 				},
 			},
-			wantErr: fmt.Errorf("graph schema saved query Procedure query contains invalid Cypher: procedure invocation is not supported"),
+			wantErr:   fmt.Errorf("graph schema saved query Procedure query contains invalid Cypher"),
+			wantCause: frontend.ErrProcedureInvocationNotSupported,
+		},
+		{
+			name: "fail - saved query contains in-query procedure invocation",
+			args: args{
+				graphExtension: GraphExtensionInput{
+					ExtensionInput: baseExtensionInput(),
+					NodeKindsInput: NodesInput{{Name: "AD_node_kind_1"}},
+					SavedQueriesInput: SavedQueriesInput{{
+						QueryKey: "procedure-query",
+						Name:     "Procedure query",
+						Query:    "MATCH (n) CALL db.labels() YIELD label RETURN n",
+					}},
+				},
+			},
+			wantErr:   fmt.Errorf("graph schema saved query Procedure query contains invalid Cypher"),
+			wantCause: frontend.ErrProcedureInvocationNotSupported,
 		},
 		{
 			name: "fail - unparseable saved query",
@@ -988,6 +1007,9 @@ func Test_validateGraphExtension(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.args.graphExtension.Validate(); tt.wantErr != nil {
 				require.ErrorContains(t, err, tt.wantErr.Error())
+				if tt.wantCause != nil {
+					require.ErrorIs(t, err, tt.wantCause)
+				}
 			} else {
 				require.NoError(t, err)
 			}

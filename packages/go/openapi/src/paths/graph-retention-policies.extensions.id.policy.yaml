@@ -17,12 +17,13 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - name: extension_id
-    description: Extension ID
+    description: Required positive identifier of the extension whose policy is being interacted with.
     in: path
     required: true
     schema:
       type: integer
       format: int64
+      minimum: 1
 get:
   operationId: GetExtensionRetentionPolicy
   summary: Get Extension Retention Policy
@@ -81,6 +82,69 @@ put:
             properties:
               data:
                 $ref: './../schemas/model.graph-retention-policy.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+
+patch:
+  operationId: PatchExtensionRetentionPolicy
+  summary: Enable/Disable Extension Retention Policy
+  description: >-
+    Changes only the enabled state of an existing extension retention policy,
+    its TTL remains unchanged. Requires admin permissions and the retention_policies feature flag.
+    Returns 404 if the feature flag is disabled, the extension is unknown,
+    or its policy does not exist.
+  tags:
+    - Graph Retention Policies
+    - Enterprise
+  requestBody:
+    required: true
+    description: >-
+      Both data and data.enabled are required, enabled must be a boolean.
+    content:
+      application/json:
+        schema:
+          type: object
+          additionalProperties: false
+          required:
+            - data
+          properties:
+            data:
+              type: object
+              additionalProperties: false
+              required:
+                - enabled
+              properties:
+                enabled:
+                  type: boolean
+        example:
+          data:
+            enabled: false
+  responses:
+    200:
+      description: Updated extension policy, including the required extension_id, enabled, and the unchanged ttl field.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                allOf:
+                  - $ref: './../schemas/model.graph-extension-retention-policy.yaml'
+                  - type: object
+                    required:
+                      - extension_id
     400:
       $ref: './../responses/bad-request.yaml'
     401:

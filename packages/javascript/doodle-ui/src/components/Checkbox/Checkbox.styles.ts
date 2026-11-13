@@ -50,3 +50,16 @@ export const CheckboxVariants = cva(
         },
     }
 );
+
+export const checkboxIndicatorClasses = 'group flex items-center justify-center text-current';
+
+export const checkboxCheckIconClasses = 'hidden h-full w-full group-data-[state=checked]:block';
+
+export const checkboxIndeterminateIconClasses = 'hidden h-full w-full group-data-[state=indeterminate]:block';
+
+export const checkboxLabelClasses = cn(
+    'inline-flex align-middle items-center gap-2 rounded-sm cursor-pointer has-[:disabled]:cursor-not-allowed',
+    '[&:has(:focus-visible)]:ring-2 [&:has(:focus-visible)]:ring-[color:var(--checkbox-focus-ring)]',
+    '[&:has(:focus-visible)]:ring-offset-2',
+    '[&:has(:focus-visible)]:ring-offset-[color:var(--checkbox-unchecked-fill)]'
+);
