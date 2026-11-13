@@ -205,8 +205,13 @@ NodeKinds: [
 	MigrationData,
 ]
 
-RelationshipKinds: [
-]
+SameHostAs: types.#Kind & {
+	symbol: "SameHostAs"
+	schema: "common"
+}
 
-InboundRelationshipKinds: list.Concat([ad.InboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])
-OutboundRelationshipKinds: list.Concat([ad.OutboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])
+RelationshipKinds: [SameHostAs]
+PathfindingRelationships: [SameHostAs]
+
+InboundRelationshipKinds: list.Concat([ad.InboundRelationshipKinds, azure.InboundOutboundRelationshipKinds, PathfindingRelationships])
+OutboundRelationshipKinds: list.Concat([ad.OutboundRelationshipKinds, azure.InboundOutboundRelationshipKinds, PathfindingRelationships])

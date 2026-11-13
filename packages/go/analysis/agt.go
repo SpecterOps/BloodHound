@@ -266,6 +266,13 @@ func fetchChildNodes(ctx context.Context, tx traversal.Traversal, node *graph.No
 			query.KindIn(query.Relationship(), azure.HasRole, azure.AZRoleEligible),
 			query.KindIn(query.End(), azure.Entity),
 		))
+	case node.Kinds.ContainsOneOf(ad.Computer, azure.VM, azure.Device):
+		// SameHostAs is bidirectional. Expand one hop at a time so the child
+		// queue deduplicates cycles and discovers the other host identities.
+		pattern = traversal.NewPattern().OutboundWithDepth(0, 1, query.And(
+			query.Kind(query.Relationship(), common.SameHostAs),
+			query.KindIn(query.End(), ad.Computer, azure.VM, azure.Device),
+		))
 	default:
 		// Skip any that do not need expanding
 		return nil

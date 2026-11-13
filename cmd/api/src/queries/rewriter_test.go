@@ -22,6 +22,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/cypher/models/cypher"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
@@ -117,7 +118,7 @@ func TestRewriter_Enter_AllAttackPathsShortcut_ReplacesKinds(t *testing.T) {
 		relationshipPattern = &cypher.RelationshipPattern{
 			Kinds: graph.Kinds{graph.StringKind("ALL_ATTACK_PATHS")},
 		}
-		expectedKinds = graph.Kinds(append(azure.PathfindingRelationships(), ad.PathfindingRelationships()...))
+		expectedKinds = graph.Kinds(azure.PathfindingRelationships()).Concatenate(ad.PathfindingRelationships()).Concatenate(common.PathfindingRelationships())
 	)
 
 	rewriter.Enter(relationshipPattern)
@@ -136,7 +137,7 @@ func TestRewriter_Enter_AllAttackPathsShortcut_TakesPrecedenceOverOtherShortcuts
 				graph.StringKind("AD_ATTACK_PATHS"),
 			},
 		}
-		expectedKinds = graph.Kinds(append(azure.PathfindingRelationships(), ad.PathfindingRelationships()...))
+		expectedKinds = graph.Kinds(azure.PathfindingRelationships()).Concatenate(ad.PathfindingRelationships()).Concatenate(common.PathfindingRelationships())
 	)
 
 	rewriter.Enter(relationshipPattern)

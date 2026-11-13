@@ -300,6 +300,14 @@ func GenerateGolangGraphModel(pkgName, dir string, graphSchema model.Graph) (*je
 		),
 	)
 
+	root.Func().Id("PathfindingRelationships").Params().Index().Qual(GraphPackageName, "Kind").Block(
+		jen.Return(jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
+			for _, relationshipKind := range graphSchema.PathfindingRelationships {
+				group.Id(relationshipKind.Symbol)
+			}
+		})),
+	)
+
 	root.Func().Id("NodeKinds").Params().Index().Qual(GraphPackageName, "Kind").Block(
 		jen.Return(
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
@@ -315,6 +323,8 @@ func GenerateGolangGraphModel(pkgName, dir string, graphSchema model.Graph) (*je
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
 				for _, relKind := range graphSchema.InboundRelationshipKinds {
 					switch relKind.Schema {
+					case "common":
+						group.Id(relKind.Symbol)
 					case "active_directory":
 						group.Qual(ADSchemaPackageName, "").Id(relKind.Symbol)
 					case "azure":
@@ -330,6 +340,8 @@ func GenerateGolangGraphModel(pkgName, dir string, graphSchema model.Graph) (*je
 			jen.Index().Qual(GraphPackageName, "Kind").ValuesFunc(func(group *jen.Group) {
 				for _, relKind := range graphSchema.OutboundRelationshipKinds {
 					switch relKind.Schema {
+					case "common":
+						group.Id(relKind.Symbol)
 					case "active_directory":
 						group.Qual(ADSchemaPackageName, "").Id(relKind.Symbol)
 					case "azure":

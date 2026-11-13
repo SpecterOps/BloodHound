@@ -21,13 +21,14 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_parseRelationshipKindsParam(t *testing.T) {
-	validKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
-	validTraversableKinds := graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
+	validKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships()).Concatenate(common.Relationships())
+	validTraversableKinds := graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships()).Concatenate(common.PathfindingRelationships())
 
 	// Default case
 	kinds, operator, err := parseRelationshipKindsParam(validKinds, "")
@@ -45,6 +46,12 @@ func Test_parseRelationshipKindsParam(t *testing.T) {
 	require.True(t, kinds.ContainsOneOf(ad.Contains))
 	require.True(t, kinds.ContainsOneOf(ad.GenericAll))
 	require.True(t, kinds.ContainsOneOf(azure.ResetPassword))
+
+	// Common host correlations remain available when filtering to traversable kinds.
+	kinds, operator, err = parseRelationshipKindsParam(validTraversableKinds, "in:SameHostAs")
+	require.NoError(t, err)
+	require.Equal(t, "in", operator)
+	require.Equal(t, graph.Kinds{common.SameHostAs}, kinds)
 
 	// Expect an error if we can't find a matching kind
 	_, _, err = parseRelationshipKindsParam(validKinds, "in:Contains,GenericAll,NOTAKIND")

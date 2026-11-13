@@ -158,6 +158,10 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 			}
 		}
 
+		if err := correlateHosts(ctx, tx, sink); err != nil {
+			return err
+		}
+
 		return tx.Commit()
 	})
 	if err != nil {
@@ -171,6 +175,7 @@ func PostHybrid(ctx context.Context, db graph.Database) (*post.AtomicPostProcess
 var hybridPostProcessedEdges = graph.Kinds{
 	azure.SyncedToEntraUser,
 	adSchema.SyncedToADUser,
+	common.SameHostAs,
 }
 
 // hasOnPremUser takes a node and returns the OnPremID as a string, whether the node has an onPrem user defined as a bool

@@ -128,6 +128,7 @@ import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
 import RootCAFor from './RootCAFor/RootCAFor';
 import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SameForestTrust from './SameForestTrust/SameForestTrust';
+import SameHostAs from './SameHostAs/SameHostAs';
 import ServerIs from './ServerIs/ServerIs';
 import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
 import SyncLAPSPassword from './SyncLAPSPassword/SyncLAPSPassword';
@@ -275,6 +276,7 @@ const EdgeInfoComponents = {
     ServerIs: ServerIs,
     OIDGroupLink: OIDGroupLink,
     ExtendedByPolicy: ExtendedByPolicy,
+    SameHostAs: SameHostAs,
     SyncedToADUser: SyncedToADUser,
     SyncedToEntraUser: SyncedToEntraUser,
     CoerceAndRelayNTLMToSMB: CoerceAndRelayNTLMToSMB,

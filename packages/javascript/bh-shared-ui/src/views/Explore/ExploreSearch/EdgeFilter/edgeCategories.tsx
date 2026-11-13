@@ -14,7 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from '../../../../graphSchema';
+import {
+    ActiveDirectoryRelationshipKind,
+    AzureRelationshipKind,
+    CommonRelationshipKind,
+} from '../../../../graphSchema';
 
 export type EdgeCheckboxType = {
     category: string;
@@ -229,6 +233,10 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                 edgeTypes: [AzureRelationshipKind.SyncedToEntraUser],
             },
         ],
+    },
+    {
+        categoryName: 'Common',
+        subcategories: [{ name: 'Host Correlation', edgeTypes: [CommonRelationshipKind.SameHostAs] }],
     },
 ];
 

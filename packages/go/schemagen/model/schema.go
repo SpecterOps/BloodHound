@@ -40,6 +40,7 @@ func (s StringEnum) GetName() string {
 }
 
 type Graph struct {
+	PathfindingRelationships  []StringEnum
 	Properties                []StringEnum
 	NodeKinds                 []StringEnum
 	RelationshipKinds         []StringEnum

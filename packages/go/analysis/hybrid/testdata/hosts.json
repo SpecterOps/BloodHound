@@ -1,0 +1,39 @@
+{
+    "graph": {
+        "nodes": [
+            {
+                "id": "S-1-5-21-111-222-333-1001",
+                "kinds": ["Computer", "Base"],
+                "properties": {
+                    "name": "HOST.EXAMPLE.COM",
+                    "environmentid": "S-1-5-21-111-222-333",
+                    "azvmid": "ABCDEF01-2345-6789-ABCD-0123456789AB"
+                }
+            },
+            {
+                "id": "/subscriptions/abcdef01-2345-6789-abcd-0123456789ab/resourceGroups/Production/providers/Microsoft.Compute/virtualMachines/AADJoined",
+                "kinds": ["AZVM", "AZBase"],
+                "properties": {
+                    "name": "AADJOINED",
+                    "environmentid": "abcdef01-2345-6789-abcd-0123456789ab",
+                    "vm_id": "abcdef01-2345-6789-abcd-0123456789ab"
+                }
+            },
+            {
+                "id": "01234567-89ab-cdef-0123-456789abcdef",
+                "kinds": ["AZDevice", "AZBase"],
+                "properties": {
+                    "name": "AADJOINED@EXAMPLE.COM",
+                    "environmentid": "abcdef01-2345-6789-abcd-0123456789ab",
+                    "onpremid": "s-1-5-21-111-222-333-1001",
+                    "physical_ids": [
+                        "[Other]:/subscriptions/abcdef01-2345-6789-abcd-0123456789ab/resourceGroups/Production/providers/Microsoft.Compute/virtualMachines/AADJoined",
+                        "[AzureResourceId]:malformed",
+                        "[AzureResourceId]:/subscriptions/abcdef01-2345-6789-abcd-0123456789ab/resourceGroups/Production/providers/Microsoft.Compute/virtualMachines/AADJoined",
+                        "[AzureResourceId]:/SUBSCRIPTIONS/ABCDEF01-2345-6789-ABCD-0123456789AB/RESOURCEGROUPS/PRODUCTION/PROVIDERS/MICROSOFT.COMPUTE/VIRTUALMACHINES/AADJOINED"
+                    ]
+                }
+            }
+        ]
+    }
+}
