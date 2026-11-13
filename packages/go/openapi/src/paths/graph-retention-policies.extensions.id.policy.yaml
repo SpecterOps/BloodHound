@@ -17,12 +17,13 @@
 parameters:
   - $ref: './../parameters/header.prefer.yaml'
   - name: extension_id
-    description: Extension ID
+    description: Required positive identifier of the extension whose policy is being updated.
     in: path
     required: true
     schema:
       type: integer
       format: int64
+      minimum: 1
 get:
   operationId: GetExtensionRetentionPolicy
   summary: Get Extension Retention Policy
@@ -105,15 +106,6 @@ patch:
   tags:
     - Graph Retention Policies
     - Enterprise
-  parameters:
-    - name: extension_id
-      description: Required positive identifier of the extension whose policy is being updated.
-      in: path
-      required: true
-      schema:
-        type: integer
-        format: int32
-        minimum: 1
   requestBody:
     required: true
     description: >-
