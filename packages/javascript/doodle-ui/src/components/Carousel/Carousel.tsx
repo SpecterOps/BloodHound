@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { EmblaCarouselType } from 'embla-carousel';
 import Autoplay from 'embla-carousel-autoplay';
 import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
@@ -22,6 +23,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../Button';
 import { IconButton } from '../IconButton';
 import { cn } from '../utils';
+import { carouselIndicatorClasses, carouselItemClasses, carouselSelectedIndicatorClasses } from './Carousel.styles';
 
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
@@ -193,11 +195,7 @@ const CarouselItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
                 ref={ref}
                 role='group'
                 aria-roledescription='slide'
-                className={cn(
-                    'min-w-0 shrink-0 grow-0 basis-full',
-                    orientation === 'horizontal' ? 'pl-4' : 'pt-4',
-                    className
-                )}
+                className={cn(carouselItemClasses, orientation === 'horizontal' ? 'pl-4' : 'pt-4', className)}
                 {...props}
             />
         );
@@ -235,8 +233,9 @@ const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
                                 : `Go to item ${index + 1} of ${scrollSnaps.length}`
                         }
                         aria-current={isCurrent ? 'true' : undefined}
-                        className={'h-2.5 w-2.5 mx-1.5 border-x border-y rounded-3xl text-main border-current focus:outline-none focus-visible:focus-ring '.concat(
-                            index === selectedIndex ? 'active bg-current rounded-3xl' : ''
+                        className={cn(
+                            carouselIndicatorClasses,
+                            index === selectedIndex && carouselSelectedIndicatorClasses
                         )}
                         onClick={() => onDotButtonClick(index)}></button>
                 );

@@ -24,7 +24,7 @@ import {
     DialogTitle,
     Input,
 } from 'doodle-ui';
-import React, { ReactNode, useCallback, useState } from 'react';
+import React, { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 const ConfirmationDialog: React.FC<{
     open: boolean;
@@ -60,20 +60,34 @@ const ConfirmationDialog: React.FC<{
     confirmDataAnalytics,
 }) => {
     const [challengeTextReply, setChallengeTextReply] = useState<string>('');
+    const resetTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+    useEffect(() => {
+        if (open) {
+            clearTimeout(resetTimeout.current);
+            setChallengeTextReply('');
+        }
+    }, [open]);
+
+    useEffect(() => () => clearTimeout(resetTimeout.current), []);
+
+    const scheduleReset = useCallback(() => {
+        clearTimeout(resetTimeout.current);
+        resetTimeout.current = setTimeout(() => {
+            setChallengeTextReply('');
+            resetTimeout.current = undefined;
+        }, 1000);
+    }, []);
 
     const handleClose = useCallback(() => {
+        scheduleReset();
         onCancel();
-        setTimeout(() => {
-            setChallengeTextReply('');
-        }, 1000);
-    }, [onCancel]);
+    }, [onCancel, scheduleReset]);
 
     const handleConfirm = useCallback(() => {
+        scheduleReset();
         onConfirm();
-        setTimeout(() => {
-            setChallengeTextReply('');
-        }, 1000);
-    }, [onConfirm]);
+    }, [onConfirm, scheduleReset]);
 
     const renderButtonContent = (buttonText: string, icon?: ReactNode) => (
         <>
