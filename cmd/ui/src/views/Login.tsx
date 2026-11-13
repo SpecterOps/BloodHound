@@ -14,26 +14,37 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { LoginForm, LoginViaSSOForm, OneTimePasscodeForm, apiClient, useAppName } from 'bh-shared-ui';
+import {
+    LoginForm,
+    LoginViaSSOForm,
+    OneTimePasscodeForm,
+    apiClient,
+    getLoginDestination,
+    saveLoginRedirect,
+    useAppName,
+} from 'bh-shared-ui';
 import { LoadingSpinner } from 'doodle-ui';
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useQuery, useQueryClient } from 'react-query';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import LoginPage from 'src/components/LoginPage';
 
 import { login as loginAction, logout } from 'src/ducks/auth/authSlice';
-import { ROUTE_HOME, ROUTE_USER_DISABLED } from 'src/routes/constants';
+import { ROUTE_HOME, ROUTE_USER_DISABLED, loginRedirectOptions } from 'src/routes/constants';
 import { useAppDispatch, useAppSelector } from 'src/store';
 
 const Login: React.FC = () => {
     /* Hooks */
     const dispatch = useAppDispatch();
+    const location = useLocation();
 
     const queryClient = useQueryClient();
 
     const authState = useAppSelector((state) => state.auth);
     const appName = useAppName();
+
+    const isAuthenticated = authState.sessionToken !== null && authState.user !== null;
 
     const [useSSO, setUseSSO] = useState(false);
 
@@ -75,13 +86,22 @@ const Login: React.FC = () => {
     };
 
     const handleSubmitLoginViaSSOForm = (providerSlug: string) => {
+        saveLoginRedirect(getLoginDestination(location.state, loginRedirectOptions));
         window.location.assign(`/api/v2/sso/${providerSlug}/login`);
+    };
+
+    const handleLoginViaSSO = () => {
+        if (listSSOProvidersQuery.data?.length === 1) {
+            handleSubmitLoginViaSSOForm(listSSOProvidersQuery.data[0].slug);
+            return;
+        }
+        setUseSSO(true);
     };
 
     /* Implementation */
 
     // Redirect if already logged in
-    if (authState.sessionToken !== null && authState.user !== null) return <Navigate to={ROUTE_HOME} replace />;
+    if (isAuthenticated) return <Navigate to={ROUTE_HOME} state={location.state} replace />;
 
     if (listSSOProvidersQuery.isLoading) {
         return (
@@ -123,10 +143,6 @@ const Login: React.FC = () => {
     }
 
     if (useSSO) {
-        if (listSSOProvidersQuery.data?.length === 1) {
-            handleSubmitLoginViaSSOForm(listSSOProvidersQuery.data[0].slug);
-            return;
-        }
         return (
             <LoginPage>
                 {title}
@@ -144,7 +160,7 @@ const Login: React.FC = () => {
             {title}
             <LoginForm
                 onSubmit={handleSubmitLoginForm}
-                onLoginViaSSO={() => setUseSSO(true)}
+                onLoginViaSSO={handleLoginViaSSO}
                 loading={authState.loginLoading}
             />
         </LoginPage>
