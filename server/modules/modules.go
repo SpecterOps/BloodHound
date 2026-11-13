@@ -22,6 +22,7 @@ package modules
 import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	alerts "github.com/specterops/bloodhound/server/alerts"
@@ -46,6 +47,8 @@ type Deps struct {
 	Graph          graph.Database
 	DogTags        dogtags.Service
 	AlertPublisher alerts.Publisher
+	// MetricsRegisterer shares the application registry so each slice can register its own metrics.
+	MetricsRegisterer prometheus.Registerer
 	// Included to allow the config module to continue requesting some side effect
 	// legacy DB requests until that functionality can be migrated to onion
 	ConfigUpdateSideEffects appcfg.ConfigUpdateSideEffecter

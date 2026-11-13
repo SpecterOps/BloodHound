@@ -173,6 +173,7 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		startDelay := 0 * time.Second
 
 		var (
+			promRegistry           = prometheus.NewRegistry()
 			cl                     = changelog.NewChangelog(connections.Graph, connections.RDMS, changelog.DefaultOptions())
 			pipeline               = datapipe.NewPipeline(ctx, cfg, connections.RDMS, connections.Graph, graphQueryCache, ingestSchema, dependencies.FileServiceResolver, cl)
 			graphQuery             = queries.NewGraphQuery(connections.Graph, graphQueryCache, cfg)
@@ -188,10 +189,11 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 		registration.RegisterFossRoutes(&routerInst, cfg, connections.RDMS, connections.Graph, graphQuery, apiCache, collectorManifests, authenticator, authorizer, ingestSchema, dependencies.FileServiceResolver, dogtagsService, openGraphSchemaService, alertPublisher)
 
 		modules.Register(modules.Deps{
-			Router:  &routerInst,
-			Pool:    connections.RDMS.Pool(),
-			Graph:   connections.Graph,
-			DogTags: dogtagsService,
+			Router:            &routerInst,
+			Pool:              connections.RDMS.Pool(),
+			Graph:             connections.Graph,
+			DogTags:           dogtagsService,
+			MetricsRegisterer: promRegistry,
 			RateLimitMiddleware: func() mux.MiddlewareFunc {
 				return middleware.MatchedRouteRateLimitMiddleware(connections.RDMS, []string{api.UserInterfacePath}, map[string]int64{
 					"/api/v2/login": 1,
@@ -211,7 +213,6 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 
 		// Register all metrics into a single registry before exposing it via the
 		// default registerer so /metrics never observes a partially-initialized state.
-		promRegistry := prometheus.NewRegistry()
 		if err := metricsregistration.RegisterBHCEMetrics(promRegistry); err != nil {
 			return nil, fmt.Errorf("failed to register prometheus metrics: %w", err)
 		} else if err := prometheus.DefaultRegisterer.Register(promRegistry); err != nil {
