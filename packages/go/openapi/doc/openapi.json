@@ -28941,7 +28941,9 @@
                     "name",
                     "version",
                     "is_builtin",
-                    "namespace"
+                    "namespace",
+                    "created_at",
+                    "updated_at"
                   ],
                   "properties": {
                     "id": {
@@ -28959,6 +28961,16 @@
                     },
                     "namespace": {
                       "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
                     }
                   }
                 }
@@ -28977,7 +28989,9 @@
                 "name": "Active Directory",
                 "version": "v1.0.0",
                 "is_builtin": true,
-                "namespace": "AD"
+                "namespace": "AD",
+                "created_at": "2026-01-01T00:00:00Z",
+                "updated_at": "2026-01-01T00:00:00Z"
               }
             ]
           }

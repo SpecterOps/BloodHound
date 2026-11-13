@@ -31,6 +31,8 @@ properties:
             - version
             - is_builtin
             - namespace
+            - created_at
+            - updated_at
           properties:
             id:
               type: integer
@@ -43,6 +45,14 @@ properties:
               type: boolean
             namespace:
               type: string
+            created_at:
+              type: string
+              format: date-time
+              readOnly: true
+            updated_at:
+              type: string
+              format: date-time
+              readOnly: true
 required:
   - data
 example:
@@ -53,3 +63,5 @@ example:
         version: "v1.0.0"
         is_builtin: true
         namespace: "AD"
+        created_at: "2026-01-01T00:00:00Z"
+        updated_at: "2026-01-01T00:00:00Z"
