@@ -42,11 +42,12 @@ import (
 // cutting dependencies (graph database, filesystem, caches, etc.) are added
 // here so that every module has a single, consistent place to pull from.
 type Deps struct {
-	Router         *router.Router
-	Pool           *pgxpool.Pool
-	Graph          graph.Database
-	DogTags        dogtags.Service
-	AlertPublisher alerts.Publisher
+	Router          *router.Router
+	Pool            *pgxpool.Pool
+	Graph           graph.Database
+	DogTags         dogtags.Service
+	AlertPublisher  alerts.Publisher
+	IdentityOptions []identity.Option
 	// Included to allow the config module to continue requesting some side effect
 	// legacy DB requests until that functionality can be migrated to onion
 	ConfigUpdateSideEffects appcfg.ConfigUpdateSideEffecter
@@ -89,7 +90,7 @@ func Register(deps Deps) {
 	analysis.Register(deps.Router, deps.Pool)
 	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects, deps.GraphRetentionManager)
 	auth.Register(deps.Router, deps.Pool)
-	identity.Register(deps.Router, deps.Pool)
+	identity.Register(deps.Router, deps.Pool, deps.IdentityOptions...)
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
 	opengraphschema.Register(deps.Router, deps.Pool)
