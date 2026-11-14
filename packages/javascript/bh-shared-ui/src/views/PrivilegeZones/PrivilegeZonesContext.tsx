@@ -41,6 +41,7 @@ export interface PrivilegeZonesContextValue {
     defaultPath: string;
     savePaths: string[];
     InfoHeader: FC;
+    ViewRelatedFindingsLink?: FC;
     EnvironmentSelector: FC;
     ZoneSelector?: FC<{ onZoneClick?: (zone: AssetGroupTag) => void }>;
     LabelSelector?: FC<{ onLabelClick?: (label: AssetGroupTag) => void }>;

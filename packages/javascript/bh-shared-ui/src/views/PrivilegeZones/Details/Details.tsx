@@ -18,7 +18,7 @@ import { Alert, AlertTitle } from '@mui/material';
 import { AssetGroupTagMemberListItem } from 'js-client-library';
 import { FC } from 'react';
 import { useHighestPrivilegeTagId, useObjectCounts, usePZPathParams, useRuleInfo } from '../../../hooks';
-import { useAppNavigate } from '../../../utils';
+import { cn, useAppNavigate } from '../../../utils';
 import { usePZContext } from '../PrivilegeZonesContext';
 import { PageDescription } from '../fragments';
 import { ObjectTabValue } from '../utils';
@@ -31,12 +31,12 @@ import TagSelector from './TagSelector';
 
 const Details: FC = () => {
     const { tagId: topTagId } = useHighestPrivilegeTagId();
-    const { tagTypeDisplay, tagId: pathTagId, ruleId, memberId, objectDetailsLink } = usePZPathParams();
+    const { tagTypeDisplay, tagId: pathTagId, ruleId, memberId, objectDetailsLink, isZonePage } = usePZPathParams();
     const tagId = pathTagId ?? topTagId;
 
     const ruleQuery = useRuleInfo(tagId, ruleId);
 
-    const { InfoHeader, EnvironmentSelector } = usePZContext();
+    const { InfoHeader, EnvironmentSelector, ViewRelatedFindingsLink } = usePZContext();
 
     const objectCountsQuery = useObjectCounts();
 
@@ -65,12 +65,17 @@ const Details: FC = () => {
             <div className='flex gap-6 mt-4 h-full'>
                 <div className='flex flex-col bg-neutral-1 pt-4 rounded-lg border border-solid border-neutral-light-4 dark:border-neutral-900 basis-2/3'>
                     <h2 className='font-bold text-xl pl-4 mb-2'>{tagTypeDisplay} Details</h2>
-                    <div className='flex flex-wrap justify-between w-full pb-6 border-b border-neutral-3 pl-4'>
-                        <div className='flex gap-4 items-center'>
+                    <div className='flex flex-wrap items-end gap-4 w-full pb-6 border-b border-neutral-3 px-4'>
+                        <div
+                            className={cn('flex flex-wrap gap-4 items-end', {
+                                '[&_button]:h-10': isZonePage,
+                            })}>
                             <TagSelector />
                             <EnvironmentSelector />
+                            <SearchBar showTags={false} />
                         </div>
-                        <SearchBar showTags={false} />
+
+                        {ViewRelatedFindingsLink && <ViewRelatedFindingsLink />}
                     </div>
                     <div className='flex overflow-x-hidden max-lg:flex-col h-dvh'>
                         <div className='w-1/2 grow border-r border-neutral-3 max-lg:border-none max-lg:w-full overflow-y-auto'>
