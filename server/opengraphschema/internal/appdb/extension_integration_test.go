@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -86,50 +87,166 @@ func TestStore_GetExtension_Integration(t *testing.T) {
 	}
 }
 
-func TestStore_ListExtensions_Integration(t *testing.T) {
+func TestStore_GetExtensions_Integration(t *testing.T) {
 	var (
 		ctx         = context.Background()
 		store, pool = setupStore(t)
-		tests       = []struct {
-			name  string
-			setup func(t *testing.T)
-			want  []services.Extension
-		}{
-			{name: "empty", want: []services.Extension{}},
-			{name: "orders by name", setup: func(t *testing.T) {
-				_, err := pool.Exec(ctx, `INSERT INTO schema_extensions (id, name, display_name, version, is_builtin, namespace, created_at, updated_at) VALUES
-     (10003, 'zeta', 'Zeta', 'v3', false, 'Z', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z'),
-     (10002, 'alpha2', 'Alpha 2', 'v2', false, 'A2', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z'),
-     (10001, 'alpha1', 'Alpha 1', 'v1', true, 'A1', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z')`)
-				require.NoError(t, err)
-			}, want: []services.Extension{
-				{ID: 10001, Name: "alpha1", DisplayName: "Alpha 1", Version: "v1", IsBuiltin: true, Namespace: "A1", CreatedAt: time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC), UpdatedAt: time.Date(2026, time.January, 2, 0, 0, 0, 0, time.UTC)},
-				{ID: 10002, Name: "alpha2", DisplayName: "Alpha 2", Version: "v2", Namespace: "A2", CreatedAt: time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC), UpdatedAt: time.Date(2026, time.January, 2, 0, 0, 0, 0, time.UTC)},
-				{ID: 10003, Name: "zeta", DisplayName: "Zeta", Version: "v3", Namespace: "Z", CreatedAt: time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC), UpdatedAt: time.Date(2026, time.January, 2, 0, 0, 0, 0, time.UTC)},
-			}},
-		}
 	)
-	for _, testCase := range tests {
-		t.Run(testCase.name, func(t *testing.T) {
-			_, err := pool.Exec(ctx, "DELETE FROM schema_extensions")
-			require.NoError(t, err)
-			if testCase.setup != nil {
-				testCase.setup(t)
-			}
-			extensions, err := store.ListExtensions(ctx)
-			require.NoError(t, err)
-			require.Len(t, extensions, len(testCase.want))
-			assert.NotNil(t, extensions)
-			for index, expected := range testCase.want {
-				var actual = extensions[index]
-				assert.Equal(t, expected.ID, actual.ID)
-				assert.Equal(t, expected.Name, actual.Name)
-				assert.Equal(t, expected.DisplayName, actual.DisplayName)
-				assert.Equal(t, expected.Version, actual.Version)
-				assert.Equal(t, expected.IsBuiltin, actual.IsBuiltin)
-				assert.Equal(t, expected.Namespace, actual.Namespace)
-				assert.WithinDuration(t, expected.CreatedAt, actual.CreatedAt, 0)
-				assert.WithinDuration(t, expected.UpdatedAt, actual.UpdatedAt, 0)
+
+	_, err := pool.Exec(ctx, `DELETE FROM schema_extensions WHERE is_builtin = true`)
+	require.NoError(t, err)
+
+	type extensionData struct {
+		name        string
+		displayName string
+		version     string
+		isBuiltin   bool
+		namespace   string
+	}
+
+	var extensions []services.Extension
+	for _, extension := range []extensionData{
+		{name: "ExtensionAlpha", displayName: "Alpha Extension", version: "1.0.0", isBuiltin: true, namespace: "ALP"},
+		{name: "ExtensionBeta", displayName: "Beta Extension", version: "1.1.0", isBuiltin: false, namespace: "BET"},
+		{name: "ExtensionGamma", displayName: "Gamma Extension", version: "2.0.0", isBuiltin: true, namespace: "GAM"},
+	} {
+		var extensionID int32
+		require.NoError(t, pool.QueryRow(ctx, `
+			INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace)
+			VALUES ($1, $2, $3, $4, $5)
+			RETURNING id`,
+			extension.name, extension.displayName, extension.version, extension.isBuiltin, extension.namespace,
+		).Scan(&extensionID))
+
+		extensions = append(extensions, services.Extension{
+			ID:          extensionID,
+			Name:        extension.name,
+			DisplayName: extension.displayName,
+			Version:     extension.version,
+			IsBuiltin:   extension.isBuiltin,
+			Namespace:   extension.namespace,
+		})
+	}
+
+	type query struct {
+		filters params.Filters
+		sort    params.SortItems
+		skip    int
+		limit   int
+	}
+
+	type expected struct {
+		extensions []services.Extension
+		count      int
+		err        string
+	}
+
+	type testCase struct {
+		name    string
+		queries []query
+		want    []expected
+	}
+
+	tests := []testCase{
+		{
+			name:    "success_-_returns_all_extensions_in_default_order",
+			queries: []query{{}},
+			want:    []expected{{extensions: extensions, count: 3}},
+		},
+		{
+			name: "success_-_filters_by_name",
+			queries: []query{
+				{filters: params.Filters{"name": {{Operator: params.Equals, Value: "ExtensionAlpha"}}}},
+				{filters: params.Filters{"name": {{Operator: params.Equals, Value: "MissingExtension"}}}},
+			},
+			want: []expected{
+				{extensions: []services.Extension{extensions[0]}, count: 1},
+				{extensions: []services.Extension{}, count: 0},
+			},
+		},
+		{
+			name: "success_-_filters_by_display_name",
+			queries: []query{
+				{filters: params.Filters{"display_name": {{Operator: params.Equals, Value: "Beta Extension"}}}},
+			},
+			want: []expected{{extensions: []services.Extension{extensions[1]}, count: 1}},
+		},
+		{
+			name: "success_-_filters_by_builtin_status",
+			queries: []query{
+				{filters: params.Filters{"is_builtin": {{Operator: params.Equals, Value: "true"}}}},
+			},
+			want: []expected{{extensions: []services.Extension{extensions[0], extensions[2]}, count: 2}},
+		},
+		{
+			name: "success_-_combines_or_and_filters",
+			queries: []query{
+				{
+					filters: params.Filters{
+						"name": {
+							{Operator: params.ApproximatelyEquals, Value: "Alpha"},
+							{Operator: params.Equals, Value: "ExtensionGamma", SetOperator: params.FilterOr},
+						},
+						"is_builtin": {{Operator: params.Equals, Value: "true"}},
+					},
+				},
+			},
+			want: []expected{{extensions: []services.Extension{extensions[0], extensions[2]}, count: 2}},
+		},
+		{
+			name: "success_-_sorts_by_display_name_in_both_directions",
+			queries: []query{
+				{sort: params.SortItems{{Field: "display_name", Direction: params.Ascending}}},
+				{sort: params.SortItems{{Field: "display_name", Direction: params.Descending}}},
+			},
+			want: []expected{
+				{extensions: []services.Extension{extensions[0], extensions[1], extensions[2]}, count: 3},
+				{extensions: []services.Extension{extensions[2], extensions[1], extensions[0]}, count: 3},
+			},
+		},
+		{
+			name: "success_-_paginates_filtered_results_and_returns_full_count",
+			queries: []query{
+				{
+					filters: params.Filters{"is_builtin": {{Operator: params.Equals, Value: "true"}}},
+					sort:    params.SortItems{{Field: "name", Direction: params.Ascending}},
+					skip:    1,
+					limit:   1,
+				},
+			},
+			want: []expected{{extensions: []services.Extension{extensions[2]}, count: 2}},
+		},
+		{
+			name: "error_-_rejects_unsupported_fields_and_sort_direction",
+			queries: []query{
+				{filters: params.Filters{"version": {{Operator: params.Equals, Value: "1.0.0"}}}},
+				{sort: params.SortItems{{Field: "version", Direction: params.Ascending}}},
+				{sort: params.SortItems{{Field: "name", Direction: "sideways"}}},
+			},
+			want: []expected{
+				{err: `filter references unknown field "version"`},
+				{err: `sort references unknown field "version"`},
+				{err: `invalid sort direction "sideways"`},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			for index, input := range test.queries {
+				actual, count, err := store.GetExtensions(ctx, input.filters, input.sort, input.skip, input.limit)
+				want := test.want[index]
+
+				if want.err != "" {
+					assert.EqualError(t, err, want.err)
+					assert.Nil(t, actual)
+					assert.Zero(t, count)
+					continue
+				}
+
+				require.NoError(t, err)
+				assert.Equal(t, want.extensions, actual)
+				assert.Equal(t, want.count, count)
 			}
 		})
 	}

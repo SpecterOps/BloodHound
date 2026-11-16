@@ -24,6 +24,8 @@ import (
 
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
+	"github.com/specterops/bloodhound/packages/go/dbutil"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 )
 
@@ -102,22 +104,66 @@ func (s *Store) GetExtension(ctx context.Context, id int32) (services.Extension,
 	}
 }
 
-func (s *Store) ListExtensions(ctx context.Context) ([]services.Extension, error) {
+// GetExtensions gets all the rows from the extensions table that match the given filter,
+// sorted by the given sorts and paged by the given pagination params.
+// It returns a slice of Extension structs populated with the data,
+// as well as an integer giving the total number of rows returned by the query (excluding any given pagination)
+func (s *Store) GetExtensions(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]services.Extension, int, error) {
 	var (
-		selectBuilder = sqlbuilder.PostgreSQL.NewSelectBuilder()
-		extensions    = make([]services.Extension, 0)
+		extensions = []services.Extension{}
 	)
-	selectBuilder.Select(extensionColumns...).From(tableSchemaExtensions)
-	selectBuilder.OrderByAsc(extensionColumnName)
-	var sqlQuery, args = selectBuilder.Build()
-	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
-		return nil, fmt.Errorf("listing extensions: %s", err)
-	} else if extensionRows, err := pgx.CollectRows(rows, pgx.RowToStructByName[extensionRow]); err != nil {
-		return nil, fmt.Errorf("reading extensions: %s", err)
-	} else {
-		for _, row := range extensionRows {
-			extensions = append(extensions, toExtension(row))
-		}
-		return extensions, nil
+
+	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	selectBuilder.Select("id", "name", "display_name", "version", "is_builtin", "namespace")
+	selectBuilder.From(tableSchemaExtensions)
+
+	countBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	countBuilder.Select("COUNT(*)")
+	countBuilder.From(tableSchemaExtensions)
+
+	// defines the columns we support filter/pagination on
+	columnAliases := map[string]string{
+		"display_name": "display_name",
+		"name":         "name",
+		"is_builtin":   "is_builtin",
 	}
+
+	err := dbutil.EntityListerApplyFilterSortPagination(ctx, selectBuilder, countBuilder,
+		dbutil.FilterSortSetup{
+			ColumnAliases:    columnAliases,
+			DefaultSortField: "id",
+		},
+		dbutil.FilterSortPaginationInput{
+			Filters: extensionFilters,
+			Sort:    sort,
+			Skip:    skip,
+			Limit:   limit,
+		})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	extensionRows := []extensionRow{}
+	sqlQuery, args := selectBuilder.Build()
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return nil, 0, fmt.Errorf("error fetching data: %w", err)
+	} else if extensionRows, err = pgx.CollectRows(rows, pgx.RowToStructByName[extensionRow]); err != nil {
+		return nil, 0, fmt.Errorf("error reading rows: %w", err)
+	}
+
+	totalRowCount := len(extensionRows)
+	if limit > 0 || skip > 0 {
+		countQuery, countArgs := countBuilder.Build()
+		if rows, err := s.db.Query(ctx, countQuery, countArgs...); err != nil {
+			return nil, 0, fmt.Errorf("error counting data: %w", err)
+		} else if totalRowCount, err = pgx.CollectOneRow(rows, pgx.RowTo[int]); err != nil {
+			return nil, 0, fmt.Errorf("error reading row count: %w", err)
+		}
+	}
+
+	for _, row := range extensionRows {
+		extensions = append(extensions, toExtension(row))
+	}
+
+	return extensions, totalRowCount, nil
 }
