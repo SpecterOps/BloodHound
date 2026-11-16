@@ -15,10 +15,64 @@
 // SPDX-License-Identifier: Apache-2.0
 package handlers
 
-type ExtensionView struct {
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/specterops/bloodhound/packages/go/responses"
+	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
+)
+
+type ExtensionMinimalView struct {
 	ExtensionID int32  `json:"extension_id"`
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
 	Namespace   string `json:"namespace"`
 	Version     string `json:"version"`
+}
+
+type ExtensionView struct {
+	ID        int32  `json:"id"`
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Version   string `json:"version"`
+	IsBuiltIn bool   `json:"is_builtin"`
+}
+
+type ExtensionsView struct {
+	Extensions []ExtensionView `json:"extensions"`
+}
+
+func (s ExtensionsView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// Note: Display name is used for name for extension view
+func buildExtensionView(extension services.Extension) ExtensionView {
+	return ExtensionView{
+		ID:        extension.ID,
+		Name:      extension.DisplayName,
+		Namespace: extension.Namespace,
+		Version:   extension.Version,
+		IsBuiltIn: extension.IsBuiltin,
+	}
+}
+
+func buildExtensionsView(extensions []services.Extension) ExtensionsView {
+	var view = ExtensionsView{Extensions: make([]ExtensionView, 0, len(extensions))}
+
+	for _, extension := range extensions {
+		view.Extensions = append(view.Extensions, buildExtensionView(extension))
+	}
+
+	return view
+}
+
+func (s *Handlers) ListExtensions(response http.ResponseWriter, request *http.Request) {
+	var ctx = request.Context()
+	if extensions, err := s.service.ListExtensions(ctx); err != nil {
+		responses.WriteInternalServerError(ctx, err, response)
+	} else {
+		responses.WriteBasic(ctx, buildExtensionsView(extensions), http.StatusOK, response)
+	}
 }

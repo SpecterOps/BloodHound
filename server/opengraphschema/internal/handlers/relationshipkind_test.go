@@ -86,7 +86,7 @@ func TestHandlers_GetRelationshipKindByID(t *testing.T) {
 					Description:        "a membership relationship",
 					IsTraversable:      true,
 					Info:               map[string]handlers.KindInfoView{},
-					Extension: handlers.ExtensionView{
+					Extension: handlers.ExtensionMinimalView{
 						ExtensionID: 7,
 						Name:        "TestExtension",
 						DisplayName: "Test Extension",

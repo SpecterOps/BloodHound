@@ -26,7 +26,27 @@ import (
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 )
 
-const tableSchemaExtensions = "schema_extensions"
+const (
+	tableSchemaExtensions = "schema_extensions"
+)
+
+const (
+	extensionColumnID          = "id"
+	extensionColumnName        = "name"
+	extensionColumnDisplayName = "display_name"
+	extensionColumnVersion     = "version"
+	extensionColumnIsBuiltin   = "is_builtin"
+	extensionColumnNamespace   = "namespace"
+)
+
+var extensionColumns = []string{
+	extensionColumnID,
+	extensionColumnName,
+	extensionColumnDisplayName,
+	extensionColumnVersion,
+	extensionColumnIsBuiltin,
+	extensionColumnNamespace,
+}
 
 // extensionRow is the package-local DB row type for a schema_extensions entry. db: tags
 // drive pgx.RowToStructByName scanning.
@@ -56,7 +76,7 @@ func toExtension(row extensionRow) services.Extension {
 func (s *Store) GetExtension(ctx context.Context, id int32) (services.Extension, error) {
 	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
 
-	selectBuilder.Select("id", "name", "display_name", "version", "is_builtin", "namespace")
+	selectBuilder.Select(extensionColumns...)
 	selectBuilder.From(tableSchemaExtensions)
 	selectBuilder.Where(selectBuilder.Equal("id", id))
 
@@ -70,5 +90,25 @@ func (s *Store) GetExtension(ctx context.Context, id int32) (services.Extension,
 		return services.Extension{}, fmt.Errorf("reading rows: %s", err)
 	} else {
 		return toExtension(row), nil
+	}
+}
+
+func (s *Store) ListExtensions(ctx context.Context) ([]services.Extension, error) {
+	var (
+		selectBuilder = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		extensions    = make([]services.Extension, 0)
+	)
+	selectBuilder.Select(extensionColumns...).From(tableSchemaExtensions)
+	selectBuilder.OrderByAsc(extensionColumnName)
+	var sqlQuery, args = selectBuilder.Build()
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return nil, fmt.Errorf("listing extensions: %s", err)
+	} else if extensionRows, err := pgx.CollectRows(rows, pgx.RowToStructByName[extensionRow]); err != nil {
+		return nil, fmt.Errorf("reading extensions: %s", err)
+	} else {
+		for _, row := range extensionRows {
+			extensions = append(extensions, toExtension(row))
+		}
+		return extensions, nil
 	}
 }

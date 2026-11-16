@@ -37,3 +37,7 @@ type Extension struct {
 func (s *Service) GetExtension(ctx context.Context, id int32) (Extension, error) {
 	return s.db.GetExtension(ctx, id)
 }
+
+func (s *Service) ListExtensions(ctx context.Context) ([]Extension, error) {
+	return s.db.ListExtensions(ctx)
+}

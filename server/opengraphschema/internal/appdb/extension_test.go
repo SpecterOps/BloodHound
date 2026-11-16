@@ -109,3 +109,58 @@ func TestStore_GetExtension(t *testing.T) {
 		})
 	}
 }
+
+func TestStore_ListExtensions(t *testing.T) {
+	t.Parallel()
+	var (
+		databaseError = errors.New("driver failure")
+		tests         = []struct {
+			name         string
+			setupMock    func(pgxmock.PgxPoolIface)
+			want         []services.Extension
+			errorContext string
+		}{
+			{name: "maps built-in and custom extensions in query order", setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedListExtensionsSQL).WillReturnRows(pool.NewRows(extensionColumns()).
+					AddRow(int32(1), "AD", "Active Directory", "v1", true, "AD").
+					AddRow(int32(2), "custom", "Custom Extension", "v2", false, "CUSTOM"))
+			}, want: []services.Extension{
+				{ID: 1, Name: "AD", DisplayName: "Active Directory", Version: "v1", IsBuiltin: true, Namespace: "AD"},
+				{ID: 2, Name: "custom", DisplayName: "Custom Extension", Version: "v2", Namespace: "CUSTOM"},
+			}},
+			{name: "empty", setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedListExtensionsSQL).WillReturnRows(pool.NewRows(extensionColumns()))
+			}, want: []services.Extension{}},
+			{name: "query error", setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedListExtensionsSQL).WillReturnError(databaseError)
+			}, errorContext: "listing extensions"},
+			{name: "row error", setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedListExtensionsSQL).WillReturnRows(pool.NewRows(extensionColumns()).
+					AddRow(int32(1), "AD", "Active Directory", "v1", true, "AD").RowError(0, databaseError))
+			}, errorContext: "reading extensions"},
+			{name: "scan error", setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(expectedListExtensionsSQL).WillReturnRows(pool.NewRows(extensionColumns()).
+					AddRow("invalid ID", "AD", "Active Directory", "v1", true, "AD"))
+			}, errorContext: "reading extensions"},
+		}
+	)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			var store, pool = newTestStore(t)
+			testCase.setupMock(pool)
+			extensions, err := store.ListExtensions(context.Background())
+			assert.Equal(t, testCase.want, extensions)
+			if testCase.errorContext != "" {
+				require.ErrorContains(t, err, testCase.errorContext)
+				assert.NotErrorIs(t, err, databaseError)
+				assert.Nil(t, errors.Unwrap(err))
+			} else {
+				require.NoError(t, err)
+			}
+			require.NoError(t, pool.ExpectationsWereMet())
+		})
+	}
+}
+
+const expectedListExtensionsSQL = `SELECT id, name, display_name, version, is_builtin, namespace FROM schema_extensions ORDER BY name ASC`

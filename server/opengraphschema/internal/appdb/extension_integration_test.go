@@ -78,3 +78,40 @@ func TestStore_GetExtension_Integration(t *testing.T) {
 		})
 	}
 }
+
+func TestStore_ListExtensions_Integration(t *testing.T) {
+	var (
+		ctx         = context.Background()
+		store, pool = setupStore(t)
+		tests       = []struct {
+			name  string
+			setup func(t *testing.T)
+			want  []services.Extension
+		}{
+			{name: "empty", want: []services.Extension{}},
+			{name: "orders by name", setup: func(t *testing.T) {
+				_, err := pool.Exec(ctx, `INSERT INTO schema_extensions (id, name, display_name, version, is_builtin, namespace) VALUES
+     (10003, 'zeta', 'Zeta', 'v3', false, 'Z'),
+     (10002, 'alpha2', 'Alpha 2', 'v2', false, 'A2'),
+     (10001, 'alpha1', 'Alpha 1', 'v1', true, 'A1')`)
+				require.NoError(t, err)
+			}, want: []services.Extension{
+				{ID: 10001, Name: "alpha1", DisplayName: "Alpha 1", Version: "v1", IsBuiltin: true, Namespace: "A1"},
+				{ID: 10002, Name: "alpha2", DisplayName: "Alpha 2", Version: "v2", Namespace: "A2"},
+				{ID: 10003, Name: "zeta", DisplayName: "Zeta", Version: "v3", Namespace: "Z"},
+			}},
+		}
+	)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			_, err := pool.Exec(ctx, "DELETE FROM schema_extensions")
+			require.NoError(t, err)
+			if testCase.setup != nil {
+				testCase.setup(t)
+			}
+			extensions, err := store.ListExtensions(ctx)
+			require.NoError(t, err)
+			assert.Equal(t, testCase.want, extensions)
+		})
+	}
+}
