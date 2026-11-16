@@ -118,6 +118,27 @@ get:
       schema:
         type: string
         pattern: "^(eq|neq):[^:]+$"
+    - name: label
+      description: |
+        Filter by an exact, case-sensitive object label name using `eq:<name>` or `neq:<name>`.
+        Repeated `eq` values match any included label on either the source or target principal.
+        Repeated `neq` values exclude findings when either principal has any excluded label.
+        When both operators are supplied, findings must satisfy the inclusion and exclusion groups.
+        Unlabeled principals do not match a label and do not prevent a `neq` match.
+        Includes Labels and Owned; excludes Privilege Zones. Names are literal strings,
+        including `null`. Existing nodes use their current labels; deleted nodes use labels
+        captured at deletion after this feature was installed. Unknown names match no findings
+        with `eq` and exclude no findings with `neq`.
+        Existing status defaults still apply; request archived statuses explicitly.
+      in: query
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+          pattern: '^(eq|neq):.+$'
+      example: ['eq:testing2', 'neq:Owned']
     - name: status
       description: Filter by finding status.
       in: query
