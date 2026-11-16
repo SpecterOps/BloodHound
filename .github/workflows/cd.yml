@@ -17,6 +17,16 @@
 name: Continuous Deployment (CD)
 
 on:
+  workflow_dispatch:
+    inputs:
+      sharphound_version:
+        description: SharpHound version to bundle (defaults to latest stable version)
+        type: string
+        default: ""
+      azurehound_version:
+        description: AzureHound version to bundle (defaults to latest stable version)
+        type: string
+        default: ""
   push:
     branches:
       - main
@@ -28,13 +38,26 @@ permissions:
   contents: read
 
 jobs:
+  validate-deployment:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate manual release tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_TYPE" != tag || ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+            echo "::error::Manual deployment requires a release tag matching vX.Y.Z or vX.Y.Z-rcN"
+            exit 1
+          fi
+
   run-slow-go-tests:
     name: Run Slow Go Tests
     uses: ./.github/workflows/run-slow-go-tests.yml
 
   bloodhound-container-image:
     name: Build and Publish BloodHound Container Image
-    needs: run-slow-go-tests
+    needs: [run-slow-go-tests, validate-deployment]
     uses: ./.github/workflows/reusable.build-container-image.yml
     with:
       container_image_repository_name: |
@@ -68,6 +91,8 @@ jobs:
         type=semver,pattern={{major}}.{{minor}},enable=${{ ! contains(github.ref_name, '-rc') }}
         type=semver,pattern={{major}},enable=${{ ! contains(github.ref_name, '-rc') }}
       build_args: |
+        SHARPHOUND_VERSION=${{ inputs.sharphound_version }}
+        AZUREHOUND_VERSION=${{ inputs.azurehound_version }}
         checkout_hash=${{ github.sha }}
         ${{ github.ref_name != 'main' && format('version={0}', github.ref_name) }}
     secrets:
