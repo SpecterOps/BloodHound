@@ -26,6 +26,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/dbutil"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 )
@@ -208,8 +209,6 @@ func (s *Store) GetGraphSchemaNodeKinds(ctx context.Context, filters params.Filt
 		schemaNodeKinds = []services.NodeKind{}
 		nodeKindRows    []nodeKindRow
 		totalRowCount   int
-		aliasedFilters  = make(params.Filters, len(filters))
-		aliasedSorts    = make(params.SortItems, 0, len(sort))
 
 		nodeKindColumnAliases = map[string]string{
 			"schema_extension_id": "nk.schema_extension_id",
@@ -238,50 +237,19 @@ func (s *Store) GetGraphSchemaNodeKinds(ctx context.Context, filters params.Filt
 	countBuilder.From(countBuilder.As(tableSchemaNodeKinds, "nk"))
 	countBuilder.Join(countBuilder.As(tableKind, "k"), "nk.kind_id = k.id")
 
-	if len(filters) > 0 {
-		for filterColumn, filter := range filters {
-			aliasedColumn, ok := nodeKindColumnAliases[filterColumn]
-			if !ok {
-				return schemaNodeKinds, 0, fmt.Errorf("node kind filter references unknown field %q", filterColumn)
-			}
-			aliasedFilters[aliasedColumn] = filter
-		}
-	}
-	if len(sort) > 0 {
-		for _, sortItem := range sort {
-			aliasedColumn, ok := nodeKindColumnAliases[sortItem.Field]
-			if !ok {
-				return schemaNodeKinds, 0, fmt.Errorf("node kind sort references unknown field %q", sortItem.Field)
-			}
-			sortItem.Field = aliasedColumn
-			if sortItem.Direction != params.Ascending && sortItem.Direction != params.Descending {
-				return schemaNodeKinds, 0, fmt.Errorf("%w: %q", services.ErrInvalidSortDirection, sortItem.Direction)
-			}
-			aliasedSorts = append(aliasedSorts, sortItem)
-		}
-	} else {
-		aliasedSorts = append(aliasedSorts, params.SortItem{Field: "nk.id", Direction: params.Ascending})
-	}
-
-	for _, builder := range []*sqlbuilder.SelectBuilder{selectBuilder, countBuilder} {
-		if err := applyFilters(builder, aliasedFilters); err != nil {
-			return schemaNodeKinds, 0, err
-		}
-	}
-
-	for _, sortItem := range aliasedSorts {
-		if sortItem.Direction == params.Descending {
-			selectBuilder.OrderByDesc(sortItem.Field)
-		} else {
-			selectBuilder.OrderByAsc(sortItem.Field)
-		}
-	}
-
-	if limit > 0 {
-		selectBuilder.Limit(limit)
-	}
-	if skip > 0 {
-		selectBuilder.Offset(skip)
+	err := dbutil.EntityListerApplyFilterSortPagination(ctx, selectBuilder, countBuilder,
+		dbutil.FilterSortSetup{
+			ColumnAliases:    nodeKindColumnAliases,
+			DefaultSortField: "nk.id",
+		},
+		dbutil.FilterSortPaginationInput{
+			Filters: filters,
+			Sort:    sort,
+			Skip:    skip,
+			Limit:   limit,
+		})
+	if err != nil {
+		return nil, 0, err
 	}
 
 	sqlQuery, args := selectBuilder.Build()

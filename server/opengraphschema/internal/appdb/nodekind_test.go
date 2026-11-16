@@ -805,8 +805,8 @@ func TestStore_GetGraphSchemaNodeKinds(t *testing.T) {
 				},
 			},
 			setupMock:     func(pgxmock.PgxPoolIface) {},
-			wantNodeKinds: []services.NodeKind{},
-			wantErr:       errors.New(`node kind filter references unknown field "unknown"`),
+			wantNodeKinds: nil,
+			wantErr:       errors.New(`filter references unknown field "unknown"`),
 		},
 		{
 			name: "error_-_rejects_invalid_sort_direction",
@@ -817,8 +817,8 @@ func TestStore_GetGraphSchemaNodeKinds(t *testing.T) {
 				},
 			},
 			setupMock:     func(pgxmock.PgxPoolIface) {},
-			wantNodeKinds: []services.NodeKind{},
-			wantErr:       fmt.Errorf("%w: %q", services.ErrInvalidSortDirection, "sideways"),
+			wantNodeKinds: nil,
+			wantErr:       errors.New("invalid sort direction \"sideways\""),
 		},
 	}
 
