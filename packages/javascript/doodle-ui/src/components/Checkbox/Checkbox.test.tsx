@@ -16,10 +16,34 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import postcss from 'postcss';
+import tailwindcss from 'tailwindcss';
 import { expect, vi } from 'vitest';
 import { Checkbox, CheckboxWithLabel } from './Checkbox';
 
 describe('Checkbox Tests', () => {
+    it('generates the CSS that shows checked and indeterminate icons', async () => {
+        const { root } = await postcss([tailwindcss('./tailwind.config.js')]).process('@tailwind utilities;', {
+            from: undefined,
+        });
+
+        const iconSelectors = [
+            String.raw`.group[data-state="checked"] .group-data-\[state\=checked\]\:block`,
+            String.raw`.group[data-state="indeterminate"] .group-data-\[state\=indeterminate\]\:block`,
+        ];
+
+        for (const selector of iconSelectors) {
+            expect(root.nodes).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        selector,
+                        nodes: expect.arrayContaining([expect.objectContaining({ prop: 'display', value: 'block' })]),
+                    }),
+                ])
+            );
+        }
+    });
+
     it('renders an uncontrolled indeterminate checkbox', () => {
         render(<Checkbox aria-label='Parent checkbox' defaultChecked='indeterminate' />);
 
@@ -64,9 +88,7 @@ describe('CheckboxWithLabel Tests', () => {
         render(<CheckboxWithLabel label='Required option' error />);
 
         expect(screen.getByRole('checkbox', { name: 'Required option' })).toHaveAttribute('aria-invalid', 'true');
-        expect(screen.getByText('Required option')).toHaveClass(
-            'peer-data-[state=unchecked]:text-status-error-main'
-        );
+        expect(screen.getByText('Required option')).toHaveClass('peer-data-[state=unchecked]:text-status-error-main');
     });
 
     it('does not toggle when disabled label is clicked', async () => {

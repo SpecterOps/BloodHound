@@ -24,6 +24,7 @@ import (
 	"net/http"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
@@ -37,18 +38,21 @@ type Identity interface {
 	ListRoles(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Role, error)
 	ListUsers(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.User, error)
 	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error)
+	ListAuthTokens(ctx context.Context, requester services.AuthTokenRequester, queryFilters params.Filters, sortItems params.SortItems) ([]services.AuthToken, error)
 	ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.UserMinimal, error)
 }
 
 // Handlers is a dependency injection container for identity handlers.
 type Handlers struct {
-	identity Identity
+	identity   Identity
+	authorizer auth.Authorizer
 }
 
 // NewHandlersContainer initializes the Handlers dependency injection container
-func NewHandlersContainer(identity Identity) *Handlers {
+func NewHandlersContainer(identity Identity, authorizer auth.Authorizer) *Handlers {
 	return &Handlers{
-		identity: identity,
+		identity:   identity,
+		authorizer: authorizer,
 	}
 }
 
@@ -149,6 +153,30 @@ func (s *Handlers) ListPermissions(response http.ResponseWriter, request *http.R
 	responses.WriteBasic(ctx, BuildPermissionListView(permissions), http.StatusOK, response)
 }
 
+func (s *Handlers) ListAuthTokens(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx       = request.Context()
+		bhCtx     = bhctx.Get(ctx)
+		requester = services.AuthTokenRequester{}
+	)
+
+	if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
+		requester = services.AuthTokenRequester{
+			UserID:         user.ID,
+			IsUser:         true,
+			CanManageUsers: s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers),
+		}
+	}
+
+	authTokens, err := s.identity.ListAuthTokens(ctx, requester, bhCtx.Filters, bhCtx.Sort)
+	if err != nil {
+		handleIdentityError(request, response, err)
+		return
+	}
+
+	responses.WriteBasic(ctx, BuildAuthTokenListView(authTokens), http.StatusOK, response)
+}
+
 // ListActiveUsersMinimal returns the id, email address and name of every active,
 // non-support user matching the filters and ordering parsed from the request
 // query parameters.
@@ -172,6 +200,10 @@ func handleIdentityError(request *http.Request, response http.ResponseWriter, er
 
 	if errors.Is(err, services.ErrNoRoleFound) || errors.Is(err, services.ErrNoPermissionFound) {
 		responses.WriteError(ctx, http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, response)
+	} else if errors.Is(err, services.ErrInvalidAuthTokenUserID) {
+		responses.WriteError(ctx, http.StatusBadRequest, err.Error(), response)
+	} else if errors.Is(err, services.ErrAuthTokenUserIDRequiresAdmin) || errors.Is(err, services.ErrAuthTokenUserIDOperatorNotAllowed) {
+		responses.WriteError(ctx, http.StatusForbidden, err.Error(), response)
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		responses.WriteError(ctx, http.StatusInternalServerError, api.ErrorResponseRequestTimeout, response)
 	} else {

@@ -260,6 +260,86 @@ func (_c *MockIdentity_ListActiveUsersMinimal_Call) RunAndReturn(run func(ctx co
 	return _c
 }
 
+// ListAuthTokens provides a mock function for the type MockIdentity
+func (_mock *MockIdentity) ListAuthTokens(ctx context.Context, requester services.AuthTokenRequester, queryFilters params.Filters, sortItems params.SortItems) ([]services.AuthToken, error) {
+	ret := _mock.Called(ctx, requester, queryFilters, sortItems)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListAuthTokens")
+	}
+
+	var r0 []services.AuthToken
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.AuthTokenRequester, params.Filters, params.SortItems) ([]services.AuthToken, error)); ok {
+		return returnFunc(ctx, requester, queryFilters, sortItems)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.AuthTokenRequester, params.Filters, params.SortItems) []services.AuthToken); ok {
+		r0 = returnFunc(ctx, requester, queryFilters, sortItems)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]services.AuthToken)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, services.AuthTokenRequester, params.Filters, params.SortItems) error); ok {
+		r1 = returnFunc(ctx, requester, queryFilters, sortItems)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockIdentity_ListAuthTokens_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListAuthTokens'
+type MockIdentity_ListAuthTokens_Call struct {
+	*mock.Call
+}
+
+// ListAuthTokens is a helper method to define mock.On call
+//   - ctx context.Context
+//   - requester services.AuthTokenRequester
+//   - queryFilters params.Filters
+//   - sortItems params.SortItems
+func (_e *MockIdentity_Expecter) ListAuthTokens(ctx interface{}, requester interface{}, queryFilters interface{}, sortItems interface{}) *MockIdentity_ListAuthTokens_Call {
+	return &MockIdentity_ListAuthTokens_Call{Call: _e.mock.On("ListAuthTokens", ctx, requester, queryFilters, sortItems)}
+}
+
+func (_c *MockIdentity_ListAuthTokens_Call) Run(run func(ctx context.Context, requester services.AuthTokenRequester, queryFilters params.Filters, sortItems params.SortItems)) *MockIdentity_ListAuthTokens_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 services.AuthTokenRequester
+		if args[1] != nil {
+			arg1 = args[1].(services.AuthTokenRequester)
+		}
+		var arg2 params.Filters
+		if args[2] != nil {
+			arg2 = args[2].(params.Filters)
+		}
+		var arg3 params.SortItems
+		if args[3] != nil {
+			arg3 = args[3].(params.SortItems)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockIdentity_ListAuthTokens_Call) Return(authTokens []services.AuthToken, err error) *MockIdentity_ListAuthTokens_Call {
+	_c.Call.Return(authTokens, err)
+	return _c
+}
+
+func (_c *MockIdentity_ListAuthTokens_Call) RunAndReturn(run func(ctx context.Context, requester services.AuthTokenRequester, queryFilters params.Filters, sortItems params.SortItems) ([]services.AuthToken, error)) *MockIdentity_ListAuthTokens_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListPermissions provides a mock function for the type MockIdentity
 func (_mock *MockIdentity) ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error) {
 	ret := _mock.Called(ctx, queryFilters, sortItems)
