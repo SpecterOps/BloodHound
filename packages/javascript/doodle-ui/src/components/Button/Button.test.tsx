@@ -36,7 +36,6 @@ describe('Button', () => {
     it.each([
         ['primary', 'border border-transparent bg-primary text-inverse'],
         ['secondary', 'border-[color:var(--button-secondary-border)] bg-elevation-1 text-main'],
-        ['tertiary', 'border-brand-orange bg-elevation-1 text-main'],
     ] as const)('applies the %s visual treatment', (variant, expectedClasses) => {
         render(<Button variant={variant}>{variant}</Button>);
 

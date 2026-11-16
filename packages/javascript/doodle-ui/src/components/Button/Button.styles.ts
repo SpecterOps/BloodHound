@@ -43,18 +43,11 @@ const containedSecondaryClasses = cn(
     'disabled:bg-[color:var(--button-disabled-fill)]'
 );
 
-const containedTertiaryClasses = cn(
-    'border border-brand-orange bg-elevation-1 text-main',
-    containedButtonStateClasses,
-    'disabled:border-[color:var(--button-disabled-fill)] disabled:bg-[color:var(--button-disabled-fill)]'
-);
-
 export const ButtonVariants = cva(buttonBaseClasses, {
     variants: {
         variant: {
             primary: containedPrimaryClasses,
             secondary: containedSecondaryClasses,
-            tertiary: containedTertiaryClasses,
             // TODO - remove in BED-7642
             // used in DropdownTriggerContents & EnvironmentSelectorTrigger
             /**
@@ -100,7 +93,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
     },
     compoundVariants: [
         {
-            variant: ['primary', 'secondary', 'tertiary'],
+            variant: ['primary', 'secondary'],
             size: ['small', 'medium', 'large'],
             className: containedButtonGeometryClasses,
         },

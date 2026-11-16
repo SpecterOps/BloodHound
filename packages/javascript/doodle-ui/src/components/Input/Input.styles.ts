@@ -20,8 +20,7 @@ import { cn } from '../utils';
 const inputBaseClasses = cn(
     'flex h-10 w-full',
     'text-base text-main placeholder:text-[color:var(--input-placeholder-text)]',
-    'disabled:cursor-not-allowed disabled:opacity-50 disabled:border-[color:var(--input-border-disabled)]',
-    invalidControlClasses,
+    'disabled:cursor-not-allowed disabled:opacity-50',
     'file:cursor-pointer file:border-0 file:bg-transparent file:pr-3 file:text-sm file:font-medium file:text-main'
 );
 
@@ -32,7 +31,8 @@ export const InputVariants = cva(inputBaseClasses, {
                 'rounded-md border border-[color:var(--input-outlined-border-default)] bg-[color:var(--input-fill)] px-3 py-2 text-sm',
                 'enabled:hover:border-[color:var(--input-outlined-border-hover)]',
                 'focus:outline-none focus:focus-ring focus:border-[color:var(--input-outlined-border-default)] enabled:hover:focus:border-[color:var(--input-outlined-hover-focus-border)]',
-                'disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100'
+                'disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
+                invalidControlClasses
             ),
             underlined: cn(
                 'rounded-sm border-b border-b-[color:var(--input-border-default)] bg-transparent',
