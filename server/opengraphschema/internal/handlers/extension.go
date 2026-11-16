@@ -18,6 +18,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
@@ -32,11 +33,13 @@ type ExtensionMinimalView struct {
 }
 
 type ExtensionView struct {
-	ID        int32  `json:"id"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-	Version   string `json:"version"`
-	IsBuiltIn bool   `json:"is_builtin"`
+	ID        int32     `json:"id"`
+	Name      string    `json:"name"`
+	Namespace string    `json:"namespace"`
+	Version   string    `json:"version"`
+	IsBuiltIn bool      `json:"is_builtin"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ExtensionsView struct {
@@ -55,6 +58,8 @@ func buildExtensionView(extension services.Extension) ExtensionView {
 		Namespace: extension.Namespace,
 		Version:   extension.Version,
 		IsBuiltIn: extension.IsBuiltin,
+		CreatedAt: extension.CreatedAt,
+		UpdatedAt: extension.UpdatedAt,
 	}
 }
 

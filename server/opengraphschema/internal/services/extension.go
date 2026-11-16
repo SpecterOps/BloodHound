@@ -19,6 +19,7 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 )
 
 // ErrExtensionNotFound indicates that no extension exists for the requested id.
@@ -32,6 +33,8 @@ type Extension struct {
 	Namespace   string
 	IsBuiltin   bool
 	Version     string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func (s *Service) GetExtension(ctx context.Context, id int32) (Extension, error) {

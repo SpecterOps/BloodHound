@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
@@ -37,6 +38,8 @@ const (
 	extensionColumnVersion     = "version"
 	extensionColumnIsBuiltin   = "is_builtin"
 	extensionColumnNamespace   = "namespace"
+	extensionColumnCreatedAt   = "created_at"
+	extensionColumnUpdatedAt   = "updated_at"
 )
 
 var extensionColumns = []string{
@@ -46,17 +49,21 @@ var extensionColumns = []string{
 	extensionColumnVersion,
 	extensionColumnIsBuiltin,
 	extensionColumnNamespace,
+	extensionColumnCreatedAt,
+	extensionColumnUpdatedAt,
 }
 
 // extensionRow is the package-local DB row type for a schema_extensions entry. db: tags
 // drive pgx.RowToStructByName scanning.
 type extensionRow struct {
-	ID          int32  `db:"id"`
-	Name        string `db:"name"`
-	DisplayName string `db:"display_name"`
-	Version     string `db:"version"`
-	IsBuiltin   bool   `db:"is_builtin"`
-	Namespace   string `db:"namespace"`
+	ID          int32     `db:"id"`
+	Name        string    `db:"name"`
+	DisplayName string    `db:"display_name"`
+	Version     string    `db:"version"`
+	IsBuiltin   bool      `db:"is_builtin"`
+	Namespace   string    `db:"namespace"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
 }
 
 // toExtension translates a raw extension row into the domain model.
@@ -68,6 +75,8 @@ func toExtension(row extensionRow) services.Extension {
 		Namespace:   row.Namespace,
 		IsBuiltin:   row.IsBuiltin,
 		Version:     row.Version,
+		CreatedAt:   row.CreatedAt,
+		UpdatedAt:   row.UpdatedAt,
 	}
 }
 

@@ -20,6 +20,7 @@ package opengraphschema_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -34,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/opengraphschema"
+	"github.com/specterops/bloodhound/server/opengraphschema/internal/handlers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -61,11 +63,11 @@ func TestListExtensions(t *testing.T) {
 			wantBody    string
 		}{
 			{name: "orders by name", enabled: true, permissions: model.Permissions{auth.Permissions().OpenGraphRead}, setup: func(t *testing.T) {
-				_, err := pool.Exec(ctx, `INSERT INTO schema_extensions (id, name, display_name, version, is_builtin, namespace) VALUES
-     (10002, 'zeta', 'Zeta', 'v2', false, 'Z'),
-     (10001, 'alpha', 'Alpha', 'v1', true, 'A')`)
+				_, err := pool.Exec(ctx, `INSERT INTO schema_extensions (id, name, display_name, version, is_builtin, namespace, created_at, updated_at) VALUES
+     (10002, 'zeta', 'Zeta', 'v2', false, 'Z', '2026-01-03T00:00:00Z', '2026-01-04T00:00:00Z'),
+     (10001, 'alpha', 'Alpha', 'v1', true, 'A', '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z')`)
 				require.NoError(t, err)
-			}, wantStatus: http.StatusOK, wantBody: `{"data":{"extensions":[{"id":10001,"name":"Alpha","namespace":"A","version":"v1","is_builtin":true},{"id":10002,"name":"Zeta","namespace":"Z","version":"v2","is_builtin":false}]}}`},
+			}, wantStatus: http.StatusOK, wantBody: `{"data":{"extensions":[{"id":10001,"name":"Alpha","namespace":"A","version":"v1","is_builtin":true,"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-02T00:00:00Z"},{"id":10002,"name":"Zeta","namespace":"Z","version":"v2","is_builtin":false,"created_at":"2026-01-03T00:00:00Z","updated_at":"2026-01-04T00:00:00Z"}]}}`},
 			{name: "empty", enabled: true, permissions: model.Permissions{auth.Permissions().OpenGraphRead}, wantStatus: http.StatusOK, wantBody: `{"data":{"extensions":[]}}`},
 			{name: "feature disabled", permissions: model.Permissions{auth.Permissions().OpenGraphRead}, wantStatus: http.StatusNotFound},
 			{name: "permission denied", enabled: true, permissions: model.Permissions{auth.Permissions().GraphDBRead}, wantStatus: http.StatusForbidden},
@@ -92,7 +94,23 @@ func TestListExtensions(t *testing.T) {
 			routerInst.Handler().ServeHTTP(recorder, request)
 			assert.Equal(t, testCase.wantStatus, recorder.Code)
 			if testCase.wantBody != "" {
-				assert.JSONEq(t, testCase.wantBody, recorder.Body.String())
+				var expected, actual struct {
+					Data handlers.ExtensionsView `json:"data"`
+				}
+				require.NoError(t, json.Unmarshal([]byte(testCase.wantBody), &expected))
+				require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &actual))
+				require.Len(t, actual.Data.Extensions, len(expected.Data.Extensions))
+				assert.NotNil(t, actual.Data.Extensions)
+				for index, expectedExtension := range expected.Data.Extensions {
+					var actualExtension = actual.Data.Extensions[index]
+					assert.Equal(t, expectedExtension.ID, actualExtension.ID)
+					assert.Equal(t, expectedExtension.Name, actualExtension.Name)
+					assert.Equal(t, expectedExtension.Namespace, actualExtension.Namespace)
+					assert.Equal(t, expectedExtension.Version, actualExtension.Version)
+					assert.Equal(t, expectedExtension.IsBuiltIn, actualExtension.IsBuiltIn)
+					assert.WithinDuration(t, expectedExtension.CreatedAt, actualExtension.CreatedAt, 0)
+					assert.WithinDuration(t, expectedExtension.UpdatedAt, actualExtension.UpdatedAt, 0)
+				}
 			}
 		})
 	}

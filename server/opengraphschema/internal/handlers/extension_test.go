@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
@@ -55,12 +56,12 @@ func TestHandlers_ListExtensions(t *testing.T) {
 				permissions: readPermissions,
 				setupMock: func(ctx context.Context, serviceMock *mocks.MockOpenGraphSchema) {
 					serviceMock.EXPECT().ListExtensions(ctx).Return([]services.Extension{
-						{ID: 1, Name: "InternalAD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1", IsBuiltin: true},
-						{ID: 2, Name: "InternalCustom", DisplayName: "Custom", Namespace: "CUSTOM", Version: "v2"},
+						{ID: 1, Name: "InternalAD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1", IsBuiltin: true, CreatedAt: time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC), UpdatedAt: time.Date(2026, time.January, 2, 0, 0, 0, 0, time.UTC)},
+						{ID: 2, Name: "InternalCustom", DisplayName: "Custom", Namespace: "CUSTOM", Version: "v2", CreatedAt: time.Date(2026, time.January, 3, 0, 0, 0, 0, time.UTC), UpdatedAt: time.Date(2026, time.January, 4, 0, 0, 0, 0, time.UTC)},
 					}, nil).Once()
 				},
 				wantStatus: http.StatusOK,
-				wantBody:   `{"data":{"extensions":[{"id":1,"name":"Active Directory","namespace":"AD","version":"v1","is_builtin":true},{"id":2,"name":"Custom","namespace":"CUSTOM","version":"v2","is_builtin":false}]}}`,
+				wantBody:   `{"data":{"extensions":[{"id":1,"name":"Active Directory","namespace":"AD","version":"v1","is_builtin":true,"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-02T00:00:00Z"},{"id":2,"name":"Custom","namespace":"CUSTOM","version":"v2","is_builtin":false,"created_at":"2026-01-03T00:00:00Z","updated_at":"2026-01-04T00:00:00Z"}]}}`,
 			},
 			{
 				name:        "OpenGraph read permission allows empty results",
