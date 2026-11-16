@@ -24,6 +24,7 @@ import (
 
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/packages/go/dbutil"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
@@ -166,4 +167,59 @@ func (s *Store) GetExtensions(ctx context.Context, extensionFilters params.Filte
 	}
 
 	return extensions, totalRowCount, nil
+}
+
+// CreateGraphSchemaExtension creates a new row in the extensions table.
+// An Extension struct is returned, populated with the value as it stands in the database.
+func (s *Store) CreateGraphSchemaExtension(ctx context.Context, extension services.Extension) (services.Extension, error) {
+	// TODO BED-10577: also insert audit log
+
+	var insertBuilder = sqlbuilder.PostgreSQL.NewInsertBuilder()
+
+	insertBuilder.InsertInto(tableSchemaExtensions)
+	insertBuilder.Cols(
+		"name", "display_name", "version", "is_builtin", "namespace", "created_at", "updated_at",
+	)
+	insertBuilder.Values(
+		extension.Name,
+		extension.DisplayName,
+		extension.Version,
+		false, // extensions created here are not "builtin" by definition
+		extension.Namespace,
+		time.Now(),
+		time.Now(),
+	)
+	insertBuilder.Returning(
+		"id", "name", "display_name", "version", "is_builtin", "namespace",
+	)
+
+	sqlQuery, args := insertBuilder.Build()
+
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return services.Extension{}, fmt.Errorf("creating extension: %w", checkExtensionError(err))
+	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[extensionRow]); err != nil {
+		return services.Extension{}, fmt.Errorf("reading created extension: %w", checkExtensionError(err))
+	} else {
+		return toExtension(row), nil
+	}
+}
+
+var (
+	graphSchemaExtensionConstraintUniqueNamespace = "schema_extensions_namespace_unique"
+	graphSchemaExtensionConstraintUniqueName      = "schema_extensions_name_key"
+)
+
+func checkExtensionError(err error) error {
+	var pgErr *pgconn.PgError
+
+	if errors.As(err, &pgErr) {
+		switch pgErr.ConstraintName {
+		case graphSchemaExtensionConstraintUniqueNamespace:
+			return fmt.Errorf("%w: %w", services.ErrDuplicateExtensionNamespace, err)
+		case graphSchemaExtensionConstraintUniqueName:
+			return fmt.Errorf("%w: %w", services.ErrDuplicateExtensionName, err)
+		}
+	}
+
+	return err
 }

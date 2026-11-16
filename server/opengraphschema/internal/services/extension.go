@@ -25,6 +25,10 @@ import (
 // ErrExtensionNotFound indicates that no extension exists for the requested id.
 var ErrExtensionNotFound = errors.New("extension not found")
 
+var ErrDuplicateExtensionNamespace = errors.New("duplicate extension namespace")
+
+var ErrDuplicateExtensionName = errors.New("duplicate extension name")
+
 // Extension is the domain representation of a schema_extensions row.
 type Extension struct {
 	ID          int32

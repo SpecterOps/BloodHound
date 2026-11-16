@@ -87,6 +87,74 @@ func TestStore_GetExtension_Integration(t *testing.T) {
 	}
 }
 
+func TestStore_CreateGraphSchemaExtension_Integration(t *testing.T) {
+	var (
+		ctx   = context.Background()
+		tests = []struct {
+			name      string
+			extension services.Extension
+			wantErr   error
+		}{
+			{
+				name: "success_-_creates_non_builtin_extension",
+				extension: services.Extension{
+					Name:        "CreatedExtension",
+					DisplayName: "Created Extension",
+					Version:     "2.0.0",
+					IsBuiltin:   true,
+					Namespace:   "NEW",
+				},
+			},
+			{
+				name: "error_-_rejects_duplicate_name",
+				extension: services.Extension{
+					Name:        "TestExtension",
+					DisplayName: "Duplicate Name",
+					Version:     "2.0.0",
+					Namespace:   "NEW",
+				},
+				wantErr: services.ErrDuplicateExtensionName,
+			},
+			{
+				name: "error_-_rejects_duplicate_namespace",
+				extension: services.Extension{
+					Name:        "AnotherExtension",
+					DisplayName: "Duplicate Namespace",
+					Version:     "2.0.0",
+					Namespace:   "TST",
+				},
+				wantErr: services.ErrDuplicateExtensionNamespace,
+			},
+		}
+	)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			store, pool := setupStore(t)
+			seedExtension(t, ctx, pool)
+
+			createdExtension, err := store.CreateGraphSchemaExtension(ctx, test.extension)
+			if test.wantErr != nil {
+				require.ErrorIs(t, err, test.wantErr)
+				assert.Equal(t, services.Extension{}, createdExtension)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.NotZero(t, createdExtension.ID)
+			assert.Equal(t, test.extension.Name, createdExtension.Name)
+			assert.Equal(t, test.extension.DisplayName, createdExtension.DisplayName)
+			assert.Equal(t, test.extension.Version, createdExtension.Version)
+			assert.Equal(t, test.extension.Namespace, createdExtension.Namespace)
+			assert.False(t, createdExtension.IsBuiltin)
+
+			persistedExtension, err := store.GetExtension(ctx, createdExtension.ID)
+			require.NoError(t, err)
+			assert.Equal(t, createdExtension, persistedExtension)
+		})
+	}
+}
+
 func TestStore_GetExtensions_Integration(t *testing.T) {
 	var (
 		ctx         = context.Background()
