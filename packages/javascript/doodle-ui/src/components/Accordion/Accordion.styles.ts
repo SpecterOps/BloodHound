@@ -18,6 +18,8 @@ import { cn } from '../utils';
 
 export const accordionItemClasses = 'bg-[color:var(--accordion-fill)] rounded-lg mb-4';
 
+export const accordionHeaderWrapperClasses = 'flex';
+
 export const accordionHeaderClasses = cn(
     'flex flex-1 gap-1 items-center rounded-md text-main font-bold transition-all',
     'hover:underline',
@@ -29,3 +31,5 @@ export const accordionHeaderClasses = cn(
 
 export const accordionContentClasses =
     'overflow-hidden text-sm text-main transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down';
+
+export const accordionContentInnerClasses = 'p-4';

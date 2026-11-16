@@ -18,7 +18,13 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion';
 import * as React from 'react';
 
 import { cn } from '../utils';
-import { accordionContentClasses, accordionHeaderClasses, accordionItemClasses } from './Accordion.styles';
+import {
+    accordionContentClasses,
+    accordionContentInnerClasses,
+    accordionHeaderClasses,
+    accordionHeaderWrapperClasses,
+    accordionItemClasses,
+} from './Accordion.styles';
 
 const Accordion = AccordionPrimitive.Root;
 
@@ -32,7 +38,7 @@ const AccordionHeader = React.forwardRef<
     React.ElementRef<typeof AccordionPrimitive.Trigger>,
     React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
-    <AccordionPrimitive.Header className='flex'>
+    <AccordionPrimitive.Header className={accordionHeaderWrapperClasses}>
         <AccordionPrimitive.Trigger ref={ref} className={cn(accordionHeaderClasses, className)} {...props}>
             {children}
         </AccordionPrimitive.Trigger>
@@ -45,7 +51,7 @@ const AccordionContent = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
     <AccordionPrimitive.Content ref={ref} className={accordionContentClasses} {...props}>
-        <div className={cn('p-4', className)}>{children}</div>
+        <div className={cn(accordionContentInnerClasses, className)}>{children}</div>
     </AccordionPrimitive.Content>
 ));
 

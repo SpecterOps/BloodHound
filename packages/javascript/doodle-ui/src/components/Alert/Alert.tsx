@@ -22,8 +22,11 @@ import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { cn } from '../utils';
 import {
     alertActionClasses,
+    alertActionsClasses,
     alertBodyClasses,
     alertDismissClasses,
+    alertDismissIconClasses,
+    alertIconClasses,
     alertTitleClasses,
     alertVariants,
 } from './Alert.styles';
@@ -47,14 +50,14 @@ const Alert = forwardRef<
         }
 >(({ action, children, className, onClose, title, variant = 'default', ...props }, ref) => (
     <div ref={ref} role='alert' className={cn(alertVariants({ variant }), className)} {...props}>
-        <div className='my-3 mr-2'>{iconMap[variant ?? 'default']}</div>
+        <div className={alertIconClasses}>{iconMap[variant ?? 'default']}</div>
 
         <div className={alertBodyClasses}>
             {title && <h5 className={alertTitleClasses}>{title}</h5>}
             {children}
         </div>
 
-        <div className='flex mt-1'>
+        <div className={alertActionsClasses}>
             {action && (
                 <button aria-label='Alert action' className={alertActionClasses} onClick={action.onClick} type='button'>
                     {action.label}
@@ -63,7 +66,7 @@ const Alert = forwardRef<
 
             {onClose && (
                 <button aria-label='Dismiss alert' className={alertDismissClasses} onClick={onClose} type='button'>
-                    <FontAwesomeIcon icon={faClose} className='mt-1 size-4' />
+                    <FontAwesomeIcon icon={faClose} className={alertDismissIconClasses} />
                 </button>
             )}
         </div>

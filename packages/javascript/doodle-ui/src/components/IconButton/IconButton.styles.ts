@@ -61,3 +61,5 @@ export const IconButtonVariants = cva(
 
 export const iconButtonIconClasses =
     'inline-flex size-[var(--icon-button-icon-size)] shrink-0 items-center justify-center [&>*]:size-full [&_svg]:size-full';
+
+export const iconButtonDisabledTriggerClasses = 'inline-flex';

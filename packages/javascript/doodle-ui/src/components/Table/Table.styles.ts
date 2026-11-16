@@ -16,6 +16,19 @@
 
 export const tableClasses = 'w-full caption-bottom text-sm';
 
+export const tableContainerClasses = 'relative w-full';
+
+export const tableContainerOverflowClasses = 'overflow-auto';
+
+export const tableHeadContentClasses = 'flex items-center';
+
+export const tableDragHandleClasses = 'rounded-sm';
+
+export const tableDragHandleCursorClasses = {
+    dragging: 'cursor-grabbing',
+    idle: 'cursor-grab',
+};
+
 export const tableHeaderClasses = '[&_tr]:border-b bg-[color:var(--table-fill)]';
 
 export const tableBodyClasses = '[&_tr:last-child]:border-0 bg-[color:var(--table-fill)]';

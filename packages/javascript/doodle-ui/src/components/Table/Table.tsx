@@ -28,9 +28,14 @@ import {
     tableCaptionClasses,
     tableCellClasses,
     tableClasses,
+    tableContainerClasses,
+    tableContainerOverflowClasses,
+    tableDragHandleClasses,
+    tableDragHandleCursorClasses,
     tableDraggingCellClasses,
     tableFooterClasses,
     tableHeadClasses,
+    tableHeadContentClasses,
     tableHeaderClasses,
     tableRowClasses,
 } from './Table.styles';
@@ -39,7 +44,12 @@ const Table = React.forwardRef<
     HTMLTableElement,
     React.HTMLAttributes<HTMLTableElement> & { disableDefaultOverflowAuto?: boolean; tableContainerClassName?: string }
 >(({ className, disableDefaultOverflowAuto, tableContainerClassName, ...props }, ref) => (
-    <div className={cn('relative w-full', { 'overflow-auto': !disableDefaultOverflowAuto }, tableContainerClassName)}>
+    <div
+        className={cn(
+            tableContainerClasses,
+            !disableDefaultOverflowAuto && tableContainerOverflowClasses,
+            tableContainerClassName
+        )}>
         <table ref={ref} className={cn(tableClasses, className)} {...props} />
     </div>
 ));
@@ -100,11 +110,14 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
                 zIndex: zIndex,
                 left: leftValue,
             }}>
-            <div ref={ref} className='flex items-center'>
+            <div ref={ref} className={tableHeadContentClasses}>
                 {enableDragging && header?.id !== 'empty-column' && (
                     <IconButton
                         aria-label='Drag to reorder'
-                        className={cn('rounded-sm', isDragging ? 'cursor-grabbing' : 'cursor-grab')}
+                        className={cn(
+                            tableDragHandleClasses,
+                            tableDragHandleCursorClasses[isDragging ? 'dragging' : 'idle']
+                        )}
                         {...attributes}
                         {...listeners}>
                         <FontAwesomeIcon icon={faGripVertical} />

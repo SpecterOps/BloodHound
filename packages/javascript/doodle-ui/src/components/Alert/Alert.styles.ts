@@ -35,6 +35,12 @@ export const alertVariants = cva('flex text-sm w-full rounded px-4 py-2 ', {
 
 export const alertBodyClasses = 'flex flex-col justify-center flex-grow py-2 gap-1';
 
+export const alertIconClasses = 'my-3 mr-2';
+
+export const alertActionsClasses = 'flex mt-1';
+
+export const alertDismissIconClasses = 'mt-1 size-4';
+
 export const alertTitleClasses = 'text-base/6 font-medium tracking-tight';
 
 export const alertActionClasses =
