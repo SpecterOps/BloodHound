@@ -18,11 +18,14 @@ package appdb_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pashagolub/pgxmock/v6"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/appdb"
@@ -219,6 +222,129 @@ func TestStore_CreateGraphSchemaNodeKind(t *testing.T) {
 			require.NoError(t, pool.ExpectationsWereMet())
 		})
 	}
+}
+
+const (
+	expectedUpsertCustomNodeKindSQL = `SELECT id FROM upsert_kind($1)`
+	expectedInsertCustomNodeKindSQL = `WITH inserted_custom_node_kind AS (INSERT INTO custom_node_kinds (config, schema_node_kind_id, kind_id) VALUES ($1::jsonb, $2, $3) RETURNING id, kind_id, schema_node_kind_id, config) SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM inserted_custom_node_kind AS cnk JOIN kind AS k ON cnk.kind_id = k.id`
+)
+
+func TestStore_CreateCustomNodeKinds(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx              = context.Background()
+		schemaNodeKindID = int32(7)
+		customNodeKind   = services.CustomNodeKind{
+			KindName:         "CustomKind",
+			SchemaNodeKindId: &schemaNodeKindID,
+			Config: services.CustomNodeKindConfig{
+				Icon: services.DisplayNodeIcon{
+					Type:  services.DisplayNodeTypeFontAwesome,
+					Name:  "user",
+					Color: "#fff",
+				},
+			},
+		}
+		configJSON   = `{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`
+		databaseError = errors.New("db error")
+	)
+
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectBeginTx(pgx.TxOptions{})
+		pool.ExpectQuery(expectedUpsertCustomNodeKindSQL).
+			WithArgs(customNodeKind.KindName).
+			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(99)))
+		pool.ExpectQuery(expectedInsertCustomNodeKindSQL).
+			WithArgs(configJSON, &schemaNodeKindID, int16(99)).
+			WillReturnRows(pool.NewRows([]string{
+				"id", "kind_name", "kind_id", "schema_node_kind_id", "config",
+			}).AddRow(int32(42), customNodeKind.KindName, int32(99), schemaNodeKindID, json.RawMessage(configJSON)))
+		pool.ExpectCommit()
+
+		created, err := store.CreateCustomNodeKinds(ctx, []services.CustomNodeKind{customNodeKind})
+		require.NoError(t, err)
+		require.Len(t, created, 1)
+		assert.Equal(t, services.CustomNodeKind{
+			ID:               42,
+			KindId:           99,
+			KindName:         customNodeKind.KindName,
+			SchemaNodeKindId: &schemaNodeKindID,
+			Config:           customNodeKind.Config,
+		}, created[0])
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("rejects empty kind names", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		invalidCustomNodeKind := customNodeKind
+		invalidCustomNodeKind.KindName = ""
+
+		created, err := store.CreateCustomNodeKinds(ctx, []services.CustomNodeKind{invalidCustomNodeKind})
+		assert.Equal(t, []services.CustomNodeKind{}, created)
+		require.EqualError(t, err, "invalid kind name")
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("duplicate kind", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectBeginTx(pgx.TxOptions{})
+		pool.ExpectQuery(expectedUpsertCustomNodeKindSQL).
+			WithArgs(customNodeKind.KindName).
+			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(99)))
+		pool.ExpectQuery(expectedInsertCustomNodeKindSQL).
+			WithArgs(configJSON, &schemaNodeKindID, int16(99)).
+			WillReturnError(&pgconn.PgError{
+				Code:           appdb.PostgresUniqueViolationCode,
+				ConstraintName: "custom_node_kinds_kind_id_key",
+			})
+		pool.ExpectRollback()
+
+		created, err := store.CreateCustomNodeKinds(ctx, []services.CustomNodeKind{customNodeKind})
+		assert.Equal(t, []services.CustomNodeKind{}, created)
+		assert.ErrorIs(t, err, services.ErrDuplicateCustomNodeKindName)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("rolls back earlier inserts when a later insert fails", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		failingCustomNodeKind := customNodeKind
+		failingCustomNodeKind.KindName = "FailingCustomKind"
+
+		pool.ExpectBeginTx(pgx.TxOptions{})
+		pool.ExpectQuery(expectedUpsertCustomNodeKindSQL).
+			WithArgs(customNodeKind.KindName).
+			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(99)))
+		pool.ExpectQuery(expectedInsertCustomNodeKindSQL).
+			WithArgs(configJSON, &schemaNodeKindID, int16(99)).
+			WillReturnRows(pool.NewRows([]string{
+				"id", "kind_name", "kind_id", "schema_node_kind_id", "config",
+			}).AddRow(int32(42), customNodeKind.KindName, int32(99), schemaNodeKindID, json.RawMessage(configJSON)))
+		pool.ExpectQuery(expectedUpsertCustomNodeKindSQL).
+			WithArgs(failingCustomNodeKind.KindName).
+			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(100)))
+		pool.ExpectQuery(expectedInsertCustomNodeKindSQL).
+			WithArgs(configJSON, &schemaNodeKindID, int16(100)).
+			WillReturnError(databaseError)
+		pool.ExpectRollback()
+
+		created, err := store.CreateCustomNodeKinds(ctx, []services.CustomNodeKind{
+			customNodeKind,
+			failingCustomNodeKind,
+		})
+		assert.Equal(t, []services.CustomNodeKind{}, created)
+		assert.ErrorIs(t, err, databaseError)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
 }
 
 const (

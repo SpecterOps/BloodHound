@@ -32,6 +32,9 @@ var ErrInvalidSortDirection = errors.New("invalid sort direction")
 // ErrDuplicateSchemaNodeKindName indicates that the node kind already exists.
 var ErrDuplicateSchemaNodeKindName = errors.New("duplicate schema node kind name")
 
+// ErrDuplicateCustomNodeKindName indicates that the custom node kind already exists.
+var ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
+
 type (
 	NodesInput []NodeInput
 	NodeInput  struct {
@@ -82,4 +85,28 @@ func (s *Service) GetNodeKind(ctx context.Context, id int32) (NodeKind, error) {
 		}
 		return nodeKind, nil
 	}
+}
+
+type CustomNodeKind struct {
+	ID               int32
+	KindId           int16  // FK to kind.id; stored column
+	KindName         string // joined from kind.name; not a stored column
+	SchemaNodeKindId *int32 // SchemaNodeKindId is nullable
+	Config           CustomNodeKindConfig
+}
+
+type DisplayNodeType string
+
+const (
+	DisplayNodeTypeFontAwesome DisplayNodeType = "font-awesome"
+)
+
+type CustomNodeKindConfig struct {
+	Icon DisplayNodeIcon `json:"icon"`
+}
+
+type DisplayNodeIcon struct {
+	Type  DisplayNodeType `json:"type"`
+	Name  string          `json:"name"`
+	Color string          `json:"color"`
 }
