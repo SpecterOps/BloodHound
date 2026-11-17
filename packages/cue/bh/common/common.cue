@@ -200,11 +200,25 @@ MigrationData: types.#Kind & {
 	representation: "MigrationData"
 }
 
+Zone: types.#Kind & {
+	symbol:         "Zone"
+	schema:         "common"
+	representation: "Zone"
+}
+
+MemberOfZone: types.#Kind & {
+	symbol:         "MemberOfZone"
+	schema:         "common"
+	representation: "MemberOfZone"
+}
+
 NodeKinds: [
 	MigrationData,
+	Zone,
 ]
 
 RelationshipKinds: [
+	MemberOfZone,
 ]
 
-PathfindingRelationships: list.Concat([ad.PathfindingRelationships, azure.PathfindingRelationships])
+PathfindingRelationships: list.Concat([ad.PathfindingRelationships, azure.PathfindingRelationships, [MemberOfZone]])

@@ -319,6 +319,8 @@ func GenerateGolangGraphModel(pkgName, dir string, graphSchema model.Graph) (*je
 						group.Qual(ADSchemaPackageName, "").Id(relKind.Symbol)
 					case "azure":
 						group.Qual(AzureSchemaPackageName, "").Id(relKind.Symbol)
+					case "common":
+						group.Id(relKind.Symbol)
 					}
 				}
 			}),

@@ -14,7 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActiveDirectoryRelationshipKind, AzureRelationshipKind } from '../../../../graphSchema';
+import {
+    ActiveDirectoryRelationshipKind,
+    AzureRelationshipKind,
+    CommonRelationshipKind,
+} from '../../../../graphSchema';
 
 export type EdgeCheckboxType = {
     category: string;
@@ -230,6 +234,18 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
         ],
     },
 ];
+
+// Common-schema edges span platforms. MemberOfZone edges are only created by BloodHound Enterprise, so
+// useEdgeCategories only shows this category there.
+export const COMMON_EDGE_CATEGORY: Category = {
+    categoryName: 'Common',
+    subcategories: [
+        {
+            name: 'Privilege Zones',
+            edgeTypes: [CommonRelationshipKind.MemberOfZone],
+        },
+    ],
+};
 
 export type SelectedEdge = {
     id: string;

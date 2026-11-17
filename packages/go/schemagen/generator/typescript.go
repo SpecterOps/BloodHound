@@ -102,6 +102,16 @@ func GenerateTypeScriptCommon(root tsgen.File, schema model.Graph) {
 	GenerateTypeScriptStringEnum(root, "CommonRelationshipKind", schema.RelationshipKinds)
 
 	GenerateTypeScriptStringEnum(root, "CommonKindProperties", schema.Properties)
+
+	// The common pathfinding list also contains the AD and Azure pathfinding kinds, which have their own functions.
+	var commonPathfindingRelationships []model.StringEnum
+	for _, relKind := range schema.PathfindingRelationships {
+		if relKind.Schema == "common" {
+			commonPathfindingRelationships = append(commonPathfindingRelationships, relKind)
+		}
+	}
+
+	GenerateTypeScriptPathfindingEdgesFn(root, "CommonPathfindingEdges", "CommonRelationshipKind", commonPathfindingRelationships)
 }
 
 func GenerateTypeScriptActiveDirectory(root tsgen.File, schema model.ActiveDirectory) {

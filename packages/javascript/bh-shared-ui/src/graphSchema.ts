@@ -1307,11 +1307,25 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
 }
 export enum CommonNodeKind {
     MigrationData = 'MigrationData',
+    Zone = 'Zone',
 }
 export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefined {
     switch (value) {
         case CommonNodeKind.MigrationData:
             return 'MigrationData';
+        case CommonNodeKind.Zone:
+            return 'Zone';
+        default:
+            return undefined;
+    }
+}
+export enum CommonRelationshipKind {
+    MemberOfZone = 'MemberOfZone',
+}
+export function CommonRelationshipKindToDisplay(value: CommonRelationshipKind): string | undefined {
+    switch (value) {
+        case CommonRelationshipKind.MemberOfZone:
+            return 'MemberOfZone';
         default:
             return undefined;
     }
@@ -1383,4 +1397,7 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
         default:
             return undefined;
     }
+}
+export function CommonPathfindingEdges(): CommonRelationshipKind[] {
+    return [CommonRelationshipKind.MemberOfZone];
 }
