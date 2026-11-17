@@ -92,11 +92,13 @@ const MainNavListItem: FC<{
 
     const labelElement = (
         <span className='min-w-0 flex flex-1 items-center gap-2 overflow-hidden whitespace-nowrap'>
-            <span className='flex size-6 shrink-0 items-center justify-center' data-testid='global_nav-item-label-icon'>
+            <span
+                aria-hidden='true'
+                className='flex size-6 shrink-0 items-center justify-center'
+                data-testid='global_nav-item-label-icon'>
                 {icon}
             </span>
             <Typography
-                aria-label={label}
                 className='block min-w-0 truncate !text-inherit'
                 component='span'
                 data-testid='global_nav-item-label-text'
@@ -129,7 +131,9 @@ const MainNavListItem: FC<{
             to={route}>
             {labelElement}
             {target === '_blank' && isExpanded && (
-                <FontAwesomeIcon className='shrink-0' icon={faExternalLink} size='sm' />
+                <span aria-hidden='true' className='shrink-0'>
+                    <FontAwesomeIcon icon={faExternalLink} size='sm' />
+                </span>
             )}
         </AppLink>
     ) : (
@@ -142,7 +146,11 @@ const MainNavListItem: FC<{
             role='button'
             tabIndex={0}>
             {labelElement}
-            {control && isExpanded && <span className='ml-1 shrink-0'>{control}</span>}
+            {control && isExpanded && (
+                <span aria-hidden='true' className='ml-1 shrink-0'>
+                    {control}
+                </span>
+            )}
         </div>
     );
 
