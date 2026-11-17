@@ -1563,6 +1563,21 @@ func (mr *MockDatabaseMockRecorder) GetAssetGroupTag(ctx, assetGroupTagId any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTag", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTag), ctx, assetGroupTagId)
 }
 
+// GetAssetGroupTagBySystemKey mocks base method.
+func (m *MockDatabase) GetAssetGroupTagBySystemKey(ctx context.Context, systemKey string) (model.AssetGroupTag, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssetGroupTagBySystemKey", ctx, systemKey)
+	ret0, _ := ret[0].(model.AssetGroupTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssetGroupTagBySystemKey indicates an expected call of GetAssetGroupTagBySystemKey.
+func (mr *MockDatabaseMockRecorder) GetAssetGroupTagBySystemKey(ctx, systemKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssetGroupTagBySystemKey", reflect.TypeOf((*MockDatabase)(nil).GetAssetGroupTagBySystemKey), ctx, systemKey)
+}
+
 // GetAssetGroupTagForSelection mocks base method.
 func (m *MockDatabase) GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error) {
 	m.ctrl.T.Helper()

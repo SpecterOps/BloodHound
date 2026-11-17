@@ -24,4 +24,5 @@ import (
 // Register attaches the auth endpoints to the given router instance.
 func Register(routerInst *router.Router, handler *handlers.Handlers) {
 	routerInst.POST("/api/v2/logout", handler.Logout)
+	routerInst.GET("/api/v2/self", handler.GetSelf)
 }
