@@ -40,6 +40,7 @@ type AssetGroupTagData interface {
 	SanitizeUpdateAssetGroupTagRequireCertify(tag *model.AssetGroupTag)
 	DeleteAssetGroupTag(ctx context.Context, user model.User, assetGroupTag model.AssetGroupTag) error
 	GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error)
+	GetAssetGroupTagBySystemKey(ctx context.Context, systemKey string) (model.AssetGroupTag, error)
 	GetAssetGroupTags(ctx context.Context, sqlFilter model.SQLFilter) (model.AssetGroupTags, error)
 	GetOrderedAssetGroupTagTiers(ctx context.Context) ([]model.AssetGroupTag, error)
 	GetAssetGroupTagForSelection(ctx context.Context) ([]model.AssetGroupTag, error)
@@ -337,9 +338,21 @@ func (s *BloodhoundDB) UpdateOpenGraphAssetGroupTagSelector(ctx context.Context,
 	return selector, nil
 }
 
+// GetAssetGroupTagBySystemKey resolves an active application-owned tag independently
+// of its editable name or database ID.
+func (s *BloodhoundDB) GetAssetGroupTagBySystemKey(ctx context.Context, systemKey string) (model.AssetGroupTag, error) {
+	var (
+		tag model.AssetGroupTag
+	)
+	if result := s.db.WithContext(ctx).Where("system_key = ? AND deleted_at IS NULL", systemKey).First(&tag); result.Error != nil {
+		return model.AssetGroupTag{}, CheckError(result)
+	}
+	return tag, nil
+}
+
 func (s *BloodhoundDB) GetAssetGroupTag(ctx context.Context, assetGroupTagId int) (model.AssetGroupTag, error) {
 	var tag model.AssetGroupTag
-	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph FROM %s WHERE id = ? AND deleted_at IS NULL", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
+	if result := s.db.WithContext(ctx).Raw(fmt.Sprintf("SELECT id, type, kind_id, system_key, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph FROM %s WHERE id = ? AND deleted_at IS NULL", tag.TableName()), assetGroupTagId).First(&tag); result.Error != nil {
 		return model.AssetGroupTag{}, CheckError(result)
 	} else {
 		return tag, nil
@@ -350,7 +363,7 @@ func (s *BloodhoundDB) GetOrderedAssetGroupTagTiers(ctx context.Context) ([]mode
 	var tags model.AssetGroupTags
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph FROM %s WHERE type = ? AND deleted_at IS NULL ORDER BY position ASC",
+			"SELECT id, type, kind_id, system_key, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph FROM %s WHERE type = ? AND deleted_at IS NULL ORDER BY position ASC",
 			model.AssetGroupTag{}.TableName(),
 		), model.AssetGroupTagTypeTier,
 	).Find(&tags); result.Error != nil {
@@ -368,7 +381,7 @@ func (s *BloodhoundDB) GetAssetGroupTags(ctx context.Context, sqlFilter model.SQ
 
 	if result := s.db.WithContext(ctx).Raw(
 		fmt.Sprintf(
-			"SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph FROM %s WHERE deleted_at IS NULL%s ORDER BY name ASC",
+			"SELECT id, type, kind_id, system_key, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph FROM %s WHERE deleted_at IS NULL%s ORDER BY name ASC",
 			model.AssetGroupTag{}.TableName(),
 			sqlFilter.SQLString,
 		),
@@ -480,7 +493,7 @@ func (s *BloodhoundDB) CreateAssetGroupTag(ctx context.Context, tagType model.As
 			)
 			INSERT INTO %s (type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph)
 			VALUES (?, (SELECT id FROM inserted_kind), ?, ?, NOW(), ?, NOW(), ?, ?, ?, ?, ?)
-			RETURNING id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph
+			RETURNING id, type, kind_id, system_key, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled, glyph
 			`, model.Kind{}.TableName(), tag.TableName())
 
 		if result := tx.Raw(query,
@@ -852,7 +865,7 @@ func (s *BloodhoundDB) GetAssetGroupTagForSelection(ctx context.Context) ([]mode
 		), owned AS (
 			SELECT id FROM asset_group_tags WHERE type = 3 AND deleted_at IS NULL LIMIT 1
 		)
-		SELECT id, type, kind_id, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`,
+		SELECT id, type, kind_id, system_key, name, description, created_at, created_by, updated_at, updated_by, position, require_certify, analysis_enabled FROM %s WHERE id IN ((SELECT id FROM tier), (SELECT id FROM owned))`,
 		model.AssetGroupTag{}.TableName())).Find(&tags))
 }
 

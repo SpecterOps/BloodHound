@@ -16,194 +16,76 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { QueryClient } from 'react-query';
 import { renderHook, waitFor } from '../../test-utils';
-import { Permission } from '../../utils';
+import { Permission, type PermissionDefinition, PERMISSIONS } from '../../utils/permissions';
 import { usePermissions } from './usePermissions';
 
-const testClientsManagePermission = {
-    authority: 'clients',
-    name: 'Manage',
-};
+const clientsManage = PERMISSIONS[Permission.CLIENTS_MANAGE];
+const authCreateToken = PERMISSIONS[Permission.AUTH_CREATE_TOKEN];
+const grantedPermissions = [clientsManage, authCreateToken];
+const requiredPermissions = [Permission.CLIENTS_MANAGE, Permission.AUTH_CREATE_TOKEN];
+const server = setupServer();
 
-const testAuthCreateTokenPermission = {
-    authority: 'auth',
-    name: 'CreateToken',
-};
-
-const testAppReadAppConfigPermission = {
-    authority: 'app',
-    name: 'ReadAppConfig',
-};
-
-const allPermissions = [
-    Permission.CLIENTS_MANAGE,
-    Permission.AUTH_CREATE_TOKEN,
-    Permission.APP_READ_APPLICATION_CONFIGURATION,
-];
-
-const queryClient = new QueryClient();
-
-const server = setupServer(
-    rest.get(`/api/v2/self`, async (_req, res, ctx) => {
-        return res(
-            ctx.json({
-                data: {
-                    roles: [],
-                },
-            })
-        );
-    })
-);
-beforeAll(() => server.listen());
-afterEach(() => {
-    queryClient.clear();
-    server.resetHandlers();
-});
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+const renderPermissions = async (permissions: PermissionDefinition[]) => {
+    server.use(rest.get('/api/v2/self', (_req, res, ctx) => res(ctx.json({ data: { roles: [{ permissions }] } }))));
+    const { result } = renderHook(() => usePermissions());
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    return result;
+};
+
 describe('usePermissions', () => {
-    it('passes check if the user has a required permission', async () => {
-        server.use(
-            rest.get(`/api/v2/self`, async (_req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            roles: [
-                                {
-                                    permissions: [testClientsManagePermission],
-                                },
-                            ],
-                        },
-                    })
-                );
-            })
-        );
-        const { result } = renderHook(() => usePermissions());
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
+    it.each([
+        {
+            name: 'no grants',
+            granted: [],
+            required: requiredPermissions,
+            expected: { single: false, all: false, any: false },
+        },
+        {
+            name: 'one matching permission',
+            granted: [clientsManage],
+            required: [Permission.CLIENTS_MANAGE],
+            expected: { single: true, all: true, any: true },
+        },
+        {
+            name: 'all required permissions',
+            granted: grantedPermissions,
+            required: requiredPermissions,
+            expected: { single: true, all: true, any: true },
+        },
+        {
+            name: 'only one of multiple required permissions',
+            granted: [authCreateToken],
+            required: requiredPermissions,
+            expected: { single: false, all: false, any: true },
+        },
+        {
+            name: 'matching name under a different authority',
+            granted: [PERMISSIONS[Permission.ALERTS_MANAGE]],
+            required: [Permission.CLIENTS_MANAGE],
+            expected: { single: false, all: false, any: false },
+        },
+        {
+            name: 'matching authority with a different name',
+            granted: [PERMISSIONS[Permission.CLIENTS_READ]],
+            required: [Permission.CLIENTS_MANAGE],
+            expected: { single: false, all: false, any: false },
+        },
+    ])('checks single, all, and any permissions with $name', async ({ granted, required, expected }) => {
+        const result = await renderPermissions(granted);
 
-        const has = result.current.checkPermission(Permission.CLIENTS_MANAGE);
-        const hasAll = result.current.checkAllPermissions([Permission.CLIENTS_MANAGE]);
-        const hasAtLeastOne = result.current.checkAtLeastOnePermission([Permission.CLIENTS_MANAGE]);
-
-        expect(has).toBe(true);
-        expect(hasAll).toBe(true);
-        expect(hasAtLeastOne).toBe(true);
+        expect(result.current.checkPermission(required[0])).toBe(expected.single);
+        expect(result.current.checkAllPermissions(required)).toBe(expected.all);
+        expect(result.current.checkAtLeastOnePermission(required)).toBe(expected.any);
     });
 
-    it('passes checks if the user has multiple required permissions', async () => {
-        server.use(
-            rest.get(`/api/v2/self`, async (_req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            roles: [
-                                {
-                                    permissions: [
-                                        testClientsManagePermission,
-                                        testAuthCreateTokenPermission,
-                                        testAppReadAppConfigPermission,
-                                    ],
-                                },
-                            ],
-                        },
-                    })
-                );
-            })
-        );
-        const { result } = renderHook(() => usePermissions());
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-        const hasAll = result.current.checkAllPermissions(allPermissions);
-        const hasAtLeastOne = result.current.checkAtLeastOnePermission(allPermissions);
-
-        expect(hasAll).toBe(true);
-        expect(hasAtLeastOne).toBe(true);
-    });
-
-    it('fails checks if the user does not have a matching permission', async () => {
-        server.use(
-            rest.get(`/api/v2/self`, async (_req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            roles: [
-                                {
-                                    permissions: [testClientsManagePermission],
-                                },
-                            ],
-                        },
-                    })
-                );
-            })
-        );
-        const { result } = renderHook(() => usePermissions());
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-        const has = result.current.checkPermission(Permission.AUTH_CREATE_TOKEN);
-        const hasAll = result.current.checkAllPermissions([Permission.AUTH_CREATE_TOKEN]);
-        const hasAtLeastOne = result.current.checkAtLeastOnePermission([Permission.AUTH_CREATE_TOKEN]);
-
-        expect(has).toBe(false);
-        expect(hasAll).toBe(false);
-        expect(hasAtLeastOne).toBe(false);
-    });
-
-    it('passes the check for at least one permission if the user is missing one of many required permissions', async () => {
-        server.use(
-            rest.get(`/api/v2/self`, async (_req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            roles: [
-                                {
-                                    permissions: [testAuthCreateTokenPermission, testAppReadAppConfigPermission],
-                                },
-                            ],
-                        },
-                    })
-                );
-            })
-        );
-        const { result } = renderHook(() => usePermissions());
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-        const hasAll = result.current.checkAllPermissions(allPermissions);
-        const hasAtLeastOne = result.current.checkAtLeastOnePermission(allPermissions);
-
-        expect(hasAll).toBe(false);
-        expect(hasAtLeastOne).toBe(true);
-    });
-
-    it('returns a list of the users current permissions', async () => {
-        server.use(
-            rest.get(`/api/v2/self`, async (_req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            roles: [
-                                {
-                                    permissions: [
-                                        testClientsManagePermission,
-                                        testAuthCreateTokenPermission,
-                                        testAppReadAppConfigPermission,
-                                    ],
-                                },
-                            ],
-                        },
-                    })
-                );
-            })
-        );
-        const { result } = renderHook(() => usePermissions());
-        await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-        const userPermissionsResult = result.current.getUserPermissions();
-
-        expect(allPermissions.length).toEqual(userPermissionsResult.length);
-
-        for (const permission of allPermissions) {
-            expect(userPermissionsResult).toContain(permission);
-        }
+    it('returns the users current permissions', async () => {
+        const result = await renderPermissions(grantedPermissions);
+        expect(result.current.getUserPermissions()).toEqual(expect.arrayContaining(requiredPermissions));
+        expect(result.current.getUserPermissions()).toHaveLength(requiredPermissions.length);
     });
 });

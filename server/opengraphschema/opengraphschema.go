@@ -56,11 +56,11 @@ func NewOpenGraphSchemaRequestAdapter(pool *pgxpool.Pool) OpenGraphSchemaRequest
 	return services.NewService(appdb.NewStore(pool))
 }
 
-func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, featureFlagsService services.FeatureFlag) {
 	var (
 		store      = appdb.NewStore(pool)
 		service    = services.NewService(store)
 		handlerSet = handlers.NewHandlersContainer(service)
 	)
-	routes.Register(routerInst, handlerSet)
+	routes.Register(routerInst, handlerSet, featureFlagsService)
 }
