@@ -22,7 +22,6 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -43,7 +42,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/services/saml"
-	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/crypto"
@@ -467,100 +465,6 @@ func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, r
 			// NOTE: This "should" be a 204 since we're not returning a payload but am returning a 200 to retain
 			// uniformity.
 			response.WriteHeader(http.StatusOK)
-		}
-	}
-}
-
-func (s ManagementResource) ListAuthTokens(response http.ResponseWriter, request *http.Request) {
-	var (
-		order           []string
-		authTokens      = model.AuthTokens{}
-		validatedUserID uuid.UUID
-		sortByColumns   = request.URL.Query()[api.QueryParameterSortBy]
-	)
-
-	for _, column := range sortByColumns {
-		var descending bool
-		if string(column[0]) == "-" {
-			descending = true
-			column = column[1:]
-		}
-
-		if !authTokens.IsSortable(column) {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsNotSortable, column), request), response)
-			return
-		}
-
-		if descending {
-			order = append(order, column+" desc")
-		} else {
-			order = append(order, column)
-		}
-	}
-
-	queryParameterFilterParser := model.NewQueryParameterFilterParser()
-	if queryFilters, err := queryParameterFilterParser.ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-		return
-	} else {
-		for name, filters := range queryFilters {
-			if valid := slices.Contains(authTokens.GetFilterableColumns(), name); !valid {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-				return
-			}
-
-			if validPredicates, err := authTokens.GetValidFilterPredicatesAsStrings(name); err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s", api.ErrorResponseDetailsColumnNotFilterable, name), request), response)
-			} else {
-				for i, filter := range filters {
-					if !slices.Contains(validPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("%s: %s %s", api.ErrorResponseDetailsFilterPredicateNotSupported, filter.Name, filter.Operator), request), response)
-						return
-					}
-
-					queryFilters[name][i].IsStringData = authTokens.IsString(filter.Name)
-				}
-			}
-		}
-
-		if queryFilters.IsFiltered("user_id") {
-			parsedUUID, err := utils.ParseUUID(queryFilters["user_id"][0].Value)
-			if err != nil {
-				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-				return
-			}
-			validatedUserID = parsedUUID
-		}
-
-		// allow filtering by user_id (model.AuthToken.UserID) only if users have permission to manage other users
-		// (non-admin roles are restricted to filtering by their own model.AuthToken.UserID)
-		bhCtx := bhctx.FromRequest(request)
-		if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); isUser {
-			if !s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
-				if queryFilters.IsFiltered("user_id") && len(queryFilters["user_id"]) > 0 {
-					if validatedUserID != user.ID {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "filtering tokens by another user's user_id requires admin privileges", request), response)
-						return
-					}
-					// non-admin users may only use the eq operator when filtering by their own user_id
-					if queryFilters["user_id"][0].Operator != model.Equals {
-						api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "non-admin users may only apply the eq operator when filtering by user_id", request), response)
-						return
-					}
-					delete(queryFilters, "user_id")
-				}
-				// in all other cases, add a filter with user_id derived from the context
-				queryFilters.AddFilter(model.QueryParameterFilter{Name: "user_id", Operator: model.Equals, Value: user.ID.String()})
-			}
-		}
-
-		if sqlFilter, err := queryFilters.BuildSQLFilter(); err != nil {
-			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-			return
-		} else if authTokens, err := s.db.GetAllAuthTokens(request.Context(), strings.Join(order, ", "), sqlFilter); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			api.WriteBasicResponse(request.Context(), v2.ListTokensResponse{Tokens: authTokens.StripKeys()}, http.StatusOK, response)
 		}
 	}
 }

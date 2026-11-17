@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { cleanup, render, screen, waitFor } from '../test-utils';
 import ConfirmationDialog from './ConfirmationDialog';
@@ -56,6 +57,52 @@ describe('ConfirmationDialog', () => {
 
         expect(testonCancel).toHaveBeenCalledTimes(0);
         expect(testOnConfirm).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(['cancel', 'confirm'])('cancels the %s reset timer on unmount', (action) => {
+        vi.useFakeTimers();
+        try {
+            const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+            const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+            fireEvent.click(screen.getByRole('button', { name: new RegExp(action, 'i') }));
+            const resetCall = setTimeoutSpy.mock.calls.findIndex(([, delay]) => delay === 1000);
+            expect(resetCall).toBeGreaterThanOrEqual(0);
+            const timer = setTimeoutSpy.mock.results[resetCall].value;
+
+            cleanup();
+            expect(clearTimeoutSpy).toHaveBeenCalledWith(timer);
+        } finally {
+            vi.restoreAllMocks();
+            vi.useRealTimers();
+        }
+    });
+
+    it('does not clear a new reply when reopened before the reset timer fires', () => {
+        cleanup();
+        const props = {
+            open: true,
+            onConfirm: testOnConfirm,
+            onCancel: testonCancel,
+            text: 'text-test',
+            title: 'title-test',
+            challengeText: 'delete',
+        };
+        const { rerender } = render(<ConfirmationDialog {...props} />);
+        fireEvent.change(screen.getByTestId('confirmation-dialog_challenge-text'), { target: { value: 'delete' } });
+        vi.useFakeTimers();
+        try {
+            fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+            rerender(<ConfirmationDialog {...props} open={false} />);
+            rerender(<ConfirmationDialog {...props} />);
+            const input = screen.getByTestId('confirmation-dialog_challenge-text');
+            expect(input).toHaveValue('');
+            fireEvent.change(input, { target: { value: 'new reply' } });
+            act(() => vi.advanceTimersByTime(1000));
+            expect(input).toHaveValue('new reply');
+        } finally {
+            cleanup();
+            vi.useRealTimers();
+        }
     });
 
     it('should disable confirmation while keeping Cancel available when isConfirmDisabled is true', async () => {

@@ -174,19 +174,6 @@ func (s *OpenGraphSchemaService) GetGraphSchemaExtensions(ctx context.Context, f
 	return s.openGraphSchemaRepository.GetGraphSchemaExtensions(ctx, filters, sort, skip, limit)
 }
 
-// ListExtensions returns all extensions sorted by display name
-// This is a convenience wrapper around GetGraphSchemaExtensions for the list endpoint
-func (s *OpenGraphSchemaService) ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error) {
-	var (
-		sort = model.Sort{{Column: "display_name", Direction: model.AscendingSortDirection}}
-	)
-	if extensions, _, err := s.GetGraphSchemaExtensions(ctx, model.Filters{}, sort, 0, 0); err != nil {
-		return model.GraphSchemaExtensions{}, fmt.Errorf("error retrieving graph extensions: %w", err)
-	} else {
-		return extensions, nil
-	}
-}
-
 func (s *OpenGraphSchemaService) DeleteExtension(ctx context.Context, extensionID int32) error {
 	if err := s.openGraphSchemaRepository.DeleteGraphSchemaExtension(ctx, extensionID); err != nil {
 		return fmt.Errorf("error deleting graph extension: %w", err)

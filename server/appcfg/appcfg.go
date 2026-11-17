@@ -60,12 +60,12 @@ type ConfigUpdateSideEffecter interface {
 // Register builds the appcfg store -> service -> handler chain and attaches
 // the appcfg routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
-func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter, graphRetentionManager handlers.GraphRetentionBaseTTLManager) {
 	var (
 		ffReader   = featureflags.NewFeatureFlagRequestAdapter(pool)
 		store      = appdb.NewStore(pool)
 		service    = services.NewService(store)
-		handlerSet = handlers.NewHandlers(service, ffReader, configUpdateSideEffecter, configUpdateSideEffecter)
+		handlerSet = handlers.NewHandlers(service, ffReader, configUpdateSideEffecter, configUpdateSideEffecter, graphRetentionManager)
 	)
 
 	routes.Register(routerInst, handlerSet)

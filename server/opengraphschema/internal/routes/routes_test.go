@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/handlers"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/routes"
+	servicemocks "github.com/specterops/bloodhound/server/opengraphschema/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,7 +42,7 @@ func TestRegister(t *testing.T) {
 		handlerSet     = handlers.NewHandlersContainer(extensionsMock)
 	)
 
-	routes.Register(&routerInst, handlerSet)
+	routes.Register(&routerInst, handlerSet, servicemocks.NewMockFeatureFlag(t))
 
 	muxRouter := routerInst.MuxRouter()
 
@@ -70,7 +71,7 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 		handlerSet     = handlers.NewHandlersContainer(extensionsMock)
 	)
 
-	routes.Register(&routerInst, handlerSet)
+	routes.Register(&routerInst, handlerSet, servicemocks.NewMockFeatureFlag(t))
 	routeHandler := routerInst.Handler()
 
 	for _, tc := range []struct {

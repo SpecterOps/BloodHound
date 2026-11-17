@@ -43,6 +43,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphretention"
 	"github.com/specterops/bloodhound/cmd/api/src/services/opengraphschema"
 	storageService "github.com/specterops/bloodhound/cmd/api/src/services/storage"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -202,6 +203,9 @@ func Entrypoint(ctx context.Context, cfg config.Configuration, connections boots
 			// legacy method on the database. Until we can move this functionality
 			// into onion, we make do with injecting the appropriate method here
 			ConfigUpdateSideEffects: connections.RDMS,
+			// Appcfg onion also for backcompat needs to interact with graph retention
+			// this is only supported in BHE, so BHCE adds an empty adaptor
+			GraphRetentionManager: graphretention.GraphRetentionAdapter{},
 		})
 
 		// Set neo4j batch and flush sizes
