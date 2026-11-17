@@ -34,3 +34,9 @@ export const datePickerTriggerClasses =
     'h-6 p-0 opacity-50 hover:opacity-100 peer-hover:opacity-100 focus-visible:opacity-100';
 
 export const datePickerContentClasses = 'w-auto p-3 border border-[color:var(--date-picker-content-border)] z-[1500]';
+
+export const datePickerStyles = {
+    wrapper: 'relative',
+    iconTrigger: 'absolute right-2 top-1/2 -translate-y-1/2',
+    selectedDay: 'bg-primary text-neutral-light-1',
+};

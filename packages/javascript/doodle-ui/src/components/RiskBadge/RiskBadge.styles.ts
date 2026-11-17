@@ -20,7 +20,7 @@ export const RiskBadgePropVariants = cva('flex justify-center items-center round
     variants: {
         type: {
             labeled: 'size-[32px] shadow-none w-auto leading-[1]',
-            'sm-labeled': 'size-[24px] p-1 shadow-none w-auto leading-[1]',
+            'sm-labeled': 'h-6 shadow-none w-auto leading-none',
             'sm-circle': 'size-4 p-1 drop-shadow bg-neutral-300',
             'md-circle': 'size-8 p-2 drop-shadow bg-neutral-300',
         },
@@ -34,7 +34,8 @@ export const RiskBadgeContentVariants = cva('rounded-full', {
         },
         type: {
             labeled: 'size-max w-32 px-6 py-2.5 border-none text-center tracking-[.25px]',
-            'sm-labeled': 'size-max px-1 py-1 border-none text-center font-bold min-w-14 w-14 text-sm',
+            'sm-labeled':
+                'inline-flex h-full min-w-14 w-14 items-center justify-center px-1 border-none text-center font-bold text-sm leading-none',
             'sm-circle': 'size-full shadow-inner1xl',
             'md-circle': 'size-full shadow-inner1xl',
         },
@@ -52,3 +53,5 @@ export const RiskBadgeContentVariants = cva('rounded-full', {
         },
     ],
 });
+
+export const riskBadgeLabelClasses = 'risk-badge-label';

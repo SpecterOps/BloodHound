@@ -17,3 +17,9 @@
 export const radialGaugeTrackClasses = 'text-neutral-light-4 stroke-current';
 
 export const radialGaugeIndicatorClasses = 'transform -rotate-90 origin-center stroke-current';
+
+export const radialGaugeStyles = {
+    root: 'relative',
+    svg: 'w-full h-full',
+    animation: 'transition-[stroke-dashoffset] duration-300',
+};

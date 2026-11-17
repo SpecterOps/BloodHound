@@ -16,7 +16,7 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DataTable } from './DataTable';
 
 vi.mock('@tanstack/react-virtual', () => ({
@@ -39,6 +39,37 @@ const columns: ColumnDef<Person>[] = [
 ];
 
 describe('DataTable', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it.each([
+        { growLastColumn: false, overflowing: false },
+        { growLastColumn: true, overflowing: false },
+        { growLastColumn: true, overflowing: true },
+    ])(
+        'shows the last data column resize handle only without growLastColumn: %o',
+        ({ growLastColumn, overflowing }) => {
+            vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(500);
+            vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockReturnValue(overflowing ? 1000 : 500);
+
+            render(
+                <DataTable
+                    columns={[...columns, { id: 'details', header: 'Details' }]}
+                    data={[{ name: 'Ada Lovelace' }]}
+                    enableResizing
+                    growLastColumn={growLastColumn}
+                />
+            );
+
+            expect(screen.getByRole('columnheader', { name: 'Name' }).querySelector('.resizer')).not.toBeNull();
+            const lastColumnHandle = screen.getByRole('columnheader', { name: 'Details' }).querySelector('.resizer');
+            expect(lastColumnHandle !== null).toBe(!growLastColumn);
+
+            const spacer = screen.queryByRole('columnheader', { name: 'empty placeholder column' });
+            expect(spacer !== null).toBe(growLastColumn && !overflowing);
+            expect(spacer?.querySelector('.resizer') ?? null).toBeNull();
+        }
+    );
+
     it('keeps the default empty table content-sized', () => {
         render(<DataTable columns={columns} data={[]} />);
 

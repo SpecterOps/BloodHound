@@ -52,3 +52,10 @@ export const InputVariants = cva(inputBaseClasses, {
         variant: 'underlined',
     },
 });
+
+export const inputStyles = {
+    field: 'grid gap-1.5',
+    requiredIndicator: 'text-status-error-main',
+    helperText: 'text-main',
+    errorMessage: 'text-error',
+};

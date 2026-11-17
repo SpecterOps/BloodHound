@@ -25,6 +25,7 @@ import {
     breadcrumbLinkClasses,
     breadcrumbListClasses,
     breadcrumbPageClasses,
+    breadcrumbsStyles,
 } from './Breadcrumbs.styles';
 
 const Breadcrumb = React.forwardRef<
@@ -72,7 +73,7 @@ const BreadcrumbPage = React.forwardRef<HTMLSpanElement, React.ComponentPropsWit
 BreadcrumbPage.displayName = 'BreadcrumbPage';
 
 const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentProps<'li'>) => (
-    <li role='presentation' aria-hidden='true' className={cn('[&>svg]:w-3.5 [&>svg]:h-3.5', className)} {...props}>
+    <li role='presentation' aria-hidden='true' className={cn(breadcrumbsStyles.separator, className)} {...props}>
         {children ?? <ChevronRight />}
     </li>
 );
@@ -80,8 +81,8 @@ BreadcrumbSeparator.displayName = 'BreadcrumbSeparator';
 
 const BreadcrumbEllipsis = ({ className, ...props }: React.ComponentProps<'span'>) => (
     <span role='presentation' aria-hidden='true' className={cn(breadcrumbEllipsisClasses, className)} {...props}>
-        <MoreHorizontal className='h-4 w-4' />
-        <span className='sr-only'>More</span>
+        <MoreHorizontal className={breadcrumbsStyles.ellipsisIcon} />
+        <span className={breadcrumbsStyles.screenReader}>More</span>
     </span>
 );
 BreadcrumbEllipsis.displayName = 'BreadcrumbElipssis';

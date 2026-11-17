@@ -18,3 +18,9 @@ export const scrollAreaScrollbarClasses =
     'transition-all data-[state=hidden]:animate-fade-out data-[state=visible]:animate-fade-in';
 
 export const scrollAreaThumbClasses = 'flex-1 bg-neutral-400 rounded-[10px]';
+
+export const scrollAreaStyles = {
+    root: 'overflow-hidden',
+    viewport: 'w-full h-full',
+    track: 'z-10',
+};

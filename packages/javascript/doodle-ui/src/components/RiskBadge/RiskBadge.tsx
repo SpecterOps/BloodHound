@@ -17,7 +17,7 @@
 import { type VariantProps } from 'class-variance-authority';
 import { ColorOptions } from '../../types';
 import { cn, getConditionalStyles, getCssColor } from '../utils';
-import { RiskBadgeContentVariants, RiskBadgePropVariants } from './RiskBadge.styles';
+import { RiskBadgeContentVariants, riskBadgeLabelClasses, RiskBadgePropVariants } from './RiskBadge.styles';
 
 export interface RiskBadgeProps
     extends React.HTMLAttributes<HTMLDivElement>,
@@ -55,7 +55,7 @@ function RiskBadge(props: RiskBadgeProps) {
         <div role='status' className={cn(RiskBadgePropVariants({ type }), className)} {...rest}>
             <div
                 style={riskBadgeStyle}
-                className={cn(RiskBadgeContentVariants({ outlined, type }), 'risk-badge-label', labelClassName)}>
+                className={cn(RiskBadgeContentVariants({ outlined, type }), riskBadgeLabelClasses, labelClassName)}>
                 <span>{labeled ? label : null}</span>
             </div>
         </div>

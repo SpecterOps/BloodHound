@@ -13,8 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+import { useArgs } from '@storybook/preview-api';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, within } from '@storybook/test';
+import type { ComponentProps } from 'react';
 import { Switch } from './Switch';
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
@@ -49,6 +51,19 @@ const meta = {
         label: 'Label',
         labelPosition: 'right',
     },
+    render: function Render() {
+        const [switchArgs, updateArgs] = useArgs<ComponentProps<typeof Switch>>();
+
+        return (
+            <Switch
+                {...switchArgs}
+                onCheckedChange={(checked) => {
+                    switchArgs.onCheckedChange?.(checked);
+                    updateArgs({ checked });
+                }}
+            />
+        );
+    },
     parameters: {
         layout: 'centered',
         docs: {
@@ -56,7 +71,7 @@ const meta = {
                 component: `
 The Switch component represents a binary on/off control.
 
-By default, the switch is rendered in an unchecked (off) state and can be toggled by user interaction (click or keyboard). When a label is provided, it is associated to the control for improved accessibility and can be positioned to the left or right.
+Switch is controlled: pass \`checked\` and update it in \`onCheckedChange\`. These examples keep the checked state synchronized with Storybook Controls when clicked or toggled with the keyboard. When a label is provided, it is associated to the control for improved accessibility and can be positioned to the left or right.
 
 When disabled, the switch is non-interactive and cannot be toggled. Visual styles indicate the disabled state for both the switch and its label.
 

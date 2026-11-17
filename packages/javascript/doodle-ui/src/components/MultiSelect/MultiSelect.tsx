@@ -37,6 +37,7 @@ import {
     multiSelectSearchInputClasses,
     multiSelectSearchRowClasses,
     multiSelectStateRowClasses,
+    multiSelectStyles,
 } from './MultiSelect.styles';
 
 // TODO: move to doodle-ui icons system in follow-up ticket
@@ -62,8 +63,8 @@ interface MultiSelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonE
 const MultiSelectTrigger = React.forwardRef<HTMLButtonElement, MultiSelectTriggerProps>(
     ({ className, open, children, variant, ...props }, ref) => (
         <button ref={ref} type='button' className={cn(MultiSelectTriggerVariants({ className, variant }))} {...props}>
-            <span className='truncate'>{children}</span>
-            <CaretDown className={cn(multiSelectCaretClasses, open && 'rotate-180')} />
+            <span className={multiSelectStyles.triggerLabel}>{children}</span>
+            <CaretDown className={cn(multiSelectCaretClasses, open && multiSelectStyles.openCaret)} />
         </button>
     )
 );
@@ -118,7 +119,7 @@ interface MultiSelectAllOptionsRowProps {
 }
 
 const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRowProps) => (
-    <div className='p-1'>
+    <div className={multiSelectStyles.optionWrapper}>
         <CheckboxWithLabel
             label={option.label}
             checked={checked}
@@ -127,29 +128,23 @@ const MultiSelectOptionRow = ({ option, checked, onSelect }: MultiSelectOptionRo
             className={multiSelectCheckboxStyles}
             fieldClassName={cn(
                 multiSelectRowStyles,
-                'text-base font-normal leading-4',
-                option.disabled
-                    ? 'cursor-not-allowed bg-[color:var(--button-disabled-fill)] text-disabled'
-                    : multiSelectInteractiveRowStyles
+                multiSelectStyles.optionText,
+                option.disabled ? multiSelectStyles.disabledRow : multiSelectInteractiveRowStyles
             )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit'
+            labelClassName={multiSelectStyles.optionLabel}
         />
     </div>
 );
 
 const MultiSelectAllOptionsRow = ({ checked, label, onSelect }: MultiSelectAllOptionsRowProps) => (
-    <div className='p-1'>
+    <div className={multiSelectStyles.optionWrapper}>
         <CheckboxWithLabel
             label={label}
             checked={checked}
             onCheckedChange={onSelect}
             className={cn(multiSelectCheckboxStyles, multiSelectIndeterminateCheckboxStyles)}
-            fieldClassName={cn(
-                multiSelectRowStyles,
-                multiSelectInteractiveRowStyles,
-                'text-base font-normal leading-4'
-            )}
-            labelClassName='min-w-0 flex-1 truncate text-inherit'
+            fieldClassName={cn(multiSelectRowStyles, multiSelectInteractiveRowStyles, multiSelectStyles.optionText)}
+            labelClassName={multiSelectStyles.optionLabel}
         />
     </div>
 );
@@ -159,7 +154,7 @@ const MultiSelectLoadingRows = ({ loadingText }: { loadingText: string }) => (
         {Array.from({ length: 6 }).map((_, index) => (
             <div key={index} className={multiSelectLoadingRowsClasses}>
                 <Checkbox tabIndex={-1} disabled />
-                <Skeleton className='h-4 flex-1' />
+                <Skeleton className={multiSelectStyles.loadingSkeleton} />
             </div>
         ))}
     </div>
@@ -344,19 +339,17 @@ const MultiSelect = ({
                     </div>
                 )}
                 {searchError && (
-                    <div role='alert' className='px-3 py-2 text-status-error-main'>
+                    <div role='alert' className={multiSelectStyles.error}>
                         {searchError}
                     </div>
                 )}
 
-                <ScrollArea
-                    thumbColor='var(--multiselect-scrollbar-thumb)'
-                    className='max-h-60 [&_[data-radix-scroll-area-viewport]]:max-h-60'>
+                <ScrollArea thumbColor='var(--multiselect-scrollbar-thumb)' className={multiSelectStyles.scrollArea}>
                     <div
                         role='group'
                         aria-label={placeholder ?? 'Select options'}
                         aria-busy={isLoading || undefined}
-                        className='p-1 pr-2'>
+                        className={multiSelectStyles.optionsList}>
                         {selectAllLabel &&
                             !isLoading &&
                             !hasSearchText &&

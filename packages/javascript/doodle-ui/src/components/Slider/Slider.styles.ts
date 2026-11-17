@@ -72,3 +72,21 @@ export const sliderThumbDotStyles = cva(
         },
     }
 );
+
+export const sliderStyles = {
+    invalidValueSpacing: 'mb-5',
+    controlWrapper: 'min-w-0 flex-1',
+    ticks: 'relative h-7 text-[10px] leading-4',
+    disabledText: 'text-disabled',
+    text: 'text-main',
+    tick: 'absolute flex -translate-x-1/2 rtl:translate-x-1/2 flex-col items-center gap-1',
+    tickDot: 'size-1 rounded-full',
+    disabledTick: 'bg-disabled',
+    activeTick: 'bg-[color:var(--slider-current-color,var(--primary))]',
+    inactiveTick: 'bg-[color:var(--slider-tick-fill)]',
+    value: 'relative shrink-0',
+    valueInput: 'h-7 w-16 px-2 py-1 text-xs',
+    valueInputWithSuffix: 'pr-5',
+    valueSuffix: 'pointer-events-none absolute end-2 top-1.5 text-xs',
+    valueError: 'absolute start-0 top-full text-xs text-status-error-main',
+};

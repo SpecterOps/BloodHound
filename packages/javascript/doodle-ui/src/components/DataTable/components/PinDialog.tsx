@@ -17,6 +17,7 @@ import { Button } from '../../Button';
 import { Dialog, DialogActions, DialogContent, DialogDescription, DialogPortal, DialogTitle } from '../../Dialog';
 
 import React, { useCallback } from 'react';
+import { dataTableStyles } from '../DataTable.styles';
 
 const PinDialog: React.FC<{
     open: boolean;
@@ -53,7 +54,7 @@ const PinDialog: React.FC<{
                             The {pinDialogState.label} column will {action === 'pin' ? 'now' : 'no longer'} be pinned.
                         </DialogDescription>
                     )}
-                    <DialogActions className='flex justify-end gap-4'>
+                    <DialogActions className={dataTableStyles.pinDialogActions}>
                         <Button variant='secondary' onClick={handleClose}>
                             Cancel
                         </Button>

@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../utils';
-import { linkExternalIconClasses, linkVariants } from './Link.styles';
+import { linkExternalIconClasses, linkScreenReaderClasses, linkVariants } from './Link.styles';
 
 export type LinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'children' | 'href' | 'target' | 'rel'> &
     VariantProps<typeof linkVariants> & {
@@ -40,7 +40,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
                 {...props}>
                 {children}{' '}
                 <FontAwesomeIcon icon={faExternalLink} aria-hidden='true' className={linkExternalIconClasses} />
-                <span className='sr-only'> (opens in a new tab)</span>
+                <span className={linkScreenReaderClasses}> (opens in a new tab)</span>
             </a>
         );
     }

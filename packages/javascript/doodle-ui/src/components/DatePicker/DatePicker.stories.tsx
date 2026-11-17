@@ -42,15 +42,29 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-    render: () => {
-        return <DatePicker />;
+    render: function Render(args) {
+        const [value, setValue] = useState('');
+        const parsedDate = DateTime.fromFormat(value, formatString);
+
+        return (
+            <DatePicker
+                {...args}
+                value={value}
+                placeholder='yyyy-mm-dd'
+                onChange={(event) => setValue(event.target.value)}
+                calendarProps={{
+                    mode: 'single',
+                    selected: parsedDate.isValid ? parsedDate.toJSDate() : undefined,
+                    onSelect: (date) => setValue(date ? DateTime.fromJSDate(date).toFormat(formatString) : ''),
+                }}
+            />
+        );
     },
 };
 
 export const InputVariantUnderlined: Story = {
-    render: () => {
-        return <DatePicker variant={'underlined'} />;
-    },
+    args: { variant: 'underlined' },
+    render: Default.render,
 };
 
 const now = new Date();
@@ -58,17 +72,21 @@ const fromDate = new Date(now);
 fromDate.setFullYear(now.getFullYear() - 1);
 
 export const BasicSingle = () => {
-    const [selected, setSelected] = useState<Date | undefined>(now);
+    const [value, setValue] = useState(DateTime.fromJSDate(now).toFormat(formatString));
+    const parsedDate = DateTime.fromFormat(value, formatString);
 
     return (
         <DatePicker
+            value={value}
+            placeholder='yyyy-mm-dd'
+            onChange={(event) => setValue(event.target.value)}
             calendarProps={{
                 fromDate: fromDate,
                 toDate: now,
                 mode: 'single',
-                selected,
+                selected: parsedDate.isValid ? parsedDate.toJSDate() : undefined,
                 onSelect: (value) => {
-                    setSelected(value);
+                    setValue(value ? DateTime.fromJSDate(value).toFormat(formatString) : '');
                 },
             }}
         />

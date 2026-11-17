@@ -63,3 +63,9 @@ export const checkboxLabelClasses = cn(
     '[&:has(:focus-visible)]:ring-offset-2',
     '[&:has(:focus-visible)]:ring-offset-[color:var(--checkbox-unchecked-fill)]'
 );
+
+export const checkboxStyles = {
+    labelText: 'cursor-pointer font-normal leading-[18px]',
+    labelError: 'peer-data-[state=unchecked]:text-status-error-main',
+    disabledLabel: 'cursor-not-allowed',
+};

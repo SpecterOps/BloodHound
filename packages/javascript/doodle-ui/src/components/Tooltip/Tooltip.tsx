@@ -22,6 +22,7 @@ import {
     tooltipContentClasses,
     tooltipContentWidthClasses,
     tooltipDefaultTriggerClasses,
+    tooltipPositionerClasses,
     tooltipTriggerClasses,
 } from './Tooltip.styles';
 
@@ -144,7 +145,7 @@ const TooltipContent = React.forwardRef<HTMLDivElement, ContentProps>(
                 collisionPadding={collisionPadding}
                 side={side}
                 sideOffset={sideOffset}
-                className='z-[1700]'>
+                className={tooltipPositionerClasses}>
                 <BaseUITooltip.Popup
                     ref={ref}
                     id={id}

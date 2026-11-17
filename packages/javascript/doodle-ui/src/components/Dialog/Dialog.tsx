@@ -25,6 +25,7 @@ import {
     dialogContentClasses,
     dialogMaxWidthClasses,
     DialogOverlayVariants,
+    dialogStyles,
     dialogTriggerClasses,
 } from './Dialog.styles';
 
@@ -130,7 +131,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
                     className={cn(
                         dialogContentClasses,
                         maxWidthClass,
-                        { 'overflow-y-auto': disableStickyLayout },
+                        { [dialogStyles.scrollableContent]: disableStickyLayout },
                         className
                     )}
                     onOpenAutoFocus={() => {
@@ -170,7 +171,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <DialogPrimitive.Title
         ref={ref}
-        className={cn('flex text-left', TypographyVariants({ variant: 'h3' }), className)}
+        className={cn(dialogStyles.titleLayout, TypographyVariants({ variant: 'h3' }), className)}
         {...props}
     />
 ));

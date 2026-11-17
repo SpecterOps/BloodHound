@@ -15,7 +15,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { cn } from '../utils';
-import { AdornmentVariants, comboBadgeLabelClasses, ComboBadgeVariants } from './ComboBadge.styles';
+import {
+    AdornmentVariants,
+    comboBadgeLabelClasses,
+    comboBadgePeerClasses,
+    ComboBadgeVariants,
+} from './ComboBadge.styles';
 
 interface ComboBadgeProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'aria-label'> {
     label: string | JSX.Element;
@@ -43,7 +48,7 @@ const ComboBadge = (props: ComboBadgeProps) => {
 
     return (
         <div role='status' aria-label={ariaLabel} className={cn(ComboBadgeVariants({ type }), className)} {...rest}>
-            <div className={cn(comboBadgeLabelClasses, { peer: !disableAdornment })}>{label}</div>
+            <div className={cn(comboBadgeLabelClasses, { [comboBadgePeerClasses]: !disableAdornment })}>{label}</div>
             {adornment ? <div className={cn(AdornmentVariants({ type, displayAdornment }))}>{adornment}</div> : null}
         </div>
     );
