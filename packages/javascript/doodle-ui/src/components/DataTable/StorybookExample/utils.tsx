@@ -74,7 +74,7 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
             cell: ({ row }) => {
                 return (
                     <div className='flex justify-start items-center max-w-2 dark:text-neutral-light-1 text-nowrap text-black'>
-                        <span className='p-2 border border-black rounded-full bg-[#17E625] mr-2 size-4 flex justify-center items-center'>
+                        <span className='p-2 border border-black text-black rounded-full bg-[#17E625] mr-2 size-4 flex justify-center items-center'>
                             <FontAwesomeIcon icon={faUser} className='text-xs' />
                         </span>
                         {row.getValue('nonTierZeroPrincipal')}
@@ -97,12 +97,14 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
                     Tier Zero Principal
                     {sortOrder !== undefined ? (
                         <button
+                            type='button'
                             onClick={() => handleSort?.('tierZeroPrincipal')}
-                            className='rounded-sm p-2 focus:outline-none focus-visible:focus-ring'
+                            className='rounded-sm p-2 text-main focus:outline-none focus-visible:focus-ring'
                             aria-label='Sort by Tier Zero Principal'>
-                            {!sortOrder && <FontAwesomeIcon icon={faCaretDown} color='black' />}
-                            {sortOrder === 'asc' && <FontAwesomeIcon icon={faCaretUp} color='dodgerblue' />}
-                            {sortOrder === 'desc' && <FontAwesomeIcon icon={faCaretDown} color='dodgerblue' />}
+                            <FontAwesomeIcon
+                                icon={sortOrder === 'asc' ? faCaretUp : faCaretDown}
+                                className={sortOrder ? 'text-secondary' : 'text-main'}
+                            />
                         </button>
                     ) : null}
                 </div>
@@ -110,7 +112,7 @@ export const getColumns = (sortOrder?: string | null, handleSort?: (sortBy: stri
             cell: ({ row }) => {
                 return (
                     <div className='flex justify-start items-center dark:text-neutral-light-1 text-black'>
-                        <span className='p-2 border border-black rounded-full bg-[#DBE617] mr-2 size-4 flex justify-center items-center'>
+                        <span className='p-2 border border-black text-black rounded-full bg-[#DBE617] mr-2 size-4 flex justify-center items-center'>
                             <FontAwesomeIcon icon={faUserGroup} className='text-xs' />
                         </span>
                         {row.getValue('tierZeroPrincipal')}

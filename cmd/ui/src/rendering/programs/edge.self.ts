@@ -14,9 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable no-useless-assignment */
-/* stop strict complaints about `i` from eslint */
-
 import { Attributes } from 'graphology-types';
 import { Coordinates, NodeDisplayData } from 'sigma/types';
 import { floatColor } from 'sigma/utils';
@@ -38,7 +35,7 @@ export const getControlPointsFromGroupSize = (
     invertY: boolean,
     invertX: boolean
 ) => {
-    const position = groupPosition++;
+    const position = groupPosition;
     const step = Math.PI / 2;
 
     const theta2 = step * position - Math.PI / 2;

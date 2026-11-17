@@ -23,11 +23,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
 )
@@ -78,15 +77,13 @@ func (s Handlers) GetAllFlags(response http.ResponseWriter, request *http.Reques
 func (s Handlers) ToggleFlag(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
 
-	rawFeatureID := mux.Vars(request)[api.URIPathVariableFeatureID]
-
-	featureID, err := strconv.ParseInt(rawFeatureID, 10, 32)
+	featureID, err := params.PathInt32(request, api.URIPathVariableFeatureID)
 	if err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponseDetailsIDMalformed, response)
 		return
 	}
 
-	flag, err := s.featureFlag.ToggleFlag(ctx, int32(featureID))
+	flag, err := s.featureFlag.ToggleFlag(ctx, featureID)
 	if err != nil {
 		handleFeatureFlagError(request, response, err)
 		return

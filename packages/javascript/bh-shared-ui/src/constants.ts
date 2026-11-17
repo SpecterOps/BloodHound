@@ -296,16 +296,6 @@ export const themedComponents = (palette: Palette): ThemeOptions['components'] =
             },
         },
     },
-    MuiLinearProgress: {
-        styleOverrides: {
-            root: {
-                backgroundColor: addOpacityToHex(palette.primary.main, 40),
-                '& .MuiLinearProgress-barColorPrimary': {
-                    backgroundColor: palette.primary.main,
-                },
-            },
-        },
-    },
     MuiTableContainer: {
         styleOverrides: {
             root: {

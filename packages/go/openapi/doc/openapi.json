@@ -1347,7 +1347,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are `user_id`, `client_id`, `name`, `last_access`, `created_at`, `updated_at`, `deleted_at`.\n",
+            "description": "Sortable columns are `name`, `last_access`, `created_at`, `updated_at`, `expires_at`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -1361,10 +1361,17 @@
             }
           },
           {
-            "name": "key",
+            "name": "created_by",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid-nullable-required"
+            }
+          },
+          {
+            "name": "expires_at",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time-nullable-required"
             }
           },
           {
@@ -1393,9 +1400,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
@@ -15652,6 +15656,9 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.jobs.hydrate-last-job"
+          },
+          {
             "$ref": "#/components/parameters/query.created-at"
           },
           {
@@ -15774,7 +15781,26 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.client-display"
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/model.client-display"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "last_job": {
+                                    "type": "object",
+                                    "nullable": true,
+                                    "description": "The most recent job record for this client. Omitted when hydrateLastJob is false or not supplied. When true, null if no job record exists.\n",
+                                    "allOf": [
+                                      {
+                                        "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
                           }
                         }
                       }
@@ -18274,6 +18300,9 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.jobs.hydrate-last-job"
+          },
+          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
@@ -18340,7 +18369,26 @@
                             "profiles": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/model.collector-job-profile"
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/model.collector-job-profile"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "last_job": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "description": "The most recent job record for this collector job profile. Omitted when hydrateLastJob is false or not supplied. When true, null if no job record exists.\n",
+                                        "allOf": [
+                                          {
+                                            "$ref": "#/components/schemas/model.collector-job-history"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             }
                           }
@@ -19446,6 +19494,95 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "UpdateCollectorJobSecret",
+        "summary": "Update a collector job secret",
+        "description": "Updates collector job secret mutable fields: name, external_key_id, and value.\nIn-flight jobs retain their snapshotted key reference.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "external_key_id": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "secret"
+                      ],
+                      "properties": {
+                        "secret": {
+                          "$ref": "#/components/schemas/model.collector-job-secret"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "**Conflict**\nThe supplied `name` collides with an existing collector job secret\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -22241,7 +22378,7 @@
         "parameters": [
           {
             "name": "sort_by",
-            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `id`, `first_seen`, `last_seen`.\n",
+            "description": "Sortable columns are `severity`, `finding_type`, `finding`, `title`, `platform`, `environment_id`, `environment_name`,\n`asset_group_tag_id`, `zone_name`, `source_principal_id`, `source_principal_kind`, `source_principal_name`, `target_principal_id`, `target_principal_kind`, `target_principal_name`, `status`, `id`, `first_seen`, `last_seen`, `is_regression`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -22373,6 +22510,15 @@
             }
           },
           {
+            "name": "principal_object_id",
+            "description": "Filter by one principal object identifier. A finding matches when the object id is either its source (starting) principal or its target principal. The supported predicate is `eq` or `neq`.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^(eq|neq):[^:]+$"
+            }
+          },
+          {
             "name": "status",
             "description": "Filter by finding status.",
             "in": "query",
@@ -22394,6 +22540,14 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.predicate.filter.string"
+            }
+          },
+          {
+            "name": "is_regression",
+            "description": "Filter findings by recurrence after remediation. Supports eq and neq with true or false.",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.boolean"
             }
           },
           {
@@ -22422,7 +22576,7 @@
                 },
                 "examples": {
                   "Unified CSV export": {
-                    "value": "Severity,Finding,Title,FindingType,IsCrossPlatform,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen,ArchivedAt\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,true,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,\nhigh,Kerberoasting,Kerberoastable User Accounts,list,false,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,\n"
+                    "value": "Severity,Finding,Title,FindingType,IsCrossPlatform,IsRegression,Platform,EnvironmentID,EnvironmentName,AssetGroupTagID,ZoneName,SourcePrincipalID,SourcePrincipalKind,SourcePrincipalName,TargetPrincipalID,TargetPrincipalKind,TargetPrincipalName,Status,FirstSeen,LastSeen,ArchivedAt\ncritical,T0GenericWrite,GenericWrite Privileges on Tier Zero Objects,relationship,true,true,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,RPATTON@CORP1.LAB.HOME-LABS.LOL,User,Robert Patton,ADMIN@CORP1.LAB.HOME-LABS.LOL,User,Domain Admin,active,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,\nhigh,Kerberoasting,Kerberoastable User Accounts,list,false,false,Active Directory,S-1-5-21-1974516972-3116780949-2584384717,CORP1.LAB.HOME-LABS.LOL,1,Tier Zero,,,, PSX_D_BA@CORP1.LAB.HOME-LABS.LOL,User,Backup Admin,accepted,2026-04-11T00:30:18Z,2026-04-14T16:57:35Z,\n"
                   }
                 }
               },
@@ -22457,6 +22611,10 @@
                                   "relationship",
                                   "list"
                                 ]
+                              },
+                              "is_regression": {
+                                "type": "boolean",
+                                "description": "Whether this unarchived finding matches a previously archived, remediated finding by type, name, environment, zone, and principal identity. Always false for archived findings."
                               },
                               "is_cross_platform": {
                                 "type": "boolean",
@@ -22566,6 +22724,7 @@
                           "title": "GenericWrite Privileges on Tier Zero Objects",
                           "finding_type": "relationship",
                           "is_cross_platform": true,
+                          "is_regression": true,
                           "platform": "Active Directory",
                           "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
                           "environment_name": "CORP1.LAB.HOME-LABS.LOL",
@@ -22588,6 +22747,7 @@
                           "title": "Kerberoastable User Accounts",
                           "finding_type": "list",
                           "is_cross_platform": false,
+                          "is_regression": false,
                           "platform": "Active Directory",
                           "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
                           "environment_name": "CORP1.LAB.HOME-LABS.LOL",
@@ -22610,6 +22770,7 @@
                           "title": "WriteOwner Privileges on Tier Zero Objects",
                           "finding_type": "relationship",
                           "is_cross_platform": false,
+                          "is_regression": false,
                           "platform": "Active Directory",
                           "environment_id": "S-1-5-21-1974516972-3116780949-2584384717",
                           "environment_name": "CORP1.LAB.HOME-LABS.LOL",
@@ -25603,6 +25764,16 @@
           "type": "integer"
         }
       },
+      "query.jobs.hydrate-last-job": {
+        "name": "hydrateLastJob",
+        "in": "query",
+        "required": false,
+        "description": "When true, includes a last_job field containing the most recent job record for each returned client or collector job profile. When false or not supplied, last_job is omitted entirely.",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
       "query.clients.hydrate-domains": {
         "name": "hydrate_domains",
         "description": "When a value of `true` is passed, any Domains associated with scheduled and finished jobs for each client will have expanded properties including `name` and `type`. When a value of `false` is passed, these same Domains will only return as a list of `objectid`s.",
@@ -26696,6 +26867,16 @@
         "type": "string",
         "pattern": "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
         "description": "Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.uuid-nullable-required": {
+        "type": "string",
+        "pattern": "^((eq|neq):[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|(eq|neq):null)$",
+        "description": "Filter results by a UUID value using a required predicate.\nValid filter predicates are `eq` and `neq`.\nUse `eq:null` or `neq:null` to compare against null.\nExample: `eq:12345678-1234-1234-1234-123456789abc`\n"
+      },
+      "api.params.predicate.filter.time-nullable-required": {
+        "type": "string",
+        "pattern": "^((eq|neq|gt|gte|lt|lte):[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?([Zz]|[+-][0-9]{2}:[0-9]{2})|(eq|neq):null)$",
+        "description": "Filter by timestamp using a required predicate.\nValid timestamp predicates are `eq`, `neq`, `gt`, `gte`, `lt`, and `lte`.\nUse `eq:null` or `neq:null` to compare against null.\n"
       },
       "api.requests.user.update": {
         "type": "object",
@@ -28429,7 +28610,9 @@
                     "name",
                     "version",
                     "is_builtin",
-                    "namespace"
+                    "namespace",
+                    "created_at",
+                    "updated_at"
                   ],
                   "properties": {
                     "id": {
@@ -28447,6 +28630,16 @@
                     },
                     "namespace": {
                       "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
                     }
                   }
                 }
@@ -28465,7 +28658,9 @@
                 "name": "Active Directory",
                 "version": "v1.0.0",
                 "is_builtin": true,
-                "namespace": "AD"
+                "namespace": "AD",
+                "created_at": "2026-01-01T00:00:00Z",
+                "updated_at": "2026-01-01T00:00:00Z"
               }
             ]
           }
@@ -30014,86 +30209,6 @@
           }
         ]
       },
-      "model.collector-job-schedule": {
-        "description": "Recurring schedule that materializes jobs for its linked profiles.",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.collector-job-schedule-minimal"
-          },
-          {
-            "type": "object",
-            "required": [
-              "disabled_at",
-              "disabled_by",
-              "profiles",
-              "created_at",
-              "updated_at"
-            ],
-            "properties": {
-              "disabled_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              },
-              "disabled_by": {
-                "$ref": "#/components/schemas/null.string.response"
-              },
-              "profiles": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/model.collector-job-profile-minimal"
-                }
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
-          }
-        ]
-      },
-      "model.collector-job-secret": {
-        "type": "object",
-        "description": "Reference to collector credentials held externally, secret values are never stored.",
-        "required": [
-          "id",
-          "type",
-          "key_id",
-          "external_key_id",
-          "name",
-          "created_at"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "auth_key"
-            ]
-          },
-          "key_id": {
-            "type": "string",
-            "description": "Identifier redeemed by the collector against external secret manager."
-          },
-          "external_key_id": {
-            "type": "string",
-            "description": "Operator-facing identifier for the referenced key."
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the secret reference."
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "model.collector-job-history": {
         "type": "object",
         "description": "Immutable terminal record for a collector job queue entry.",
@@ -30185,6 +30300,86 @@
           },
           "failure_reason": {
             "$ref": "#/components/schemas/null.string.response"
+          }
+        }
+      },
+      "model.collector-job-schedule": {
+        "description": "Recurring schedule that materializes jobs for its linked profiles.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.collector-job-schedule-minimal"
+          },
+          {
+            "type": "object",
+            "required": [
+              "disabled_at",
+              "disabled_by",
+              "profiles",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "disabled_at": {
+                "$ref": "#/components/schemas/null.time.response"
+              },
+              "disabled_by": {
+                "$ref": "#/components/schemas/null.string.response"
+              },
+              "profiles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.collector-job-profile-minimal"
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "model.collector-job-secret": {
+        "type": "object",
+        "description": "Reference to collector credentials held externally, secret values are never stored.",
+        "required": [
+          "id",
+          "type",
+          "key_id",
+          "external_key_id",
+          "name",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "auth_key"
+            ]
+          },
+          "key_id": {
+            "type": "string",
+            "description": "Identifier redeemed by the collector against external secret manager."
+          },
+          "external_key_id": {
+            "type": "string",
+            "description": "Operator-facing identifier for the referenced key."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the secret reference."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

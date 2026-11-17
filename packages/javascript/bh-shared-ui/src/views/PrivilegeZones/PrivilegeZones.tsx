@@ -16,8 +16,7 @@
 
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { CircularProgress } from '@mui/material';
-import { Badge, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
+import { Badge, LoadingSpinner, Tabs, TabsList, TabsTrigger } from 'doodle-ui';
 import React, { FC, Suspense } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Route, Routes, useLocation } from 'react-router-dom';
@@ -185,19 +184,23 @@ const PrivilegeZones: FC = () => {
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
-                    <Suspense
-                        fallback={
-                            <div className='absolute inset-0 flex items-center justify-center'>
-                                <CircularProgress color='primary' size={80} />
-                            </div>
-                        }>
-                        <Routes>
-                            {childRoutes.map((route) => {
-                                return <Route path={route.path} element={<route.component />} key={route.path} />;
-                            })}
-                            <Route path='*' element={<DefaultRoot defaultPath={defaultPath} />} />
-                        </Routes>
-                    </Suspense>
+                    <div className='relative flex-1 min-h-0'>
+                        <Suspense
+                            fallback={
+                                <LoadingSpinner
+                                    variant='overlay'
+                                    className='bg-transparent'
+                                    spinnerClassName='size-20'
+                                />
+                            }>
+                            <Routes>
+                                {childRoutes.map((route) => {
+                                    return <Route path={route.path} element={<route.component />} key={route.path} />;
+                                })}
+                                <Route path='*' element={<DefaultRoot defaultPath={defaultPath} />} />
+                            </Routes>
+                        </Suspense>
+                    </div>
                 </div>
             </div>
         </>

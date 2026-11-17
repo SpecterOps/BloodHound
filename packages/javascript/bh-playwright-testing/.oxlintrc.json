@@ -1,0 +1,36 @@
+{
+    "$schema": "../../../node_modules/oxlint/configuration_schema.json",
+    "extends": ["../../../tools/oxc/configs/react.json"],
+    "plugins": [],
+    "categories": {
+        "correctness": "off",
+        "suspicious": "off",
+        "pedantic": "off",
+        "perf": "off",
+        "style": "off",
+        "restriction": "off",
+        "nursery": "off"
+    },
+    "env": {
+        "builtin": true,
+        "browser": true
+    },
+    "ignorePatterns": ["**/rollup.config.js"],
+    "settings": {
+        "react": {
+            "version": "18.2.0"
+        }
+    },
+    "jsPlugins": ["eslint-plugin-sx-props"],
+    "rules": {
+        "no-unused-vars": [
+            "error",
+            {
+                "args": "after-used",
+                "caughtErrors": "none",
+                "ignoreRestSiblings": true
+            }
+        ],
+        "sx-props/no-sx-props": "error"
+    }
+}

@@ -13,17 +13,13 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import * as React from 'react';
 import { cn } from '../utils';
+import { skeletonClasses } from './Skeleton.styles';
 
 const Skeleton = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-    ({ className, ...props }, ref) => (
-        <div
-            ref={ref}
-            className={cn('animate-pulse bg-neutral-light-5 dark:bg-neutral-dark-5 rounded-md', className)}
-            {...props}
-        />
-    )
+    ({ className, ...props }, ref) => <div ref={ref} className={cn(skeletonClasses, className)} {...props} />
 );
 
 Skeleton.displayName = 'Skeleton';

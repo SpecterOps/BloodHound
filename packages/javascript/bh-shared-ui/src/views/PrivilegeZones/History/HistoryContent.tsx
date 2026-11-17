@@ -91,12 +91,14 @@ const HistoryContent = () => {
                     <div
                         onScroll={onScroll}
                         ref={scrollRef}
-                        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+                        // oxlint-disable-next-line a11y-compat/no-noninteractive-tabindex
                         tabIndex={0}
-                        className='overflow-y-auto mb-1 min-h-32 h-full'>
+                        className='overflow-y-auto min-h-32 h-full flex flex-col rounded-b-md'>
                         <DataTable
                             aria-label='History Log Table'
+                            className='border-0 bg-neutral-1'
                             data={records}
+                            shouldFillHeight
                             TableHeaderProps={tableHeaderProps}
                             TableHeadProps={tableHeadProps}
                             TableProps={tableProps}

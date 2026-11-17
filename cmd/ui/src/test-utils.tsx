@@ -142,7 +142,7 @@ function customRenderHook<Result, Props>(
 }
 
 // re-export everything
-// eslint-disable-next-line react-refresh/only-export-components
+// oxlint-disable-next-line refresh-compat/only-export-components
 export * from '@testing-library/react';
 // override render method
 export { customRender as render, customRenderHook as renderHook };

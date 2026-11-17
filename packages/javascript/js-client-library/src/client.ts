@@ -54,6 +54,7 @@ import {
     UpdateCertificationRequest,
     UpdateCollectorJobProfileRequest,
     UpdateCollectorJobScheduleRequest,
+    UpdateCollectorJobSecretRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateOpenHoundClientRequest,
@@ -145,6 +146,7 @@ import {
     SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
     UpdateCollectorJobScheduleResponse,
+    UpdateCollectorJobSecretResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
     WebhookTestResponse,
@@ -614,6 +616,9 @@ class BHEAPIClient {
             options
         );
 
+    changeFindingStatus = (findingId: number | string, status: 'active' | 'in_progress', options?: RequestOptions) =>
+        this.baseClient.put(`/api/v2/attack-paths/findings/${findingId}/status`, { status }, options);
+
     requestAttackPaths = (options?: RequestOptions) => this.baseClient.put('/api/v2/attack-paths', options);
 
     requestAnalysis = (options?: RequestOptions) => this.baseClient.put('/api/v2/analysis', options);
@@ -910,6 +915,16 @@ class BHEAPIClient {
 
     createCollectorJobSecret = (request: CreateCollectorJobSecretRequest, options?: RequestOptions) =>
         this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collie-job-secrets', request, options);
+
+    updateCollectorJobSecret = (secretId: string, request: UpdateCollectorJobSecretRequest, options?: RequestOptions) =>
+        this.baseClient.patch<UpdateCollectorJobSecretResponse>(
+            `/api/v2/collie-job-secrets/${secretId}`,
+            request,
+            options
+        );
+
+    deleteCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collie-job-secrets/${secretId}`, options);
 
     /* clients */
 

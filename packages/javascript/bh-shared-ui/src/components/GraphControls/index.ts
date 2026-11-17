@@ -22,3 +22,4 @@ export {
     minimumGraphSpacing,
 } from './GraphControls';
 export type { GraphDirection, GraphExportAction, GraphLayoutControlOptions } from './GraphControls';
+export { createGraphImageExportActions } from './graphImageExport';

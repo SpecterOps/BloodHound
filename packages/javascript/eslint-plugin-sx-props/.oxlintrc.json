@@ -1,0 +1,13 @@
+{
+    "categories": {
+        "correctness": "off",
+        "suspicious": "off",
+        "pedantic": "off",
+        "perf": "off",
+        "style": "off",
+        "restriction": "off",
+        "nursery": "off"
+    },
+    "plugins": [],
+    "overrides": []
+}

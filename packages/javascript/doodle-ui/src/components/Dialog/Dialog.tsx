@@ -13,11 +13,20 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { TypographyVariants } from '../Typography';
 import { cn } from '../utils';
+import {
+    dialogActionsClasses,
+    dialogBodyClasses,
+    dialogContentClasses,
+    dialogMaxWidthClasses,
+    DialogOverlayVariants,
+    dialogTriggerClasses,
+} from './Dialog.styles';
 
 /**
  * See documentation: [Dialog](https://www.radix-ui.com/primitives/docs/components/dialog#root)
@@ -31,11 +40,7 @@ const DialogTrigger = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Trigger>,
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>
 >(({ className, ...props }, ref) => (
-    <DialogPrimitive.Trigger
-        ref={ref}
-        className={cn('focus:outline-none focus-visible:focus-ring', className)}
-        {...props}
-    />
+    <DialogPrimitive.Trigger ref={ref} className={cn(dialogTriggerClasses, className)} {...props} />
 ));
 DialogTrigger.displayName = DialogPrimitive.Trigger.displayName;
 
@@ -51,18 +56,9 @@ const DialogClose = React.forwardRef<
     React.ElementRef<typeof DialogPrimitive.Close>,
     React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close>
 >(({ className, ...props }, ref) => (
-    <DialogPrimitive.Close
-        ref={ref}
-        className={cn('focus:outline-none focus-visible:focus-ring', className)}
-        {...props}
-    />
+    <DialogPrimitive.Close ref={ref} className={cn(dialogTriggerClasses, className)} {...props} />
 ));
 DialogClose.displayName = DialogPrimitive.Close.displayName;
-
-const DialogOverlayVariants = cva(
-    'fixed inset-0 bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-    { variants: { blurBackground: { true: 'backdrop-blur-sm' }, allowNav: { true: 'z-50', false: 'z-[1410]' } } }
-);
 
 interface DialogOverlayProps
     extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>,
@@ -106,15 +102,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
         },
         ref
     ) => {
-        // Where do these magic values come from? They match MUIs maxWidth values
-        const maxWidthMap: Record<(typeof DialogMaxWidth)[number], string> = {
-            xl: 'max-w-[1536px]',
-            lg: 'max-w-[1200px]',
-            md: 'max-w-[900px]',
-            sm: 'max-w-[600px]',
-            xs: 'max-w-[444px]',
-        };
-        const maxWidthClass = maxWidth ? maxWidthMap[maxWidth] : '';
+        const maxWidthClass = maxWidth ? dialogMaxWidthClasses[maxWidth] : '';
 
         const titleChildren: React.ReactNode[] = [];
         const actionsChildren: React.ReactNode[] = [];
@@ -140,11 +128,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
                 <DialogPrimitive.Content
                     ref={ref}
                     className={cn(
-                        'flex flex-col overflow-hidden fixed gap-4 p-6 w-full shadow-lg max-w-lg max-h-[calc(100vh-32px)]',
-                        'left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]',
-                        'duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
-                        'rounded-md bg-neutral-light-2 dark:bg-neutral-dark-2 dark:text-neutral-light-1 z-[1500]',
-                        'focus:outline-none focus-visible:focus-ring',
+                        dialogContentClasses,
                         maxWidthClass,
                         { 'overflow-y-auto': disableStickyLayout },
                         className
@@ -161,11 +145,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
                     ) : (
                         <>
                             {titleChildren}
-                            {middleChildren.length > 0 && (
-                                <div className='flex flex-col gap-4 flex-auto min-h-0 overflow-y-auto px-[calc(var(--focus-ring-width)+var(--focus-ring-offset-width))] -mx-[calc(var(--focus-ring-width)+var(--focus-ring-offset-width))]'>
-                                    {middleChildren}
-                                </div>
-                            )}
+                            {middleChildren.length > 0 && <div className={dialogBodyClasses}>{middleChildren}</div>}
                             {actionsChildren}
                         </>
                     )}
@@ -177,7 +157,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogActions = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)} {...props} />
+    <div className={cn(dialogActionsClasses, className)} {...props} />
 );
 DialogActions.displayName = 'DialogActions';
 

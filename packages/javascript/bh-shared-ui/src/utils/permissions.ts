@@ -41,6 +41,7 @@ export enum Permission {
     ALERTS_READ,
     ALERTS_MANAGE,
     AUDIT_LOG_READ,
+    COLLECTION_READ_JOBS,
 }
 
 export type PermissionDefinition = {
@@ -116,6 +117,10 @@ export const PERMISSIONS: PermissionDefinitions = {
     [Permission.COLLECTION_MANAGE_JOBS]: {
         authority: 'collection',
         name: 'ManageJobs',
+    },
+    [Permission.COLLECTION_READ_JOBS]: {
+        authority: 'collection',
+        name: 'ReadJobs',
     },
     [Permission.GRAPH_DB_READ]: {
         authority: 'graphdb',

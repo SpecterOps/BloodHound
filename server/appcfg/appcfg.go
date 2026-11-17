@@ -33,15 +33,12 @@ import (
 	"github.com/specterops/bloodhound/server/featureflags"
 )
 
-type ParameterKey = services.ParameterKey
-type Parameter = services.Parameter
 type ScheduledAnalysisParameter = services.ScheduledAnalysisParameter
 
-const ScheduledAnalysis = services.ScheduledAnalysis
-
-// ConfigurationAdapter lets other slices read configuration
+// ConfigurationAdapter supplies GetConfig<Type> methods for fetching typed parameter values.
+// If any problem is encountered, these methods log a warning and return both the parameter default value and an error.
 type ConfigurationAdapter interface {
-	GetApplicationConfiguration(ctx context.Context, parameterKey ParameterKey) (Parameter, error)
+	GetConfigScheduledAnalysis(ctx context.Context) (ScheduledAnalysisParameter, error)
 }
 
 func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
@@ -63,12 +60,12 @@ type ConfigUpdateSideEffecter interface {
 // Register builds the appcfg store -> service -> handler chain and attaches
 // the appcfg routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
-func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter, graphRetentionManager handlers.GraphRetentionBaseTTLManager) {
 	var (
 		ffReader   = featureflags.NewFeatureFlagRequestAdapter(pool)
 		store      = appdb.NewStore(pool)
 		service    = services.NewService(store)
-		handlerSet = handlers.NewHandlers(service, ffReader, configUpdateSideEffecter, configUpdateSideEffecter)
+		handlerSet = handlers.NewHandlers(service, ffReader, configUpdateSideEffecter, configUpdateSideEffecter, graphRetentionManager)
 	)
 
 	routes.Register(routerInst, handlerSet)

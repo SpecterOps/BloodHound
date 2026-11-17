@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 )
@@ -105,12 +105,11 @@ func (s Handlers) GetRelationshipByID(response http.ResponseWriter, request *htt
 	var (
 		err                error
 		ctx                = request.Context()
-		rawRelationshipID  = mux.Vars(request)[URIPathVariableRelationshipID]
 		includeKindInfoRaw = request.URL.Query().Get("include-info")
 		includeKindInfo    = false
 	)
 
-	relationshipID, err := strconv.ParseInt(rawRelationshipID, 10, 64)
+	relationshipID, err := params.PathInt64(request, URIPathVariableRelationshipID)
 	if err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "relationship id is malformed", response)
 		return

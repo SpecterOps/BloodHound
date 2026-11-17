@@ -1,0 +1,36 @@
+{
+    "$schema": "../../node_modules/oxlint/configuration_schema.json",
+    "extends": ["../../tools/oxc/configs/react.json"],
+    "plugins": [],
+    "categories": {
+        "correctness": "off",
+        "suspicious": "off",
+        "pedantic": "off",
+        "perf": "off",
+        "style": "off",
+        "restriction": "off",
+        "nursery": "off"
+    },
+    "env": {
+        "builtin": true,
+        "browser": true
+    },
+    "settings": {
+        "react": {
+            "version": "18.2.0"
+        }
+    },
+    "jsPlugins": [
+        {
+            "name": "refresh-compat",
+            "specifier": "../../tools/oxc/plugins/refresh-compat.cjs"
+        }
+    ],
+    "rules": {
+        "react-compat/no-unescaped-entities": [2],
+        "refresh-compat/only-export-components": [1],
+        "typescript/ban-ts-comment": "error",
+        "typescript/no-explicit-any": "error",
+        "a11y-compat/no-autofocus": [2]
+    }
+}

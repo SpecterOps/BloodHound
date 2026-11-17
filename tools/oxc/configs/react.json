@@ -1,0 +1,162 @@
+{
+    "$schema": "../../../node_modules/oxlint/configuration_schema.json",
+    "extends": ["./base.json"],
+    "plugins": [],
+    "jsPlugins": [
+        {
+            "name": "react-compat",
+            "specifier": "../plugins/react-compat.cjs"
+        },
+        {
+            "name": "hooks-compat",
+            "specifier": "../plugins/hooks-compat.cjs"
+        },
+        {
+            "name": "a11y-compat",
+            "specifier": "../plugins/a11y-compat.cjs"
+        }
+    ],
+    "rules": {
+        "react-compat/display-name": [2],
+        "react-compat/jsx-key": [2],
+        "react-compat/jsx-no-comment-textnodes": [2],
+        "react-compat/jsx-no-duplicate-props": [2],
+        "react-compat/jsx-no-target-blank": [2],
+        "react-compat/jsx-no-undef": [2],
+        "react-compat/jsx-uses-vars": [2],
+        "react-compat/no-children-prop": [2],
+        "react-compat/no-danger-with-children": [2],
+        "react-compat/no-deprecated": [2],
+        "react-compat/no-direct-mutation-state": [2],
+        "react-compat/no-find-dom-node": [2],
+        "react-compat/no-is-mounted": [2],
+        "react-compat/no-render-return-value": [2],
+        "react-compat/no-string-refs": [2],
+        "react-compat/no-unknown-property": [2],
+        "react-compat/require-render-return": [2],
+        "hooks-compat/rules-of-hooks": [2],
+        "hooks-compat/exhaustive-deps": [1],
+        "a11y-compat/alt-text": [2],
+        "a11y-compat/anchor-has-content": [2],
+        "a11y-compat/anchor-is-valid": [2],
+        "a11y-compat/aria-activedescendant-has-tabindex": [2],
+        "a11y-compat/aria-props": [2],
+        "a11y-compat/aria-proptypes": [2],
+        "a11y-compat/aria-role": [2],
+        "a11y-compat/aria-unsupported-elements": [2],
+        "a11y-compat/autocomplete-valid": [2],
+        "a11y-compat/click-events-have-key-events": [2],
+        "a11y-compat/heading-has-content": [2],
+        "a11y-compat/html-has-lang": [2],
+        "a11y-compat/iframe-has-title": [2],
+        "a11y-compat/img-redundant-alt": [2],
+        "a11y-compat/interactive-supports-focus": [
+            2,
+            {
+                "tabbable": [
+                    "button",
+                    "checkbox",
+                    "link",
+                    "searchbox",
+                    "spinbutton",
+                    "switch",
+                    "textbox"
+                ]
+            }
+        ],
+        "a11y-compat/label-has-associated-control": [2],
+        "a11y-compat/media-has-caption": [2],
+        "a11y-compat/mouse-events-have-key-events": [2],
+        "a11y-compat/no-access-key": [2],
+        "a11y-compat/no-distracting-elements": [2],
+        "a11y-compat/no-interactive-element-to-noninteractive-role": [
+            2,
+            {
+                "tr": ["none", "presentation"],
+                "canvas": ["img"]
+            }
+        ],
+        "a11y-compat/no-noninteractive-element-interactions": [
+            2,
+            {
+                "handlers": [
+                    "onClick",
+                    "onError",
+                    "onLoad",
+                    "onMouseDown",
+                    "onMouseUp",
+                    "onKeyPress",
+                    "onKeyDown",
+                    "onKeyUp"
+                ],
+                "alert": ["onKeyUp", "onKeyDown", "onKeyPress"],
+                "body": ["onError", "onLoad"],
+                "dialog": ["onKeyUp", "onKeyDown", "onKeyPress"],
+                "iframe": ["onError", "onLoad"],
+                "img": ["onError", "onLoad"]
+            }
+        ],
+        "a11y-compat/no-noninteractive-element-to-interactive-role": [
+            2,
+            {
+                "ul": [
+                    "listbox",
+                    "menu",
+                    "menubar",
+                    "radiogroup",
+                    "tablist",
+                    "tree",
+                    "treegrid"
+                ],
+                "ol": [
+                    "listbox",
+                    "menu",
+                    "menubar",
+                    "radiogroup",
+                    "tablist",
+                    "tree",
+                    "treegrid"
+                ],
+                "li": [
+                    "menuitem",
+                    "menuitemradio",
+                    "menuitemcheckbox",
+                    "option",
+                    "row",
+                    "tab",
+                    "treeitem"
+                ],
+                "table": ["grid"],
+                "td": ["gridcell"],
+                "fieldset": ["radiogroup", "presentation"]
+            }
+        ],
+        "a11y-compat/no-noninteractive-tabindex": [
+            2,
+            {
+                "tags": [],
+                "roles": ["tabpanel"],
+                "allowExpressionValues": true
+            }
+        ],
+        "a11y-compat/no-redundant-roles": [2],
+        "a11y-compat/no-static-element-interactions": [
+            2,
+            {
+                "allowExpressionValues": true,
+                "handlers": [
+                    "onClick",
+                    "onMouseDown",
+                    "onMouseUp",
+                    "onKeyPress",
+                    "onKeyDown",
+                    "onKeyUp"
+                ]
+            }
+        ],
+        "a11y-compat/role-has-required-aria-props": [2],
+        "a11y-compat/role-supports-aria-props": [2],
+        "a11y-compat/scope": [2],
+        "a11y-compat/tabindex-no-positive": [2]
+    }
+}

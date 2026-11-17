@@ -14,8 +14,6 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, CircularProgress } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import {
     FileUploadDialog,
     GenericErrorBoundaryFallback,
@@ -25,6 +23,7 @@ import {
     useKeyboardShortcutsDialogContext,
     useQuickUploadEnabled,
 } from 'bh-shared-ui';
+import { LoadingSpinner } from 'doodle-ui';
 import React, { Suspense, useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Route, Routes } from 'react-router-dom';
@@ -35,17 +34,8 @@ import { fullyAuthenticatedSelector } from 'src/ducks/auth/authSlice';
 import { fetchAssetGroups } from 'src/ducks/global/actions';
 import { ROUTES } from 'src/routes';
 import { useAppDispatch, useAppSelector } from 'src/store';
-const useStyles = makeStyles({
-    content: {
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        minHeight: '100%',
-    },
-});
 
 const Content: React.FC = () => {
-    const classes = useStyles();
     const dispatch = useAppDispatch();
     const authState = useAppSelector((state) => state.auth);
     const { showFileIngestDialog, setShowFileIngestDialog } = useFileUploadDialogContext();
@@ -78,23 +68,9 @@ const Content: React.FC = () => {
     });
 
     return (
-        <Box component='main' className={classes.content}>
+        <main className='relative w-full h-full min-h-full'>
             <ErrorBoundary fallbackRender={GenericErrorBoundaryFallback}>
-                <Suspense
-                    fallback={
-                        <Box
-                            position='absolute'
-                            top='0'
-                            left='0'
-                            right='0'
-                            bottom='0'
-                            display='flex'
-                            alignItems='center'
-                            justifyContent='center'
-                            zIndex={1000}>
-                            <CircularProgress color='primary' size={80} />
-                        </Box>
-                    }>
+                <Suspense fallback={<LoadingSpinner variant='overlay' spinnerClassName='size-20' />}>
                     <Routes>
                         {ROUTES.map((route) => {
                             return route.authenticationRequired ? (
@@ -126,7 +102,7 @@ const Content: React.FC = () => {
                     )}
                 </Suspense>
             </ErrorBoundary>
-        </Box>
+        </main>
     );
 };
 

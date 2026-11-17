@@ -48,6 +48,11 @@ describe('exportGraphData', () => {
         );
     });
 
+    it('generates an extension-free base name for exporters that add their own extension', () => {
+        const exportedAt = DateTime.fromISO('2026-10-27T14:05:09');
+        expect(exportUtils.getGraphExportFileBaseName(exportedAt)).toBe('bh-graph-2026-10-27_14-05-09');
+    });
+
     it('uses the default filename generator when exporting JSON', () => {
         const createObjectUrlSpy = vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:mock');
 

@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -66,7 +67,7 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostSyncLAPSPassword", db, syncLAPSPasswordTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	for _, domain := range domainNodes {
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -98,11 +99,11 @@ func PostSyncLAPSPassword(ctx context.Context, db graph.Database, localGroupData
 				return nil
 			}
 		}); err != nil {
-			return sink.Stats(), err
+			return sink.Stats(), errors.Join(err, sink.Abort())
 		}
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 var dcSyncPostProcessedEdges = graph.Kinds{
@@ -136,7 +137,7 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostDCSync", db, dcSyncTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	for _, domain := range domainNodes {
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -163,11 +164,11 @@ func PostDCSync(ctx context.Context, db graph.Database, localGroupData *LocalGro
 
 			return nil
 		}); err != nil {
-			return sink.Stats(), err
+			return sink.Stats(), errors.Join(err, sink.Abort())
 		}
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 var protectAdminGroupsPostProcessedEdges = graph.Kinds{
@@ -201,7 +202,7 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.Atomi
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostProtectAdminGroups", db, protectAdminGroupsTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	for _, domain := range domainNodes {
 		if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
@@ -230,11 +231,11 @@ func PostProtectAdminGroups(ctx context.Context, db graph.Database) (*post.Atomi
 				return nil
 			}
 		}); err != nil {
-			return sink.Stats(), err
+			return sink.Stats(), errors.Join(err, sink.Abort())
 		}
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 var hasTrustKeysPostProcessedEdges = graph.Kinds{
@@ -268,7 +269,7 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*post.AtomicPostP
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostHasTrustKeys", db, hasTrustKeysTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		for _, domain := range domainNodes {
@@ -320,10 +321,10 @@ func PostHasTrustKeys(ctx context.Context, db graph.Database) (*post.AtomicPostP
 
 		return nil
 	}); err != nil {
-		return sink.Stats(), fmt.Errorf("error creating HasTrustKeys edges: %w", err)
+		return sink.Stats(), errors.Join(fmt.Errorf("error creating HasTrustKeys edges: %w", err), sink.Abort())
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 // FetchNodeIDsByKind fetches a bitmap of node IDs where each node has at least one kind assignment
@@ -502,7 +503,8 @@ func getLAPSComputersForDomain(tx graph.Transaction, domain *graph.Node) ([]grap
 			return query.And(
 				query.Kind(query.Node(), ad.Computer),
 				query.Equals(
-					query.Property(query.Node(), ad.HasLAPS.String()), true),
+					query.Property(query.Node(), ad.HasLAPS.String()), true,
+				),
 				query.Equals(query.Property(query.Node(), ad.DomainSID.String()), domainSid),
 			)
 		}))
@@ -531,7 +533,8 @@ func getAdminSDHolderProtected(tx graph.Transaction, domain *graph.Node) ([]grap
 			return query.And(
 				query.KindIn(query.Node(), ad.Computer, ad.User, ad.Group),
 				query.Equals(
-					query.Property(query.Node(), ad.AdminSDHolderProtected.String()), true),
+					query.Property(query.Node(), ad.AdminSDHolderProtected.String()), true,
+				),
 				query.Equals(query.Property(query.Node(), ad.DomainSID.String()), domainSid),
 			)
 		}))

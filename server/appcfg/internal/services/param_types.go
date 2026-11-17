@@ -18,7 +18,13 @@
 
 package services
 
-import "github.com/specterops/bloodhound/packages/go/duration"
+import (
+	"time"
+
+	"github.com/specterops/bloodhound/packages/go/duration"
+
+	"github.com/specterops/dawgs/drivers/neo4j"
+)
 
 // # Param keys
 
@@ -152,6 +158,17 @@ type CustomSubClaimKeyParameter struct {
 	ClaimKey string `json:"claim_key"`
 }
 
+const (
+	defaultSessionTTLHours                         = 8
+	defaultAGTDAWGsWorkerLimit                     = 2
+	maxAGTDAWGsWorkerLimit                         = 6
+	defaultAGTExpansionWorkerLimit                 = 3
+	defaultAGTSelectorWorkerLimit                  = 7
+	defaultAPITokenExpirationPeriod                = 90
+	maxAPITokenExpirationPeriod                    = 365
+	defaultGraphStorageOptimizationMinIntervalSecs = 86400
+)
+
 // # Param definitions
 
 //   - AllowAPIAccess: determines whether http API get/set operations
@@ -213,73 +230,181 @@ var (
 		PasswordExpirationWindow: {
 			AllowAPIAccess: true,
 			GetType:        func() any { return PasswordExpirationParameter{} },
+			HydrationRules: ParamTypeHydrationRules[PasswordExpirationParameter]{
+				Default: PasswordExpirationParameter{
+					Duration: duration.ISODuration(90 * 24 * time.Hour),
+				},
+			},
 		},
 		Neo4jConfigs: {
 			AllowAPIAccess: true,
 			GetType:        func() any { return Neo4jParameter{} },
+			HydrationRules: ParamTypeHydrationRules[Neo4jParameter]{
+				Default: Neo4jParameter{
+					WriteFlushSize: neo4j.DefaultWriteFlushSize,
+					BatchWriteSize: neo4j.DefaultBatchWriteSize,
+				},
+			},
 		},
 		PruneTTL: {
 			AllowAPIAccess: true,
 			GetType:        func() any { return PruneTTLParameter{} },
+			HydrationRules: ParamTypeHydrationRules[PruneTTLParameter]{
+				Default: PruneTTLParameter{
+					BaseTTL:           duration.ISODuration(7 * 24 * time.Hour),
+					HasSessionEdgeTTL: duration.ISODuration(3 * 24 * time.Hour),
+				},
+			},
 		},
 		CitrixRDPSupportKey: {
 			AllowAPIAccess: true,
 			GetType:        func() any { return CitrixRDPSupportParameter{} },
+			HydrationRules: ParamTypeHydrationRules[CitrixRDPSupportParameter]{
+				Default: CitrixRDPSupportParameter{},
+			},
 		},
 		ReconciliationKey: {
 			AllowAPIAccess: true,
 			GetType:        func() any { return ReconciliationParameter{} },
+			HydrationRules: ParamTypeHydrationRules[ReconciliationParameter]{
+				Default: ReconciliationParameter{Enabled: true},
+			},
 		},
 		ScheduledAnalysis: {
 			AllowAPIAccess: true,
 			GetType:        func() any { return ScheduledAnalysisParameter{} },
+			HydrationRules: ParamTypeHydrationRules[ScheduledAnalysisParameter]{
+				Default: ScheduledAnalysisParameter{Enabled: false, RRule: ""},
+			},
 		},
 		ClientMetricsKey: {
 			AllowAPIAccess: true,
 			GetType:        func() any { return ClientMetricsParameter{} },
+			HydrationRules: ParamTypeHydrationRules[ClientMetricsParameter]{
+				Default: ClientMetricsParameter{Enabled: false},
+			},
 		},
 		APITokenExpiration: {
 			AllowAPIAccess: true,
 			GetType:        func() any { return APITokenExpirationParameter{} },
+			HydrationRules: ParamTypeHydrationRules[APITokenExpirationParameter]{
+				Default: APITokenExpirationParameter{Enabled: false, ExpirationPeriod: defaultAPITokenExpirationPeriod},
+				Normalize: func(parameter *APITokenExpirationParameter) {
+					if parameter.ExpirationPeriod <= 0 || parameter.ExpirationPeriod > maxAPITokenExpirationPeriod {
+						parameter.ExpirationPeriod = defaultAPITokenExpirationPeriod
+					}
+				},
+			},
 		},
 		TrustedProxiesConfig: {
 			GetType: func() any { return TrustedProxiesParameters{} },
+			HydrationRules: ParamTypeHydrationRules[TrustedProxiesParameters]{
+				Default: TrustedProxiesParameters{TrustedProxies: 0},
+			},
 		},
 		FedEULACustomTextKey: {
 			GetType: func() any { return FedEULACustomTextParameter{} },
+			HydrationRules: ParamTypeHydrationRules[FedEULACustomTextParameter]{
+				Default: FedEULACustomTextParameter{CustomText: ""},
+			},
 		},
 		TierManagementParameterKey: {
 			GetType: func() any { return TieringParameter{} },
+			HydrationRules: ParamTypeHydrationRules[TieringParameter]{
+				Default: TieringParameter{},
+			},
 		},
 		SessionTTLHours: {
 			GetType: func() any { return SessionTTLHoursParameter{} },
+			HydrationRules: ParamTypeHydrationRules[SessionTTLHoursParameter]{
+				Default: SessionTTLHoursParameter{Hours: defaultSessionTTLHours},
+				Normalize: func(parameter *SessionTTLHoursParameter) {
+					if parameter.Hours <= 0 {
+						parameter.Hours = defaultSessionTTLHours
+					}
+				},
+			},
 		},
 		StaleClientUpdatedLogicKey: {
 			GetType: func() any { return StaleClientUpdatedLogicParameter{} },
+			HydrationRules: ParamTypeHydrationRules[StaleClientUpdatedLogicParameter]{
+				Default: StaleClientUpdatedLogicParameter{Enabled: false},
+			},
 		},
 		RetainIngestedFilesKey: {
 			GetType: func() any { return RetainIngestedFilesParameter{} },
+			HydrationRules: ParamTypeHydrationRules[RetainIngestedFilesParameter]{
+				Default: RetainIngestedFilesParameter{Enabled: false},
+			},
 		},
 		AGTParameterKey: {
 			GetType: func() any { return AGTParameter{} },
+			HydrationRules: ParamTypeHydrationRules[AGTParameter]{
+				Default: AGTParameter{
+					DAWGsWorkerLimit:     defaultAGTDAWGsWorkerLimit,
+					ExpansionWorkerLimit: defaultAGTExpansionWorkerLimit,
+					SelectorWorkerLimit:  defaultAGTSelectorWorkerLimit,
+				},
+				Normalize: func(parameter *AGTParameter) {
+					if parameter.DAWGsWorkerLimit <= 0 || parameter.DAWGsWorkerLimit > maxAGTDAWGsWorkerLimit {
+						parameter.DAWGsWorkerLimit = maxAGTDAWGsWorkerLimit
+					}
+					if parameter.SelectorWorkerLimit <= 0 {
+						parameter.SelectorWorkerLimit = defaultAGTSelectorWorkerLimit
+					}
+					if parameter.ExpansionWorkerLimit <= 0 {
+						parameter.ExpansionWorkerLimit = defaultAGTExpansionWorkerLimit
+					}
+				},
+			},
 		},
 		TimeoutLimit: {
 			GetType: func() any { return TimeoutLimitParameter{} },
+			HydrationRules: ParamTypeHydrationRules[TimeoutLimitParameter]{
+				Default: TimeoutLimitParameter{Enabled: true},
+			},
 		},
 		APITokens: {
 			GetType: func() any { return APITokensParameter{} },
+			HydrationRules: ParamTypeHydrationRules[APITokensParameter]{
+				Default: APITokensParameter{Enabled: true},
+			},
 		},
 		EnvironmentTargetedAccessControlKey: {
 			GetType: func() any { return EnvironmentTargetedAccessControlParameter{} },
+			HydrationRules: ParamTypeHydrationRules[EnvironmentTargetedAccessControlParameter]{
+				Default: EnvironmentTargetedAccessControlParameter{Enabled: false},
+			},
 		},
 		SupportAccountProvisioningKey: {
 			GetType: func() any { return SupportAccountProvisioningParameter{} },
+			HydrationRules: ParamTypeHydrationRules[SupportAccountProvisioningParameter]{
+				Default: SupportAccountProvisioningParameter{
+					Enabled:    true,
+					SessionTTL: duration.ISODuration(2 * time.Hour),
+				},
+			},
 		},
 		GraphStorageOptimizationKey: {
 			GetType: func() any { return GraphStorageOptimizationParameter{} },
+			HydrationRules: ParamTypeHydrationRules[GraphStorageOptimizationParameter]{
+				Default: GraphStorageOptimizationParameter{
+					AfterBoot:          false,
+					AfterAnalysis:      false,
+					MinIntervalSeconds: defaultGraphStorageOptimizationMinIntervalSecs,
+				},
+				Normalize: func(parameter *GraphStorageOptimizationParameter) {
+					if parameter.MinIntervalSeconds < 0 {
+						parameter.MinIntervalSeconds = defaultGraphStorageOptimizationMinIntervalSecs
+					}
+				},
+			},
 		},
 		CustomSubClaimKey: {
 			GetType: func() any { return CustomSubClaimKeyParameter{} },
+			HydrationRules: ParamTypeHydrationRules[CustomSubClaimKeyParameter]{
+				Default: CustomSubClaimKeyParameter{ClaimKey: ""},
+			},
 		},
 	}
 )

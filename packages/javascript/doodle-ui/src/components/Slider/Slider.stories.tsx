@@ -61,7 +61,10 @@ const meta: Meta<typeof Slider> = {
             description: 'Accessible label applied to the slider thumb.',
             table: { type: { summary: 'string' } },
         },
-        step: { table: { disable: true } }, // TODO: BED-9872
+        step: { control: 'number', description: 'Keyboard and drag increment.' },
+        ticks: { control: 'object', description: 'Values at which to show labeled dot ticks.' },
+        showValue: { control: 'boolean', description: 'Show a value field that commits on blur or Enter.' },
+        valueSuffix: { control: 'text', description: 'Suffix for tick labels and the value field.' },
     },
     args: {
         min: 0,
@@ -146,4 +149,16 @@ export const Disabled: Story = {
             <Slider {...args} />
         </div>
     ),
+};
+
+/** Labeled ticks do not constrain the slider's step. Use the theme toolbar to switch modes. */
+export const WithTicks: Story = {
+    args: { value: 50, ticks: [0, 25, 50, 75, 100] },
+    render: renderInteractive,
+};
+
+/** Edit the field and press Enter or leave the field to update the slider. Escape discards edits. */
+export const WithTicksAndValues: Story = {
+    args: { value: 50, ticks: [0, 25, 50, 75, 100], showValue: true },
+    render: renderInteractive,
 };

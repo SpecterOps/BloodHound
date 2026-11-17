@@ -31,17 +31,15 @@ import (
 
 func TestCreateAndGetAllIngestJobs(t *testing.T) {
 	var (
-		testCtx       = context.Background()
-		dbInst, roles = initAndGetRoles(t)
-		seedUsers     = []model.User{
+		testCtx   = context.Background()
+		dbInst    = integration.SetupDB(t)
+		seedUsers = []model.User{
 			{
-				Roles:         roles,
 				FirstName:     null.StringFrom("First"),
 				LastName:      null.StringFrom("Last"),
 				EmailAddress:  null.StringFrom(userPrincipal),
 				PrincipalName: userPrincipal,
 			}, {
-				Roles:         roles,
 				FirstName:     null.StringFrom("First2"),
 				LastName:      null.StringFrom("Last2"),
 				EmailAddress:  null.StringFrom(user2Principal),

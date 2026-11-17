@@ -19,6 +19,7 @@ import { DateTime } from 'luxon';
 import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '../Button';
+import { Dialog, DialogContent, DialogDescription, DialogPortal, DialogTitle, DialogTrigger } from '../Dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../Form';
 import { Input, InputProps } from '../Input';
 import { DatePicker } from './DatePicker';
@@ -138,4 +139,21 @@ export const SingleMasked = () => {
             </form>
         </Form>
     );
+};
+
+export const InDialog: Story = {
+    render: () => (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button>Choose a date</Button>
+            </DialogTrigger>
+            <DialogPortal>
+                <DialogContent>
+                    <DialogTitle>Choose a date</DialogTitle>
+                    <DialogDescription>Select a date from the calendar.</DialogDescription>
+                    <BasicSingle />
+                </DialogContent>
+            </DialogPortal>
+        </Dialog>
+    ),
 };

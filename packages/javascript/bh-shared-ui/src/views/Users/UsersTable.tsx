@@ -106,7 +106,7 @@ const UsersTable: FC<UsersTableProps> = ({
 
         return [
             // This linting rule is disabled because the elements in this array do not require a key prop.
-            /* eslint-disable react/jsx-key */
+            /* oxlint-disable react-compat/jsx-key */
             user.principal_name,
             <>
                 {user.email_address}
@@ -148,7 +148,7 @@ const UsersTable: FC<UsersTableProps> = ({
                 onDisableUserMfa={() => setDisable2FADialogOpen(true)}
                 index={index}
             />,
-            /* eslint-enable react/jsx-key */
+            /* oxlint-enable react-compat/jsx-key */
         ];
     });
 

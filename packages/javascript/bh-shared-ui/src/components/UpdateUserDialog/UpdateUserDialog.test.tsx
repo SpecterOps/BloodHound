@@ -175,11 +175,9 @@ describe('UpdateUserDialog', () => {
     it('should render an update user form', async () => {
         updateDialogInitSetup();
 
-        const editUserText = await waitFor(() => screen.getByText('Edit User'));
-
-        expect(editUserText).toBeInTheDocument();
-
         expect(await screen.findByLabelText('Email Address')).toBeInTheDocument();
+
+        expect(screen.getByRole('heading', { name: 'Edit User' })).toBeInTheDocument();
 
         expect(await screen.findByLabelText('Principal Name')).toBeInTheDocument();
 

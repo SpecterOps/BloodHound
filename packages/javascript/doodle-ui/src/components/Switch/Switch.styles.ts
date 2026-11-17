@@ -13,17 +13,21 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { cva } from 'class-variance-authority';
+import { cn } from '../utils';
 
-export const switchWrapperStyles = cva('inline-flex items-center rounded-sm py-1 px-0.5 gap-1 focus-within:focus-ring');
+export const switchWrapperStyles = 'inline-flex items-center rounded-sm py-1 px-0.5 gap-1 focus-within:focus-ring';
 
-export const switchRootStyles = cva(
-    'group flex h-3 w-6 items-center rounded-3xl transition-all ease-in-out bg-[color:var(--switch-fill)] data-[state=checked]:bg-primary disabled:data-[state=checked]:bg-[color:var(--switch-disabled-fill)] disabled:cursor-not-allowed disabled:bg-[color:var(--switch-disabled-fill)] focus:outline-none'
+export const switchRootStyles = cn(
+    'group flex h-3 w-6 items-center rounded-3xl transition-all ease-in-out bg-[color:var(--switch-fill)]',
+    'data-[state=checked]:bg-primary',
+    'disabled:data-[state=checked]:bg-[color:var(--switch-disabled-fill)] disabled:cursor-not-allowed disabled:bg-[color:var(--switch-disabled-fill)]',
+    'focus:outline-none'
 );
 
-export const switchThumbStyles = cva(
-    'h-2.5 w-2.5 translate-x-px rounded-full shadow-outer-1 transition-all ease-in-out bg-[color:var(--switch-thumb-fill)] data-[state=checked]:translate-x-[13px]'
-);
+export const switchThumbStyles =
+    'h-2.5 w-2.5 translate-x-px rounded-full shadow-outer-1 transition-all ease-in-out bg-[color:var(--switch-thumb-fill)] data-[state=checked]:translate-x-[13px]';
 
 export const LabelVariants = cva('text-base text-main transition-all ease-in-out px-0.5', {
     variants: {

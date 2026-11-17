@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"
 )
@@ -111,7 +111,6 @@ func (s NodeView) JSONView() ([]byte, error) {
 func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Request) {
 	var (
 		ctx            = request.Context()
-		nodeIDRaw      = mux.Vars(request)[URIPathVariableNodeID]
 		includeInfoRaw = request.URL.Query().Get("include-info")
 		includeInfo    bool
 		err            error
@@ -124,7 +123,7 @@ func (s Handlers) GetNodeByID(response http.ResponseWriter, request *http.Reques
 		}
 	}
 
-	if nodeID, err := strconv.ParseInt(nodeIDRaw, 10, 64); err != nil {
+	if nodeID, err := params.PathInt64(request, URIPathVariableNodeID); err != nil {
 		responses.WriteError(ctx, http.StatusBadRequest, "node id is malformed", response)
 	} else {
 		node, err := s.graphDB.GetNode(ctx, nodeID, includeInfo)

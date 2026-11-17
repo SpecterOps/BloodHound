@@ -19,6 +19,25 @@ import { EntityField } from '../../utils';
 import { Field, ObjectInfoFields, exclusionList } from './fragments';
 
 describe('Field', () => {
+    it.each([
+        { description: 'single-item', values: ['HOST/one'] },
+        { description: 'multiple-item', values: ['HOST/one', 'HOST/two'] },
+    ])('renders $description lists with one label and a title for each value', ({ values }) => {
+        render(<Field label='Service Principal Names:' value={values} />);
+
+        expect(screen.getAllByText(/^Service Principal Names:?$/)).toHaveLength(1);
+        values.forEach((value) => {
+            const element = screen.getByText(value);
+            expect(element).toHaveAttribute('title', value);
+        });
+    });
+
+    it('preserves rich labels', () => {
+        render(<Field label={<span>Rich label</span>} value='value' />);
+        expect(screen.getByText('Rich label')).toBeInTheDocument();
+        expect(screen.getByText('value')).toBeInTheDocument();
+    });
+
     it('should render a Field when the provided value is false', () => {
         render(<Field label='Test Field (Boolean)' value={false} keyprop='test-field-boolean' />);
         expect(screen.getByText('FALSE')).toBeInTheDocument();

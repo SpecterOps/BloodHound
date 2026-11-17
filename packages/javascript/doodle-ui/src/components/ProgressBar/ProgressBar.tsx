@@ -36,7 +36,7 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(({ classN
         min={0}
         max={100}
         className={cnWithState('w-full', className)}>
-        <ProgressPrimitive.Track className='relative h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-gray-700'>
+        <ProgressPrimitive.Track className='relative h-2 w-full overflow-hidden bg-neutral-200 dark:bg-gray-700'>
             <ProgressPrimitive.Indicator className='h-full bg-primary motion-safe:transition-[width] data-[indeterminate]:w-1/3 motion-safe:data-[indeterminate]:animate-progress-indeterminate' />
         </ProgressPrimitive.Track>
     </ProgressPrimitive.Root>

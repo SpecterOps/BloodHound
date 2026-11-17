@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import { forwardRef } from 'react';
 
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
@@ -21,19 +22,23 @@ import { SelectValueProps } from '@radix-ui/react-select';
 import { Slot } from '@radix-ui/react-slot';
 import { Select, SelectContent, SelectItem, SelectPortal, SelectTrigger, SelectValue } from '../Select';
 import { cn } from '../utils';
+import {
+    paginationContentClasses,
+    paginationControlsClasses,
+    paginationDisabledControlClasses,
+    paginationEllipsisClasses,
+    paginationLinkClasses,
+    paginationNavClasses,
+    paginationPageSizeClasses,
+} from './Pagination.styles';
 
 const PaginationNav = ({ className, ...props }: React.ComponentProps<'nav'>) => (
-    <nav
-        role='navigation'
-        aria-label='pagination'
-        className={cn('mx-auto flex w-full justify-center', className)}
-        {...props}
-    />
+    <nav role='navigation' aria-label='pagination' className={cn(paginationNavClasses, className)} {...props} />
 );
 PaginationNav.displayName = 'PaginationNav';
 
 const PaginationContent = forwardRef<HTMLDivElement, React.ComponentProps<'div'>>(({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex flex-row items-center gap-2 dark:text-white', className)} {...props} />
+    <div ref={ref} className={cn(paginationContentClasses, className)} {...props} />
 ));
 PaginationContent.displayName = 'PaginationContent';
 
@@ -53,10 +58,7 @@ const PaginationLink = ({ className, isActive, asChild, ...props }: PaginationLi
     return (
         <Comp
             aria-current={isActive ? 'page' : undefined}
-            className={cn(
-                'inline-flex min-h-9 min-w-9 items-center justify-center rounded-md focus:outline-none focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50',
-                className
-            )}
+            className={cn(paginationLinkClasses, className)}
             {...props}
         />
     );
@@ -82,7 +84,7 @@ const PaginationNext = ({ onClick, className, ...props }: React.ComponentProps<t
 PaginationNext.displayName = 'PaginationNext';
 
 const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<'span'>) => (
-    <span aria-hidden className={cn('flex h-9 w-9 items-center justify-center', className)} {...props}></span>
+    <span aria-hidden className={cn(paginationEllipsisClasses, className)} {...props}></span>
 );
 PaginationEllipsis.displayName = 'PaginationEllipsis';
 
@@ -154,7 +156,7 @@ const Pagination: React.FC<PaginationProps> = (props) => {
     return (
         <PaginationNav className={cn('text-sm tabular-nums', className)} {...rest}>
             <PaginationContent>
-                <PaginationItem className='flex justify-center items-center gap-2 px-1 py-2 mx-2'>
+                <PaginationItem className={paginationPageSizeClasses}>
                     Rows per page:
                     <PaginationSelect
                         options={selectItems}
@@ -162,19 +164,19 @@ const Pagination: React.FC<PaginationProps> = (props) => {
                         onValueChange={handleValueChange}
                     />
                 </PaginationItem>
-                <PaginationItem className='px-1 py-2 mx-2'>
+                <PaginationItem className={paginationControlsClasses}>
                     {lowerBoundary} - {upperBoundary} of {count}
                 </PaginationItem>
                 <PaginationItem>
                     <PaginationPrevious
                         onClick={handlePageChange(-1)}
                         disabled={lowerBoundary <= 1}
-                        className='disabled:text-gray-400 px-1 py-2 mx-2'
+                        className={paginationDisabledControlClasses}
                     />
                     <PaginationNext
                         onClick={handlePageChange(1)}
                         disabled={upperBoundary >= count}
-                        className='disabled:text-gray-400 px-1 py-2 mx-2'
+                        className={paginationDisabledControlClasses}
                     />
                 </PaginationItem>
             </PaginationContent>

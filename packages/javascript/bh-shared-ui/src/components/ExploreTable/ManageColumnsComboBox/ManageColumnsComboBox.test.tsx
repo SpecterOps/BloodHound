@@ -24,7 +24,7 @@ import { ManageColumnsComboBox, ManageColumnsComboBoxOption } from './ManageColu
 vi.mock('@fortawesome/react-fontawesome', () => ({
     FontAwesomeIcon: vi.fn(({ icon, onClick }: any) => {
         const iconName = typeof icon === 'string' ? icon : icon.iconName;
-        // eslint-disable-next-line
+        // oxlint-disable-next-line
         return <span onClick={onClick}>{iconName}</span>;
     }),
 }));
@@ -144,6 +144,19 @@ describe('ManageColumnsComboBox', () => {
         // Unselected non-pinned columns are also listed
         expect(screen.getByText('Object ID')).toBeInTheDocument();
         expect(screen.getByText('Custom Column 1')).toBeInTheDocument();
+    });
+
+    it('toggles a column only once when its checkbox label is clicked', async () => {
+        const { user, onChange } = setup();
+        await user.click(screen.getByRole('button', { name: /columns/i }));
+        onChange.mockClear();
+
+        await user.click(screen.getByText('Kind', { exact: true }));
+
+        expect(onChange).toHaveBeenCalledTimes(1);
+        expect(onChange).toHaveBeenCalledWith(
+            allColumns.filter((column) => defaultSelectedColumns[column.id] && column.id !== 'kind')
+        );
     });
 
     it('filters unselected columns when typing in the filter input', async () => {

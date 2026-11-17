@@ -14,5 +14,6 @@
     "go.useLanguageServer": true,
     "gopls": {
         "ui.semanticTokens": true
-    }
+    },
+    "eslint.enable": false
 }

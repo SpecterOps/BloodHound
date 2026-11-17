@@ -14,14 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect } from 'vitest';
 import { RadioGroup, RadioItem } from './RadioGroup';
-
-expect.extend(matchers);
 
 // The Radix UI radio <button> element is not programmatically linked to its adjacent <label>
 // via for/id, so accessible-name queries like getByRole('radio', { name: '...' }) do not work.

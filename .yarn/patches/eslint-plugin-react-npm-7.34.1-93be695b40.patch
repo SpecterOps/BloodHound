@@ -1,0 +1,15 @@
+diff --git a/lib/util/message.js b/lib/util/message.js
+index 0c9962a4de876af69a7a9d22686f88b9a7648da4..dc4e30205b4bfb7299601d44f80003f2709c1940 100644
+--- a/lib/util/message.js
++++ b/lib/util/message.js
+@@ -1,8 +1,6 @@
+ 'use strict';
+ 
+-const semver = require('semver');
+-const eslintPkg = require('eslint/package.json');
+-
++// Oxlint supports message IDs. Avoid reading an absent ESLint engine's version.
+ module.exports = function getMessageData(messageId, message) {
+-  return messageId && semver.satisfies(eslintPkg.version, '>= 4.15') ? { messageId } : { message };
++  return messageId ? { messageId } : { message };
+ };

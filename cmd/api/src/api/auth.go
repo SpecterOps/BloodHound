@@ -143,7 +143,6 @@ func (s authExtensions) jwtKeyFunc(_ *jwt.Token) (any, error) {
 
 type Authenticator interface {
 	LoginWithSecret(ctx context.Context, loginRequest LoginRequest) (LoginDetails, error)
-	Logout(ctx context.Context, userSession model.UserSession)
 	ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error
 	ValidateRequestSignature(tokenID uuid.UUID, request *http.Request, serverTime time.Time) (auth.Context, int, error)
 	CreateSession(ctx context.Context, user model.User, authProvider any) (string, error)
@@ -240,10 +239,6 @@ func (s AuthenticatorBase) LoginWithSecret(ctx context.Context, loginRequest Log
 			}, nil
 		}
 	}
-}
-
-func (s AuthenticatorBase) Logout(ctx context.Context, userSession model.UserSession) {
-	s.db.EndUserSession(ctx, userSession)
 }
 
 func (s AuthenticatorBase) ValidateSecret(ctx context.Context, secret string, authSecret model.AuthSecret) error {

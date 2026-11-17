@@ -18,6 +18,7 @@ import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
 import React from 'react';
 import { Label } from '../Label';
 import { cn } from '../utils';
+import { radioItemControlClasses, radioItemIndicatorClasses, radioItemLabelClasses } from './RadioGroup.styles';
 
 interface RadioGroupProps extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> {
     row?: boolean;
@@ -51,19 +52,9 @@ interface RadioGroupItemProps extends React.ComponentPropsWithoutRef<typeof Radi
 
 const RadioItem = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.Item>, RadioGroupItemProps>(
     ({ className, label, value, ...props }, ref) => (
-        <Label className='flex items-center font-normal cursor-pointer has-[:disabled]:cursor-default has-[:disabled]:text-disabled mb-1 mr-4 rounded-md px-1 [&:has(:focus-visible)]:bg-radio-label-focus-fill'>
-            <RadioGroupPrimitive.Item
-                value={value}
-                ref={ref}
-                className={
-                    'w-4 h-4 rounded-full border border-radio-border-default hover:border-radio-border-hover active:border-primary-variant mr-2 relative focus:outline-none focus-visible:focus-ring data-[disabled]:border-radio-disabled-border data-[disabled]:bg-radio-disabled-fill peer'
-                }
-                {...props}>
-                <RadioGroupPrimitive.Indicator
-                    className={cn(
-                        'bg-radio-indicator-fill w-2 h-2 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
-                    )}
-                />
+        <Label className={radioItemLabelClasses}>
+            <RadioGroupPrimitive.Item value={value} ref={ref} className={radioItemControlClasses} {...props}>
+                <RadioGroupPrimitive.Indicator className={radioItemIndicatorClasses} />
             </RadioGroupPrimitive.Item>
             <span className={className}>{label}</span>
         </Label>

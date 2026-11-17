@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* oxlint-disable no-unused-vars */
 // organize-imports-ignore
 import matchers from '@testing-library/jest-dom/matchers';
 import { expect } from 'vitest';

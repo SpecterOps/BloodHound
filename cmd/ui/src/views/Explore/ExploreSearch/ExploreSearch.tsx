@@ -235,7 +235,7 @@ const ExploreSearch: React.FC = () => {
                 <TabPanels
                     tabs={[
                         // This linting rule is disabled because the elements in this array do not require a key prop.
-                        /* eslint-disable react/jsx-key */
+                        /* oxlint-disable react-compat/jsx-key */
                         <NodeSearch nodeSearchState={nodeSearchState} />,
                         <PathfindingSearch
                             pathfindingSearchState={pathfindingSearchState}
@@ -249,7 +249,7 @@ const ExploreSearch: React.FC = () => {
                             setDisableQueryLimit={handleDisableTimeoutChange}
                             onQuerySuccess={handleQuerySuccess}
                         />,
-                        /* eslint-enable react/jsx-key */
+                        /* oxlint-enable react-compat/jsx-key */
                     ]}
                     activeTab={tabMap[activeTab]}
                 />

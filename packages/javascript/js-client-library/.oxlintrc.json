@@ -1,0 +1,23 @@
+{
+    "$schema": "../../../node_modules/oxlint/configuration_schema.json",
+    "extends": ["../../../tools/oxc/configs/base.json"],
+    "plugins": [],
+    "categories": {
+        "correctness": "off",
+        "suspicious": "off",
+        "pedantic": "off",
+        "perf": "off",
+        "style": "off",
+        "restriction": "off",
+        "nursery": "off"
+    },
+    "env": {
+        "builtin": true,
+        "browser": true
+    },
+    "settings": {
+        "react": {
+            "version": "18.2.0"
+        }
+    }
+}

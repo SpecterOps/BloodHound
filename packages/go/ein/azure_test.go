@@ -352,103 +352,75 @@ func TestConvertAzureSubscriptionContributorToRels(t *testing.T) {
 }
 
 func Test_ConvertAzureRoleManagementPolicyAssignment(t *testing.T) {
-	model := models.RoleManagementPolicyAssignment{
-		Id:                                "id-1234",
-		RoleDefinitionId:                  "role-1234",
-		EndUserAssignmentRequiresApproval: true,
-		EndUserAssignmentRequiresCAPAuthenticationContext: false,
-		EndUserAssignmentUserApprovers: []string{
-			"user-approver-1",
-			"user-approver-2",
-		},
-		EndUserAssignmentGroupApprovers: []string{
-			"group-approver-1",
-			"group-approver-2",
-		},
-		EndUserAssignmentRequiresMFA:               false,
-		EndUserAssignmentRequiresJustification:     false,
-		EndUserAssignmentRequiresTicketInformation: false,
-		TenantId: "tenant-1234",
+	for _, testCase := range []struct {
+		name             string
+		requiresApproval bool
+		userApprovers    []string
+		groupApprovers   []string
+	}{
+		{name: "approval disabled", userApprovers: []string{"user-approver"}, groupApprovers: []string{"group-approver"}},
+		{name: "user approvers", requiresApproval: true, userApprovers: []string{"user-approver"}},
+		{name: "group approvers", requiresApproval: true, groupApprovers: []string{"group-approver"}},
+		{name: "user and group approvers", requiresApproval: true, userApprovers: []string{"user-approver"}, groupApprovers: []string{"group-approver"}},
+		{name: "missing approvers", requiresApproval: true},
+		{name: "empty approvers", requiresApproval: true, userApprovers: []string{}, groupApprovers: []string{}},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				policyAssignment = models.RoleManagementPolicyAssignment{
+					RoleDefinitionId:                                  "role-1234",
+					TenantId:                                          "tenant-1234",
+					EndUserAssignmentRequiresApproval:                 testCase.requiresApproval,
+					EndUserAssignmentUserApprovers:                    testCase.userApprovers,
+					EndUserAssignmentGroupApprovers:                   testCase.groupApprovers,
+					EndUserAssignmentRequiresCAPAuthenticationContext: true,
+					EndUserAssignmentRequiresMFA:                      true,
+					EndUserAssignmentRequiresJustification:            true,
+					EndUserAssignmentRequiresTicketInformation:        true,
+				}
+				node, relationships = ein.ConvertAzureRoleManagementPolicyAssignment(policyAssignment)
+			)
+
+			assert.Equal(t, "role-1234@tenant-1234", node.ObjectID)
+			require.Len(t, node.Labels, 1)
+			assert.Equal(t, azure.Role, node.Labels[0])
+			assert.Equal(t, map[string]any{
+				azure.RoleDefinitionId.String():                                  "ROLE-1234",
+				azure.TenantID.String():                                          "TENANT-1234",
+				azure.EndUserAssignmentRequiresApproval.String():                 testCase.requiresApproval,
+				azure.EndUserAssignmentUserApprovers.String():                    testCase.userApprovers,
+				azure.EndUserAssignmentGroupApprovers.String():                   testCase.groupApprovers,
+				azure.EndUserAssignmentRequiresCAPAuthenticationContext.String(): true,
+				azure.EndUserAssignmentRequiresMFA.String():                      true,
+				azure.EndUserAssignmentRequiresJustification.String():            true,
+				azure.EndUserAssignmentRequiresTicketInformation.String():        true,
+			}, node.PropertyMap)
+
+			var expectedApprovers = append(append([]string{}, testCase.userApprovers...), testCase.groupApprovers...)
+			if !testCase.requiresApproval {
+				expectedApprovers = nil
+			} else if len(expectedApprovers) == 0 {
+				expectedApprovers = []string{
+					strings.ToUpper(azure.PrivilegedRoleAdministratorRole) + "@tenant-1234",
+					strings.ToUpper(azure.CompanyAdministratorRole) + "@tenant-1234",
+				}
+			}
+			require.Len(t, relationships, len(expectedApprovers))
+			for index, relationship := range relationships {
+				assert.Equal(t, expectedApprovers[index], relationship.Source.Value)
+				assert.Equal(t, "role-1234@tenant-1234", relationship.Target.Value)
+				assert.Equal(t, azure.Role, relationship.Target.Kind)
+				assert.Equal(t, azure.AZRoleApprover, relationship.RelType)
+				if len(testCase.userApprovers)+len(testCase.groupApprovers) == 0 {
+					assert.Equal(t, azure.Role, relationship.Source.Kind)
+				} else if index < len(testCase.userApprovers) {
+					assert.Equal(t, azure.User, relationship.Source.Kind)
+				} else {
+					assert.Equal(t, azure.Group, relationship.Source.Kind)
+				}
+			}
+		})
 	}
-
-	t.Run("Create AZRole node and no relationships", func(t *testing.T) {
-		model.EndUserAssignmentRequiresApproval = false
-
-		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
-
-		// Assert created node properties
-		assert.Equal(t, "role-1234@tenant-1234", node.ObjectID)
-		assert.Equal(t, "AZRole", node.Labels[0].String())
-		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
-		assert.Equal(t, []string{"group-approver-1", "group-approver-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
-		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
-		assert.Equal(t, false, node.PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
-		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
-		require.Len(t, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
-		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
-
-		require.Len(t, rels, 0)
-	})
-
-	t.Run("Create relationships and multiple ndoes for each user and group approver", func(t *testing.T) {
-		model.EndUserAssignmentRequiresApproval = true
-
-		node, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
-
-		// Assert created node properties
-		assert.Equal(t, "role-1234@tenant-1234", node.ObjectID)
-		assert.Equal(t, "AZRole", node.Labels[0].String())
-		require.Len(t, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()], 2)
-		assert.Equal(t, []string{"group-approver-1", "group-approver-2"}, node.PropertyMap[azure.EndUserAssignmentGroupApprovers.String()])
-		assert.Equal(t, "TENANT-1234", node.PropertyMap[azure.TenantID.String()])
-		assert.Equal(t, true, node.PropertyMap[azure.EndUserAssignmentRequiresApproval.String()])
-		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
-		require.Len(t, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()], 2)
-		assert.Equal(t, []string{"user-approver-1", "user-approver-2"}, node.PropertyMap[azure.EndUserAssignmentUserApprovers.String()])
-
-		// Assert created relationships
-		require.Len(t, rels, 4)
-
-		assert.Equal(t, "user-approver-1", rels[0].Source.Value)
-		assert.Equal(t, azure.User, rels[0].Source.Kind)
-		assert.Equal(t, azure.Role, rels[0].Target.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[0].Target.Value)
-		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
-
-		assert.Equal(t, "user-approver-2", rels[1].Source.Value)
-		assert.Equal(t, azure.User, rels[1].Source.Kind)
-		assert.Equal(t, azure.Role, rels[1].Target.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[1].Target.Value)
-		assert.Equal(t, azure.AZRoleApprover, rels[1].RelType)
-
-		assert.Equal(t, "group-approver-1", rels[2].Source.Value)
-		assert.Equal(t, azure.Group, rels[2].Source.Kind)
-		assert.Equal(t, azure.Role, rels[2].Target.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[2].Target.Value)
-		assert.Equal(t, azure.AZRoleApprover, rels[2].RelType)
-
-		assert.Equal(t, "group-approver-2", rels[3].Source.Value)
-		assert.Equal(t, azure.Group, rels[3].Source.Kind)
-		assert.Equal(t, azure.Role, rels[3].Target.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[3].Target.Value)
-		assert.Equal(t, azure.AZRoleApprover, rels[3].RelType)
-	})
-
-	t.Run("No approvers creates AZRoleApprover edge from uppercased PrivilegedRoleAdministratorRole", func(t *testing.T) {
-		model.EndUserAssignmentRequiresApproval = true
-		model.EndUserAssignmentUserApprovers = nil
-		model.EndUserAssignmentGroupApprovers = nil
-
-		_, rels := ein.ConvertAzureRoleManagementPolicyAssignment(model)
-
-		require.Len(t, rels, 1)
-		expectedSource := fmt.Sprintf("%s@%s", strings.ToUpper(azure.PrivilegedRoleAdministratorRole), "tenant-1234")
-		assert.Equal(t, expectedSource, rels[0].Source.Value, "the well-known role constant is uppercased at the source so the endpoint matches the collector-sourced AZRole node objectid regardless of the use_raw_object_id flag")
-		assert.Equal(t, azure.Role, rels[0].Source.Kind)
-		assert.Equal(t, "role-1234@tenant-1234", rels[0].Target.Value)
-		assert.Equal(t, azure.Role, rels[0].Target.Kind)
-		assert.Equal(t, azure.AZRoleApprover, rels[0].RelType)
-	})
 }
 
 func TestConvertAzureVirtualMachineAvereContributorToRels(t *testing.T) {

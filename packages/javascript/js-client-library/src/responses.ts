@@ -102,7 +102,7 @@ export type KnownEnvironmentType = (typeof knownEnvironmentTypes)[number];
 export type Environment = {
     // `string & {}` is a hack to make this a string literal type that can be widened to string if needed
     // Needed because environment types can be provided by the user
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // oxlint-disable-next-line typescript/ban-types
     type: KnownEnvironmentType | (string & {});
     impactValue: number;
     name: string;
@@ -399,7 +399,7 @@ export type GetClientResponse = PaginatedResponse<Client[]>;
 export type CollectorJobProfileResponse = BasicResponse<{ profile: CollectorJobProfile }>;
 
 // ---------------------------------------------------------------------------
-//  Collectors - Managed Collections
+//  Collectors - Cloud Collector
 // ---------------------------------------------------------------------------
 export type GetCollectorJobProfilesResponse = PaginatedResponse<{ profiles: CollectorJobProfile[] }>;
 
@@ -415,9 +415,13 @@ export type RunCollectorJobProfileResponse = BasicResponse<{ job: CollectorJob }
 
 export type GetCollectorJobSecretsResponse = PaginatedResponse<{ secrets: CollectorJobSecret[] }>;
 
-export type GetCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+type CollectorJobSecretBody = { secret: CollectorJobSecret };
 
-export type CreateCollectorJobSecretResponse = BasicResponse<{ secret: CollectorJobSecret }>;
+export type GetCollectorJobSecretResponse = BasicResponse<CollectorJobSecretBody>;
+
+export type CreateCollectorJobSecretResponse = BasicResponse<CollectorJobSecretBody>;
+
+export type UpdateCollectorJobSecretResponse = BasicResponse<CollectorJobSecretBody>;
 
 // ---------------------------------------------------------------------------
 //  Collectors - Support Bundles (Management Operations)
@@ -529,7 +533,7 @@ export type FindingSchemaResponse = PaginatedResponse<{ findings: FindingSchema[
 
 export type GraphKindsResponse = BasicResponse<{ kinds: string[] }>;
 
-export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'deprecated' | 'orphaned';
+export type FindingStatus = 'remediated' | 'accepted' | 'active' | 'in_progress' | 'deprecated' | 'orphaned';
 
 export type UnifiedFinding = {
     id: number;
@@ -553,6 +557,7 @@ export type UnifiedFinding = {
     last_seen: string;
     prioritization_rank?: number | null;
     is_cross_platform?: boolean;
+    is_regression?: boolean;
 };
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;

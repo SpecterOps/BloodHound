@@ -42,9 +42,6 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 		middleware.LoginTimer()(http.HandlerFunc(loginResource.Login)).ServeHTTP(response, request)
 	})
 
-	// Login resources
-	routerInst.GET("/api/v2/self", managementResource.GetSelf)
-	routerInst.POST("/api/v2/logout", loginResource.Logout)
 	// Login path prefix matcher for SAML providers, order matters here due to PathPrefix
 	routerInst.POST(fmt.Sprintf("/api/{version}/login/saml/{%s}/acs", api.URIPathVariableSSOProviderSlug), managementResource.SAMLCallbackRedirect)
 	routerInst.GET(fmt.Sprintf("/api/{version}/login/saml/{%s}/metadata", api.URIPathVariableSSOProviderSlug), managementResource.ServeMetadata)
@@ -78,7 +75,6 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 	routerInst.GET(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa-activation", api.URIPathVariableUserID), managementResource.GetMFAActivationStatus).AuthorizeUserManagementAccess().RequireUserId()
 	routerInst.POST(fmt.Sprintf("/api/v2/bloodhound-users/{%s}/mfa-activation", api.URIPathVariableUserID), managementResource.ActivateMFA).AuthorizeUserManagementAccess().RequireUserId()
 	routerInst.POST("/api/v2/tokens", managementResource.CreateAuthToken).RequirePermissions(permissions.AuthCreateToken).AuthorizeUserManagementAccess()
-	routerInst.GET("/api/v2/tokens", managementResource.ListAuthTokens).RequirePermissions(permissions.AuthCreateToken).AuthorizeUserManagementAccess()
 	routerInst.DELETE(fmt.Sprintf("/api/v2/tokens/{%s}", api.URIPathVariableTokenID), managementResource.DeleteAuthToken).RequirePermissions(permissions.AuthCreateToken).AuthorizeUserManagementAccess()
 }
 
@@ -294,7 +290,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.GET(fmt.Sprintf("/api/v2/azure-tenants/{%s}/data-quality-stats", api.URIPathVariableTenantID), resources.GetAzureDataQualityStats).RequirePermissions(permissions.GraphDBRead).SupportsETAC(resources.DB, resources.DogTags)
 	routerInst.GET(fmt.Sprintf("/api/v2/platform/{%s}/data-quality-stats", api.URIPathVariablePlatformID), resources.GetPlatformAggregateStats).RequirePermissions(permissions.GraphDBRead)
 	routerInst.GET("/api/v2/data-quality-stats", resources.GetDataQualityStats).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement)
-	routerInst.GET("/api/v2/data-quality-stats-aggregations", resources.GetDataQualityAggregations).RequirePermissions(permissions.GraphDBRead).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement)
 	// Custom Node Management
 	routerInst.GET("/api/v2/custom-nodes", resources.GetCustomNodeKinds).RequirePermissions(permissions.OpenGraphRead)
 	routerInst.GET(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.GetCustomNodeKind).RequirePermissions(permissions.OpenGraphRead)
@@ -303,7 +298,6 @@ func NewV2API(resources v2.Resources, routerInst *router.Router) {
 	routerInst.DELETE(fmt.Sprintf("/api/v2/custom-nodes/{%s}", v2.CustomNodeKindParameter), resources.DeleteCustomNodeKind).RequirePermissions(permissions.OpenGraphWrite)
 	// Open Graph Schema
 	routerInst.PUT("/api/v2/extensions", resources.OpenGraphSchemaIngest).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequirePermissions(permissions.OpenGraphWrite)
-	routerInst.GET("/api/v2/extensions", resources.ListExtensions).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequirePermissions(permissions.OpenGraphRead)
 	routerInst.DELETE(fmt.Sprintf("/api/v2/extensions/{%s}", api.URIPathVariableExtensionID), resources.DeleteExtension).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequirePermissions(permissions.OpenGraphWrite)
 	// Graph Schema API
 	routerInst.GET("/api/v2/extensions-edges", resources.ListEdgeTypes).CheckFeatureFlag(resources.DB, appcfg.FeatureOpenGraphExtensionManagement).RequirePermissions(permissions.GraphDBRead).RequirePermissions(permissions.OpenGraphRead)

@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bloodhoundad/azurehound/v2/enums"
 	"github.com/specterops/bloodhound/packages/go/ein"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -179,4 +180,44 @@ func TestConvertAzureManagedCluster_NodeResourceGroupID(t *testing.T) {
 		assert.Equal(t, 1, strings.Count(strings.ToLower(nrg), "/subscriptions/"))
 		assert.Equal(t, "/SUBSCRIPTIONS/SUB-1234/RESOURCEGROUPS/MC_RG-1234_AKS-1234_CENTRALUS", nrg)
 	})
+}
+
+// The four policy shapes reproduce the ten-edge PIM baseline without post processing.
+func TestRoleManagementPolicyIngestProducesAllApproverEdges(t *testing.T) {
+	var (
+		converted = &ConvertedAzureData{}
+		converter = getKindConverter(enums.KindAZRoleManagementPolicyAssignment)
+		policies  = []json.RawMessage{
+			json.RawMessage(`{"roleDefinitionId":"PIMROLE1","tenantId":"TENANT","endUserAssignmentRequiresApproval":true,"endUserAssignmentUserApprovers":["USER1","USER2","USER3"],"endUserAssignmentGroupApprovers":["GROUP5"]}`),
+			json.RawMessage(`{"roleDefinitionId":"PIMROLE2","tenantId":"TENANT","endUserAssignmentRequiresApproval":true,"endUserAssignmentGroupApprovers":["GROUP1","GROUP2"]}`),
+			json.RawMessage(`{"roleDefinitionId":"PIMROLE3","tenantId":"TENANT","endUserAssignmentRequiresApproval":true,"endUserAssignmentUserApprovers":["USER8"],"endUserAssignmentGroupApprovers":["GROUP5"]}`),
+			json.RawMessage(`{"roleDefinitionId":"PIMROLE4","tenantId":"TENANT","endUserAssignmentRequiresApproval":true}`),
+			json.RawMessage(`{"roleDefinitionId":"DISABLED","tenantId":"TENANT","endUserAssignmentRequiresApproval":false,"endUserAssignmentUserApprovers":["USER1"]}`),
+		}
+		expectedEdges = []string{
+			"USER1->PIMROLE1@TENANT",
+			"USER2->PIMROLE1@TENANT",
+			"USER3->PIMROLE1@TENANT",
+			"GROUP5->PIMROLE1@TENANT",
+			"GROUP1->PIMROLE2@TENANT",
+			"GROUP2->PIMROLE2@TENANT",
+			"USER8->PIMROLE3@TENANT",
+			"GROUP5->PIMROLE3@TENANT",
+			"E8611AB8-C189-46E8-94E1-60213AB1F814@TENANT->PIMROLE4@TENANT",
+			"62E90394-69F5-4237-9190-012177145E10@TENANT->PIMROLE4@TENANT",
+		}
+		actualEdges = make([]string, 0, len(expectedEdges))
+	)
+
+	for _, policy := range policies {
+		converter(policy, converted, time.Now())
+	}
+
+	require.Len(t, converted.NodeProps, len(policies))
+	for _, relationship := range converted.RelProps {
+		require.Equal(t, azure.AZRoleApprover, relationship.RelType)
+		require.Equal(t, azure.Role, relationship.Target.Kind)
+		actualEdges = append(actualEdges, relationship.Source.Value+"->"+relationship.Target.Value)
+	}
+	require.ElementsMatch(t, expectedEdges, actualEdges)
 }

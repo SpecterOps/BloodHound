@@ -17,7 +17,6 @@ import { faThumbTack } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { CheckboxWithLabel } from 'doodle-ui';
 import { UseComboboxPropGetters, useMultipleSelection } from 'downshift';
-import { cn } from '../../../utils';
 import { adaptClickHandlerToKeyDown } from '../../../utils/adaptClickHandlerToKeyDown';
 import { ManageColumnsComboBoxOption } from './ManageColumnsComboBox';
 
@@ -33,11 +32,13 @@ type ManageColumnsListItemProps = {
 
 const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps, onPinClick }: ManageColumnsListItemProps) => (
     <li
-        role='button' // eslint-disable-line
+        role='button' // oxlint-disable-line
         tabIndex={0}
         className='p-2 m-0 w-full hover:bg-gray-100 dark:hover:bg-neutral-dark-4 cursor-pointer flex items-center'
         {...itemProps}
         onClick={(e) => {
+            // The row handles selection; prevent the label from clicking the checkbox again.
+            e.preventDefault();
             e.stopPropagation();
             onClick(item);
         }}
@@ -52,15 +53,7 @@ const ManageColumnsListItem = ({ isSelected, item, onClick, itemProps, onPinClic
                     ref={(checkbox) => {
                         checkbox?.setAttribute('inert', '');
                     }}
-                    disabled
                     role='presentation'
-                    className={cn('mr-2 *:text-white', {
-                        '*:bg-primary dark:border-none': isSelected,
-                        'dark:border-white': !isSelected,
-                    })}
-                    style={{
-                        opacity: 'initial',
-                    }}
                     checked={isSelected}
                 />
             </div>

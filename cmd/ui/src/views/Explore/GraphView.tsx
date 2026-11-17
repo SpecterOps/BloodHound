@@ -23,7 +23,6 @@ import {
     FeatureFlag,
     GraphControls,
     GraphItemInformationPanel,
-    GraphProgress,
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
     NodeClickInfo,
@@ -48,6 +47,7 @@ import {
     useTheme,
     useToggle,
 } from 'bh-shared-ui';
+import { ProgressBar } from 'doodle-ui';
 import { MultiDirectedGraph } from 'graphology';
 import { Attributes } from 'graphology-types';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -263,7 +263,7 @@ const GraphView: FC = () => {
         return (
             <div className='relative h-full w-full overflow-hidden' data-testid='explore'>
                 {hiddenHeading}
-                <GraphProgress loading={graphHasDataQuery.isLoading} />
+                <ProgressBar value={null} aria-label='Loading Explore graph' className='absolute inset-x-0 top-0' />
             </div>
         );
     }
@@ -359,7 +359,9 @@ const GraphView: FC = () => {
                 }
             />
 
-            <GraphProgress loading={graphQuery.isLoading} />
+            {graphQuery.isLoading && (
+                <ProgressBar value={null} aria-label='Loading Explore graph' className='absolute inset-x-0 top-0' />
+            )}
             <NoDataFileUploadDialogWithLinks open={!graphHasDataQuery.data} />
             {displayTable && (
                 <ExploreTable

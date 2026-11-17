@@ -40,6 +40,13 @@ var (
 
 	ErrUnexpectedVersionFormat = errors.New("expected version to be formatted: <major>.<minor>.<patch>[-<prerelease>]")
 	ErrMissingPrefix           = fmt.Errorf("prefix `%s` is missing", Prefix)
+
+	// DevelopmentVersion is the default version stamped into local and integration builds that do not set ldflags.
+	DevelopmentVersion = Version{
+		Major: 999,
+		Minor: 999,
+		Patch: 999,
+	}
 )
 
 type Version struct {
@@ -51,6 +58,11 @@ type Version struct {
 
 func (s *Version) IsPrerelease() bool {
 	return s.Prerelease != ""
+}
+
+// IsDevelopment returns true if this version matches the default development version.
+func (s Version) IsDevelopment() bool {
+	return s.Equals(DevelopmentVersion)
 }
 
 func (s *Version) unmarshal(buffer []byte, unmarshalFunc func(buffer []byte, target any) error) error {

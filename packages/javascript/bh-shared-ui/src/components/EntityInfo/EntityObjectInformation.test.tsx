@@ -153,12 +153,12 @@ describe('EntityObjectInformation', () => {
 
         render(<EntityObjectInformationWithProvider selectedNode={selectedNode} />);
 
-        expect(await screen.findByText('Effective EKUs:')).toBeInTheDocument();
+        expect(await screen.findByText('Effective EKUs')).toBeInTheDocument();
         expect(screen.getByText('NONE')).toHaveAttribute('aria-hidden', 'true');
         expect(screen.getByText('Empty array, zero values')).toBeInTheDocument();
-        expect(screen.getByText('Emptystring:')).toBeInTheDocument();
+        expect(screen.getByText('Emptystring')).toBeInTheDocument();
         expect(screen.getByText('Empty string')).toBeInTheDocument();
-        expect(screen.getByText('Nullvalue:')).toBeInTheDocument();
+        expect(screen.getByText('Nullvalue')).toBeInTheDocument();
         screen.getAllByText('—').forEach((placeholder) => {
             expect(placeholder).toHaveAttribute('aria-hidden', 'true');
         });
