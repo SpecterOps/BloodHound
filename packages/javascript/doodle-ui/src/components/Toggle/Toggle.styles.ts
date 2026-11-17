@@ -39,6 +39,3 @@ export const ToggleVariants = cva(
         },
     }
 );
-
-export const toggleGroupClasses =
-    'flex items-center justify-center gap-2 p-1 rounded bg-[color:var(--toggle-group-fill)] shadow-outer-1';
