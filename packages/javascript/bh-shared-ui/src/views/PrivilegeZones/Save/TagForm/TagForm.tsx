@@ -52,10 +52,12 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useTagLimits } from '../../../../hooks';
 import {
+    useAllAssetGroupTagRules,
     useAssetGroupTagInfo,
     useCreateAssetGroupTag,
     useDeleteAssetGroupTag,
     usePatchAssetGroupTag,
+    useSetAllRulesEnabled,
     useTagsQuery,
 } from '../../../../hooks/useAssetGroupTags';
 import { useNotifications } from '../../../../providers';
@@ -67,6 +69,8 @@ import GlyphSelectDialog from './GlyphSelectDialog';
 import { useTagFormUtils } from './utils';
 
 const MAX_NAME_LENGTH = 250;
+
+type TagFormValues = UpdateAssetGroupTagRequest & { enable_all_rules?: boolean };
 
 export const TagForm: FC = () => {
     const [glyphDialogOpen, setGlyphDialogOpen] = useState(false);
@@ -81,6 +85,7 @@ export const TagForm: FC = () => {
         disableNameInput,
         isLabelPage,
         isUpdateZoneLocation,
+        isUpdateLabelLocation,
         isZonePage,
         showAnalysisToggle,
         showDeleteButton,
@@ -95,6 +100,8 @@ export const TagForm: FC = () => {
 
     const tagsQuery = useTagsQuery();
     const tagQuery = useAssetGroupTagInfo(tagId);
+    const rulesQuery = useAllAssetGroupTagRules(tagId, isUpdateLabelLocation);
+    const anyRulesEnabled = rulesQuery.data?.some((rule) => rule.disabled_at === null) ?? false;
 
     const { remainingZonesAvailable, remainingLabelsAvailable } = useTagLimits();
     const { ZoneList, SalesMessage, Certification } = useContext(PrivilegeZonesContext);
@@ -127,7 +134,7 @@ export const TagForm: FC = () => {
         return diffed;
     };
 
-    const form = useForm<UpdateAssetGroupTagRequest>({
+    const form = useForm<TagFormValues>({
         defaultValues: {
             name: '',
             description: '',
@@ -142,6 +149,7 @@ export const TagForm: FC = () => {
 
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
+    const setAllRulesEnabledMutation = useSetAllRulesEnabled(tagId);
     const deleteTagMutation = useDeleteAssetGroupTag();
 
     const handleCreateTag = useCallback(
@@ -173,12 +181,13 @@ export const TagForm: FC = () => {
     );
 
     const handleUpdateTag = useCallback(
-        async (formData: UpdateAssetGroupTagRequest) => {
+        async (formData: TagFormValues) => {
             try {
                 if (!tagId) return;
 
                 const diffedValues = diffValues(tagQuery.data, formData, isLabelPage);
-                if (isEmpty(diffedValues)) {
+                const enableAllRules = isLabelPage ? formData.enable_all_rules : undefined;
+                if (isEmpty(diffedValues) && enableAllRules === undefined) {
                     addNotification('No changes detected', `privilege-zones_update-tag_no-changes-warn_${tagId}`, {
                         anchorOrigin: { vertical: 'top', horizontal: 'right' },
                     });
@@ -189,10 +198,27 @@ export const TagForm: FC = () => {
 
                 if (!privilegeZoneAnalysisEnabled) delete updatedValues.analysis_enabled;
 
-                await updateTagMutation.mutateAsync({
-                    updatedValues,
-                    tagId,
-                });
+                if (!isEmpty(updatedValues)) {
+                    await updateTagMutation.mutateAsync({
+                        updatedValues,
+                        tagId,
+                    });
+                }
+
+                if (enableAllRules !== undefined) {
+                    const { failedCount } = await setAllRulesEnabledMutation.mutateAsync(enableAllRules);
+                    if (failedCount > 0) {
+                        addNotification(
+                            `Failed to ${enableAllRules ? 'enable' : 'disable'} ${failedCount} ${failedCount === 1 ? 'rule' : 'rules'}. Please try again.`,
+                            `privilege-zones_update-label-rules-error_${tagId}`,
+                            {
+                                variant: 'error',
+                                anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                            }
+                        );
+                        return;
+                    }
+                }
 
                 addNotification(
                     `${tagTypeDisplay} was updated successfully!`,
@@ -212,6 +238,7 @@ export const TagForm: FC = () => {
             privilegeZoneAnalysisEnabled,
             isLabelPage,
             updateTagMutation,
+            setAllRulesEnabledMutation,
             tagId,
             addNotification,
             tagTypeDisplay,
@@ -239,7 +266,7 @@ export const TagForm: FC = () => {
         }
     }, [tagId, deleteTagMutation, addNotification, handleDeleteNavigate, tagType, tagTypeDisplay]);
 
-    const onSubmit: SubmitHandler<UpdateAssetGroupTagRequest | CreateAssetGroupTagRequest> = useCallback(
+    const onSubmit: SubmitHandler<TagFormValues | CreateAssetGroupTagRequest> = useCallback(
         (formData) => {
             if (tagId === '') {
                 handleCreateTag(formData as CreateAssetGroupTagRequest);
@@ -423,6 +450,39 @@ export const TagForm: FC = () => {
                                 </CardDescription>
                             )}
                             <CardContent>
+                                {isUpdateLabelLocation && (
+                                    <FormField
+                                        control={control}
+                                        name='enable_all_rules'
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel htmlFor='enable_rules'>Enable Rules</FormLabel>
+                                                <div className='mb-4'>
+                                                    <FormControl>
+                                                        <Switch
+                                                            id='enable_rules'
+                                                            {...field}
+                                                            value={''}
+                                                            label={
+                                                                field.value ?? anyRulesEnabled ? 'Enabled' : 'Disabled'
+                                                            }
+                                                            labelClassName='text-sm'
+                                                            data-testid='privilege-zones_save_tag-form_enable-rules-toggle'
+                                                            checked={field.value ?? anyRulesEnabled}
+                                                            disabled={
+                                                                !rulesQuery.data?.length ||
+                                                                rulesQuery.isError ||
+                                                                setAllRulesEnabledMutation.isLoading
+                                                            }
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                </div>
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
+
                                 {showAnalysisToggle && (
                                     <FormField
                                         control={control}
@@ -657,6 +717,7 @@ export const TagForm: FC = () => {
                             <Button
                                 data-testid='privilege-zones_save_tag-form_save-button'
                                 variant='primary'
+                                disabled={updateTagMutation.isLoading || setAllRulesEnabledMutation.isLoading}
                                 onClick={handleSubmit(onSubmit)}>
                                 {tagId === '' ? 'Define Rule' : 'Save Edits'}
                             </Button>

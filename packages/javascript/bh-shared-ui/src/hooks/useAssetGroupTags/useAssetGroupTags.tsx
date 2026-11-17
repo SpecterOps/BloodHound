@@ -183,6 +183,31 @@ export const getAssetGroupTagRules = (tagId: string | number, queryParams: GetRu
     );
 };
 
+export const getAllAssetGroupTagRules = async (tagId: string | number) => {
+    const rules: AssetGroupTagSelector[] = [];
+    let nextPage: PageParam | undefined = { skip: 0, limit: PAGE_SIZE };
+
+    while (nextPage) {
+        const page = await getAssetGroupTagRules(tagId, {
+            ...nextPage,
+            sortBy: 'id',
+            environments: [],
+            counts: false,
+        });
+        rules.push(...page.items);
+        nextPage = page.nextPageParam;
+    }
+
+    return rules;
+};
+
+export const useAllAssetGroupTagRules = (tagId: string, enabled: boolean) =>
+    useQuery({
+        queryKey: [...privilegeZonesKeys.rulesByTag(tagId), 'all'],
+        queryFn: () => getAllAssetGroupTagRules(tagId),
+        enabled: tagId !== '' && enabled,
+    });
+
 interface GetRulesQueryParams {
     skip: number;
     limit: number;
