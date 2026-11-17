@@ -99,10 +99,6 @@ on:
           - 'type=registry,ref=registry/image:tag'
 
           Multiple outputs can be specified using comma separation.
-      validate_bundled_collectors:
-        type: boolean
-        default: false
-        description: Validate bundled collectors after exporting with type=local,dest=/tmp/collector-image,platform-split=true.
       image_provenance:
         type: string
         description: |-
@@ -244,8 +240,6 @@ jobs:
 
       - id: build-container-image
         uses: ./.github/actions/build-container-image
-        env:
-          DOCKER_BUILD_RECORD_UPLOAD: "false"
         with:
           dockerhub_account: ${{ secrets.dockerhub_account }}
           dockerhub_token: ${{ secrets.dockerhub_token }}
@@ -270,27 +264,3 @@ jobs:
           image_provenance: ${{ inputs.image_provenance }}
           image_sbom: ${{ inputs.image_sbom }}
           image_tags: ${{ steps.container-image-metadata.outputs.tags }}
-
-      - name: Print and Validate Bundled Collectors
-        if: inputs.validate_bundled_collectors
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          for architecture in amd64 arm64; do
-            echo "::group::Collectors bundled for linux/$architecture"
-
-            for collector in sharphound azurehound; do
-              (
-                cd "/tmp/collector-image/linux_${architecture}/etc/bloodhound/collectors/$collector"
-
-                for archive in *.zip; do
-                  test -f "$archive"
-                  echo "$collector: $archive"
-                  sha256sum -c -- "$archive.sha256"
-                done
-              )
-            done
-
-            echo "::endgroup::"
-          done
