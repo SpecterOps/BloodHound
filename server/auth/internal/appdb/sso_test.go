@@ -190,7 +190,7 @@ func TestStore_ListAuthProviders_SQL(t *testing.T) {
 			}
 
 			assert.Len(t, providers, testCase.expectedCount)
-			
+
 			if testCase.assertResult != nil {
 				testCase.assertResult(t, providers)
 			}
