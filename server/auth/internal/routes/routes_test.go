@@ -54,6 +54,8 @@ func TestRegister(t *testing.T) {
 	}{
 		{http.MethodPost, "/api/v2/logout", true},
 		{http.MethodGet, "/api/v2/logout", false},
+		{http.MethodGet, "/api/v2/self", true},
+		{http.MethodPost, "/api/v2/self", false},
 	} {
 		req := httptest.NewRequest(tc.method, tc.path, nil)
 		var match mux.RouteMatch
