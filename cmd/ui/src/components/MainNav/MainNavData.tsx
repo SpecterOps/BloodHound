@@ -180,7 +180,7 @@ export const useMainNavSecondaryListData = (): MainNavData['secondaryList'] => {
                  It is unavailable in React 18 (enabled in v19), so this spread
                  workaround applies the property without triggering type errors
                 */
-                <div ref={(node) => node?.setAttribute('inert', '')}>
+                <div aria-hidden='true' ref={(node) => node?.setAttribute('inert', '')}>
                     <Switch checked={darkMode} />
                 </div>
             ),

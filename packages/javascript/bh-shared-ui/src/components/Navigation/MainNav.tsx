@@ -146,11 +146,7 @@ const MainNavListItem: FC<{
             role='button'
             tabIndex={0}>
             {labelElement}
-            {control && isExpanded && (
-                <span aria-hidden='true' className='ml-1 shrink-0'>
-                    {control}
-                </span>
-            )}
+            {control && isExpanded && <span className='ml-1 shrink-0'>{control}</span>}
         </div>
     );
 
