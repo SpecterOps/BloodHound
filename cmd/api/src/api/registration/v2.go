@@ -54,7 +54,6 @@ func registerV2Auth(resources v2.Resources, routerInst *router.Router, permissio
 	routerInst.GET(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.GetSAMLProvider).RequirePermissions(permissions.AuthReadProviders)
 	routerInst.DELETE(fmt.Sprintf("/api/v2/saml/providers/{%s}", api.URIPathVariableSAMLProviderID), managementResource.DeleteSAMLProvider).RequirePermissions(permissions.AuthManageProviders)
 	// SSO
-	routerInst.GET("/api/v2/sso-providers", managementResource.ListAuthProviders)
 	routerInst.POST("/api/v2/sso-providers/saml", managementResource.CreateSAMLProviderMultipart).RequirePermissions(permissions.AuthManageProviders)
 	routerInst.POST("/api/v2/sso-providers/oidc", managementResource.CreateOIDCProvider).CheckFeatureFlag(resources.DB, appcfg.FeatureOIDCSupport).RequirePermissions(permissions.AuthManageProviders)
 	routerInst.DELETE(fmt.Sprintf("/api/v2/sso-providers/{%s}", api.URIPathVariableSSOProviderID), managementResource.DeleteSSOProvider).RequirePermissions(permissions.AuthManageProviders)

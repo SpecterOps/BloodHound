@@ -19,6 +19,7 @@ package appdb
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -27,6 +28,7 @@ const (
 )
 
 type pgxQuerier interface {
+	Query(ctx context.Context, sql string, arguments ...any) (pgx.Rows, error)
 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
 }
 
@@ -36,4 +38,18 @@ type Store struct {
 
 func NewStore(db pgxQuerier) *Store {
 	return &Store{db: db}
+}
+
+func qualify(tableName, columnName string) string {
+	return tableName + "." + columnName
+}
+
+func qualifyAll(tableName string, columnNames ...string) []string {
+	var columns = make([]string, 0, len(columnNames))
+
+	for _, columnName := range columnNames {
+		columns = append(columns, qualify(tableName, columnName))
+	}
+	
+	return columns
 }
