@@ -22,12 +22,16 @@ import (
 	"time"
 )
 
-// ErrExtensionNotFound indicates that no extension exists for the requested id.
-var ErrExtensionNotFound = errors.New("extension not found")
+var (
+	// ErrExtensionNotFound indicates that no extension exists for the requested id.
+	ErrExtensionNotFound = errors.New("extension not found")
 
-var ErrDuplicateExtensionNamespace = errors.New("duplicate extension namespace")
+	ErrDuplicateExtensionNamespace = errors.New("duplicate extension namespace")
 
-var ErrDuplicateExtensionName = errors.New("duplicate extension name")
+	ErrDuplicateExtensionName = errors.New("duplicate extension name")
+
+	ErrGraphExtensionBuiltIn = errors.New("cannot modify a built-in graph extension")
+)
 
 // Extension is the domain representation of a schema_extensions row.
 type Extension struct {

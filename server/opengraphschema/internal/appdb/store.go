@@ -43,6 +43,8 @@ type Store struct {
 	db pgxDriver
 }
 
+const sqlCurrentTimestamp = "current_timestamp"
+
 // NewStore returns a Store backed by the provided pgx connection pool.
 func NewStore(db pgxDriver) *Store {
 	return &Store{db: db}

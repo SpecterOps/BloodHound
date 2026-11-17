@@ -253,3 +253,73 @@ func (s *Store) UpdateExtension(ctx context.Context, extension services.Extensio
 		return toExtension(row), nil
 	}
 }
+
+func (s *Store) DeleteExtension(ctx context.Context, extensionID int32) error {
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %s", err)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	// Retrieve the extension to check if it exists and if it's built-in
+	selectBuiltinBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
+	selectBuiltinBuilder.Select("is_builtin")
+	selectBuiltinBuilder.From(tableSchemaExtensions)
+	selectBuiltinBuilder.Where(selectBuiltinBuilder.Equal("id", extensionID))
+	sql, args := selectBuiltinBuilder.Build()
+
+	var isBuiltin bool
+	if err = tx.QueryRow(ctx, sql, args...).Scan(&isBuiltin); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return services.ErrExtensionNotFound
+		}
+		return fmt.Errorf("failure preparing to delete extension: %w", err)
+	}
+
+	// Prevent deletion of built-in extensions
+	if isBuiltin {
+		return services.ErrGraphExtensionBuiltIn
+	}
+
+	// Before deleting the extension (which cascades to schema_node_kinds), create stubs in custom_node_kinds for all non-display
+	// node kinds. Non-display kinds are not tracked in custom_node_kinds while the schema is active. It is possible that a schemaless
+	// node kind of the same name existed before this extension upserted it to a non-display node kind, which removes it from the custom
+	// node table. Because of this edge case, inserting stubs here for the non-display node kinds ensures that those node kinds will
+	// remain tracked even after the schema is gone, in the event any nodes of those kinds remain in the graph.
+	nodeKinds, err := getGraphSchemaNodeKindsByExtensionId(ctx, tx, extensionID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch node kinds for extension %d: %w", extensionID, err)
+	}
+
+	for _, nodeKind := range nodeKinds {
+		if !nodeKind.IsDisplayKind {
+			// Ignore ErrDuplicateCustomNodeKindName. This indicates the kind is already tracked, nothing to do.
+			_, err := insertCustomNodeKind(ctx, tx, services.CustomNodeKind{KindID: nodeKind.KindID, KindName: nodeKind.Name, Config: CustomNodeKindStubConfig})
+			if err != nil && !errors.Is(err, services.ErrDuplicateCustomNodeKindName) {
+				return fmt.Errorf("failed to create stub for non-display node kind %q: %w", nodeKind.Name, err)
+			}
+		}
+	}
+
+	// Now delete the extension
+	deleteBuilder := sqlbuilder.PostgreSQL.NewDeleteBuilder()
+	deleteBuilder.DeleteFrom(tableSchemaExtensions)
+	deleteBuilder.Where(deleteBuilder.Equal("id", extensionID))
+	deleteBuilder.Returning("id")
+	sqlQuery, args := deleteBuilder.Build()
+	if rows, err := tx.Query(ctx, sqlQuery, args...); err != nil {
+		return fmt.Errorf("deleting extension %d: %w", extensionID, err)
+	} else if _, err := pgx.CollectOneRow(rows, pgx.RowTo[int32]); errors.Is(err, pgx.ErrNoRows) {
+		return services.ErrExtensionNotFound
+	} else if err != nil {
+		return fmt.Errorf("reading deleted extension %d: %w", extensionID, err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("committing extension deletion: %w", err)
+	}
+
+	return nil
+}

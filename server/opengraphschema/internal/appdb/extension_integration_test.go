@@ -251,6 +251,109 @@ func TestStore_UpdateExtension_Integration(t *testing.T) {
 	})
 }
 
+func TestStore_DeleteExtension_Integration(t *testing.T) {
+	var ctx = context.Background()
+
+	t.Run("error_-_returns_extension_not_found", func(t *testing.T) {
+		store, _ := setupStore(t)
+
+		err := store.DeleteExtension(ctx, int32(999999999))
+		require.ErrorIs(t, err, services.ErrExtensionNotFound)
+	})
+
+	t.Run("error_-_rejects_builtin_extension_without_deleting_it", func(t *testing.T) {
+		store, pool := setupStore(t)
+		extensionID := seedExtension(t, ctx, pool)
+		_, err := pool.Exec(ctx, `UPDATE schema_extensions SET is_builtin = true WHERE id = $1`, extensionID)
+		require.NoError(t, err)
+
+		err = store.DeleteExtension(ctx, extensionID)
+		require.ErrorIs(t, err, services.ErrGraphExtensionBuiltIn)
+
+		var extensionCount int
+		require.NoError(t, pool.QueryRow(ctx, `SELECT COUNT(*) FROM schema_extensions WHERE id = $1`, extensionID).Scan(&extensionCount))
+		assert.Equal(t, 1, extensionCount)
+	})
+
+	t.Run("success_-_deletes_extension_without_node_kinds", func(t *testing.T) {
+		store, pool := setupStore(t)
+		extensionID := seedExtension(t, ctx, pool)
+
+		require.NoError(t, store.DeleteExtension(ctx, extensionID))
+
+		var extensionCount int
+		require.NoError(t, pool.QueryRow(ctx, `SELECT COUNT(*) FROM schema_extensions WHERE id = $1`, extensionID).Scan(&extensionCount))
+		assert.Zero(t, extensionCount)
+	})
+
+	t.Run("success_-_deletes_extension_and_stubs_non_display_node_kinds", func(t *testing.T) {
+		store, pool := setupStore(t)
+		extensionID := seedExtension(t, ctx, pool)
+
+		// seed 2 node kinds (one's a display kind, one isn't)
+		type seededNodeKind struct {
+			kindID        int32
+			name          string
+			isDisplayKind bool
+		}
+		var nodeKinds []seededNodeKind
+		for _, nodeKind := range []struct {
+			name          string
+			isDisplayKind bool
+		}{
+			{name: "DeleteDisplayKind", isDisplayKind: true},
+			{name: "DeleteNonDisplayKind", isDisplayKind: false},
+		} {
+			var kindID int32
+			require.NoError(t, pool.QueryRow(ctx, `INSERT INTO kind (name) VALUES ($1) RETURNING id`, nodeKind.name).Scan(&kindID))
+			nodeKinds = append(nodeKinds, seededNodeKind{kindID: kindID, name: nodeKind.name, isDisplayKind: nodeKind.isDisplayKind})
+
+			_, err := pool.Exec(ctx, `
+				INSERT INTO schema_node_kinds (schema_extension_id, kind_id, display_name, description, is_display_kind, icon, icon_color)
+				VALUES ($1, $2, $3, 'test node kind', $4, 'user', '#fff')`,
+				extensionID, kindID, nodeKind.name, nodeKind.isDisplayKind)
+			require.NoError(t, err)
+		}
+		t.Cleanup(func() {
+			_, err := pool.Exec(ctx, `DELETE FROM schema_node_kinds WHERE schema_extension_id = $1`, extensionID)
+			require.NoError(t, err)
+			for _, nodeKind := range nodeKinds {
+				_, err := pool.Exec(ctx, `DELETE FROM custom_node_kinds WHERE kind_id = $1`, nodeKind.kindID)
+				require.NoError(t, err)
+				_, err = pool.Exec(ctx, `DELETE FROM kind WHERE id = $1`, nodeKind.kindID)
+				require.NoError(t, err)
+			}
+		})
+
+		// execute delete
+		require.NoError(t, store.DeleteExtension(ctx, extensionID))
+
+		// extension and node kinds deleted
+		var extensionCount int
+		require.NoError(t, pool.QueryRow(ctx, `SELECT COUNT(*) FROM schema_extensions WHERE id = $1`, extensionID).Scan(&extensionCount))
+		assert.Zero(t, extensionCount)
+
+		var schemaNodeKindCount int
+		require.NoError(t, pool.QueryRow(ctx, `SELECT COUNT(*) FROM schema_node_kinds WHERE schema_extension_id = $1`, extensionID).Scan(&schemaNodeKindCount))
+		assert.Zero(t, schemaNodeKindCount)
+
+		// stub node kind created
+		for _, nodeKind := range nodeKinds {
+			var customNodeKindCount int
+			require.NoError(t, pool.QueryRow(ctx, `SELECT COUNT(*) FROM custom_node_kinds WHERE kind_id = $1`, nodeKind.kindID).Scan(&customNodeKindCount))
+			if !nodeKind.isDisplayKind {
+				assert.Equal(t, 1, customNodeKindCount)
+
+				var config []byte
+				require.NoError(t, pool.QueryRow(ctx, `SELECT config FROM custom_node_kinds WHERE kind_id = $1`, nodeKind.kindID).Scan(&config))
+				assert.JSONEq(t, `{"icon":{"type":"font-awesome","name":"question","color":"#FFFFFF"}}`, string(config))
+			} else {
+				assert.Zero(t, customNodeKindCount)
+			}
+		}
+	})
+}
+
 func TestStore_GetExtensions_Integration(t *testing.T) {
 	var (
 		ctx         = context.Background()
