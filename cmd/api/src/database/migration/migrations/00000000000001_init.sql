@@ -2248,7 +2248,7 @@ DO $$
         IF EXISTS (
             SELECT 1
             FROM information_schema.columns
-            WHERE table_schema = 'public' AND column_name = 'name' AND table_name = 'source_kinds'
+            WHERE table_schema = current_schema() AND column_name = 'name' AND table_name = 'source_kinds'
         ) THEN
             INSERT INTO kind (name)
             SELECT name
