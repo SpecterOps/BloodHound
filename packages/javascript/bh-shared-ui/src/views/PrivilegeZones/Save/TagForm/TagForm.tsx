@@ -411,7 +411,7 @@ export const TagForm: FC = () => {
     );
     const labelUpdate = (
         <p>
-            Update this Label's details. You can adjust its name and description.
+            Update this Label's details. You can manage this label’s rules, name, and description.
             <br />
             <LabelsLink />.
         </p>
