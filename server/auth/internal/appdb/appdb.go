@@ -50,6 +50,6 @@ func qualifyAll(tableName string, columnNames ...string) []string {
 	for _, columnName := range columnNames {
 		columns = append(columns, qualify(tableName, columnName))
 	}
-	
+
 	return columns
 }
