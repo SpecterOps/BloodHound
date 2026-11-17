@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
-	"path"
 	"strconv"
 	"strings"
 
@@ -34,7 +32,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/serde"
 	"github.com/specterops/dawgs/cardinality"
-	"gorm.io/gorm/utils"
 )
 
 // AuthProvider represents a unified SSO provider (either OIDC or SAML)
@@ -48,14 +45,6 @@ type AuthProvider struct {
 
 	LoginUri    serde.URL `json:"login_uri"`
 	CallbackUri serde.URL `json:"callback_uri"`
-}
-
-func (s *AuthProvider) FormatProviderURLs(hostUrl url.URL) {
-	root := hostUrl
-	root.Path = path.Join("/api/v2/sso/", s.Slug)
-
-	s.LoginUri = serde.FromURL(*root.JoinPath("login"))
-	s.CallbackUri = serde.FromURL(*root.JoinPath("callback"))
 }
 
 type getRoler interface {
@@ -72,100 +61,6 @@ type jitUserUpserter interface {
 	LookupUser(ctx context.Context, principalNameOrEmail string) (model.User, error)
 	CreateUser(ctx context.Context, user model.User) (model.User, error)
 	UpdateUser(ctx context.Context, user model.User) error
-}
-
-// ListAuthProviders lists all available SSO providers (SAML and OIDC) with sorting and filtering
-func (s ManagementResource) ListAuthProviders(response http.ResponseWriter, request *http.Request) {
-	var (
-		requestCtx        = request.Context()
-		queryParams       = request.URL.Query()
-		sortByColumns     = queryParams[api.QueryParameterSortBy]
-		order             []string
-		queryFilters      model.QueryParameterFilterMap
-		sqlFilter         model.SQLFilter
-		ssoProviders      []model.SSOProvider
-		providers         []AuthProvider
-		err               error
-		queryFilterParser = model.NewQueryParameterFilterParser()
-	)
-
-	for _, column := range sortByColumns {
-		var descending bool
-		if strings.HasPrefix(column, "-") {
-			descending = true
-			column = column[1:]
-		}
-
-		if !model.SSOProviderSortableFields(column) {
-			api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsNotSortable, request), response)
-			return
-		}
-
-		if descending {
-			order = append(order, column+" desc")
-		} else {
-			order = append(order, column)
-		}
-	}
-
-	// Set default order by created_at if no sorting is specified
-	if len(order) == 0 {
-		order = append(order, "created_at")
-	}
-
-	if queryFilters, err = queryFilterParser.ParseQueryParameterFilters(request); err != nil {
-		api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsBadQueryParameterFilters, request), response)
-	} else {
-		for name, filters := range queryFilters {
-			if validPredicates, err := model.SSOProviderValidFilterPredicates(name); err != nil {
-				api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
-				return
-			} else {
-				for i, filter := range filters {
-					if !utils.Contains(validPredicates, string(filter.Operator)) {
-						api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponseDetailsFilterPredicateNotSupported, request), response)
-						return
-					}
-					queryFilters[name][i].IsStringData = model.SSOProviderIsStringField(filter.Name)
-				}
-			}
-		}
-
-		if sqlFilter, err = queryFilters.BuildSQLFilter(); err != nil {
-			api.WriteErrorResponse(requestCtx, api.BuildErrorResponse(http.StatusBadRequest, "error building SQL for filter", request), response)
-		} else if ssoProviders, err = s.db.GetAllSSOProviders(requestCtx, strings.Join(order, ", "), sqlFilter); err != nil {
-			api.HandleDatabaseError(request, response, err)
-		} else {
-			for _, ssoProvider := range ssoProviders {
-				provider := AuthProvider{
-					ID:     ssoProvider.ID,
-					Name:   ssoProvider.Name,
-					Type:   ssoProvider.Type.String(),
-					Slug:   ssoProvider.Slug,
-					Config: ssoProvider.Config,
-				}
-
-				// Format callback url from host
-				provider.FormatProviderURLs(*bhctx.Get(requestCtx).Host)
-
-				switch ssoProvider.Type {
-				case model.SessionAuthProviderOIDC:
-					if ssoProvider.OIDCProvider != nil {
-						provider.Details = ssoProvider.OIDCProvider
-					}
-				case model.SessionAuthProviderSAML:
-					if ssoProvider.SAMLProvider != nil {
-						ssoProvider.SAMLProvider.FormatSAMLProviderURLs(*bhctx.Get(requestCtx).Host)
-						provider.Details = ssoProvider.SAMLProvider
-					}
-				}
-
-				providers = append(providers, provider)
-			}
-
-			api.WriteBasicResponse(requestCtx, providers, http.StatusOK, response)
-		}
-	}
 }
 
 // DeleteSSOProviderResponse represents the response returned to the user from DeleteSSOProvider
