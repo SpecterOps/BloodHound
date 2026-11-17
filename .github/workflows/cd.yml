@@ -14,19 +14,27 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-name: Validate BHCE Collector Image
+name: Continuous Deployment (CD)
 
 on:
   push:
     branches:
-      - lfalslev/bed-7545
+      - main
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+      - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
 
 permissions:
   contents: read
 
 jobs:
+  run-slow-go-tests:
+    name: Run Slow Go Tests
+    uses: ./.github/workflows/run-slow-go-tests.yml
+
   bloodhound-container-image:
-    name: Build and Validate BloodHound Container Image
+    name: Build and Publish BloodHound Container Image
+    needs: run-slow-go-tests
     uses: ./.github/workflows/reusable.build-container-image.yml
     with:
       container_image_repository_name: |
@@ -36,10 +44,10 @@ jobs:
       build_context: .
       image_sbom: true
       image_provenance: mode=max
-      build_outputs: type=local,dest=/tmp/collector-image,platform-split=true
-      validate_bundled_collectors: true
+      build_outputs: type=image,push=true
       dockerfile: dockerfiles/bloodhound.Dockerfile
       image_cache_from: type=gha
+      image_cache_to: type=gha,mode=max
       image_flavor: latest=${{ (github.ref_name == 'main' || contains(github.ref_name, '-rc')) == false }}
       image_tags: |
         # Edge builds from main
@@ -68,5 +76,32 @@ jobs:
       ghcr_account: ${{ github.actor }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
       gh_access_token: ${{ secrets.GITHUB_TOKEN }}
+      ecr_aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+      ecr_aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
+
+  cosign-image-signing:
+    needs: bloodhound-container-image
+    name: Sign and Verify ${{ matrix.registry_kind }} image
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - registry_kind: dockerhub
+            image_repository: docker.io/specterops/bloodhound
+          - registry_kind: ecr
+            image_repository: 590372943691.dkr.ecr.us-east-1.amazonaws.com/bhce/deployment
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/reusable.cosign-image-signing.yml
+    with:
+      registry_kind: ${{ matrix.registry_kind }}
+      image_repository: ${{ matrix.image_repository }}
+      image_digest: ${{ needs.bloodhound-container-image.outputs.image_digest }}
+      aws_region: us-east-1
+      certificate_identity: https://github.com/SpecterOps/BloodHound/.github/workflows/reusable.cosign-image-signing.yml@${{ github.ref }}
+    secrets:
+      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
       ecr_aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
       ecr_aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
