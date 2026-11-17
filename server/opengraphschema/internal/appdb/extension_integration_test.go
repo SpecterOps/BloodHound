@@ -87,7 +87,7 @@ func TestStore_GetExtension_Integration(t *testing.T) {
 	}
 }
 
-func TestStore_CreateGraphSchemaExtension_Integration(t *testing.T) {
+func TestStore_CreateExtension_Integration(t *testing.T) {
 	var (
 		ctx   = context.Background()
 		tests = []struct {
@@ -133,7 +133,7 @@ func TestStore_CreateGraphSchemaExtension_Integration(t *testing.T) {
 			store, pool := setupStore(t)
 			seedExtension(t, ctx, pool)
 
-			createdExtension, err := store.CreateGraphSchemaExtension(ctx, test.extension)
+			createdExtension, err := store.CreateExtension(ctx, test.extension)
 			if test.wantErr != nil {
 				require.ErrorIs(t, err, test.wantErr)
 				assert.Equal(t, services.Extension{}, createdExtension)
@@ -153,6 +153,102 @@ func TestStore_CreateGraphSchemaExtension_Integration(t *testing.T) {
 			assert.Equal(t, createdExtension, persistedExtension)
 		})
 	}
+}
+
+func TestStore_UpdateExtension_Integration(t *testing.T) {
+	var ctx = context.Background()
+
+	t.Run("success_-_updates_and_persists_extension_fields_ignores_builtin", func(t *testing.T) {
+		store, pool := setupStore(t)
+		extensionID := seedExtension(t, ctx, pool)
+		_, err := pool.Exec(ctx, `UPDATE schema_extensions SET is_builtin = true WHERE id = $1`, extensionID)
+		require.NoError(t, err)
+
+		input := services.Extension{
+			ID:          extensionID,
+			Name:        "UpdatedExtension",
+			DisplayName: "Updated Extension",
+			Version:     "2.0.0",
+			Namespace:   "UPD",
+			IsBuiltin:   false,
+		}
+
+		updatedExtension, err := store.UpdateExtension(ctx, input)
+		require.NoError(t, err)
+		assert.Equal(t, services.Extension{
+			ID:          extensionID,
+			Name:        input.Name,
+			DisplayName: input.DisplayName,
+			Version:     input.Version,
+			Namespace:   input.Namespace,
+			IsBuiltin:   true,
+		}, updatedExtension)
+
+		persistedExtension, err := store.GetExtension(ctx, extensionID)
+		require.NoError(t, err)
+		assert.Equal(t, updatedExtension, persistedExtension)
+	})
+
+	t.Run("error_-_returns_extension_not_found", func(t *testing.T) {
+		store, _ := setupStore(t)
+		updatedExtension, err := store.UpdateExtension(ctx, services.Extension{
+			ID:          0,
+			Name:        "MissingExtension",
+			DisplayName: "Missing Extension",
+			Version:     "1.0.0",
+			Namespace:   "MIS",
+		})
+		require.ErrorIs(t, err, services.ErrExtensionNotFound)
+		assert.Equal(t, services.Extension{}, updatedExtension)
+	})
+
+	t.Run("error_-_rejects_duplicate_name", func(t *testing.T) {
+		store, pool := setupStore(t)
+		extensionID := seedExtension(t, ctx, pool)
+		var duplicateID int32
+		require.NoError(t, pool.QueryRow(ctx, `
+			INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace)
+			VALUES ('OtherExtension', 'Other Extension', '1.0.0', false, 'OTH')
+			RETURNING id`).Scan(&duplicateID))
+		t.Cleanup(func() {
+			_, err := pool.Exec(ctx, `DELETE FROM schema_extensions WHERE id = $1`, duplicateID)
+			require.NoError(t, err)
+		})
+
+		updatedExtension, err := store.UpdateExtension(ctx, services.Extension{
+			ID:          extensionID,
+			Name:        "OtherExtension",
+			DisplayName: "Updated Extension",
+			Version:     "2.0.0",
+			Namespace:   "UPD",
+		})
+		require.ErrorIs(t, err, services.ErrDuplicateExtensionName)
+		assert.Equal(t, services.Extension{}, updatedExtension)
+	})
+
+	t.Run("error_-_rejects_duplicate_namespace", func(t *testing.T) {
+		store, pool := setupStore(t)
+		extensionID := seedExtension(t, ctx, pool)
+		var duplicateID int32
+		require.NoError(t, pool.QueryRow(ctx, `
+			INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace)
+			VALUES ('OtherExtension', 'Other Extension', '1.0.0', false, 'OTH')
+			RETURNING id`).Scan(&duplicateID))
+		t.Cleanup(func() {
+			_, err := pool.Exec(ctx, `DELETE FROM schema_extensions WHERE id = $1`, duplicateID)
+			require.NoError(t, err)
+		})
+
+		updatedExtension, err := store.UpdateExtension(ctx, services.Extension{
+			ID:          extensionID,
+			Name:        "UpdatedExtension",
+			DisplayName: "Updated Extension",
+			Version:     "2.0.0",
+			Namespace:   "OTH",
+		})
+		require.ErrorIs(t, err, services.ErrDuplicateExtensionNamespace)
+		assert.Equal(t, services.Extension{}, updatedExtension)
+	})
 }
 
 func TestStore_GetExtensions_Integration(t *testing.T) {

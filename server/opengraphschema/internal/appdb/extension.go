@@ -169,9 +169,9 @@ func (s *Store) GetExtensions(ctx context.Context, extensionFilters params.Filte
 	return extensions, totalRowCount, nil
 }
 
-// CreateGraphSchemaExtension creates a new row in the extensions table.
+// CreateExtension creates a new row in the extensions table.
 // An Extension struct is returned, populated with the value as it stands in the database.
-func (s *Store) CreateGraphSchemaExtension(ctx context.Context, extension services.Extension) (services.Extension, error) {
+func (s *Store) CreateExtension(ctx context.Context, extension services.Extension) (services.Extension, error) {
 	// TODO BED-10577: also insert audit log
 
 	var insertBuilder = sqlbuilder.PostgreSQL.NewInsertBuilder()
@@ -222,4 +222,34 @@ func checkExtensionError(err error) error {
 	}
 
 	return err
+}
+
+// UpdateGraphSchemaExtension updates an existing Graph Schema Extension.
+// Only the `name`, `display_name`, and `version` fields are updatable.
+// It returns the updated extension, or an error if the update violates schema constraints or did not succeed.
+func (s *Store) UpdateExtension(ctx context.Context, extension services.Extension) (services.Extension, error) {
+	updateBuilder := sqlbuilder.PostgreSQL.NewUpdateBuilder()
+	updateBuilder.Update(tableSchemaExtensions)
+	updateBuilder.Set(
+		updateBuilder.Assign("name", extension.Name),
+		updateBuilder.Assign("display_name", extension.DisplayName),
+		updateBuilder.Assign("version", extension.Version),
+		updateBuilder.Assign("namespace", extension.Namespace),
+		updateBuilder.Assign("updated_at", time.Now()),
+	)
+
+	updateBuilder.Where(updateBuilder.Equal("id", extension.ID))
+	updateBuilder.Returning("id", "name", "display_name", "version", "is_builtin", "namespace")
+
+	sqlQuery, args := updateBuilder.Build()
+
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return services.Extension{}, fmt.Errorf("updating extension: %w", checkExtensionError(err))
+	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[extensionRow]); errors.Is(err, pgx.ErrNoRows) {
+		return services.Extension{}, services.ErrExtensionNotFound
+	} else if err != nil {
+		return services.Extension{}, fmt.Errorf("reading updated extension: %w", checkExtensionError(err))
+	} else {
+		return toExtension(row), nil
+	}
 }
