@@ -14,50 +14,19 @@
 # limitations under the License.
 #
 # SPDX-License-Identifier: Apache-2.0
-name: Continuous Deployment (CD)
+name: Validate BHCE Collector Image
 
 on:
-  workflow_dispatch:
-    inputs:
-      sharphound_version:
-        description: SharpHound version to bundle (defaults to latest stable version)
-        type: string
-        default: ""
-      azurehound_version:
-        description: AzureHound version to bundle (defaults to latest stable version)
-        type: string
-        default: ""
   push:
     branches:
-      - main
-    tags:
-      - v[0-9]+.[0-9]+.[0-9]+
-      - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
+      - lfalslev/bed-7545
 
 permissions:
   contents: read
 
 jobs:
-  validate-deployment:
-    name: Validate Deployment
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate manual release tag
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          set -euo pipefail
-          if [[ "$GITHUB_REF_TYPE" != tag || ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
-            echo "::error::Manual deployment requires a release tag matching vX.Y.Z or vX.Y.Z-rcN"
-            exit 1
-          fi
-
-  run-slow-go-tests:
-    name: Run Slow Go Tests
-    uses: ./.github/workflows/run-slow-go-tests.yml
-
   bloodhound-container-image:
-    name: Build and Publish BloodHound Container Image
-    needs: [run-slow-go-tests, validate-deployment]
+    name: Build and Validate BloodHound Container Image
     uses: ./.github/workflows/reusable.build-container-image.yml
     with:
       container_image_repository_name: |
@@ -67,10 +36,10 @@ jobs:
       build_context: .
       image_sbom: true
       image_provenance: mode=max
-      build_outputs: type=image,push=true
+      build_outputs: type=local,dest=/tmp/collector-image,platform-split=true
+      validate_bundled_collectors: true
       dockerfile: dockerfiles/bloodhound.Dockerfile
       image_cache_from: type=gha
-      image_cache_to: type=gha,mode=max
       image_flavor: latest=${{ (github.ref_name == 'main' || contains(github.ref_name, '-rc')) == false }}
       image_tags: |
         # Edge builds from main
@@ -91,8 +60,6 @@ jobs:
         type=semver,pattern={{major}}.{{minor}},enable=${{ ! contains(github.ref_name, '-rc') }}
         type=semver,pattern={{major}},enable=${{ ! contains(github.ref_name, '-rc') }}
       build_args: |
-        SHARPHOUND_VERSION=${{ inputs.sharphound_version }}
-        AZUREHOUND_VERSION=${{ inputs.azurehound_version }}
         checkout_hash=${{ github.sha }}
         ${{ github.ref_name != 'main' && format('version={0}', github.ref_name) }}
     secrets:
@@ -101,32 +68,5 @@ jobs:
       ghcr_account: ${{ github.actor }}
       ghcr_token: ${{ secrets.GITHUB_TOKEN }}
       gh_access_token: ${{ secrets.GITHUB_TOKEN }}
-      ecr_aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
-      ecr_aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
-
-  cosign-image-signing:
-    needs: bloodhound-container-image
-    name: Sign and Verify ${{ matrix.registry_kind }} image
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - registry_kind: dockerhub
-            image_repository: docker.io/specterops/bloodhound
-          - registry_kind: ecr
-            image_repository: 590372943691.dkr.ecr.us-east-1.amazonaws.com/bhce/deployment
-    permissions:
-      contents: read
-      id-token: write
-    uses: ./.github/workflows/reusable.cosign-image-signing.yml
-    with:
-      registry_kind: ${{ matrix.registry_kind }}
-      image_repository: ${{ matrix.image_repository }}
-      image_digest: ${{ needs.bloodhound-container-image.outputs.image_digest }}
-      aws_region: us-east-1
-      certificate_identity: https://github.com/SpecterOps/BloodHound/.github/workflows/reusable.cosign-image-signing.yml@${{ github.ref }}
-    secrets:
-      dockerhub_account: ${{ secrets.DOCKERHUB_USERNAME }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
       ecr_aws_access_key_id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
       ecr_aws_secret_access_key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
