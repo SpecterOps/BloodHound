@@ -20,16 +20,20 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/handlers"
+	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 )
 
 // Register attaches the extensions endpoints to the given router instance.
-func Register(routerInst *router.Router, handlerSet *handlers.Handlers) {
+func Register(routerInst *router.Router, handlerSet *handlers.Handlers, featureFlags services.FeatureFlag) {
 	var (
 		permissions           = auth.Permissions()
 		nodeKindRoute         = routerInst.GET(fmt.Sprintf("/api/v2/node-kinds/{%s}", handlers.URIPathVariableNodeKindID), handlerSet.GetNodeKindByID)
 		relationshipKindRoute = routerInst.GET(fmt.Sprintf("/api/v2/relationship-kinds/{%s}", handlers.URIPathVariableRelationshipKindID), handlerSet.GetRelationshipKindByID)
 	)
+
+	routerInst.GET("/api/v2/extensions", handlerSet.ListExtensions).CheckFeatureFlag(featureFlags, featureflags.FeatureOpenGraphExtensionManagement).RequirePermissions(permissions.OpenGraphRead)
 
 	nodeKindRoute.RequirePermissions(permissions.GraphDBRead)
 	relationshipKindRoute.RequirePermissions(permissions.GraphDBRead)
