@@ -14,14 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { LoadingSpinner } from './LoadingSpinner';
-
-expect.extend(matchers);
 
 describe('LoadingSpinner', () => {
     it('exposes a named indeterminate progress indicator without announcing the decorative icon', () => {

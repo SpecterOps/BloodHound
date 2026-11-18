@@ -25,7 +25,7 @@ type PathfindingSwapButtonProps = {
 const PathfindingSwapButton = ({ disabled, onSwapPathfindingInputs }: PathfindingSwapButtonProps) => {
     return (
         <Button
-            className='h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25 text-white'
+            className='h-7 w-7 min-w-7 p-0 rounded-[4px] border-black/25'
             disabled={disabled}
             aria-label='Swap start and destination'
             onClick={onSwapPathfindingInputs}>

@@ -13,14 +13,10 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent, type UserEvent } from '@testing-library/user-event';
 import { expect } from 'vitest';
 import { Drawer, DrawerBody, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from './Drawer';
-
-expect.extend(matchers);
 
 const renderDrawer = ({
     className,

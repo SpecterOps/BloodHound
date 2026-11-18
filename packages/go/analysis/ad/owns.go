@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -76,17 +77,17 @@ func PostOwnsAndWriteOwner(ctx context.Context, db graph.Database, localGroupDat
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostOwnsAndWriteOwner", db, ownsWriteOwnerTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	if err := postOwnsEdges(ctx, db, sink, dsHeuristicsCache, anyEnforced, adminGroupIds); err != nil {
-		return sink.Stats(), err
+		return sink.Stats(), errors.Join(err, sink.Abort())
 	}
 
 	if err := postWriteOwnerEdges(ctx, db, sink, dsHeuristicsCache, anyEnforced); err != nil {
-		return sink.Stats(), err
+		return sink.Stats(), errors.Join(err, sink.Abort())
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 func postOwnsEdges(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, dsHeuristicsCache map[string]bool, anyEnforced bool, adminGroupIds cardinality.Duplex[uint64]) error {

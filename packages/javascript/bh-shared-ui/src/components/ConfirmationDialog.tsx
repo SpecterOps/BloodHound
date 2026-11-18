@@ -24,7 +24,7 @@ import {
     DialogTitle,
     Input,
 } from 'doodle-ui';
-import React, { ReactNode, useCallback, useState } from 'react';
+import React, { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 const ConfirmationDialog: React.FC<{
     open: boolean;
@@ -34,6 +34,7 @@ const ConfirmationDialog: React.FC<{
     onConfirm: () => void;
     challengeText?: string;
     isLoading?: boolean;
+    isConfirmDisabled?: boolean;
     error?: string;
     cancelIcon?: ReactNode;
     confirmIcon?: ReactNode;
@@ -47,6 +48,7 @@ const ConfirmationDialog: React.FC<{
     text,
     onCancel,
     isLoading,
+    isConfirmDisabled,
     error,
     challengeText = '',
     onConfirm,
@@ -58,20 +60,34 @@ const ConfirmationDialog: React.FC<{
     confirmDataAnalytics,
 }) => {
     const [challengeTextReply, setChallengeTextReply] = useState<string>('');
+    const resetTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+    useEffect(() => {
+        if (open) {
+            clearTimeout(resetTimeout.current);
+            setChallengeTextReply('');
+        }
+    }, [open]);
+
+    useEffect(() => () => clearTimeout(resetTimeout.current), []);
+
+    const scheduleReset = useCallback(() => {
+        clearTimeout(resetTimeout.current);
+        resetTimeout.current = setTimeout(() => {
+            setChallengeTextReply('');
+            resetTimeout.current = undefined;
+        }, 1000);
+    }, []);
 
     const handleClose = useCallback(() => {
+        scheduleReset();
         onCancel();
-        setTimeout(() => {
-            setChallengeTextReply('');
-        }, 1000);
-    }, [onCancel]);
+    }, [onCancel, scheduleReset]);
 
     const handleConfirm = useCallback(() => {
+        scheduleReset();
         onConfirm();
-        setTimeout(() => {
-            setChallengeTextReply('');
-        }, 1000);
-    }, [onConfirm]);
+    }, [onConfirm, scheduleReset]);
 
     const renderButtonContent = (buttonText: string, icon?: ReactNode) => (
         <>
@@ -86,10 +102,13 @@ const ConfirmationDialog: React.FC<{
             <DialogPortal>
                 <DialogContent>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
-                    <DialogDescription className='text-lg'>{text}</DialogDescription>
+                    <DialogDescription asChild className='text-lg'>
+                        {/* Description can contain block elements that cannot be nested inside a paragraph, so using a div asChild */}
+                        <div>{text}</div>
+                    </DialogDescription>
                     {challengeText && (
                         <DialogDescription asChild className='text-sm'>
-                            <div className='pb-1'>
+                            <div className='pb-1 flex flex-col gap-1'>
                                 Please input "{challengeText}" prior to clicking confirm.
                                 <Input
                                     placeholder={challengeText}
@@ -113,7 +132,11 @@ const ConfirmationDialog: React.FC<{
                         <Button
                             data-analytics={confirmDataAnalytics}
                             onClick={handleConfirm}
-                            disabled={isLoading || challengeText.toLowerCase() !== challengeTextReply.toLowerCase()}
+                            disabled={
+                                isLoading ||
+                                isConfirmDisabled ||
+                                challengeText.toLowerCase() !== challengeTextReply.toLowerCase()
+                            }
                             data-testid='confirmation-dialog_button-yes'>
                             {renderButtonContent(confirmText, confirmIcon)}
                         </Button>

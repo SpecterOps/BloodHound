@@ -24,9 +24,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
-	alerts "github.com/specterops/bloodhound/server/alerts"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphretention"
+	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/appcfg"
+	"github.com/specterops/bloodhound/server/auth"
+	"github.com/specterops/bloodhound/server/dataquality"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
 	"github.com/specterops/bloodhound/server/identity"
@@ -40,14 +43,17 @@ import (
 // cutting dependencies (graph database, filesystem, caches, etc.) are added
 // here so that every module has a single, consistent place to pull from.
 type Deps struct {
-	Router         *router.Router
-	Pool           *pgxpool.Pool
-	Graph          graph.Database
-	DogTags        dogtags.Service
-	AlertPublisher alerts.Publisher
+	Router          *router.Router
+	Pool            *pgxpool.Pool
+	Graph           graph.Database
+	DogTags         dogtags.Service
+	AlertPublisher  alerts.Publisher
+	IdentityOptions []identity.Option
 	// Included to allow the config module to continue requesting some side effect
 	// legacy DB requests until that functionality can be migrated to onion
 	ConfigUpdateSideEffects appcfg.ConfigUpdateSideEffecter
+	// Included for backwards compatibility for the config onion
+	GraphRetentionManager graphretention.GraphRetentionManager
 	// RateLimitMiddleware is installed once for matched routes before authentication.
 	RateLimitMiddleware func() mux.MiddlewareFunc
 }
@@ -82,11 +88,15 @@ func Register(deps Deps) {
 		deps.AlertPublisher = alerts.NewAlertEventPublisher()
 	}
 
+	featureFlagAdapter := featureflags.NewFeatureFlagRequestAdapter(deps.Pool)
+
 	analysis.Register(deps.Router, deps.Pool)
-	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects)
-	identity.Register(deps.Router, deps.Pool)
+	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects, deps.GraphRetentionManager)
+	auth.Register(deps.Router, deps.Pool)
+	identity.Register(deps.Router, deps.Pool, deps.IdentityOptions...)
 	featureflags.Register(deps.Router, deps.Pool)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
-	opengraphschema.Register(deps.Router, deps.Pool)
+	opengraphschema.Register(deps.Router, deps.Pool, featureFlagAdapter)
+	dataquality.Register(deps.Router, deps.Pool)
 	savedqueries.Register(deps.Router, deps.Pool)
 }

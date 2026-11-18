@@ -13,8 +13,6 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import '@testing-library/jest-dom';
-import matchers from '@testing-library/jest-dom/matchers';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect, useState } from 'react';
@@ -33,8 +31,6 @@ import {
     useStepper,
     type Step,
 } from './index';
-
-expect.extend(matchers);
 
 function NextStep() {
     const { activeStep, setActiveStep } = useStepper();

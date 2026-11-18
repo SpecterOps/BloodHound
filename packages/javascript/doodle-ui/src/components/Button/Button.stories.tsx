@@ -66,6 +66,7 @@ Use a Button when a user remains in the current context and triggers an action, 
 
 - Use primary for the main action in a section or workflow.
 - Use secondary for supporting actions such as Cancel or Back.
+- Use tertiary only when product guidance calls for the orange outlined treatment.
 - Use TextButton for lower-emphasis text actions.
 - Use IconButton for icon-only actions.
 
@@ -118,7 +119,7 @@ Using the correct element provides expected keyboard behavior and helps assistiv
         },
         variant: {
             // TODO - remove transparent option
-            options: ['primary', 'secondary'],
+            options: ['primary', 'secondary', 'tertiary'],
             control: 'select',
         },
         // TODO - remove fontColor
@@ -133,8 +134,9 @@ Using the correct element provides expected keyboard behavior and helps assistiv
         },
         size: {
             options: ['small', 'medium', 'large'],
-            control: 'select',
-            description: 'deprecated',
+            control: false,
+            description:
+                '**Deprecated:** Contained buttons use uniform geometry. This prop is retained for legacy transparent and icon variants.',
             table: {
                 category: 'Deprecated',
             },
@@ -273,6 +275,31 @@ export const Secondary: ButtonStory = {
                 </Button>
             </div>
         </>
+    ),
+};
+
+export const Tertiary: ButtonStory = {
+    args: {
+        variant: 'tertiary',
+        children: 'Tertiary',
+        disabled: false,
+    },
+    parameters: {
+        docs: {
+            description: {
+                story: `The tertiary variant provides the orange outlined treatment. Use it only when product guidance calls for this visual hierarchy.`,
+            },
+        },
+    },
+    render: ({ variant, children, ...buttonProps }) => (
+        <div className='flex items-center gap-4'>
+            <Button variant={variant} {...buttonProps}>
+                {children}
+            </Button>
+            <Button variant='tertiary' disabled>
+                Disabled
+            </Button>
+        </div>
     ),
 };
 

@@ -311,6 +311,10 @@ func RoleMembers(tx graph.Transaction, tenant *graph.Node, roleTemplateIDs ...st
 }
 
 func roleMembers(tx graph.Transaction, tenantRoles graph.NodeSet, additionalRelationships ...graph.Kind) (graph.NodeSet, error) {
+	return roleMembersByRelationshipKinds(tx, tenantRoles, append(additionalRelationships, azure.MemberOf, azure.HasRole)...)
+}
+
+func roleMembersByRelationshipKinds(tx graph.Transaction, tenantRoles graph.NodeSet, relationships ...graph.Kind) (graph.NodeSet, error) {
 	members := graph.NewNodeSet()
 
 	for _, tenantRole := range tenantRoles {
@@ -319,7 +323,7 @@ func roleMembers(tx graph.Transaction, tenantRoles graph.NodeSet, additionalRela
 			Direction: graph.DirectionInbound,
 			BranchQuery: func() graph.Criteria {
 				return query.And(
-					query.KindIn(query.Relationship(), append(additionalRelationships, azure.MemberOf, azure.HasRole)...),
+					query.KindIn(query.Relationship(), relationships...),
 				)
 			},
 			DescentFilter: roleDescentFilter,

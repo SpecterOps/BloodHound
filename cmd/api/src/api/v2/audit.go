@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
 // AuditLogsResponse holds the data returned to an Audit logs request
@@ -114,9 +115,9 @@ func (s Resources) ListAuditLogs(response http.ResponseWriter, request *http.Req
 			return
 		} else if limit, err := ParseLimitQueryParameter(queryParams, 1000); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, limitQueryParam, err), response)
-		} else if getLogsBefore, err := ParseTimeQueryParameter(queryParams, logsBeforeQueryParam, time.Now()); err != nil {
+		} else if getLogsBefore, err := params.ParseTimeQueryParameter(queryParams, logsBeforeQueryParam, time.Now()); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsBeforeQueryParam, err), response)
-		} else if getLogsAfter, err := ParseTimeQueryParameter(queryParams, logsAfterQueryParam, getLogsBefore.Add(-time.Hour*24*365)); err != nil {
+		} else if getLogsAfter, err := params.ParseTimeQueryParameter(queryParams, logsAfterQueryParam, getLogsBefore.Add(-time.Hour*24*365)); err != nil {
 			api.WriteErrorResponse(request.Context(), ErrBadQueryParameter(request, logsAfterQueryParam, err), response)
 		} else if getLogsAfter.After(getLogsBefore) {
 			api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("query parameter \"%s\" must not be later than \"%s\"", logsAfterQueryParam, logsBeforeQueryParam), request), response)

@@ -207,6 +207,7 @@ const ExploreTable = ({
                     SearchInputProps={searchInputProps}
                 />
                 <MemoDataTable
+                    shouldFillHeight
                     TableHeaderProps={tableHeaderProps}
                     TableHeadProps={tableHeadProps}
                     TableProps={tableProps}

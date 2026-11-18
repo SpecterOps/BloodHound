@@ -1,4 +1,4 @@
-// Copyright 2023 Specter Ops, Inc.
+// Copyright 2026 Specter Ops, Inc.
 //
 // Licensed under the Apache License, Version 2.0
 // you may not use this file except in compliance with the License.
@@ -13,20 +13,4 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-
-package v2
-
-import "time"
-
-// Constants and functions relating to pagination
-
-const (
-	// DefaultTimeRangeDuration is the default time range for range query parameters: 30 days prior to now
-	DefaultTimeRangeDuration = -30 * 24 * time.Hour
-)
-
-func DefaultTimeRange() (time.Time, time.Time) {
-	now := time.Now()
-
-	return now, now.Add(DefaultTimeRangeDuration)
-}
+export * from './ButtonGroup';

@@ -17,7 +17,9 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -200,4 +202,95 @@ func TestAuth_CreateSSOSession(t *testing.T) {
 		_, err := gothamSAML.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
 		require.ErrorIs(t, err, model.ErrSAMLAssertion)
 	})
+}
+
+func TestAuth_SAMLLogging(t *testing.T) {
+	var (
+		testCases = []struct {
+			name                   string
+			principalAttributeName string
+			principalValue         string
+			groupMembership        string
+			employeeID             string
+			expectedPrincipalName  string
+			expectedError          error
+		}{
+			{
+				name:                   "principal found with group and employee attributes",
+				principalAttributeName: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress",
+				principalValue:         "alice123@example.invalid",
+				groupMembership:        "Finance-Admins",
+				employeeID:             "E10427",
+				expectedPrincipalName:  "alice123@example.invalid",
+			},
+			{
+				name:                   "principal missing with group and employee attributes",
+				principalAttributeName: "uid",
+				principalValue:         "bob123@example.invalid",
+				groupMembership:        "Payroll-Readers",
+				employeeID:             "E20853",
+				expectedError:          model.ErrSAMLAssertion,
+			},
+		}
+	)
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				logBuffer      bytes.Buffer
+				previousLogger = slog.Default()
+				samlProvider   = model.SAMLProvider{}
+				testAssertion  = &saml.Assertion{
+					AttributeStatements: []saml.AttributeStatement{{
+						Attributes: []saml.Attribute{
+							{
+								Name:       testCase.principalAttributeName,
+								NameFormat: model.ObjectIDAttributeNameFormat,
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: testCase.principalValue,
+								}},
+							},
+							{
+								Name:       "groups",
+								NameFormat: "urn:oasis:names:tc:SAML:2.0:attrname-format:basic",
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: testCase.groupMembership,
+								}},
+							},
+							{
+								Name:       "employeeNumber",
+								NameFormat: "urn:oasis:names:tc:SAML:2.0:attrname-format:basic",
+								Values: []saml.AttributeValue{{
+									Type:  model.XMLTypeString,
+									Value: testCase.employeeID,
+								}},
+							},
+						},
+					}},
+				}
+			)
+
+			t.Cleanup(func() { slog.SetDefault(previousLogger) })
+			// enable debug logging so this catches raw values logged at any standard level
+			slog.SetDefault(slog.New(slog.NewJSONHandler(&logBuffer, &slog.HandlerOptions{Level: slog.LevelDebug})))
+
+			principalName, err := samlProvider.GetSAMLUserPrincipalNameFromAssertion(testAssertion)
+			if testCase.expectedError != nil {
+				require.ErrorIs(t, err, testCase.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, testCase.expectedPrincipalName, principalName)
+			require.Contains(t, logBuffer.String(), `"name":"`+testCase.principalAttributeName+`"`)
+			require.Contains(t, logBuffer.String(), `"name":"groups"`)
+			require.Contains(t, logBuffer.String(), `"name":"employeeNumber"`)
+			require.Contains(t, logBuffer.String(), `"name_format":"`+model.ObjectIDAttributeNameFormat+`"`)
+			require.Contains(t, logBuffer.String(), `"name_format":"urn:oasis:names:tc:SAML:2.0:attrname-format:basic"`)
+			require.NotContains(t, logBuffer.String(), testCase.principalValue)
+			require.NotContains(t, logBuffer.String(), testCase.groupMembership)
+			require.NotContains(t, logBuffer.String(), testCase.employeeID)
+		})
+	}
 }

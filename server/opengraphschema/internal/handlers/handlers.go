@@ -25,6 +25,7 @@ import (
 
 // OpenGraphSchema defines the schema service boundary for the OpenGraph schema handlers package.
 type OpenGraphSchema interface {
+	ListExtensions(ctx context.Context) ([]services.Extension, error)
 	GetNodeKind(ctx context.Context, id int32) (services.NodeKind, error)
 	GetRelationshipKind(ctx context.Context, id int32) (services.RelationshipKind, error)
 }
