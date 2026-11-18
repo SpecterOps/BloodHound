@@ -246,7 +246,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 				},
 			},
 		}
-		configJSON   = `{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`
+		configJSON    = `{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`
 		databaseError = errors.New("db error")
 	)
 
@@ -348,8 +348,8 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 }
 
 const (
-	expectedGetCustomNodeKindsSQL = `SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM custom_node_kinds AS cnk JOIN kind AS k ON cnk.kind_id = k.id ORDER BY cnk.id ASC`
-	expectedGetCustomNodeKindSQL  = `SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM custom_node_kinds AS cnk JOIN kind AS k ON cnk.kind_id = k.id WHERE k.name = $1`
+	expectedGetCustomNodeKindsSQL   = `SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM custom_node_kinds AS cnk JOIN kind AS k ON cnk.kind_id = k.id ORDER BY cnk.id ASC`
+	expectedGetCustomNodeKindSQL    = `SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM custom_node_kinds AS cnk JOIN kind AS k ON cnk.kind_id = k.id WHERE k.name = $1`
 	expectedUpdateCustomNodeKindSQL = `WITH updated_custom_node_kind AS (UPDATE custom_node_kinds AS cnk SET schema_node_kind_id = COALESCE($1, schema_node_kind_id), config = $2::jsonb, updated_at = NOW() FROM kind AS k WHERE k.id = cnk.kind_id AND k.name = $3 RETURNING cnk.id, cnk.kind_id, cnk.schema_node_kind_id, cnk.config) SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM updated_custom_node_kind AS cnk JOIN kind AS k ON cnk.kind_id = k.id`
 )
 
