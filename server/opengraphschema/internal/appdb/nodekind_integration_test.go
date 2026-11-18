@@ -388,6 +388,21 @@ func TestStore_E2ECustomNodeKinds_Integration(t *testing.T) {
 		_, err := store.CreateCustomNodeKinds(ctx, customNodeKinds[:1])
 		assert.ErrorIs(t, err, services.ErrDuplicateCustomNodeKindName)
 	})
+
+	t.Run("deletes the custom node kind and preserves the kind registry entry", func(t *testing.T) {
+		err := store.DeleteCustomNodeKind(ctx, customNodeKinds[0].KindName)
+		require.NoError(t, err)
+
+		var customNodeKindCount, kindCount int
+		require.NoError(t, pool.QueryRow(ctx, `
+			SELECT count(*) FROM custom_node_kinds AS cnk
+			JOIN kind AS k ON k.id = cnk.kind_id
+			WHERE k.name = $1`, customNodeKinds[0].KindName).Scan(&customNodeKindCount))
+		require.NoError(t, pool.QueryRow(ctx, `
+			SELECT count(*) FROM kind WHERE name = $1`, customNodeKinds[0].KindName).Scan(&kindCount))
+		assert.Zero(t, customNodeKindCount)
+		assert.Equal(t, 1, kindCount)
+	})
 }
 
 func TestStore_GetGraphSchemaNodeKinds_Integration(t *testing.T) {

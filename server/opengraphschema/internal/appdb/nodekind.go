@@ -403,9 +403,6 @@ func checkNodeKindError(err error, name string) error {
 	return err
 }
 
-// TODO: Port the remaining custom node kind CRUD from cmd/api/src/database/customnode.go:
-// DeleteCustomNodeKind.
-
 // TODO BED-10577: re-implement auditing
 
 // CreateCustomNodeKinds creates custom node kinds, registering their names in the kind table first.
@@ -662,6 +659,28 @@ func (s *Store) UpdateCustomNodeKind(ctx context.Context, customNodeKind service
 	}
 
 	return updatedCustomNodeKind, nil
+}
+
+// DeleteCustomNodeKind deletes a custom node kind by name without deleting its kind registry entry.
+func (s *Store) DeleteCustomNodeKind(ctx context.Context, kindName string) error {
+	deleteBuilder := sqlbuilder.PostgreSQL.NewDeleteBuilder()
+
+	deleteBuilder.DeleteFrom(tableCustomNodeKinds)
+	deleteBuilder.Where(
+		"kind_id = (SELECT id FROM "+tableKind+" WHERE name = "+deleteBuilder.Var(kindName)+")",
+	)
+	deleteBuilder.Returning("id")
+
+	sqlQuery, args := deleteBuilder.Build()
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return fmt.Errorf("deleting custom node kind %q: %w", kindName, err)
+	} else if _, err := pgx.CollectOneRow(rows, pgx.RowTo[int32]); errors.Is(err, pgx.ErrNoRows) {
+		return services.ErrCustomNodeKindNotFound
+	} else if err != nil {
+		return fmt.Errorf("reading deleted custom node kind %q: %w", kindName, err)
+	}
+
+	return nil
 }
 
 func checkCustomNodeKindError(err error) error {

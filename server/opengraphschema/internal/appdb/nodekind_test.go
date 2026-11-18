@@ -613,9 +613,59 @@ func TestStore_UpdateCustomNodeKind(t *testing.T) {
 	})
 }
 
+func TestStore_DeleteCustomNodeKind(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx      = context.Background()
+		kindName = "CustomKind"
+	)
+
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectQuery(expectedDeleteCustomNodeKindSQL).
+			WithArgs(kindName).
+			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(42))
+
+		err := store.DeleteCustomNodeKind(ctx, kindName)
+		require.NoError(t, err)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectQuery(expectedDeleteCustomNodeKindSQL).
+			WithArgs(kindName).
+			WillReturnRows(pool.NewRows([]string{"id"}))
+
+		err := store.DeleteCustomNodeKind(ctx, kindName)
+		assert.ErrorIs(t, err, services.ErrCustomNodeKindNotFound)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("query error", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		databaseError := errors.New("db error")
+		pool.ExpectQuery(expectedDeleteCustomNodeKindSQL).
+			WithArgs(kindName).
+			WillReturnError(databaseError)
+
+		err := store.DeleteCustomNodeKind(ctx, kindName)
+		assert.ErrorIs(t, err, databaseError)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+}
+
 const (
 	expectedGetGraphSchemaNodeKindsSQL       = `SELECT nk.id, nk.kind_id, k.name, nk.schema_extension_id, nk.display_name, nk.description, nk.is_display_kind, nk.icon, nk.icon_color, nk.created_at, nk.updated_at, nk.deleted_at FROM schema_node_kinds AS nk JOIN kind AS k ON nk.kind_id = k.id`
 	expectedCountGraphSchemaNodeKindsSQL     = `SELECT COUNT(*) FROM schema_node_kinds AS nk JOIN kind AS k ON nk.kind_id = k.id`
+	expectedDeleteCustomNodeKindSQL          = `DELETE FROM custom_node_kinds WHERE kind_id = (SELECT id FROM kind WHERE name = $1) RETURNING id`
 	expectedUpdateGraphSchemaNodeKindIconSQL = `UPDATE schema_node_kinds SET icon = $1, icon_color = $2, updated_at = NOW() WHERE id = $3 RETURNING icon, icon_color`
 )
 
