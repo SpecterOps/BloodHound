@@ -23,7 +23,7 @@ export const buttonBaseClasses = [
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 
-const containedButtonGeometryClasses = 'rounded p-2 text-sm/none';
+const containedButtonGeometryClasses = 'rounded p-2 text-sm/5 [&>svg]:size-4';
 
 const containedButtonStateClasses = [
     'hover:bg-secondary hover:text-inverse',
@@ -43,18 +43,11 @@ const containedSecondaryClasses = [
     'disabled:bg-[color:var(--button-disabled-fill)]',
 ];
 
-const containedTertiaryClasses = [
-    'border border-brand-orange bg-elevation-1 text-main',
-    ...containedButtonStateClasses,
-    'disabled:border-[color:var(--button-disabled-fill)] disabled:bg-[color:var(--button-disabled-fill)]',
-];
-
 export const ButtonVariants = cva(buttonBaseClasses, {
     variants: {
         variant: {
             primary: containedPrimaryClasses,
             secondary: containedSecondaryClasses,
-            tertiary: containedTertiaryClasses,
             // TODO - remove in BED-7642
             // used in DropdownTriggerContents & EnvironmentSelectorTrigger
             /**
@@ -100,7 +93,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
     },
     compoundVariants: [
         {
-            variant: ['primary', 'secondary', 'tertiary'],
+            variant: ['primary', 'secondary'],
             size: ['small', 'medium', 'large'],
             className: containedButtonGeometryClasses,
         },
