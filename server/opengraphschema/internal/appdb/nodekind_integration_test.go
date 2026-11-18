@@ -315,7 +315,7 @@ func TestStore_E2ECustomNodeKinds_Integration(t *testing.T) {
 			assert.Equal(t, customNodeKind.SchemaNodeKindId, created[i].SchemaNodeKindId)
 			assert.Equal(t, customNodeKind.Config, created[i].Config)
 		}
-		assert.Equal(t, int16(preexistingKindID), created[1].KindId)
+		assert.Equal(t, preexistingKindID, created[1].KindId)
 
 		// A should be created exactly once; B should retain its pre-existing kind ID.
 		var createdKindCount int
@@ -356,7 +356,7 @@ func TestStore_E2ECustomNodeKinds_Integration(t *testing.T) {
 			&storedID, &storedKindID, &storedSchemaNodeKindID, &storedConfig,
 		))
 		assert.Equal(t, created[0].ID, storedID)
-		assert.Equal(t, int32(created[0].KindId), storedKindID)
+		assert.Equal(t, created[0].KindId, storedKindID)
 		assert.Equal(t, seeded.nodeKindID, storedSchemaNodeKindID)
 		assert.JSONEq(t, `{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`, string(storedConfig))
 	})

@@ -259,7 +259,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 			WithArgs(customNodeKind.KindName).
 			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(99)))
 		pool.ExpectQuery(expectedInsertCustomNodeKindSQL).
-			WithArgs(configJSON, &schemaNodeKindID, int16(99)).
+			WithArgs(configJSON, &schemaNodeKindID, int32(99)).
 			WillReturnRows(pool.NewRows([]string{
 				"id", "kind_name", "kind_id", "schema_node_kind_id", "config",
 			}).AddRow(int32(42), customNodeKind.KindName, int32(99), &schemaNodeKindID, json.RawMessage(configJSON)))
@@ -300,7 +300,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 			WithArgs(customNodeKind.KindName).
 			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(99)))
 		pool.ExpectQuery(expectedInsertCustomNodeKindSQL).
-			WithArgs(configJSON, &schemaNodeKindID, int16(99)).
+			WithArgs(configJSON, &schemaNodeKindID, int32(99)).
 			WillReturnError(&pgconn.PgError{
 				Code:           appdb.PostgresUniqueViolationCode,
 				ConstraintName: "custom_node_kinds_kind_id_key",
@@ -325,7 +325,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 			WithArgs(customNodeKind.KindName).
 			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(99)))
 		pool.ExpectQuery(expectedInsertCustomNodeKindSQL).
-			WithArgs(configJSON, &schemaNodeKindID, int16(99)).
+			WithArgs(configJSON, &schemaNodeKindID, int32(99)).
 			WillReturnRows(pool.NewRows([]string{
 				"id", "kind_name", "kind_id", "schema_node_kind_id", "config",
 			}).AddRow(int32(42), customNodeKind.KindName, int32(99), &schemaNodeKindID, json.RawMessage(configJSON)))
@@ -333,7 +333,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 			WithArgs(failingCustomNodeKind.KindName).
 			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(100)))
 		pool.ExpectQuery(expectedInsertCustomNodeKindSQL).
-			WithArgs(configJSON, &schemaNodeKindID, int16(100)).
+			WithArgs(configJSON, &schemaNodeKindID, int32(100)).
 			WillReturnError(databaseError)
 		pool.ExpectRollback()
 
@@ -381,7 +381,7 @@ func TestStore_GetCustomNodeKinds(t *testing.T) {
 		store, pool := newTestStore(t)
 		pool.ExpectQuery(expectedGetCustomNodeKindsSQL).WillReturnRows(
 			pool.NewRows(columns).AddRow(
-				customNodeKind.ID, customNodeKind.KindName, int32(customNodeKind.KindId),
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
 				&schemaNodeKindID, configJSON,
 			),
 		)
@@ -447,7 +447,7 @@ func TestStore_GetCustomNodeKind(t *testing.T) {
 		pool.ExpectQuery(expectedGetCustomNodeKindSQL).
 			WithArgs(customNodeKind.KindName).
 			WillReturnRows(pool.NewRows(columns).AddRow(
-				customNodeKind.ID, customNodeKind.KindName, int32(customNodeKind.KindId),
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
 				&schemaNodeKindID, configJSON,
 			))
 
