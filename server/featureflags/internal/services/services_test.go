@@ -56,7 +56,7 @@ func expectAudit(m serviceMocks, ctx context.Context, flag services.FeatureFlag,
 	var (
 		commitID = uuid.Must(uuid.NewV4())
 		entry    = audit.Entry{
-			Action: model.AuditLogActionToggleEarlyAccessFeatureFlag,
+			Action: audit.ActionToggleEarlyAccessFeatureFlag,
 			Fields: flag.AuditData(),
 		}
 	)
@@ -396,7 +396,7 @@ func TestService_ToggleFlag(t *testing.T) {
 			args: args{ctx: ctx, featureID: updatableFlag.ID},
 			setupMocks: func(m serviceMocks) {
 				m.database.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
-				entry := audit.Entry{Action: model.AuditLogActionToggleEarlyAccessFeatureFlag, Fields: toggledUpdatableFlag.AuditData()}
+				entry := audit.Entry{Action: audit.ActionToggleEarlyAccessFeatureFlag, Fields: toggledUpdatableFlag.AuditData()}
 				m.auditor.EXPECT().Begin(ctx, entry).Return(uuid.Nil, auditIntentErr)
 			},
 			want: want{flag: toggledUpdatableFlag, err: auditIntentErr},
@@ -406,7 +406,7 @@ func TestService_ToggleFlag(t *testing.T) {
 			args: args{ctx: ctx, featureID: updatableFlag.ID},
 			setupMocks: func(m serviceMocks) {
 				commitID := uuid.Must(uuid.NewV4())
-				entry := audit.Entry{Action: model.AuditLogActionToggleEarlyAccessFeatureFlag, Fields: toggledUpdatableFlag.AuditData()}
+				entry := audit.Entry{Action: audit.ActionToggleEarlyAccessFeatureFlag, Fields: toggledUpdatableFlag.AuditData()}
 				m.database.EXPECT().GetFlagByID(ctx, updatableFlag.ID).Return(updatableFlag, nil)
 				m.auditor.EXPECT().Begin(ctx, entry).Return(commitID, nil)
 				m.database.EXPECT().SetFlag(ctx, toggledUpdatableFlag).Return(nil)

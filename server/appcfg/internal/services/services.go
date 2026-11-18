@@ -26,6 +26,7 @@ import (
 
 var (
 	ErrNotFound = errors.New("not found")
+	ErrAuditLog = errors.New("audit log operation failed")
 )
 
 type Database interface {

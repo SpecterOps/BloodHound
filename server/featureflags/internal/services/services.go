@@ -196,7 +196,7 @@ func (s *Service) ToggleFlag(ctx context.Context, id int32) (FeatureFlag, error)
 func (s *Service) setFlag(ctx context.Context, flag FeatureFlag) error {
 	var (
 		entry = audit.Entry{
-			Action: model.AuditLogActionToggleEarlyAccessFeatureFlag,
+			Action: audit.ActionToggleEarlyAccessFeatureFlag,
 			Fields: flag.AuditData(),
 		}
 		commitID     uuid.UUID

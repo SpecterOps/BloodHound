@@ -29,7 +29,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -101,24 +100,32 @@ func (s Reader) GetAllApplicationConfigurations(ctx context.Context) (Parameters
 func (s Service) UpsertApplicationConfiguration(ctx context.Context, parameterKey ParameterKey, value types.JSONBObject) error {
 	var (
 		entry = audit.Entry{
-			Action: model.AuditLogActionUpdateParameter,
+			Action: audit.ActionUpdateParameter,
 			Fields: map[string]any{
 				"key":   parameterKey,
 				"value": value,
 			},
 		}
-		commitID     uuid.UUID
-		operationErr error
-		err          error
+		commitID           uuid.UUID
+		operationErr       error
+		auditCompletionErr error
+		err                error
 	)
 
 	if commitID, err = s.auditor.Begin(ctx, entry); err != nil {
-		return fmt.Errorf("writing update parameter audit intent: %w", err)
+		return fmt.Errorf("%w: writing update parameter audit intent: %s", ErrAuditLog, err)
 	}
 
-	operationErr = s.db.UpsertConfigurationParameter(ctx, parameterKey, value)
-	if err = s.auditor.Complete(ctx, commitID, entry, operationErr); err != nil {
-		return fmt.Errorf("writing update parameter audit outcome: %w", err)
+	func() {
+		defer func() {
+			auditCompletionErr = s.auditor.Complete(ctx, commitID, entry, operationErr)
+		}()
+
+		operationErr = s.db.UpsertConfigurationParameter(ctx, parameterKey, value)
+	}()
+
+	if auditCompletionErr != nil {
+		return fmt.Errorf("%w: writing update parameter audit outcome: %s", ErrAuditLog, auditCompletionErr)
 	}
 
 	return operationErr

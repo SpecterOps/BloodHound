@@ -29,7 +29,15 @@ import (
 	"github.com/specterops/bloodhound/server/audit/internal/services"
 )
 
-type Entry = services.Entry
+type Entry = services.AuditLogEntry
+type Action = services.Action
+
+const (
+	ActionUpdateParameter              = services.ActionUpdateParameter
+	ActionToggleEarlyAccessFeatureFlag = services.ActionToggleEarlyAccessFeatureFlag
+)
+
+var ErrAuditLog = services.ErrAuditLog
 
 // AuditRequestAdapter records the intent and outcome rows that make up one legacy audit event.
 type AuditRequestAdapter interface {

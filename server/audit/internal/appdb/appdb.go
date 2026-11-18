@@ -22,25 +22,43 @@ import (
 	"fmt"
 
 	"github.com/huandu/go-sqlbuilder"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/server/audit/internal/services"
 )
 
-const tableAuditLogs = "audit_logs"
+const (
+	tableAuditLogs                = "audit_logs"
+	auditLogColumnCreatedAt       = "created_at"
+	auditLogColumnActorID         = "actor_id"
+	auditLogColumnActorName       = "actor_name"
+	auditLogColumnActorEmail      = "actor_email"
+	auditLogColumnAction          = "action"
+	auditLogColumnFields          = "fields"
+	auditLogColumnRequestID       = "request_id"
+	auditLogColumnSourceIPAddress = "source_ip_address"
+	auditLogColumnStatus          = "status"
+	auditLogColumnCommitID        = "commit_id"
+	sqlCurrentTimestamp           = "current_timestamp"
+)
 
-type pgxExecer interface {
-	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+// pgxQuerier lists the pgx methods used by the audit persistence slice and
+// supports future audit-log queries and transactional operations.
+type pgxQuerier interface {
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }
 
 type Store struct {
-	database pgxExecer
+	db pgxQuerier
 }
 
-func NewStore(databaseInterface pgxExecer) *Store {
-	return &Store{database: databaseInterface}
+func NewStore(databaseInterface pgxQuerier) *Store {
+	return &Store{db: databaseInterface}
 }
 
-func (s *Store) CreateAuditLog(ctx context.Context, auditLog services.Log) error {
+func (s *Store) CreateAuditLog(ctx context.Context, auditLog services.AuditLog) error {
 	var (
 		insertBuilder = sqlbuilder.PostgreSQL.NewInsertBuilder()
 		fields        []byte
@@ -55,12 +73,19 @@ func (s *Store) CreateAuditLog(ctx context.Context, auditLog services.Log) error
 
 	insertBuilder.InsertInto(tableAuditLogs)
 	insertBuilder.Cols(
-		"created_at", "actor_id", "actor_name", "actor_email",
-		"action", "fields", "request_id", "source_ip_address",
-		"status", "commit_id",
+		auditLogColumnCreatedAt,
+		auditLogColumnActorID,
+		auditLogColumnActorName,
+		auditLogColumnActorEmail,
+		auditLogColumnAction,
+		auditLogColumnFields,
+		auditLogColumnRequestID,
+		auditLogColumnSourceIPAddress,
+		auditLogColumnStatus,
+		auditLogColumnCommitID,
 	)
 	insertBuilder.Values(
-		auditLog.CreatedAt,
+		sqlbuilder.Raw(sqlCurrentTimestamp),
 		auditLog.ActorID,
 		auditLog.ActorName,
 		auditLog.ActorEmail,
@@ -73,7 +98,7 @@ func (s *Store) CreateAuditLog(ctx context.Context, auditLog services.Log) error
 	)
 
 	sqlQuery, arguments = insertBuilder.Build()
-	if _, err = s.database.Exec(ctx, sqlQuery, arguments...); err != nil {
+	if _, err = s.db.Exec(ctx, sqlQuery, arguments...); err != nil {
 		return fmt.Errorf("inserting audit log: %w", err)
 	}
 

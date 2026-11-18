@@ -20,11 +20,11 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/audit/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,18 +36,32 @@ type mock struct {
 }
 
 type mockDatabase struct {
-	logs []services.Log
-	err  error
+	logs             []services.AuditLog
+	contextSnapshots []contextSnapshot
+	err              error
 }
 
-func (s *mockDatabase) CreateAuditLog(_ context.Context, auditLog services.Log) error {
+type contextSnapshot struct {
+	err         error
+	deadline    time.Time
+	hasDeadline bool
+}
+
+func (s *mockDatabase) CreateAuditLog(ctx context.Context, auditLog services.AuditLog) error {
+	deadline, hasDeadline := ctx.Deadline()
+	s.contextSnapshots = append(s.contextSnapshots, contextSnapshot{
+		err:         ctx.Err(),
+		deadline:    deadline,
+		hasDeadline: hasDeadline,
+	})
 	s.logs = append(s.logs, auditLog)
 	return s.err
 }
 
 type mockIdentityResolver struct {
-	identity auth.SimpleIdentity
-	err      error
+	identity          auth.SimpleIdentity
+	expectedAuthOwner any
+	err               error
 }
 
 func TestNewService_NilDependenciesPanic(t *testing.T) {
@@ -84,7 +98,11 @@ func TestNewService_NilDependenciesPanic(t *testing.T) {
 	}
 }
 
-func (s mockIdentityResolver) GetIdentity(auth.Context) (auth.SimpleIdentity, error) {
+func (s mockIdentityResolver) GetIdentity(authContext auth.Context) (auth.SimpleIdentity, error) {
+	if s.expectedAuthOwner != nil && authContext.Owner != s.expectedAuthOwner {
+		return auth.SimpleIdentity{}, errors.New("unexpected auth context owner")
+	}
+
 	return s.identity, s.err
 }
 
@@ -98,8 +116,8 @@ func TestService_Begin(t *testing.T) {
 			RequestID: "request-id",
 			RequestIP: "127.0.0.1",
 		})
-		entry = services.Entry{
-			Action: model.AuditLogActionUpdateParameter,
+		entry = services.AuditLogEntry{
+			Action: services.ActionUpdateParameter,
 			Fields: map[string]any{"key": "value"},
 		}
 	)
@@ -153,7 +171,7 @@ func TestService_Begin(t *testing.T) {
 				actorID    string
 				actorName  string
 				actorEmail string
-			}{error: writeErr, logCount: 1},
+			}{error: services.ErrAuditLog, logCount: 1},
 		},
 	}
 
@@ -171,6 +189,8 @@ func TestService_Begin(t *testing.T) {
 
 			if testCase.expected.error != nil {
 				assert.ErrorIs(t, err, testCase.expected.error)
+				assert.NotErrorIs(t, err, writeErr)
+				assert.ErrorContains(t, err, writeErr.Error())
 				assert.True(t, commitID.IsNil())
 			} else {
 				require.NoError(t, err)
@@ -178,7 +198,7 @@ func TestService_Begin(t *testing.T) {
 			}
 			require.Len(t, mocks.database.logs, testCase.expected.logCount)
 			auditLog := mocks.database.logs[0]
-			assert.Equal(t, model.AuditLogStatusIntent, auditLog.Status)
+			assert.Equal(t, services.StatusIntent, auditLog.Status)
 			assert.Equal(t, entry.Action, auditLog.Action)
 			assert.Equal(t, entry.Fields, auditLog.Fields)
 			assert.Equal(t, "request-id", auditLog.RequestID)
@@ -193,71 +213,110 @@ func TestService_Begin(t *testing.T) {
 func TestService_Complete(t *testing.T) {
 	t.Parallel()
 
+	type expected struct {
+		status          services.Status
+		error           error
+		fields          map[string]any
+		requestID       string
+		sourceIPAddress string
+		actorID         string
+	}
+
 	var (
+		actorID      = uuid.Must(uuid.NewV4())
 		commitID     = uuid.Must(uuid.NewV4())
 		operationErr = errors.New("operation failed")
 		writeErr     = errors.New("write failed")
-		entry        = services.Entry{
-			Action: model.AuditLogActionUpdateParameter,
+		entry        = services.AuditLogEntry{
+			Action: services.ActionUpdateParameter,
 			Fields: map[string]any{"key": "value"},
 		}
 	)
 
 	tests := []struct {
-		name         string
-		operationErr error
-		writeErr     error
-		expected     struct {
-			status model.AuditLogEntryStatus
-			error  error
-			fields map[string]any
-		}
+		name             string
+		buildContext     func() context.Context
+		identityResolver mockIdentityResolver
+		operationErr     error
+		writeErr         error
+		expected         expected
 	}{
 		{
-			name: "Success: writes success outcome",
-			expected: struct {
-				status model.AuditLogEntryStatus
-				error  error
-				fields map[string]any
-			}{status: model.AuditLogStatusSuccess, fields: map[string]any{"key": "value"}},
+			name:     "Success: writes success outcome",
+			expected: expected{status: services.StatusSuccess, fields: map[string]any{"key": "value"}},
 		},
 		{
 			name:         "Success: writes failure outcome with operation error",
 			operationErr: operationErr,
-			expected: struct {
-				status model.AuditLogEntryStatus
-				error  error
-				fields map[string]any
-			}{status: model.AuditLogStatusFailure, fields: map[string]any{"key": "value", "error": operationErr.Error()}},
+			expected:     expected{status: services.StatusFailure, fields: map[string]any{"key": "value", "error": operationErr.Error()}},
 		},
 		{
 			name:     "Error: audit insert failure",
 			writeErr: writeErr,
-			expected: struct {
-				status model.AuditLogEntryStatus
-				error  error
-				fields map[string]any
-			}{status: model.AuditLogStatusSuccess, error: writeErr, fields: map[string]any{"key": "value"}},
+			expected: expected{status: services.StatusSuccess, error: services.ErrAuditLog, fields: map[string]any{"key": "value"}},
+		},
+		{
+			name: "Success: writes outcome after request cancellation and preserves request values",
+			buildContext: func() context.Context {
+				requestContext := bhctx.Set(context.Background(), &bhctx.Context{
+					RequestID: "request-id",
+					RequestIP: "127.0.0.1",
+					AuthCtx:   auth.Context{Owner: "actor-owner"},
+				})
+				canceledContext, cancel := context.WithCancel(requestContext)
+				cancel()
+
+				return canceledContext
+			},
+			identityResolver: mockIdentityResolver{
+				identity:          auth.SimpleIdentity{ID: actorID},
+				expectedAuthOwner: "actor-owner",
+			},
+			expected: expected{
+				status:          services.StatusSuccess,
+				fields:          map[string]any{"key": "value"},
+				requestID:       "request-id",
+				sourceIPAddress: "127.0.0.1",
+				actorID:         actorID.String(),
+			},
 		},
 	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
-			var database = &mockDatabase{err: testCase.writeErr}
-			service := services.NewService(database, mockIdentityResolver{err: errors.New("identity unavailable")})
+			var (
+				ctx              = context.Background()
+				database         = &mockDatabase{err: testCase.writeErr}
+				identityResolver = mockIdentityResolver{err: errors.New("identity unavailable")}
+			)
+			if testCase.buildContext != nil {
+				ctx = testCase.buildContext()
+				identityResolver = testCase.identityResolver
+			}
+			service := services.NewService(database, identityResolver)
 
-			err := service.Complete(context.Background(), commitID, entry, testCase.operationErr)
+			err := service.Complete(ctx, commitID, entry, testCase.operationErr)
 
 			if testCase.expected.error != nil {
 				assert.ErrorIs(t, err, testCase.expected.error)
+				assert.NotErrorIs(t, err, writeErr)
+				assert.ErrorContains(t, err, writeErr.Error())
 			} else {
 				require.NoError(t, err)
 			}
 			require.Len(t, database.logs, 1)
+			require.Len(t, database.contextSnapshots, 1)
+			assert.NoError(t, database.contextSnapshots[0].err)
+			assert.True(t, database.contextSnapshots[0].hasDeadline)
+			assert.Positive(t, time.Until(database.contextSnapshots[0].deadline))
+			assert.LessOrEqual(t, time.Until(database.contextSnapshots[0].deadline), 30*time.Second)
 			assert.Equal(t, testCase.expected.status, database.logs[0].Status)
 			assert.Equal(t, commitID, database.logs[0].CommitID)
 			assert.Equal(t, testCase.expected.fields, database.logs[0].Fields)
+			assert.Equal(t, testCase.expected.requestID, database.logs[0].RequestID)
+			assert.Equal(t, testCase.expected.sourceIPAddress, database.logs[0].SourceIPAddress)
+			assert.Equal(t, testCase.expected.actorID, database.logs[0].ActorID)
 			assert.Equal(t, map[string]any{"key": "value"}, entry.Fields)
 		})
 	}

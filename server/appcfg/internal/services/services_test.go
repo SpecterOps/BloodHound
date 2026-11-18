@@ -26,7 +26,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/duration"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services/mocks"
@@ -399,7 +398,7 @@ func TestService_UpsertApplicationConfiguration(t *testing.T) {
 		parameterKey = services.ParameterKey("test-key")
 		value        = types.JSONBObject{Object: map[string]any{"enabled": true}}
 		entry        = audit.Entry{
-			Action: model.AuditLogActionUpdateParameter,
+			Action: audit.ActionUpdateParameter,
 			Fields: map[string]any{"key": parameterKey, "value": value},
 		}
 		commitID        = uuid.Must(uuid.NewV4())
@@ -412,7 +411,8 @@ func TestService_UpsertApplicationConfiguration(t *testing.T) {
 		name       string
 		setupMocks func(*mocks.MockDatabase, *mocks.MockAuditor)
 		expected   struct {
-			error error
+			error         error
+			errorContains string
 		}
 	}{
 		{
@@ -428,7 +428,10 @@ func TestService_UpsertApplicationConfiguration(t *testing.T) {
 			setupMocks: func(_ *mocks.MockDatabase, auditor *mocks.MockAuditor) {
 				auditor.EXPECT().Begin(ctx, entry).Return(uuid.Nil, auditIntentErr)
 			},
-			expected: struct{ error error }{error: auditIntentErr},
+			expected: struct {
+				error         error
+				errorContains string
+			}{error: services.ErrAuditLog, errorContains: auditIntentErr.Error()},
 		},
 		{
 			name: "Error: records a failure outcome when upsert fails",
@@ -437,7 +440,10 @@ func TestService_UpsertApplicationConfiguration(t *testing.T) {
 				database.EXPECT().UpsertConfigurationParameter(ctx, parameterKey, value).Return(databaseErr)
 				auditor.EXPECT().Complete(ctx, commitID, entry, databaseErr).Return(nil)
 			},
-			expected: struct{ error error }{error: databaseErr},
+			expected: struct {
+				error         error
+				errorContains string
+			}{error: databaseErr},
 		},
 		{
 			name: "Error: returns audit outcome failure after successful upsert",
@@ -446,7 +452,22 @@ func TestService_UpsertApplicationConfiguration(t *testing.T) {
 				database.EXPECT().UpsertConfigurationParameter(ctx, parameterKey, value).Return(nil)
 				auditor.EXPECT().Complete(ctx, commitID, entry, nil).Return(auditOutcomeErr)
 			},
-			expected: struct{ error error }{error: auditOutcomeErr},
+			expected: struct {
+				error         error
+				errorContains string
+			}{error: services.ErrAuditLog, errorContains: auditOutcomeErr.Error()},
+		},
+		{
+			name: "Error: audit outcome failure takes precedence over upsert failure",
+			setupMocks: func(database *mocks.MockDatabase, auditor *mocks.MockAuditor) {
+				auditor.EXPECT().Begin(ctx, entry).Return(commitID, nil)
+				database.EXPECT().UpsertConfigurationParameter(ctx, parameterKey, value).Return(databaseErr)
+				auditor.EXPECT().Complete(ctx, commitID, entry, databaseErr).Return(auditOutcomeErr)
+			},
+			expected: struct {
+				error         error
+				errorContains string
+			}{error: services.ErrAuditLog, errorContains: auditOutcomeErr.Error()},
 		},
 	}
 
@@ -466,6 +487,9 @@ func TestService_UpsertApplicationConfiguration(t *testing.T) {
 				assert.ErrorIs(t, err, testCase.expected.error)
 			} else {
 				require.NoError(t, err)
+			}
+			if testCase.expected.errorContains != "" {
+				assert.ErrorContains(t, err, testCase.expected.errorContains)
 			}
 		})
 	}

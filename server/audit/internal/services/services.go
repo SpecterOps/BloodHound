@@ -18,35 +18,53 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
-type Entry struct {
-	Action model.AuditLogAction
+var ErrAuditLog = errors.New("audit log operation failed")
+
+const auditLogOutcomeTimeout = 30 * time.Second
+
+type Action string
+
+const (
+	ActionUpdateParameter              Action = "UpdateParameter"
+	ActionToggleEarlyAccessFeatureFlag Action = "ToggleEarlyAccessFeatureFlag"
+)
+
+type Status string
+
+const (
+	StatusSuccess Status = "success"
+	StatusFailure Status = "failure"
+	StatusIntent  Status = "intent"
+)
+
+type AuditLogEntry struct {
+	Action Action
 	Fields map[string]any
 }
 
-type Log struct {
-	CreatedAt       time.Time
+type AuditLog struct {
 	ActorID         string
 	ActorName       string
 	ActorEmail      string
-	Action          model.AuditLogAction
+	Action          Action
 	Fields          map[string]any
 	RequestID       string
 	SourceIPAddress string
-	Status          model.AuditLogEntryStatus
+	Status          Status
 	CommitID        uuid.UUID
 }
 
 type Database interface {
-	CreateAuditLog(ctx context.Context, auditLog Log) error
+	CreateAuditLog(ctx context.Context, auditLog AuditLog) error
 }
 
 type Service struct {
@@ -65,40 +83,44 @@ func NewService(databaseInterface Database, identityResolver auth.IdentityResolv
 	return &Service{database: databaseInterface, identityResolver: identityResolver}
 }
 
-func (s *Service) Begin(ctx context.Context, entry Entry) (uuid.UUID, error) {
+func (s *Service) Begin(ctx context.Context, entry AuditLogEntry) (uuid.UUID, error) {
 	var (
 		commitID, err = uuid.NewV4()
 	)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("generating audit commit id: %w", err)
+		return uuid.Nil, fmt.Errorf("%w: generating audit commit id: %s", ErrAuditLog, err)
 	}
 
-	if err = s.database.CreateAuditLog(ctx, s.newLog(ctx, commitID, entry, model.AuditLogStatusIntent, nil)); err != nil {
-		return uuid.Nil, fmt.Errorf("creating audit intent: %w", err)
+	if err = s.database.CreateAuditLog(ctx, s.newLog(ctx, commitID, entry, StatusIntent, nil)); err != nil {
+		return uuid.Nil, fmt.Errorf("%w: creating audit intent: %s", ErrAuditLog, err)
 	}
 
 	return commitID, nil
 }
 
-func (s *Service) Complete(ctx context.Context, commitID uuid.UUID, entry Entry, operationErr error) error {
-	var status = model.AuditLogStatusSuccess
+func (s *Service) Complete(ctx context.Context, commitID uuid.UUID, entry AuditLogEntry, operationErr error) error {
+	var (
+		status               = StatusSuccess
+		auditContext, cancel = context.WithTimeout(context.WithoutCancel(ctx), auditLogOutcomeTimeout)
+	)
+	defer cancel()
+
 	if operationErr != nil {
-		status = model.AuditLogStatusFailure
+		status = StatusFailure
 	}
 
-	if err := s.database.CreateAuditLog(ctx, s.newLog(ctx, commitID, entry, status, operationErr)); err != nil {
-		return fmt.Errorf("creating audit %s outcome: %w", status, err)
+	if err := s.database.CreateAuditLog(auditContext, s.newLog(auditContext, commitID, entry, status, operationErr)); err != nil {
+		return fmt.Errorf("%w: creating audit %s outcome: %s", ErrAuditLog, status, err)
 	}
 
 	return nil
 }
 
-func (s *Service) newLog(ctx context.Context, commitID uuid.UUID, entry Entry, status model.AuditLogEntryStatus, operationErr error) Log {
+func (s *Service) newLog(ctx context.Context, commitID uuid.UUID, entry AuditLogEntry, status Status, operationErr error) AuditLog {
 	var (
 		requestContext = bhctx.Get(ctx)
 		fields         = make(map[string]any, len(entry.Fields)+1)
-		auditLog       = Log{
-			CreatedAt:       time.Now().UTC(),
+		auditLog       = AuditLog{
 			Action:          entry.Action,
 			Fields:          fields,
 			RequestID:       requestContext.RequestID,

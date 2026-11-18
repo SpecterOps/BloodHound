@@ -20,37 +20,33 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/pashagolub/pgxmock/v6"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/audit/internal/appdb"
 	"github.com/specterops/bloodhound/server/audit/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-const expectedInsertSQL = `INSERT INTO audit_logs (created_at, actor_id, actor_name, actor_email, action, fields, request_id, source_ip_address, status, commit_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+const expectedInsertSQL = `INSERT INTO audit_logs (created_at, actor_id, actor_name, actor_email, action, fields, request_id, source_ip_address, status, commit_id) VALUES (current_timestamp, $1, $2, $3, $4, $5, $6, $7, $8, $9)`
 
 func TestStore_CreateAuditLog(t *testing.T) {
 	t.Parallel()
 
 	var (
 		ctx         = context.Background()
-		createdAt   = time.Date(2026, 11, 12, 12, 0, 0, 0, time.UTC)
 		commitID    = uuid.Must(uuid.NewV4())
 		databaseErr = errors.New("database unavailable")
-		auditLog    = services.Log{
-			CreatedAt:       createdAt,
+		auditLog    = services.AuditLog{
 			ActorID:         "actor-id",
 			ActorName:       "actor",
 			ActorEmail:      "actor@example.com",
-			Action:          model.AuditLogActionUpdateParameter,
+			Action:          services.ActionUpdateParameter,
 			Fields:          map[string]any{"key": "value"},
 			RequestID:       "request-id",
 			SourceIPAddress: "127.0.0.1",
-			Status:          model.AuditLogStatusIntent,
+			Status:          services.StatusIntent,
 			CommitID:        commitID,
 		}
 	)
@@ -69,9 +65,9 @@ func TestStore_CreateAuditLog(t *testing.T) {
 			setupMocks: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectExec(expectedInsertSQL).
 					WithArgs(
-						createdAt, "actor-id", "actor", "actor@example.com",
-						string(model.AuditLogActionUpdateParameter), `{"key":"value"}`,
-						"request-id", "127.0.0.1", string(model.AuditLogStatusIntent), commitID.String(),
+						"actor-id", "actor", "actor@example.com",
+						string(services.ActionUpdateParameter), `{"key":"value"}`,
+						"request-id", "127.0.0.1", string(services.StatusIntent), commitID.String(),
 					).
 					WillReturnResult(pgxmock.NewResult("INSERT", 1))
 			},
@@ -81,9 +77,9 @@ func TestStore_CreateAuditLog(t *testing.T) {
 			setupMocks: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectExec(expectedInsertSQL).
 					WithArgs(
-						createdAt, "actor-id", "actor", "actor@example.com",
-						string(model.AuditLogActionUpdateParameter), `{"key":"value"}`,
-						"request-id", "127.0.0.1", string(model.AuditLogStatusIntent), commitID.String(),
+						"actor-id", "actor", "actor@example.com",
+						string(services.ActionUpdateParameter), `{"key":"value"}`,
+						"request-id", "127.0.0.1", string(services.StatusIntent), commitID.String(),
 					).
 					WillReturnError(databaseErr)
 			},

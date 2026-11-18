@@ -54,7 +54,7 @@ func (_m *MockDatabase) EXPECT() *MockDatabase_Expecter {
 }
 
 // CreateAuditLog provides a mock function for the type MockDatabase
-func (_mock *MockDatabase) CreateAuditLog(ctx context.Context, auditLog services.Log) error {
+func (_mock *MockDatabase) CreateAuditLog(ctx context.Context, auditLog services.AuditLog) error {
 	ret := _mock.Called(ctx, auditLog)
 
 	if len(ret) == 0 {
@@ -62,7 +62,7 @@ func (_mock *MockDatabase) CreateAuditLog(ctx context.Context, auditLog services
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, services.Log) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.AuditLog) error); ok {
 		r0 = returnFunc(ctx, auditLog)
 	} else {
 		r0 = ret.Error(0)
@@ -82,15 +82,15 @@ func (_e *MockDatabase_Expecter) CreateAuditLog(ctx interface{}, auditLog interf
 	return &MockDatabase_CreateAuditLog_Call{Call: _e.mock.On("CreateAuditLog", ctx, auditLog)}
 }
 
-func (_c *MockDatabase_CreateAuditLog_Call) Run(run func(ctx context.Context, auditLog services.Log)) *MockDatabase_CreateAuditLog_Call {
+func (_c *MockDatabase_CreateAuditLog_Call) Run(run func(ctx context.Context, auditLog services.AuditLog)) *MockDatabase_CreateAuditLog_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 services.Log
+		var arg1 services.AuditLog
 		if args[1] != nil {
-			arg1 = args[1].(services.Log)
+			arg1 = args[1].(services.AuditLog)
 		}
 		run(
 			arg0,
@@ -105,7 +105,7 @@ func (_c *MockDatabase_CreateAuditLog_Call) Return(err error) *MockDatabase_Crea
 	return _c
 }
 
-func (_c *MockDatabase_CreateAuditLog_Call) RunAndReturn(run func(ctx context.Context, auditLog services.Log) error) *MockDatabase_CreateAuditLog_Call {
+func (_c *MockDatabase_CreateAuditLog_Call) RunAndReturn(run func(ctx context.Context, auditLog services.AuditLog) error) *MockDatabase_CreateAuditLog_Call {
 	_c.Call.Return(run)
 	return _c
 }
