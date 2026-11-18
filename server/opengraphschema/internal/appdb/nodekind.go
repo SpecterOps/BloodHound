@@ -369,6 +369,40 @@ func (s *Store) UpdateGraphSchemaNodeKind(ctx context.Context, nodeKind services
 	}
 }
 
+type schemaNodeKindIconRow struct {
+	Icon      string `db:"icon"`
+	IconColor string `db:"icon_color"`
+}
+
+func updateGraphSchemaNodeKindIcon(ctx context.Context, databaseQuerier pgxQuerier, schemaNodeKindID int32, icon services.DisplayNodeIcon) (services.DisplayNodeIcon, error) {
+	updateBuilder := sqlbuilder.PostgreSQL.NewUpdateBuilder()
+
+	updateBuilder.Update(tableSchemaNodeKinds)
+	updateBuilder.Set(
+		updateBuilder.Assign("icon", icon.Name),
+		updateBuilder.Assign("icon_color", icon.Color),
+		updateBuilder.Assign("updated_at", sqlbuilder.Raw("NOW()")),
+	)
+	updateBuilder.Where(updateBuilder.Equal("id", schemaNodeKindID))
+	updateBuilder.Returning("icon", "icon_color")
+
+	sqlQuery, args := updateBuilder.Build()
+	if rows, err := databaseQuerier.Query(ctx, sqlQuery, args...); err != nil {
+		return services.DisplayNodeIcon{}, fmt.Errorf("updating schema node kind icon: %w", err)
+	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[schemaNodeKindIconRow]); errors.Is(err, pgx.ErrNoRows) {
+		return services.DisplayNodeIcon{}, services.ErrNodeKindNotFound
+	} else if err != nil {
+		return services.DisplayNodeIcon{}, fmt.Errorf("reading updated schema node kind icon: %w", err)
+	} else {
+		// The schema table stores only the name and color, so preserve the supplied type.
+		return services.DisplayNodeIcon{
+			Type:  icon.Type,
+			Name:  row.Icon,
+			Color: row.IconColor,
+		}, nil
+	}
+}
+
 // DeleteGraphSchemaNodeKind - deletes a schema_node_kinds row based on the provided id. Will return an error if that id does not exist.
 func (s *Store) DeleteGraphSchemaNodeKind(ctx context.Context, nodeKindID int32) error {
 	deleteBuilder := sqlbuilder.PostgreSQL.NewDeleteBuilder()
@@ -488,40 +522,6 @@ func (s *Store) CreateCustomNodeKinds(ctx context.Context, customNodeKinds []ser
 	}
 
 	return createdCustomNodeKinds, nil
-}
-
-type schemaNodeKindIconRow struct {
-	Icon      string `db:"icon"`
-	IconColor string `db:"icon_color"`
-}
-
-func updateGraphSchemaNodeKindIcon(ctx context.Context, databaseQuerier pgxQuerier, schemaNodeKindID int32, icon services.DisplayNodeIcon) (services.DisplayNodeIcon, error) {
-	updateBuilder := sqlbuilder.PostgreSQL.NewUpdateBuilder()
-
-	updateBuilder.Update(tableSchemaNodeKinds)
-	updateBuilder.Set(
-		updateBuilder.Assign("icon", icon.Name),
-		updateBuilder.Assign("icon_color", icon.Color),
-		updateBuilder.Assign("updated_at", sqlbuilder.Raw("NOW()")),
-	)
-	updateBuilder.Where(updateBuilder.Equal("id", schemaNodeKindID))
-	updateBuilder.Returning("icon", "icon_color")
-
-	sqlQuery, args := updateBuilder.Build()
-	if rows, err := databaseQuerier.Query(ctx, sqlQuery, args...); err != nil {
-		return services.DisplayNodeIcon{}, fmt.Errorf("updating schema node kind icon: %w", err)
-	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[schemaNodeKindIconRow]); errors.Is(err, pgx.ErrNoRows) {
-		return services.DisplayNodeIcon{}, services.ErrNodeKindNotFound
-	} else if err != nil {
-		return services.DisplayNodeIcon{}, fmt.Errorf("reading updated schema node kind icon: %w", err)
-	} else {
-		// The schema table stores only the name and color, so preserve the supplied type.
-		return services.DisplayNodeIcon{
-			Type:  icon.Type,
-			Name:  row.Icon,
-			Color: row.IconColor,
-		}, nil
-	}
 }
 
 // GetCustomNodeKinds returns all custom node kinds ordered by their row id.
@@ -667,7 +667,7 @@ func (s *Store) DeleteCustomNodeKind(ctx context.Context, kindName string) error
 
 	deleteBuilder.DeleteFrom(tableCustomNodeKinds)
 	deleteBuilder.Where(
-		"kind_id = (SELECT id FROM "+tableKind+" WHERE name = "+deleteBuilder.Var(kindName)+")",
+		"kind_id = (SELECT id FROM " + tableKind + " WHERE name = " + deleteBuilder.Var(kindName) + ")",
 	)
 	deleteBuilder.Returning("id")
 
