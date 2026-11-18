@@ -91,6 +91,8 @@ func NewDefaultConfiguration() (Configuration, error) {
 			},
 			Database: DatabaseConfiguration{
 				MaxConcurrentSessions: 10,
+				TraversalStateLimit:   5_000_000,
+				TraversalByteLimit:    2 * 1024 * 1024 * 1024, // 2GB
 			},
 			Neo4J: DatabaseConfiguration{
 				MaxConcurrentSessions: 10,
