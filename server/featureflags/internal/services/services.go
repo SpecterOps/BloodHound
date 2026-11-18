@@ -25,6 +25,7 @@ import (
 
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 )
 
 // Feature-flag keys referenced by BHE feature slices. These mirror the keys
@@ -89,6 +90,7 @@ type AnalysisRequestSubmitter interface {
 
 // Service implements feature-flag use cases on top of a Database implementation.
 type Service struct {
+	featureFlags      productfeatures.DatabaseFlags
 	db                Database
 	analysisRequester AnalysisRequestSubmitter
 }
@@ -103,7 +105,9 @@ func NewService(db Database, analysisRequester AnalysisRequestSubmitter) *Servic
 	if analysisRequester == nil {
 		panic("feature-flag: service requires a non-nil AnalysisRequestSubmitter")
 	}
-	return &Service{db: db, analysisRequester: analysisRequester}
+	var service = &Service{db: db, analysisRequester: analysisRequester}
+	service.featureFlags = productfeatures.NewDatabaseFlags(service.lookupFlagEnabled, ErrNotFound)
+	return service
 }
 
 // GetFlagByKey returns the feature flag for the supplied key, or ErrNotFound
@@ -114,11 +118,12 @@ func (s *Service) GetFlagByKey(ctx context.Context, key string) (FeatureFlag, er
 
 // IsEnabled reports whether the feature flag for the supplied key is enabled.
 func (s *Service) IsEnabled(ctx context.Context, key string) (bool, error) {
+	return s.featureFlags.IsEnabled(ctx, key)
+}
+
+func (s *Service) lookupFlagEnabled(ctx context.Context, key string) (bool, error) {
 	flag, err := s.db.GetFlagByKey(ctx, key)
-	if err != nil {
-		return false, err
-	}
-	return flag.Enabled, nil
+	return flag.Enabled, err
 }
 
 // GetAllFlags returns all the feature flags

@@ -29,7 +29,6 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graph_mocks "github.com/specterops/bloodhound/cmd/api/src/vendormocks/dawgs/graph"
 	"github.com/specterops/bloodhound/packages/go/headers"
 	"github.com/specterops/bloodhound/packages/go/mediatypes"
@@ -107,9 +106,7 @@ func TestDatabaseWipe(t *testing.T) {
 					apitest.BodyStruct(input, v2.DatabaseWipe{DeleteCollectedGraphData: true})
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{
-						Enabled: true,
-					}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), gomock.Any()).Return(true, nil)
 
 					successfulRequestDeletion := mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), gomock.Any()).Times(1)
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -132,7 +129,7 @@ func TestDatabaseWipe(t *testing.T) {
 					capturedDeleteRequest = model.AnalysisRequest{}
 
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), gomock.Any()).Return(true, nil)
 					mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return([]model.SourceKind{{ID: 42, Name: "Base"}}, nil)
 					mockGraph.EXPECT().FetchKinds(gomock.Any()).Return(graph.Kinds{graph.StringKind("Base"), graph.StringKind("User")}, nil)
 					mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, request model.AnalysisRequest) error {
@@ -167,7 +164,7 @@ func TestDatabaseWipe(t *testing.T) {
 					capturedDeleteRequest = model.AnalysisRequest{}
 
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), gomock.Any()).Return(true, nil)
 					mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, request model.AnalysisRequest) error {
 						capturedDeleteRequest = request
 						return nil
@@ -198,7 +195,7 @@ func TestDatabaseWipe(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), gomock.Any()).Return(true, nil)
 					mockDB.EXPECT().GetSourceKinds(gomock.Any()).Return([]model.SourceKind{{ID: 42, Name: "Base"}}, nil)
 					mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 				},
@@ -357,9 +354,7 @@ func TestDatabaseWipe(t *testing.T) {
 					successfulAuditLogIntent := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 					// collected graph data operations
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), gomock.Any()).Return(appcfg.FeatureFlag{
-						Enabled: true,
-					}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), gomock.Any()).Return(true, nil)
 					successfulDeletionRequest := mockDB.EXPECT().RequestCollectedGraphDataDeletion(gomock.Any(), gomock.Any()).Times(1)
 					nodesDeletedAuditLog := mockDB.EXPECT().AppendAuditLog(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 					gomock.InOrder(successfulAuditLogIntent, successfulDeletionRequest, nodesDeletedAuditLog)

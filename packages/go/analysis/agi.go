@@ -243,16 +243,16 @@ func parallelTagAzureTierZero(ctx context.Context, db graph.Database) error {
 	return nil
 }
 
-func tagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.GetFlagByKeyer, graphDB graph.Database) error {
+func tagActiveDirectoryTierZero(ctx context.Context, featureFlagProvider appcfg.FlagEvaluator, graphDB graph.Database) error {
 	defer measure.ContextMeasure(ctx, slog.LevelInfo, "Finished tagging Active Directory Tier Zero")()
 
-	if autoTagT0ParentObjectsFlag, err := featureFlagProvider.GetFlagByKey(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {
+	if autoTagT0ParentObjectsEnabled, err := featureFlagProvider.IsEnabled(ctx, appcfg.FeatureAutoTagT0ParentObjects); err != nil {
 		return err
 	} else if domains, err := adAnalysis.FetchAllDomains(ctx, graphDB); err != nil {
 		return err
 	} else {
 		for _, domain := range domains {
-			if roots, err := adAnalysis.FetchActiveDirectoryTierZeroRoots(ctx, graphDB, domain, autoTagT0ParentObjectsFlag.Enabled); err != nil {
+			if roots, err := adAnalysis.FetchActiveDirectoryTierZeroRoots(ctx, graphDB, domain, autoTagT0ParentObjectsEnabled); err != nil {
 				return err
 			} else {
 				properties := graph.NewProperties()

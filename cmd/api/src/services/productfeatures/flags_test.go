@@ -17,13 +17,47 @@ package productfeatures_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/open-feature/go-sdk/openfeature/isolated"
 	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestDatabaseFlagsReadsCurrentValue(t *testing.T) {
+	t.Parallel()
+
+	var (
+		key      = productfeatures.ETAC_ENABLED
+		values   = map[string]bool{key: false}
+		notFound = errors.New("feature flag not found")
+	)
+	flags := productfeatures.NewDatabaseFlags(func(_ context.Context, key string) (bool, error) {
+		if enabled, ok := values[key]; ok {
+			return enabled, nil
+		}
+		return false, notFound
+	}, notFound)
+	entitlements := featuretest.NewClient(t, featuretest.Overrides{Bools: map[string]bool{key: true}})
+
+	enabled, err := flags.IsEnabled(t.Context(), key)
+	require.NoError(t, err)
+	assert.False(t, enabled)
+	assert.Equal(t, true, productfeatures.AllValues(t.Context(), entitlements)[key])
+
+	values[key] = true
+	enabled, err = flags.IsEnabled(t.Context(), key)
+	require.NoError(t, err)
+	assert.True(t, enabled)
+
+	delete(values, key)
+	enabled, err = flags.IsEnabled(t.Context(), key)
+	require.ErrorIs(t, err, notFound)
+	assert.False(t, enabled)
+}
 
 func TestAllValues_Defaults(t *testing.T) {
 	var evaluationAPI = isolated.NewAPI()

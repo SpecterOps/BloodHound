@@ -344,8 +344,8 @@ func TestSaveDataQuality(t *testing.T) {
 
 func expectOpenGraphDataQualityFlag(mockDB *mocks.MockDatabase, enabled bool, err error) {
 	mockDB.EXPECT().
-		GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphDataQuality).
-		Return(appcfg.FeatureFlag{Enabled: enabled}, err)
+		IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphDataQuality).
+		Return(enabled, err)
 }
 
 func expectOpenGraphRelationshipKinds(mockDB *mocks.MockDatabase, schemaExtension model.GraphSchemaExtension, relationshipKinds ...graph.Kind) {

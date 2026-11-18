@@ -57,15 +57,15 @@ func (s Resources) SearchHandler(response http.ResponseWriter, request *http.Req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid search parameter", request), response)
 	} else if skip, limit, _, err := utils.GetPageParamsForGraphQuery(context.Background(), queryParams); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf("Invalid query parameter: %v", err), request), response)
-	} else if openGraphSearchFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
+	} else if openGraphSearchEnabled, err := s.DB.IsEnabled(request.Context(), appcfg.FeatureOpenGraphSearch); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if useRawObjectIDFeatureFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureUseRawObjectID); err != nil {
+	} else if useRawObjectIDEnabled, err := s.DB.IsEnabled(request.Context(), appcfg.FeatureUseRawObjectID); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
-	} else if searchableNodeKinds, err := getSearchableNodeKinds(openGraphSearchFeatureFlag.Enabled, primaryDisplayKinds, graph.StringsToKinds(nodeTypes)); err != nil {
+	} else if searchableNodeKinds, err := getSearchableNodeKinds(openGraphSearchEnabled, primaryDisplayKinds, graph.StringsToKinds(nodeTypes)); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "Invalid type parameter", request), response)
-	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit, useRawObjectIDFeatureFlag.Enabled, etacAllowedList); err != nil {
+	} else if nodes, err := s.GraphQuery.SearchNodesByNameOrObjectId(ctx, searchableNodeKinds, searchQuery, skip, limit, useRawObjectIDEnabled, etacAllowedList); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, fmt.Sprintf("Graph error: %v", err), request), response)
 	} else {
 		result := filterAndFormatSearchResults(nodes, etacAllowedList, primaryDisplayKinds)
@@ -258,11 +258,11 @@ func BuildEnvironmentFilter(ctx context.Context, db database.Database, openGraph
 	var result EnvironmentFilterResult
 
 	// Check OpenGraph findings feature flag
-	openGraphFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings)
+	openGraphFindingsEnabled, err := db.IsEnabled(ctx, appcfg.FeatureOpenGraphFindings)
 	if err != nil {
 		return result, err
 		// Fetch schema environments and extension display names
-	} else if environmentKinds, envKindToExtension, err := openGraphSchemaService.GetEnvironmentKindsAndSchemaEnvironmentData(ctx, !openGraphFlag.Enabled); err != nil {
+	} else if environmentKinds, envKindToExtension, err := openGraphSchemaService.GetEnvironmentKindsAndSchemaEnvironmentData(ctx, !openGraphFindingsEnabled); err != nil {
 		return result, err
 	} else {
 		// Build base filter criteria

@@ -281,10 +281,10 @@ func (s *GraphifyService) ProcessTasks(updateJob UpdateJobFunc) {
 
 	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false
 	flagChangeLogEnabled := false
-	if changelogFF, err := s.db.GetFlagByKey(s.ctx, appcfg.FeatureChangelog); err != nil {
+	if changelogEnabled, err := s.db.IsEnabled(s.ctx, appcfg.FeatureChangelog); err != nil {
 		slog.WarnContext(s.ctx, "Get changelog feature flag failed", attr.Error(err))
 	} else {
-		flagChangeLogEnabled = changelogFF.Enabled
+		flagChangeLogEnabled = changelogEnabled
 	}
 
 	// Lookup feature flag once per run. dont fail ingest on flag lookup, just default to false

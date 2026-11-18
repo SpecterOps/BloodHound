@@ -34,7 +34,7 @@ type GraphifyData interface {
 	// Task handlers
 	GetAllIngestTasks(ctx context.Context) (model.IngestTasks, error)
 	DeleteIngestTask(ctx context.Context, ingestTask model.IngestTask) error
-	GetFlagByKey(context.Context, string) (appcfg.FeatureFlag, error)
+	IsEnabled(context.Context, string) (bool, error)
 
 	RegisterSourceKind(context.Context) func(sourceKind graph.Kind) error
 	EnsureStubbedCustomNodeKindForIngest(context.Context, string) error

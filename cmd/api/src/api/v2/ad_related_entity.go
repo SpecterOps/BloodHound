@@ -55,12 +55,12 @@ func (s *Resources) handleAdRelatedEntityQuery(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if !hasAccess {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, api.ErrorResponseDetailsForbidden, request), response)
-	} else if entityPanelCachingFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureEntityPanelCaching); err != nil {
+	} else if entityPanelCachingEnabled, err := s.DB.IsEnabled(request.Context(), appcfg.FeatureEntityPanelCaching); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else if primaryDisplayKinds, err := s.DB.GetPrimaryDisplayKinds(request.Context()); err != nil {
 		api.HandleDatabaseError(request, response, err)
 	} else {
-		if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), primaryDisplayKinds, params, entityPanelCachingFlag.Enabled); err != nil {
+		if results, count, err := s.GraphQuery.GetADEntityQueryResult(request.Context(), primaryDisplayKinds, params, entityPanelCachingEnabled); err != nil {
 			if errors.Is(err, queries.ErrGraphUnsupported) || errors.Is(err, queries.ErrUnsupportedDataType) {
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, fmt.Sprintf(api.FmtErrorResponseDetailsBadQueryParameters, err), request), response)
 			} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {

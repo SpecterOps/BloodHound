@@ -52,7 +52,7 @@ func (s *BloodhoundDB) UpsertOpenGraphExtension(ctx context.Context, graphExtens
 		reconciledSavedQueries      model.ReconcileResult[model.SavedQuery]
 
 		tx                      = s.db.WithContext(ctx).Begin()
-		bloodhoundDBTransaction = BloodhoundDB{db: tx, idResolver: s.idResolver}
+		bloodhoundDBTransaction = NewBloodhoundDB(tx, s.pool, s.idResolver, s.config)
 	)
 
 	defer func() {
