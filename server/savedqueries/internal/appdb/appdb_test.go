@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/pashagolub/pgxmock/v6"
 	"github.com/specterops/bloodhound/server/savedqueries/internal/appdb"
 	"github.com/specterops/bloodhound/server/savedqueries/internal/services"
 	"github.com/stretchr/testify/assert"
