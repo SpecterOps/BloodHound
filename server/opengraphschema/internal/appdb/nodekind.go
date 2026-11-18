@@ -98,7 +98,7 @@ func toCustomNodeKind(row customNodeKindRow) (services.CustomNodeKind, error) {
 
 	return services.CustomNodeKind{
 		ID:               row.ID,
-		KindId:           row.KindID,
+		KindID:           row.KindID,
 		KindName:         row.KindName,
 		SchemaNodeKindId: row.SchemaNodeKindID,
 		Config:           config,
@@ -473,7 +473,7 @@ func (s *Store) CreateCustomNodeKinds(ctx context.Context, customNodeKinds []ser
 		} else if kindID, err := pgx.CollectOneRow(rows, pgx.RowTo[int32]); err != nil {
 			return emptyCustomNodeKinds, fmt.Errorf("reading upserted kind %q: %w", customNodeKind.KindName, err)
 		} else {
-			customNodeKind.KindId = kindID
+			customNodeKind.KindID = kindID
 		}
 
 		// Insert the custom node kind and join kind to retrieve the non-stored kind name.
@@ -492,7 +492,7 @@ func (s *Store) CreateCustomNodeKinds(ctx context.Context, customNodeKinds []ser
 		insertBuilder.Values(
 			sqlbuilder.Build("$0::jsonb", string(config)),
 			customNodeKind.SchemaNodeKindId,
-			customNodeKind.KindId,
+			customNodeKind.KindID,
 		)
 		insertBuilder.Returning("id", "kind_id", "schema_node_kind_id", "config")
 

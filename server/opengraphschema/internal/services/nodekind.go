@@ -92,7 +92,7 @@ func (s *Service) GetNodeKind(ctx context.Context, id int32) (NodeKind, error) {
 
 type CustomNodeKind struct {
 	ID               int32
-	KindId           int32  // FK to kind.id; stored column
+	KindID           int32  // FK to kind.id; stored column
 	KindName         string // joined from kind.name; not a stored column
 	SchemaNodeKindId *int32 // SchemaNodeKindId is nullable
 	Config           CustomNodeKindConfig

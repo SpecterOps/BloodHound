@@ -270,7 +270,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 		require.Len(t, created, 1)
 		assert.Equal(t, services.CustomNodeKind{
 			ID:               42,
-			KindId:           99,
+			KindID:           99,
 			KindName:         customNodeKind.KindName,
 			SchemaNodeKindId: &schemaNodeKindID,
 			Config:           customNodeKind.Config,
@@ -361,7 +361,7 @@ func TestStore_GetCustomNodeKinds(t *testing.T) {
 		schemaNodeKindID = int32(7)
 		customNodeKind   = services.CustomNodeKind{
 			ID:               42,
-			KindId:           99,
+			KindID:           99,
 			KindName:         "CustomKind",
 			SchemaNodeKindId: &schemaNodeKindID,
 			Config: services.CustomNodeKindConfig{
@@ -382,7 +382,7 @@ func TestStore_GetCustomNodeKinds(t *testing.T) {
 		store, pool := newTestStore(t)
 		pool.ExpectQuery(expectedGetCustomNodeKindsSQL).WillReturnRows(
 			pool.NewRows(columns).AddRow(
-				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindID,
 				&schemaNodeKindID, configJSON,
 			),
 		)
@@ -426,7 +426,7 @@ func TestStore_GetCustomNodeKind(t *testing.T) {
 		schemaNodeKindID = int32(7)
 		customNodeKind   = services.CustomNodeKind{
 			ID:               42,
-			KindId:           99,
+			KindID:           99,
 			KindName:         "CustomKind",
 			SchemaNodeKindId: &schemaNodeKindID,
 			Config: services.CustomNodeKindConfig{
@@ -448,7 +448,7 @@ func TestStore_GetCustomNodeKind(t *testing.T) {
 		pool.ExpectQuery(expectedGetCustomNodeKindSQL).
 			WithArgs(customNodeKind.KindName).
 			WillReturnRows(pool.NewRows(columns).AddRow(
-				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindID,
 				&schemaNodeKindID, configJSON,
 			))
 
@@ -495,7 +495,7 @@ func TestStore_UpdateCustomNodeKind(t *testing.T) {
 		schemaNodeKindID = int32(7)
 		customNodeKind   = services.CustomNodeKind{
 			ID:               42,
-			KindId:           99,
+			KindID:           99,
 			KindName:         "CustomKind",
 			SchemaNodeKindId: &schemaNodeKindID,
 			Config: services.CustomNodeKindConfig{
@@ -518,7 +518,7 @@ func TestStore_UpdateCustomNodeKind(t *testing.T) {
 		pool.ExpectQuery(expectedUpdateCustomNodeKindSQL).
 			WithArgs(&schemaNodeKindID, string(configJSON), customNodeKind.KindName).
 			WillReturnRows(pool.NewRows(columns).AddRow(
-				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindID,
 				&schemaNodeKindID, configJSON,
 			))
 		pool.ExpectQuery(expectedUpdateGraphSchemaNodeKindIconSQL).
@@ -576,7 +576,7 @@ func TestStore_UpdateCustomNodeKind(t *testing.T) {
 		pool.ExpectQuery(expectedUpdateCustomNodeKindSQL).
 			WithArgs(&schemaNodeKindID, string(configJSON), customNodeKind.KindName).
 			WillReturnRows(pool.NewRows(columns).AddRow(
-				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindID,
 				&schemaNodeKindID, configJSON,
 			))
 		pool.ExpectQuery(expectedUpdateGraphSchemaNodeKindIconSQL).
@@ -598,7 +598,7 @@ func TestStore_UpdateCustomNodeKind(t *testing.T) {
 		pool.ExpectQuery(expectedUpdateCustomNodeKindSQL).
 			WithArgs(&schemaNodeKindID, string(configJSON), customNodeKind.KindName).
 			WillReturnRows(pool.NewRows(columns).AddRow(
-				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindID,
 				&schemaNodeKindID, configJSON,
 			))
 		pool.ExpectQuery(expectedUpdateGraphSchemaNodeKindIconSQL).

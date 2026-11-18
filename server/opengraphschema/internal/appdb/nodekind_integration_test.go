@@ -310,12 +310,12 @@ func TestStore_E2ECustomNodeKinds_Integration(t *testing.T) {
 
 		for i, customNodeKind := range customNodeKinds {
 			assert.Positive(t, created[i].ID)
-			assert.Positive(t, created[i].KindId)
+			assert.Positive(t, created[i].KindID)
 			assert.Equal(t, customNodeKind.KindName, created[i].KindName)
 			assert.Equal(t, customNodeKind.SchemaNodeKindId, created[i].SchemaNodeKindId)
 			assert.Equal(t, customNodeKind.Config, created[i].Config)
 		}
-		assert.Equal(t, preexistingKindID, created[1].KindId)
+		assert.Equal(t, preexistingKindID, created[1].KindID)
 
 		// A should be created exactly once; B should retain its pre-existing kind ID.
 		var createdKindCount int
@@ -350,7 +350,7 @@ func TestStore_E2ECustomNodeKinds_Integration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, created[0].ID, updated.ID)
 		assert.Equal(t, created[0].KindName, updated.KindName)
-		assert.Equal(t, created[0].KindId, updated.KindId)
+		assert.Equal(t, created[0].KindID, updated.KindID)
 		require.NotNil(t, updated.SchemaNodeKindId)
 		assert.Equal(t, seeded.nodeKindID, *updated.SchemaNodeKindId)
 		assert.Equal(t, nodeKindToUpdate.Config, updated.Config)
