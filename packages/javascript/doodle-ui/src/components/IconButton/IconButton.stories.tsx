@@ -134,6 +134,8 @@ const meta = {
             description: {
                 component: `Use IconButton for an action represented only by an icon. If the action also has visible text, use Button or TextButton instead.
 
+### **[View the IconButton design in Figma](https://www.figma.com/design/pqlfSCxXVB5MjX5Gq50rW8/Alpha-%F0%9F%90%95?node-id=5527-39908&m=dev)**
+
 ### Basic usage
 
 Provide one icon child and an \`aria-label\` that describes the action. The button uses the label as its accessible name and default tooltip. Describe what happens when the button is activated—not the icon's appearance.
