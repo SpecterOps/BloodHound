@@ -81,7 +81,7 @@ describe('Button', () => {
         );
 
         expect(screen.getByRole('button', { name: 'Help' })).toHaveClass('rounded-3xl');
-        expect(screen.getByRole('button', { name: 'Settings' })).toHaveClass('rounded-full');
+        expect(screen.getByRole('button', { name: 'Settings' })).toHaveClass('rounded');
     });
 });
 

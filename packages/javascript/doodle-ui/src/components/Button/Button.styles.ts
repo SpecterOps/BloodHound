@@ -23,7 +23,13 @@ export const buttonBaseClasses = [
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 
-const containedButtonGeometryClasses = 'rounded p-2 text-sm/5 [&>svg]:size-4';
+export const buttonBorderRadiusClasses = 'rounded';
+
+const containedButtonGeometryClasses = cn(
+    buttonBorderRadiusClasses,
+    // Optically align icons with the text glyphs rather than just the line box.
+    'p-2 text-sm/5 [&>svg]:size-4 [&>svg]:-translate-y-px'
+);
 
 const containedButtonStateClasses = [
     'hover:bg-secondary hover:text-inverse',
