@@ -35,6 +35,9 @@ var ErrDuplicateSchemaNodeKindName = errors.New("duplicate schema node kind name
 // ErrDuplicateCustomNodeKindName indicates that the custom node kind already exists.
 var ErrDuplicateCustomNodeKindName = errors.New("duplicate custom node kind name")
 
+// ErrCustomNodeKindNotFound indicates that no custom node kind exists for the requested name.
+var ErrCustomNodeKindNotFound = errors.New("custom node kind not found")
+
 type (
 	NodesInput []NodeInput
 	NodeInput  struct {

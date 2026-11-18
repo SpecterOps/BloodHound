@@ -254,12 +254,12 @@ func TestStore_CreateGraphSchemaNodeKind_Integration(t *testing.T) {
 	}
 }
 
-func TestStore_CreateCustomNodeKinds_Integration(t *testing.T) {
+func TestStore_E2ECustomNodeKinds_Integration(t *testing.T) {
 	var (
-		ctx               = context.Background()
-		store, pool       = setupStore(t)
-		seeded            = seedNodeKind(t, ctx, pool)
-		customNodeKinds   = []services.CustomNodeKind{
+		ctx             = context.Background()
+		store, pool     = setupStore(t)
+		seeded          = seedNodeKind(t, ctx, pool)
+		customNodeKinds = []services.CustomNodeKind{
 			{
 				KindName:         "TestCustomNodeKindA",
 				SchemaNodeKindId: &seeded.nodeKindID,
@@ -300,46 +300,71 @@ func TestStore_CreateCustomNodeKinds_Integration(t *testing.T) {
 	require.NoError(t, pool.QueryRow(ctx, `
 		INSERT INTO kind (name) VALUES ($1) RETURNING id`, customNodeKinds[1].KindName).Scan(&preexistingKindID))
 
-	created, err := store.CreateCustomNodeKinds(ctx, customNodeKinds)
-	require.NoError(t, err)
-	require.Len(t, created, len(customNodeKinds))
+	var created []services.CustomNodeKind
+	if !t.Run("creates a missing kind and reuses an existing kind", func(t *testing.T) {
+		var err error
 
-	for i, customNodeKind := range customNodeKinds {
-		assert.Positive(t, created[i].ID)
-		assert.Positive(t, created[i].KindId)
-		assert.Equal(t, customNodeKind.KindName, created[i].KindName)
-		assert.Equal(t, customNodeKind.SchemaNodeKindId, created[i].SchemaNodeKindId)
-		assert.Equal(t, customNodeKind.Config, created[i].Config)
+		created, err = store.CreateCustomNodeKinds(ctx, customNodeKinds)
+		require.NoError(t, err)
+		require.Len(t, created, len(customNodeKinds))
+
+		for i, customNodeKind := range customNodeKinds {
+			assert.Positive(t, created[i].ID)
+			assert.Positive(t, created[i].KindId)
+			assert.Equal(t, customNodeKind.KindName, created[i].KindName)
+			assert.Equal(t, customNodeKind.SchemaNodeKindId, created[i].SchemaNodeKindId)
+			assert.Equal(t, customNodeKind.Config, created[i].Config)
+		}
+		assert.Equal(t, int16(preexistingKindID), created[1].KindId)
+
+		// A should be created exactly once; B should retain its pre-existing kind ID.
+		var createdKindCount int
+		require.NoError(t, pool.QueryRow(ctx, `
+			SELECT count(*) FROM kind WHERE name = $1`, customNodeKinds[0].KindName).Scan(&createdKindCount))
+		assert.Equal(t, 1, createdKindCount)
+	}) {
+		// do not attempt later tests if the first was unsuccessful
+		return
 	}
-	assert.Equal(t, int16(preexistingKindID), created[1].KindId)
 
-	// Verify the insert created A's kind row and persisted the returned custom-node data.
-	var createdKindCount int
-	require.NoError(t, pool.QueryRow(ctx, `
-		SELECT count(*) FROM kind WHERE name = $1`, customNodeKinds[0].KindName).Scan(&createdKindCount))
-	assert.Equal(t, 1, createdKindCount)
+	t.Run("lists the created custom node kinds", func(t *testing.T) {
+		readCustomNodeKinds, err := store.GetCustomNodeKinds(ctx)
+		require.NoError(t, err)
+		for _, createdCustomNodeKind := range created {
+			assert.Contains(t, readCustomNodeKinds, createdCustomNodeKind)
+		}
+	})
 
-	var (
-		storedID               int32
-		storedKindID           int32
-		storedSchemaNodeKindID int32
-		storedConfig           []byte
-	)
-	require.NoError(t, pool.QueryRow(ctx, `
-		SELECT cnk.id, cnk.kind_id, cnk.schema_node_kind_id, cnk.config
-		FROM custom_node_kinds AS cnk
-		JOIN kind AS k ON cnk.kind_id = k.id
-		WHERE k.name = $1`, customNodeKinds[0].KindName).Scan(
-		&storedID, &storedKindID, &storedSchemaNodeKindID, &storedConfig,
-	))
-	assert.Equal(t, created[0].ID, storedID)
-	assert.Equal(t, int32(created[0].KindId), storedKindID)
-	assert.Equal(t, seeded.nodeKindID, storedSchemaNodeKindID)
-	assert.JSONEq(t, `{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`, string(storedConfig))
+	t.Run("gets a custom node kind by name", func(t *testing.T) {
+		readCustomNodeKind, err := store.GetCustomNodeKind(ctx, customNodeKinds[0].KindName)
+		require.NoError(t, err)
+		assert.Equal(t, created[0], readCustomNodeKind)
+	})
 
-	// A repeated custom-node insert should report the existing-kind conflict.
-	_, err = store.CreateCustomNodeKinds(ctx, customNodeKinds[:1])
-	assert.ErrorIs(t, err, services.ErrDuplicateCustomNodeKindName)
+	t.Run("returns persisted insert values", func(t *testing.T) {
+		var (
+			storedID               int32
+			storedKindID           int32
+			storedSchemaNodeKindID int32
+			storedConfig           []byte
+		)
+		require.NoError(t, pool.QueryRow(ctx, `
+			SELECT cnk.id, cnk.kind_id, cnk.schema_node_kind_id, cnk.config
+			FROM custom_node_kinds AS cnk
+			JOIN kind AS k ON cnk.kind_id = k.id
+			WHERE k.name = $1`, customNodeKinds[0].KindName).Scan(
+			&storedID, &storedKindID, &storedSchemaNodeKindID, &storedConfig,
+		))
+		assert.Equal(t, created[0].ID, storedID)
+		assert.Equal(t, int32(created[0].KindId), storedKindID)
+		assert.Equal(t, seeded.nodeKindID, storedSchemaNodeKindID)
+		assert.JSONEq(t, `{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`, string(storedConfig))
+	})
+
+	t.Run("rejects a duplicate custom node kind", func(t *testing.T) {
+		_, err := store.CreateCustomNodeKinds(ctx, customNodeKinds[:1])
+		assert.ErrorIs(t, err, services.ErrDuplicateCustomNodeKindName)
+	})
 }
 
 func TestStore_GetGraphSchemaNodeKinds_Integration(t *testing.T) {

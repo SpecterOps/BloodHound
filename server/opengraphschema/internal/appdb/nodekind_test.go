@@ -262,7 +262,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 			WithArgs(configJSON, &schemaNodeKindID, int16(99)).
 			WillReturnRows(pool.NewRows([]string{
 				"id", "kind_name", "kind_id", "schema_node_kind_id", "config",
-			}).AddRow(int32(42), customNodeKind.KindName, int32(99), schemaNodeKindID, json.RawMessage(configJSON)))
+			}).AddRow(int32(42), customNodeKind.KindName, int32(99), &schemaNodeKindID, json.RawMessage(configJSON)))
 		pool.ExpectCommit()
 
 		created, err := store.CreateCustomNodeKinds(ctx, []services.CustomNodeKind{customNodeKind})
@@ -328,7 +328,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 			WithArgs(configJSON, &schemaNodeKindID, int16(99)).
 			WillReturnRows(pool.NewRows([]string{
 				"id", "kind_name", "kind_id", "schema_node_kind_id", "config",
-			}).AddRow(int32(42), customNodeKind.KindName, int32(99), schemaNodeKindID, json.RawMessage(configJSON)))
+			}).AddRow(int32(42), customNodeKind.KindName, int32(99), &schemaNodeKindID, json.RawMessage(configJSON)))
 		pool.ExpectQuery(expectedUpsertCustomNodeKindSQL).
 			WithArgs(failingCustomNodeKind.KindName).
 			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(100)))
@@ -342,6 +342,145 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 			failingCustomNodeKind,
 		})
 		assert.Equal(t, []services.CustomNodeKind{}, created)
+		assert.ErrorIs(t, err, databaseError)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+}
+
+const (
+	expectedGetCustomNodeKindsSQL = `SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM custom_node_kinds AS cnk JOIN kind AS k ON cnk.kind_id = k.id ORDER BY cnk.id ASC`
+	expectedGetCustomNodeKindSQL  = `SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM custom_node_kinds AS cnk JOIN kind AS k ON cnk.kind_id = k.id WHERE k.name = $1`
+)
+
+func TestStore_GetCustomNodeKinds(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx              = context.Background()
+		schemaNodeKindID = int32(7)
+		customNodeKind   = services.CustomNodeKind{
+			ID:               42,
+			KindId:           99,
+			KindName:         "CustomKind",
+			SchemaNodeKindId: &schemaNodeKindID,
+			Config: services.CustomNodeKindConfig{
+				Icon: services.DisplayNodeIcon{
+					Type:  services.DisplayNodeTypeFontAwesome,
+					Name:  "user",
+					Color: "#fff",
+				},
+			},
+		}
+		configJSON = json.RawMessage(`{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`)
+		columns    = []string{"id", "kind_name", "kind_id", "schema_node_kind_id", "config"}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectQuery(expectedGetCustomNodeKindsSQL).WillReturnRows(
+			pool.NewRows(columns).AddRow(
+				customNodeKind.ID, customNodeKind.KindName, int32(customNodeKind.KindId),
+				&schemaNodeKindID, configJSON,
+			),
+		)
+
+		customNodeKinds, err := store.GetCustomNodeKinds(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, []services.CustomNodeKind{customNodeKind}, customNodeKinds)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("empty result", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectQuery(expectedGetCustomNodeKindsSQL).WillReturnRows(pool.NewRows(columns))
+
+		customNodeKinds, err := store.GetCustomNodeKinds(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, []services.CustomNodeKind{}, customNodeKinds)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("query error", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		databaseError := errors.New("db error")
+		pool.ExpectQuery(expectedGetCustomNodeKindsSQL).WillReturnError(databaseError)
+
+		_, err := store.GetCustomNodeKinds(ctx)
+		assert.ErrorIs(t, err, databaseError)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+}
+
+func TestStore_GetCustomNodeKind(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx              = context.Background()
+		schemaNodeKindID = int32(7)
+		customNodeKind   = services.CustomNodeKind{
+			ID:               42,
+			KindId:           99,
+			KindName:         "CustomKind",
+			SchemaNodeKindId: &schemaNodeKindID,
+			Config: services.CustomNodeKindConfig{
+				Icon: services.DisplayNodeIcon{
+					Type:  services.DisplayNodeTypeFontAwesome,
+					Name:  "user",
+					Color: "#fff",
+				},
+			},
+		}
+		configJSON = json.RawMessage(`{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`)
+		columns    = []string{"id", "kind_name", "kind_id", "schema_node_kind_id", "config"}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectQuery(expectedGetCustomNodeKindSQL).
+			WithArgs(customNodeKind.KindName).
+			WillReturnRows(pool.NewRows(columns).AddRow(
+				customNodeKind.ID, customNodeKind.KindName, int32(customNodeKind.KindId),
+				&schemaNodeKindID, configJSON,
+			))
+
+		got, err := store.GetCustomNodeKind(ctx, customNodeKind.KindName)
+		require.NoError(t, err)
+		assert.Equal(t, customNodeKind, got)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectQuery(expectedGetCustomNodeKindSQL).
+			WithArgs(customNodeKind.KindName).
+			WillReturnRows(pool.NewRows(columns))
+
+		got, err := store.GetCustomNodeKind(ctx, customNodeKind.KindName)
+		assert.Equal(t, services.CustomNodeKind{}, got)
+		assert.ErrorIs(t, err, services.ErrCustomNodeKindNotFound)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("query error", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		databaseError := errors.New("db error")
+		pool.ExpectQuery(expectedGetCustomNodeKindSQL).
+			WithArgs(customNodeKind.KindName).
+			WillReturnError(databaseError)
+
+		_, err := store.GetCustomNodeKind(ctx, customNodeKind.KindName)
 		assert.ErrorIs(t, err, databaseError)
 		require.NoError(t, pool.ExpectationsWereMet())
 	})

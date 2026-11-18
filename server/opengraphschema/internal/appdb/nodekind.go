@@ -404,7 +404,7 @@ func checkNodeKindError(err error, name string) error {
 }
 
 // TODO: Port the remaining custom node kind CRUD from cmd/api/src/database/customnode.go:
-// GetCustomNodeKinds, UpdateCustomNodeKind, and DeleteCustomNodeKind.
+// UpdateCustomNodeKind and DeleteCustomNodeKind.
 // Preserve schema-node icon synchronization.
 
 // TODO BED-10577: re-implement auditing
@@ -492,6 +492,63 @@ func (s *Store) CreateCustomNodeKinds(ctx context.Context, customNodeKinds []ser
 	}
 
 	return createdCustomNodeKinds, nil
+}
+
+// GetCustomNodeKinds returns all custom node kinds ordered by their row id.
+func (s *Store) GetCustomNodeKinds(ctx context.Context) ([]services.CustomNodeKind, error) {
+	var (
+		selectBuilder   = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		customNodeKinds = []services.CustomNodeKind{}
+	)
+
+	selectBuilder.Select(
+		"cnk.id", "k.name AS kind_name", "cnk.kind_id", "cnk.schema_node_kind_id", "cnk.config",
+	)
+	selectBuilder.From(selectBuilder.As(tableCustomNodeKinds, "cnk"))
+	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "cnk.kind_id = k.id")
+	selectBuilder.OrderByAsc("cnk.id")
+
+	sqlQuery, args := selectBuilder.Build()
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return nil, fmt.Errorf("fetching custom node kinds: %w", err)
+	} else if customNodeKindRows, err := pgx.CollectRows(rows, pgx.RowToStructByName[customNodeKindRow]); err != nil {
+		return nil, fmt.Errorf("reading custom node kinds: %w", err)
+	} else {
+		for _, row := range customNodeKindRows {
+			if customNodeKind, err := toCustomNodeKind(row); err != nil {
+				return nil, fmt.Errorf("reading custom node kind %q: %w", row.KindName, err)
+			} else {
+				customNodeKinds = append(customNodeKinds, customNodeKind)
+			}
+		}
+	}
+
+	return customNodeKinds, nil
+}
+
+// GetCustomNodeKind returns the custom node kind registered under kindName.
+func (s *Store) GetCustomNodeKind(ctx context.Context, kindName string) (services.CustomNodeKind, error) {
+	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
+
+	selectBuilder.Select(
+		"cnk.id", "k.name AS kind_name", "cnk.kind_id", "cnk.schema_node_kind_id", "cnk.config",
+	)
+	selectBuilder.From(selectBuilder.As(tableCustomNodeKinds, "cnk"))
+	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "cnk.kind_id = k.id")
+	selectBuilder.Where(selectBuilder.Equal("k.name", kindName))
+
+	sqlQuery, args := selectBuilder.Build()
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return services.CustomNodeKind{}, fmt.Errorf("fetching custom node kind %q: %w", kindName, err)
+	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[customNodeKindRow]); errors.Is(err, pgx.ErrNoRows) {
+		return services.CustomNodeKind{}, services.ErrCustomNodeKindNotFound
+	} else if err != nil {
+		return services.CustomNodeKind{}, fmt.Errorf("reading custom node kind %q: %w", kindName, err)
+	} else if customNodeKind, err := toCustomNodeKind(row); err != nil {
+		return services.CustomNodeKind{}, fmt.Errorf("reading custom node kind %q: %w", kindName, err)
+	} else {
+		return customNodeKind, nil
+	}
 }
 
 func checkCustomNodeKindError(err error) error {
