@@ -72,6 +72,14 @@ func TestNewService(t *testing.T) {
 	assert.NotNil(t, svc)
 }
 
+func TestNewReader_NilDatabasePanic(t *testing.T) {
+	t.Parallel()
+
+	assert.PanicsWithValue(t, "feature-flag: reader requires a non-nil Database", func() {
+		services.NewReader(nil)
+	})
+}
+
 func TestNewService_NilDependenciesPanic(t *testing.T) {
 	t.Parallel()
 

@@ -39,6 +39,14 @@ var (
 	ErrDB = errors.New("database error")
 )
 
+func TestNewReader_NilDatabasePanic(t *testing.T) {
+	t.Parallel()
+
+	assert.PanicsWithValue(t, "appcfg: reader requires a non-nil Database", func() {
+		services.NewReader(nil)
+	})
+}
+
 func TestNewService_NilDependenciesPanic(t *testing.T) {
 	t.Parallel()
 

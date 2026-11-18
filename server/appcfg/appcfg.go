@@ -24,7 +24,6 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/server/appcfg/internal/adapter"
 	"github.com/specterops/bloodhound/server/appcfg/internal/appdb"
@@ -45,12 +44,11 @@ type ConfigurationAdapter interface {
 
 func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
 	var (
-		store        = appdb.NewStore(pool)
-		auditService = audit.Register(pool, auth.NewIdentityResolver())
-		service      = services.NewService(store, auditService)
+		store  = appdb.NewStore(pool)
+		reader = services.NewReader(store)
 	)
 
-	return adapter.NewConfigurationAdapter(store, service)
+	return adapter.NewConfigurationAdapter(reader)
 }
 
 // ConfigUpdateSideEffecter provides legacy database methods called as a side effects
@@ -63,7 +61,7 @@ type ConfigUpdateSideEffecter interface {
 // Register builds the appcfg store -> service -> handler chain and attaches
 // the appcfg routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
-func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter, auditor audit.Service) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter, auditor audit.AuditRequestAdapter) {
 	var (
 		ffReader   = featureflags.NewFeatureFlagRequestAdapter(pool)
 		store      = appdb.NewStore(pool)

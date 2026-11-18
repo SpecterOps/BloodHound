@@ -27,12 +27,12 @@ precedence.
 
 ## Wiring a module
 
-`modules.Register` creates one `audit.Service` using the process's identity resolver
+`modules.Register` creates one `audit.AuditRequestAdapter` using the process's identity resolver
 and supplies it to feature-module `Register` functions. A feature module should pass
 that dependency to its service constructor:
 
 ```go
-func Register(routerInst *router.Router, pool *pgxpool.Pool, auditor audit.Service) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, auditor audit.AuditRequestAdapter) {
 	var (
 		store = appdb.NewStore(pool)
 		svc   = services.NewService(store, auditor)

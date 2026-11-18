@@ -40,9 +40,23 @@ type Auditor interface {
 	Complete(ctx context.Context, commitID uuid.UUID, entry audit.Entry, operationErr error) error
 }
 
+// Reader provides application configuration read operations without requiring
+// dependencies used only by mutating operations.
+type Reader struct {
+	db Database
+}
+
 type Service struct {
-	db      Database
+	*Reader
 	auditor Auditor
+}
+
+func NewReader(databaseInterface Database) *Reader {
+	if databaseInterface == nil {
+		panic("appcfg: reader requires a non-nil Database")
+	}
+
+	return &Reader{db: databaseInterface}
 }
 
 func NewService(databaseInterface Database, auditor Auditor) *Service {
@@ -53,5 +67,5 @@ func NewService(databaseInterface Database, auditor Auditor) *Service {
 		panic("appcfg: service requires a non-nil Auditor")
 	}
 
-	return &Service{db: databaseInterface, auditor: auditor}
+	return &Service{Reader: &Reader{db: databaseInterface}, auditor: auditor}
 }

@@ -94,11 +94,25 @@ type Auditor interface {
 	Complete(ctx context.Context, commitID uuid.UUID, entry audit.Entry, operationErr error) error
 }
 
+// Reader provides feature flag read operations without requiring dependencies
+// used only by mutating operations.
+type Reader struct {
+	db Database
+}
+
 // Service implements feature-flag use cases on top of a Database implementation.
 type Service struct {
-	db                Database
+	*Reader
 	analysisRequester AnalysisRequestSubmitter
 	auditor           Auditor
+}
+
+func NewReader(databaseInterface Database) *Reader {
+	if databaseInterface == nil {
+		panic("feature-flag: reader requires a non-nil Database")
+	}
+
+	return &Reader{db: databaseInterface}
 }
 
 // NewService constructs a Service from the supplied Database port. The
@@ -114,17 +128,17 @@ func NewService(db Database, analysisRequester AnalysisRequestSubmitter, auditor
 	if auditor == nil {
 		panic("feature-flag: service requires a non-nil Auditor")
 	}
-	return &Service{db: db, analysisRequester: analysisRequester, auditor: auditor}
+	return &Service{Reader: &Reader{db: db}, analysisRequester: analysisRequester, auditor: auditor}
 }
 
 // GetFlagByKey returns the feature flag for the supplied key, or ErrNotFound
 // when no flag exists.
-func (s *Service) GetFlagByKey(ctx context.Context, key string) (FeatureFlag, error) {
+func (s *Reader) GetFlagByKey(ctx context.Context, key string) (FeatureFlag, error) {
 	return s.db.GetFlagByKey(ctx, key)
 }
 
 // IsEnabled reports whether the feature flag for the supplied key is enabled.
-func (s *Service) IsEnabled(ctx context.Context, key string) (bool, error) {
+func (s *Reader) IsEnabled(ctx context.Context, key string) (bool, error) {
 	flag, err := s.db.GetFlagByKey(ctx, key)
 	if err != nil {
 		return false, err
@@ -133,7 +147,7 @@ func (s *Service) IsEnabled(ctx context.Context, key string) (bool, error) {
 }
 
 // GetAllFlags returns all the feature flags
-func (s *Service) GetAllFlags(ctx context.Context) ([]FeatureFlag, error) {
+func (s *Reader) GetAllFlags(ctx context.Context) ([]FeatureFlag, error) {
 	return s.db.GetAllFlags(ctx)
 }
 

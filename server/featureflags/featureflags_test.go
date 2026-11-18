@@ -102,7 +102,7 @@ func TestRegister(t *testing.T) {
 
 	// Should not panic
 	require.NotPanics(t, func() {
-		featureflags.Register(&routerInst, pool, audit.Register(pool, auth.NewIdentityResolver()))
+		featureflags.Register(&routerInst, pool, audit.NewAuditRequestAdapter(pool, auth.NewIdentityResolver()))
 	})
 
 	muxRouter := routerInst.MuxRouter()

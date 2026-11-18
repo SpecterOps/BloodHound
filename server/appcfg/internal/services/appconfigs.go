@@ -90,11 +90,11 @@ func (s Service) IsAPIAllowedKey(key ParameterKey) bool {
 // Parameters is a collection of Parameter structs.
 type Parameters []Parameter
 
-func (s Service) GetApplicationConfiguration(ctx context.Context, parameterKey ParameterKey) (Parameter, error) {
+func (s Reader) GetApplicationConfiguration(ctx context.Context, parameterKey ParameterKey) (Parameter, error) {
 	return s.db.GetConfigurationParameter(ctx, parameterKey)
 }
 
-func (s Service) GetAllApplicationConfigurations(ctx context.Context) (Parameters, error) {
+func (s Reader) GetAllApplicationConfigurations(ctx context.Context) (Parameters, error) {
 	return s.db.GetAllConfigurationParameters(ctx)
 }
 
@@ -149,7 +149,7 @@ func (s GetConfigError) slogWarn(ctx context.Context) {
 // or of the wrong type.
 // If any other fetch problem happens, GetConfig logs a warning and returns the
 // parameter's default value and a GetConfigError.
-func (s *Service) GetConfig[ParamType any](ctx context.Context, key ParameterKey) (ParamType, error) {
+func (s *Reader) GetConfig[ParamType any](ctx context.Context, key ParameterKey) (ParamType, error) {
 	var result ParamType
 
 	paramDefinition, ok := getParamTypeHydrationRules[ParamType](key)

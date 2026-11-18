@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRegister_Dependencies(t *testing.T) {
+func TestNewAuditRequestAdapter_Dependencies(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -42,12 +42,12 @@ func TestRegister_Dependencies(t *testing.T) {
 		{
 			name:             "Error: nil pool",
 			identityResolver: auth.NewIdentityResolver(),
-			expectedPanic:    "audit: Register requires a non-nil Pool",
+			expectedPanic:    "audit: NewAuditRequestAdapter requires a non-nil Pool",
 		},
 		{
 			name:          "Error: nil identity resolver",
 			pool:          new(pgxpool.Pool),
-			expectedPanic: "audit: Register requires a non-nil IdentityResolver",
+			expectedPanic: "audit: NewAuditRequestAdapter requires a non-nil IdentityResolver",
 		},
 	}
 
@@ -55,8 +55,8 @@ func TestRegister_Dependencies(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 			construct := func() {
-				service := audit.Register(testCase.pool, testCase.identityResolver)
-				assert.NotNil(t, service)
+				adapter := audit.NewAuditRequestAdapter(testCase.pool, testCase.identityResolver)
+				assert.NotNil(t, adapter)
 			}
 
 			if testCase.expectedPanic != "" {
