@@ -19,6 +19,7 @@ package identity
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/server/appcfg"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
 	"github.com/specterops/bloodhound/server/identity/internal/routes"
@@ -44,7 +45,7 @@ func WithAuthTokenReader(reader AuthTokenReader) Option {
 func Register(routerInst *router.Router, pool *pgxpool.Pool, options ...Option) {
 	var (
 		store      = appdb.NewStore(pool)
-		svc        = services.NewService(store, options...)
+		svc        = services.NewService(store, appcfg.NewConfigurationAdapter(pool), options...)
 		handlerSet = handlers.NewHandlersContainer(svc, routerInst.Authorizer())
 	)
 
@@ -56,7 +57,7 @@ func Register(routerInst *router.Router, pool *pgxpool.Pool, options ...Option) 
 func RegisterUserListAlias(routerInst *router.Router, pool *pgxpool.Pool, path string) {
 	var (
 		store      = appdb.NewStore(pool)
-		svc        = services.NewService(store)
+		svc        = services.NewService(store, appcfg.NewConfigurationAdapter(pool))
 		handlerSet = handlers.NewHandlersContainer(svc, routerInst.Authorizer())
 	)
 	routes.RegisterUserListRoute(routerInst, handlerSet, path)

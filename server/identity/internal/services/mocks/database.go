@@ -54,6 +54,72 @@ func (_m *MockDatabase) EXPECT() *MockDatabase_Expecter {
 	return &MockDatabase_Expecter{mock: &_m.Mock}
 }
 
+// CreateAuthToken provides a mock function for the type MockDatabase
+func (_mock *MockDatabase) CreateAuthToken(ctx context.Context, authToken services.CreatedAuthToken) (services.CreatedAuthToken, error) {
+	ret := _mock.Called(ctx, authToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateAuthToken")
+	}
+
+	var r0 services.CreatedAuthToken
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.CreatedAuthToken) (services.CreatedAuthToken, error)); ok {
+		return returnFunc(ctx, authToken)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, services.CreatedAuthToken) services.CreatedAuthToken); ok {
+		r0 = returnFunc(ctx, authToken)
+	} else {
+		r0 = ret.Get(0).(services.CreatedAuthToken)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, services.CreatedAuthToken) error); ok {
+		r1 = returnFunc(ctx, authToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockDatabase_CreateAuthToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateAuthToken'
+type MockDatabase_CreateAuthToken_Call struct {
+	*mock.Call
+}
+
+// CreateAuthToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - authToken services.CreatedAuthToken
+func (_e *MockDatabase_Expecter) CreateAuthToken(ctx interface{}, authToken interface{}) *MockDatabase_CreateAuthToken_Call {
+	return &MockDatabase_CreateAuthToken_Call{Call: _e.mock.On("CreateAuthToken", ctx, authToken)}
+}
+
+func (_c *MockDatabase_CreateAuthToken_Call) Run(run func(ctx context.Context, authToken services.CreatedAuthToken)) *MockDatabase_CreateAuthToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 services.CreatedAuthToken
+		if args[1] != nil {
+			arg1 = args[1].(services.CreatedAuthToken)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockDatabase_CreateAuthToken_Call) Return(createdAuthToken services.CreatedAuthToken, err error) *MockDatabase_CreateAuthToken_Call {
+	_c.Call.Return(createdAuthToken, err)
+	return _c
+}
+
+func (_c *MockDatabase_CreateAuthToken_Call) RunAndReturn(run func(ctx context.Context, authToken services.CreatedAuthToken) (services.CreatedAuthToken, error)) *MockDatabase_CreateAuthToken_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetPermission provides a mock function for the type MockDatabase
 func (_mock *MockDatabase) GetPermission(ctx context.Context, id int) (services.Permission, error) {
 	ret := _mock.Called(ctx, id)

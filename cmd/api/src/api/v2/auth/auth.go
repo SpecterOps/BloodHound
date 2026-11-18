@@ -464,47 +464,6 @@ func (s ManagementResource) ExpireUserAuthSecret(response http.ResponseWriter, r
 	}
 }
 
-func (s ManagementResource) CreateAuthToken(response http.ResponseWriter, request *http.Request) {
-	var (
-		createUserTokenRequest = v2.CreateUserToken{}
-		bhCtx                  = bhctx.FromRequest(request)
-	)
-
-	if !appcfg.GetAPITokensParameter(request.Context(), s.db) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "API key creation is disabled", request), response)
-		return
-	} else if user, isUser := auth.GetUserFromAuthCtx(bhCtx.AuthCtx); !isUser {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if err := api.ReadJSONRequestPayloadLimited(&createUserTokenRequest, request); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, request), response)
-	} else if user, err := s.db.GetUser(request.Context(), user.ID); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else if err := verifyUserID(&createUserTokenRequest, user, bhCtx, s.authorizer); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, err.Error(), request), response)
-	} else if authToken, err := auth.NewUserAuthToken(createUserTokenRequest.UserID, createUserTokenRequest.TokenName, auth.HMAC_SHA2_256, user.ID); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-	} else if newAuthToken, err := s.db.CreateAuthToken(request.Context(), authToken); err != nil {
-		api.HandleDatabaseError(request, response, err)
-	} else {
-		api.WriteBasicResponse(request.Context(), newAuthToken, http.StatusOK, response)
-	}
-}
-
-// This is a helper function that selects the correct user_id to use for the token being created.
-// If no user_id is passed in the request, use the authed user's ID and proceed.
-// If the request contains a user_id other than their own, check to make sure they have permissions to create tokens for other users and reject.
-func verifyUserID(createUserTokenRequest *v2.CreateUserToken, user model.User, bhCtx *bhctx.Context, authorizer auth.Authorizer) error {
-	if createUserTokenRequest.UserID == "" {
-		createUserTokenRequest.UserID = user.ID.String()
-		return nil
-	}
-	if createUserTokenRequest.UserID != user.ID.String() && !authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers) {
-		return errors.New("missing permission to create tokens for other users")
-	}
-
-	return nil
-}
-
 func (s ManagementResource) DeleteAuthToken(response http.ResponseWriter, request *http.Request) {
 	var (
 		pathVars      = mux.Vars(request)

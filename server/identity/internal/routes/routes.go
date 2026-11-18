@@ -28,17 +28,18 @@ import (
 // Register attaches the identity endpoints to the given router instance.
 func Register(routerInst *router.Router, handler *handlers.Handlers) {
 	var (
-		permissions         = auth.Permissions()
-		roleList            = handlers.RoleListView{}
-		permissionList      = handlers.PermissionListView{}
-		authTokenList       = handlers.AuthTokenListView{}
-		userMinimalList     = handlers.UserMinimalListView{}
-		roleListRoute       = routerInst.GET("/api/v2/roles", handler.ListRoles)
-		roleRoute           = routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole)
-		permissionRoute     = routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission)
-		permissionListRoute = routerInst.GET("/api/v2/permissions", handler.ListPermissions)
-		authTokenListRoute  = routerInst.GET("/api/v2/tokens", handler.ListAuthTokens)
-		userMinimalRoute    = routerInst.GET("/api/v2/bloodhound-users-minimal", handler.ListActiveUsersMinimal)
+		permissions          = auth.Permissions()
+		roleList             = handlers.RoleListView{}
+		permissionList       = handlers.PermissionListView{}
+		authTokenList        = handlers.AuthTokenListView{}
+		userMinimalList      = handlers.UserMinimalListView{}
+		roleListRoute        = routerInst.GET("/api/v2/roles", handler.ListRoles)
+		roleRoute            = routerInst.GET(fmt.Sprintf("/api/v2/roles/{%s}", api.URIPathVariableRoleID), handler.GetRole)
+		permissionRoute      = routerInst.GET(fmt.Sprintf("/api/v2/permissions/{%s}", api.URIPathVariablePermissionID), handler.GetPermission)
+		permissionListRoute  = routerInst.GET("/api/v2/permissions", handler.ListPermissions)
+		authTokenListRoute   = routerInst.GET("/api/v2/tokens", handler.ListAuthTokens)
+		authTokenCreateRoute = routerInst.POST("/api/v2/tokens", handler.CreateAuthToken)
+		userMinimalRoute     = routerInst.GET("/api/v2/bloodhound-users-minimal", handler.ListActiveUsersMinimal)
 	)
 
 	RegisterUserListRoute(routerInst, handler, "/api/v2/bloodhound-users")
@@ -47,6 +48,7 @@ func Register(routerInst *router.Router, handler *handlers.Handlers) {
 	permissionRoute.RequirePermissions(permissions.AuthManageSelf)
 	permissionListRoute.RequirePermissions(permissions.AuthManageSelf).WithSort(permissionList).WithFilters(permissionList)
 	authTokenListRoute.RequirePermissions(permissions.AuthCreateToken).AuthorizeUserManagementAccess().WithSort(authTokenList).WithFilters(authTokenList)
+	authTokenCreateRoute.RequirePermissions(permissions.AuthCreateToken).AuthorizeUserManagementAccess()
 	userMinimalRoute.RequirePermissions(permissions.AuthReadUsersMinimal).WithSort(userMinimalList).WithFilters(userMinimalList)
 }
 

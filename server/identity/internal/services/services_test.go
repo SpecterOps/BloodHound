@@ -17,17 +17,22 @@
 package services_test
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
+	"io"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/packages/go/params"
+	"github.com/specterops/bloodhound/server/appcfg"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 	"github.com/specterops/bloodhound/server/identity/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
+	testifymock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,7 +95,7 @@ func TestService_GetPermission(t *testing.T) {
 
 			var (
 				databaseMock = mocks.NewMockDatabase(t)
-				svc          = services.NewService(databaseMock)
+				svc          = services.NewService(databaseMock, mocks.NewMockTokenConfigReader(t))
 			)
 
 			testCase.setupMocks(mock{database: databaseMock})
@@ -168,7 +173,7 @@ func TestService_GetRole(t *testing.T) {
 
 			var (
 				databaseMock = mocks.NewMockDatabase(t)
-				svc          = services.NewService(databaseMock)
+				svc          = services.NewService(databaseMock, mocks.NewMockTokenConfigReader(t))
 			)
 
 			testCase.setupMocks(mock{database: databaseMock})
@@ -249,7 +254,7 @@ func TestService_ListRoles(t *testing.T) {
 
 			var (
 				databaseMock = mocks.NewMockDatabase(t)
-				svc          = services.NewService(databaseMock)
+				svc          = services.NewService(databaseMock, mocks.NewMockTokenConfigReader(t))
 			)
 
 			testCase.setupMocks(mock{database: databaseMock})
@@ -319,7 +324,7 @@ func TestService_ListPermissions(t *testing.T) {
 
 			var (
 				databaseMock = mocks.NewMockDatabase(t)
-				svc          = services.NewService(databaseMock)
+				svc          = services.NewService(databaseMock, mocks.NewMockTokenConfigReader(t))
 			)
 
 			testCase.setupMocks(mock{database: databaseMock})
@@ -400,7 +405,7 @@ func TestService_ListUsers(t *testing.T) {
 
 			var (
 				databaseMock = mocks.NewMockDatabase(t)
-				svc          = services.NewService(databaseMock)
+				svc          = services.NewService(databaseMock, mocks.NewMockTokenConfigReader(t))
 			)
 
 			testCase.setupMocks(mock{database: databaseMock})
@@ -537,7 +542,7 @@ func TestService_ListAuthTokens(t *testing.T) {
 
 			var (
 				databaseMock = mocks.NewMockDatabase(t)
-				svc          = services.NewService(databaseMock)
+				svc          = services.NewService(databaseMock, mocks.NewMockTokenConfigReader(t))
 			)
 
 			testCase.setupMocks(mock{database: databaseMock})
@@ -645,7 +650,7 @@ func TestService_ListActiveUsersMinimal(t *testing.T) {
 
 			var (
 				databaseMock = mocks.NewMockDatabase(t)
-				svc          = services.NewService(databaseMock)
+				svc          = services.NewService(databaseMock, mocks.NewMockTokenConfigReader(t))
 			)
 
 			testCase.setupMocks(mock{database: databaseMock})
@@ -656,6 +661,203 @@ func TestService_ListActiveUsersMinimal(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, testCase.expected.users, result)
+			}
+		})
+	}
+}
+
+func TestService_CreateAuthToken(t *testing.T) {
+	type mock struct {
+		database          *mocks.MockDatabase
+		tokenConfigReader *mocks.MockTokenConfigReader
+	}
+
+	type expected struct {
+		authToken services.CreatedAuthToken
+		err       error
+	}
+
+	type testData struct {
+		name         string
+		requester    services.AuthTokenRequester
+		request      services.CreateAuthTokenRequest
+		randomSource io.Reader
+		setupMocks   func(mock mock)
+		expected     expected
+	}
+
+	var (
+		ctx               = context.Background()
+		now               = time.Date(2026, 3, 1, 12, 0, 0, 0, time.UTC)
+		requesterID       = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		otherUserID       = uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222")
+		unexpectedErr     = errors.New("connection refused")
+		adminRequester    = services.AuthTokenRequester{UserID: requesterID, IsUser: true, CanManageUsers: true}
+		nonAdminRequester = services.AuthTokenRequester{UserID: requesterID, IsUser: true}
+		expectedKey       = "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ=="
+		tokensEnabled     = func(mock mock) {
+			mock.tokenConfigReader.EXPECT().GetConfigAPITokens(ctx).Return(appcfg.APITokensParameter{Enabled: true}, nil)
+		}
+		expirationDisabled = func(mock mock) {
+			mock.tokenConfigReader.EXPECT().GetConfigAPITokenExpiration(ctx).Return(appcfg.APITokenExpirationParameter{ExpirationPeriod: 90}, nil)
+		}
+		insertEchoesToken = func(mock mock) {
+			mock.database.EXPECT().CreateAuthToken(ctx, testifymock.Anything).RunAndReturn(func(_ context.Context, authToken services.CreatedAuthToken) (services.CreatedAuthToken, error) {
+				return authToken, nil
+			})
+		}
+		createdToken = func(ownerID uuid.UUID, expiresAt sql.NullTime) services.CreatedAuthToken {
+			return services.CreatedAuthToken{
+				AuthToken: services.AuthToken{
+					UserID:     uuid.NullUUID{UUID: ownerID, Valid: true},
+					Name:       sql.NullString{String: "my token", Valid: true},
+					HmacMethod: "hmac-sha2-256",
+					LastAccess: now,
+					ExpiresAt:  expiresAt,
+					CreatedBy:  uuid.NullUUID{UUID: requesterID, Valid: true},
+				},
+				Key: expectedKey,
+			}
+		}
+	)
+
+	tt := []testData{
+		{
+			name:      "Success: user creates own token without user_id - 200",
+			requester: nonAdminRequester,
+			request:   services.CreateAuthTokenRequest{Name: "my token"},
+			setupMocks: func(mock mock) {
+				tokensEnabled(mock)
+				expirationDisabled(mock)
+				insertEchoesToken(mock)
+			},
+			expected: expected{authToken: createdToken(requesterID, sql.NullTime{})},
+		},
+		{
+			name:      "Success: user creates own token with explicit user_id - 200",
+			requester: nonAdminRequester,
+			request:   services.CreateAuthTokenRequest{Name: "my token", UserID: requesterID.String()},
+			setupMocks: func(mock mock) {
+				tokensEnabled(mock)
+				expirationDisabled(mock)
+				insertEchoesToken(mock)
+			},
+			expected: expected{authToken: createdToken(requesterID, sql.NullTime{})},
+		},
+		{
+			name:      "Success: admin creates token for another user and is recorded as creator - 200",
+			requester: adminRequester,
+			request:   services.CreateAuthTokenRequest{Name: "my token", UserID: otherUserID.String()},
+			setupMocks: func(mock mock) {
+				tokensEnabled(mock)
+				expirationDisabled(mock)
+				insertEchoesToken(mock)
+			},
+			expected: expected{authToken: createdToken(otherUserID, sql.NullTime{})},
+		},
+		{
+			name:      "Success: enabled expiration sets expires_at - 200",
+			requester: nonAdminRequester,
+			request:   services.CreateAuthTokenRequest{Name: "my token"},
+			setupMocks: func(mock mock) {
+				tokensEnabled(mock)
+				mock.tokenConfigReader.EXPECT().GetConfigAPITokenExpiration(ctx).Return(appcfg.APITokenExpirationParameter{Enabled: true, ExpirationPeriod: 30}, nil)
+				insertEchoesToken(mock)
+			},
+			expected: expected{authToken: createdToken(requesterID, sql.NullTime{Time: now.AddDate(0, 0, 30), Valid: true})},
+		},
+		{
+			name:      "Success: config read errors fall back to the returned defaults - 200",
+			requester: nonAdminRequester,
+			request:   services.CreateAuthTokenRequest{Name: "my token"},
+			setupMocks: func(mock mock) {
+				mock.tokenConfigReader.EXPECT().GetConfigAPITokens(ctx).Return(appcfg.APITokensParameter{Enabled: true}, unexpectedErr)
+				mock.tokenConfigReader.EXPECT().GetConfigAPITokenExpiration(ctx).Return(appcfg.APITokenExpirationParameter{ExpirationPeriod: 90}, unexpectedErr)
+				insertEchoesToken(mock)
+			},
+			expected: expected{authToken: createdToken(requesterID, sql.NullTime{})},
+		},
+		{
+			name:      "Error: API tokens are disabled - 403",
+			requester: adminRequester,
+			request:   services.CreateAuthTokenRequest{Name: "my token"},
+			setupMocks: func(mock mock) {
+				mock.tokenConfigReader.EXPECT().GetConfigAPITokens(ctx).Return(appcfg.APITokensParameter{Enabled: false}, nil)
+			},
+			expected: expected{err: services.ErrAPITokensDisabled},
+		},
+		{
+			name:       "Error: user_id is not a UUID - 400",
+			requester:  adminRequester,
+			request:    services.CreateAuthTokenRequest{Name: "my token", UserID: "not-a-uuid"},
+			setupMocks: tokensEnabled,
+			expected:   expected{err: services.ErrInvalidAuthTokenUserID},
+		},
+		{
+			name:       "Error: non-admin creates token for another user - 403",
+			requester:  nonAdminRequester,
+			request:    services.CreateAuthTokenRequest{Name: "my token", UserID: otherUserID.String()},
+			setupMocks: tokensEnabled,
+			expected:   expected{err: services.ErrAuthTokenTargetRequiresAdmin},
+		},
+		{
+			name:         "Error: random source fails - 500",
+			requester:    nonAdminRequester,
+			request:      services.CreateAuthTokenRequest{Name: "my token"},
+			randomSource: iotest.ErrReader(errors.New("entropy unavailable")),
+			setupMocks:   tokensEnabled,
+			expected:     expected{err: services.ErrAuthTokenKeyGeneration},
+		},
+		{
+			name:      "Error: target user does not exist - 400",
+			requester: adminRequester,
+			request:   services.CreateAuthTokenRequest{Name: "my token", UserID: otherUserID.String()},
+			setupMocks: func(mock mock) {
+				tokensEnabled(mock)
+				expirationDisabled(mock)
+				mock.database.EXPECT().CreateAuthToken(ctx, testifymock.Anything).Return(services.CreatedAuthToken{}, services.ErrAuthTokenUserNotFound)
+			},
+			expected: expected{err: services.ErrAuthTokenUserNotFound},
+		},
+		{
+			name:      "Error: database insert fails - 500",
+			requester: nonAdminRequester,
+			request:   services.CreateAuthTokenRequest{Name: "my token"},
+			setupMocks: func(mock mock) {
+				tokensEnabled(mock)
+				expirationDisabled(mock)
+				mock.database.EXPECT().CreateAuthToken(ctx, testifymock.Anything).Return(services.CreatedAuthToken{}, unexpectedErr)
+			},
+			expected: expected{err: unexpectedErr},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				databaseMock                    = mocks.NewMockDatabase(t)
+				tokenConfigReaderMock           = mocks.NewMockTokenConfigReader(t)
+				randomSource          io.Reader = bytes.NewReader(bytes.Repeat([]byte{0x01}, 40))
+			)
+
+			if testCase.randomSource != nil {
+				randomSource = testCase.randomSource
+			}
+
+			var svc = services.NewService(databaseMock, tokenConfigReaderMock, services.WithRandomSource(randomSource), services.WithClock(func() time.Time { return now }))
+
+			testCase.setupMocks(mock{database: databaseMock, tokenConfigReader: tokenConfigReaderMock})
+
+			result, err := svc.CreateAuthToken(ctx, testCase.requester, testCase.request)
+			if testCase.expected.err != nil {
+				assert.ErrorIs(t, err, testCase.expected.err)
+			} else {
+				require.NoError(t, err)
+				assert.NotEqual(t, uuid.Nil, result.ID)
+				result.ID = uuid.Nil
+				assert.Equal(t, testCase.expected.authToken, result)
 			}
 		})
 	}

@@ -20,6 +20,7 @@ package identity_test
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,6 +31,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
@@ -46,6 +48,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/params"
+	"github.com/specterops/bloodhound/server/appcfg"
 	"github.com/specterops/bloodhound/server/identity"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
 	"github.com/specterops/bloodhound/server/identity/internal/handlers"
@@ -126,7 +129,7 @@ func getIdentityPostgresConfig(t *testing.T) pgtestdb.Config {
 func newIdentityHandlers(db *database.BloodhoundDB) *handlers.Handlers {
 	var (
 		store      = appdb.NewStore(db.Pool())
-		svc        = services.NewService(store)
+		svc        = services.NewService(store, appcfg.NewConfigurationAdapter(db.Pool()))
 		handlerSet = handlers.NewHandlersContainer(svc, auth.NewAuthorizer(nil))
 	)
 	return handlerSet
@@ -1403,6 +1406,284 @@ func TestIdentity_ListAuthTokens(t *testing.T) {
 				request  = httptest.NewRequest(http.MethodGet, "/api/v2/tokens", nil)
 			)
 			request.URL.RawQuery = testCase.query.Encode()
+			request = bhctx.SetRequestContext(request, &bhctx.Context{AuthCtx: auth.Context{Owner: testCase.owner}})
+
+			handler.ServeHTTP(recorder, request)
+			assert.Equal(t, testCase.expected.responseCode, recorder.Code, recorder.Body.String())
+			assert.Equal(t, "application/json", recorder.Header().Get("Content-Type"))
+			if testCase.expected.assertBody != nil {
+				testCase.expected.assertBody(t, recorder.Body.Bytes())
+			}
+		})
+	}
+}
+
+// createAuthTokenResponseEnvelope is the JSON envelope shape returned by the
+// POST /api/v2/tokens handler.
+type createAuthTokenResponseEnvelope struct {
+	Data struct {
+		ID         uuid.UUID       `json:"id"`
+		UserID     uuid.NullUUID   `json:"user_id"`
+		Name       *string         `json:"name"`
+		Key        string          `json:"key"`
+		HmacMethod string          `json:"hmac_method"`
+		CreatedBy  uuid.NullUUID   `json:"created_by"`
+		ExpiresAt  json.RawMessage `json:"expires_at"`
+	} `json:"data"`
+}
+
+// legacyNullTime mirrors the JSON encoding of sql.NullTime, which has no
+// custom marshaller and encodes as {"Time": ..., "Valid": ...}.
+type legacyNullTime struct {
+	Time  time.Time `json:"Time"`
+	Valid bool      `json:"Valid"`
+}
+
+// setIdentityParameter overwrites a parameter for the calling test and restores it on cleanup.
+func setIdentityParameter(t *testing.T, ctx context.Context, pool *pgxpool.Pool, parameterKey string, parameterValue string) {
+	t.Helper()
+
+	var (
+		originalValue string
+		err           error
+	)
+
+	require.NoError(t, pool.QueryRow(ctx, `SELECT value::text FROM parameters WHERE key = $1`, parameterKey).Scan(&originalValue))
+	_, err = pool.Exec(ctx, `UPDATE parameters SET value = $2::jsonb, updated_at = now() WHERE key = $1`, parameterKey, parameterValue)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_, restoreErr := pool.Exec(context.Background(), `UPDATE parameters SET value = $2::jsonb, updated_at = now() WHERE key = $1`, parameterKey, originalValue)
+		require.NoError(t, restoreErr)
+	})
+}
+
+func TestIdentity_CreateAuthToken(t *testing.T) {
+	type expected struct {
+		responseCode int
+		assertBody   func(t *testing.T, body []byte)
+	}
+	type testData struct {
+		name        string
+		owner       any
+		body        string
+		contentType string
+		setup       func(t *testing.T)
+		expected    expected
+	}
+
+	var (
+		db          = setupIdentityDB(t)
+		ctx         = context.Background()
+		pool        = db.Pool()
+		permissions = auth.Permissions()
+		// Denied non-GET requests write an audit log, so the authorizer needs a real audit logger.
+		routerInst        = router.NewRouter(config.Configuration{}, auth.NewAuthorizer(db), "")
+		adminID           = lookupUserID(t, ctx, pool, seedUser(t, ctx, pool, "create-tokens-admin", false))
+		ownerID           = lookupUserID(t, ctx, pool, seedUser(t, ctx, pool, "create-tokens-owner", false))
+		otherID           = lookupUserID(t, ctx, pool, seedUser(t, ctx, pool, "create-tokens-other", false))
+		nonexistentUserID = uuid.Must(uuid.NewV4())
+		adminUser         = model.User{Unique: model.Unique{ID: adminID}, Roles: model.Roles{{Permissions: model.Permissions{permissions.AuthCreateToken, permissions.AuthManageSelf, permissions.AuthManageUsers}}}}
+		ownerUser         = model.User{Unique: model.Unique{ID: ownerID}, Roles: model.Roles{{Permissions: model.Permissions{permissions.AuthCreateToken, permissions.AuthManageSelf}}}}
+		noCreateTokenUser = model.User{Unique: model.Unique{ID: ownerID}, Roles: model.Roles{{Permissions: model.Permissions{permissions.AuthManageSelf}}}}
+		noManageSelfUser  = model.User{Unique: model.Unique{ID: ownerID}, Roles: model.Roles{{Permissions: model.Permissions{permissions.AuthCreateToken}}}}
+		legacyFieldNames  = []string{"id", "user_id", "name", "key", "hmac_method", "last_access", "expires_at", "created_by", "created_at", "updated_at", "deleted_at"}
+	)
+	identity.Register(&routerInst, pool)
+	handler := routerInst.Handler()
+
+	decodeCreatedToken := func(t *testing.T, body []byte) createAuthTokenResponseEnvelope {
+		t.Helper()
+		var envelope createAuthTokenResponseEnvelope
+		require.NoError(t, json.Unmarshal(body, &envelope))
+		return envelope
+	}
+	decodeExpiresAt := func(t *testing.T, envelope createAuthTokenResponseEnvelope) legacyNullTime {
+		t.Helper()
+		var expiresAt legacyNullTime
+		require.NoError(t, json.Unmarshal(envelope.Data.ExpiresAt, &expiresAt), "expires_at must keep the legacy sql.NullTime object encoding")
+		return expiresAt
+	}
+	assertCreatedToken := func(t *testing.T, body []byte, expectedUserID uuid.UUID, expectedCreatedBy uuid.UUID, expectedName string) createAuthTokenResponseEnvelope {
+		t.Helper()
+		var (
+			envelope    = decodeCreatedToken(t, body)
+			rawEnvelope struct {
+				Data map[string]json.RawMessage `json:"data"`
+			}
+		)
+		require.NoError(t, json.Unmarshal(body, &rawEnvelope))
+		assert.ElementsMatch(t, legacyFieldNames, slices.Collect(maps.Keys(rawEnvelope.Data)))
+
+		assert.NotEqual(t, uuid.Nil, envelope.Data.ID)
+		assert.Equal(t, uuid.NullUUID{UUID: expectedUserID, Valid: true}, envelope.Data.UserID)
+		assert.Equal(t, uuid.NullUUID{UUID: expectedCreatedBy, Valid: true}, envelope.Data.CreatedBy)
+		require.NotNil(t, envelope.Data.Name)
+		assert.Equal(t, expectedName, *envelope.Data.Name)
+		assert.Equal(t, auth.HMAC_SHA2_256, envelope.Data.HmacMethod)
+
+		decodedKey, err := base64.StdEncoding.DecodeString(envelope.Data.Key)
+		require.NoError(t, err)
+		assert.Len(t, decodedKey, 40)
+
+		return envelope
+	}
+	bodyContains := func(message string) func(t *testing.T, body []byte) {
+		return func(t *testing.T, body []byte) { assert.Contains(t, string(body), message) }
+	}
+
+	tt := []testData{
+		{
+			name:  "Success: user creates own token without user_id - 200",
+			owner: ownerUser,
+			body:  `{"token_name":"mine"}`,
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				envelope := assertCreatedToken(t, body, ownerID, ownerID, "mine")
+				assert.False(t, decodeExpiresAt(t, envelope).Valid)
+			}},
+		},
+		{
+			name:  "Success: user creates own token with explicit user_id - 200",
+			owner: ownerUser,
+			body:  fmt.Sprintf(`{"token_name":"mine-explicit","user_id":%q}`, ownerID.String()),
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				assertCreatedToken(t, body, ownerID, ownerID, "mine-explicit")
+			}},
+		},
+		{
+			name:  "Success: admin creates token for another user - 200",
+			owner: adminUser,
+			body:  fmt.Sprintf(`{"token_name":"for-other","user_id":%q}`, otherID.String()),
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				assertCreatedToken(t, body, otherID, adminID, "for-other")
+			}},
+		},
+		{
+			name:  "Success: expiration enforced sets expires_at - 200",
+			owner: ownerUser,
+			body:  `{"token_name":"expiring"}`,
+			setup: func(t *testing.T) {
+				setIdentityParameter(t, ctx, pool, "auth.api_token_expiration", `{"enabled": true, "expiration_period": 30}`)
+			},
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				var (
+					envelope  = assertCreatedToken(t, body, ownerID, ownerID, "expiring")
+					expiresAt = decodeExpiresAt(t, envelope)
+				)
+				assert.True(t, expiresAt.Valid)
+				assert.WithinDuration(t, time.Now().AddDate(0, 0, 30), expiresAt.Time, time.Minute)
+			}},
+		},
+		{
+			name:  "Success: token row is persisted with the returned key - 200",
+			owner: ownerUser,
+			body:  `{"token_name":"persisted"}`,
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				var (
+					envelope     = assertCreatedToken(t, body, ownerID, ownerID, "persisted")
+					storedKey    string
+					storedUserID string
+				)
+				require.NoError(t, pool.QueryRow(ctx, `SELECT key, user_id FROM auth_tokens WHERE id = $1`, envelope.Data.ID.String()).Scan(&storedKey, &storedUserID))
+				assert.Equal(t, envelope.Data.Key, storedKey)
+				assert.Equal(t, ownerID.String(), storedUserID)
+			}},
+		},
+		{
+			name:  "Success: audit log success row is written without the key - 200",
+			owner: ownerUser,
+			body:  `{"token_name":"audited"}`,
+			expected: expected{responseCode: http.StatusOK, assertBody: func(t *testing.T, body []byte) {
+				var (
+					envelope        = assertCreatedToken(t, body, ownerID, ownerID, "audited")
+					successRowCount int
+					keyRowCount     int
+				)
+				require.NoError(t, pool.QueryRow(ctx,
+					`SELECT count(*) FROM audit_logs WHERE action = $1 AND status = 'success' AND fields->>'id' = $2`,
+					string(model.AuditLogActionCreateAuthToken), envelope.Data.ID.String(),
+				).Scan(&successRowCount))
+				require.NoError(t, pool.QueryRow(ctx,
+					`SELECT count(*) FROM audit_logs WHERE action = $1 AND fields->>'id' = $2 AND fields ? 'key'`,
+					string(model.AuditLogActionCreateAuthToken), envelope.Data.ID.String(),
+				).Scan(&keyRowCount))
+				assert.Equal(t, 1, successRowCount)
+				assert.Zero(t, keyRowCount)
+			}},
+		},
+		{
+			name:  "Error: API tokens are disabled - 403",
+			owner: ownerUser,
+			body:  `{"token_name":"disabled"}`,
+			setup: func(t *testing.T) {
+				setIdentityParameter(t, ctx, pool, "auth.api_tokens", `{"enabled": false}`)
+			},
+			expected: expected{responseCode: http.StatusForbidden, assertBody: bodyContains("API key creation is disabled")},
+		},
+		{
+			name:     "Error: non-admin creates token for another user - 403",
+			owner:    ownerUser,
+			body:     fmt.Sprintf(`{"token_name":"not-mine","user_id":%q}`, otherID.String()),
+			expected: expected{responseCode: http.StatusForbidden, assertBody: bodyContains("missing permission to create tokens for other users")},
+		},
+		{
+			name:     "Error: user_id is not a UUID - 400",
+			owner:    adminUser,
+			body:     `{"token_name":"bad-uuid","user_id":"not-a-uuid"}`,
+			expected: expected{responseCode: http.StatusBadRequest, assertBody: bodyContains("invalid UUID")},
+		},
+		{
+			name:     "Error: user_id does not exist - 400",
+			owner:    adminUser,
+			body:     fmt.Sprintf(`{"token_name":"nobody","user_id":%q}`, nonexistentUserID.String()),
+			expected: expected{responseCode: http.StatusBadRequest, assertBody: bodyContains("user_id does not match an existing user")},
+		},
+		{
+			name:     "Error: malformed JSON body - 400",
+			owner:    ownerUser,
+			body:     `{`,
+			expected: expected{responseCode: http.StatusBadRequest, assertBody: bodyContains(api.ErrorResponsePayloadUnmarshalError)},
+		},
+		{
+			name:        "Error: non-JSON Content-Type - 400",
+			owner:       ownerUser,
+			body:        `{"token_name":"wrong-content-type"}`,
+			contentType: "text/plain",
+			expected:    expected{responseCode: http.StatusBadRequest, assertBody: bodyContains(api.ErrorResponsePayloadUnmarshalError)},
+		},
+		{
+			name:     "Error: unauthenticated request - 401",
+			owner:    nil,
+			body:     `{"token_name":"anonymous"}`,
+			expected: expected{responseCode: http.StatusUnauthorized},
+		},
+		{
+			name:     "Error: user lacks AuthCreateToken permission - 403",
+			owner:    noCreateTokenUser,
+			body:     `{"token_name":"no-permission"}`,
+			expected: expected{responseCode: http.StatusForbidden},
+		},
+		{
+			name:     "Error: user lacks AuthManageSelf permission - 401",
+			owner:    noManageSelfUser,
+			body:     `{"token_name":"no-manage-self"}`,
+			expected: expected{responseCode: http.StatusUnauthorized},
+		},
+	}
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				recorder    = httptest.NewRecorder()
+				request     = httptest.NewRequest(http.MethodPost, "/api/v2/tokens", strings.NewReader(testCase.body))
+				contentType = testCase.contentType
+			)
+			if testCase.setup != nil {
+				testCase.setup(t)
+			}
+			if contentType == "" {
+				contentType = "application/json"
+			}
+			request.Header.Set("Content-Type", contentType)
 			request = bhctx.SetRequestContext(request, &bhctx.Context{AuthCtx: auth.Context{Owner: testCase.owner}})
 
 			handler.ServeHTTP(recorder, request)

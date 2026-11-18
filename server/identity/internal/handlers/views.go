@@ -407,6 +407,30 @@ func (s AuthTokenView) JSONView() ([]byte, error) {
 	return json.Marshal(s)
 }
 
+// CreateAuthTokenInputView is the POST /api/v2/tokens request body. An empty
+// user_id creates the token for the requester.
+type CreateAuthTokenInputView struct {
+	TokenName string `json:"token_name"`
+	UserID    string `json:"user_id"`
+}
+
+// CreatedAuthTokenView is the only response that includes the token's secret key.
+type CreatedAuthTokenView struct {
+	AuthTokenView
+	Key string `json:"key"`
+}
+
+func BuildCreatedAuthTokenView(createdToken services.CreatedAuthToken) CreatedAuthTokenView {
+	return CreatedAuthTokenView{
+		AuthTokenView: BuildAuthTokenView(createdToken.AuthToken),
+		Key:           createdToken.Key,
+	}
+}
+
+func (s CreatedAuthTokenView) JSONView() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 type AuthTokenListView struct {
 	Tokens []AuthTokenView `json:"tokens"`
 }

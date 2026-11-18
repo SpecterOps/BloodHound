@@ -76,11 +76,6 @@ type SetUserSecretRequest struct {
 	NeedsPasswordReset bool   `json:"needs_password_reset"`
 }
 
-type CreateUserToken struct {
-	TokenName string `json:"token_name"`
-	UserID    string `json:"user_id"`
-}
-
 type CreateOIDCProviderRequest struct {
 	Name     string `json:"name"`
 	Issuer   string `json:"issuer"`

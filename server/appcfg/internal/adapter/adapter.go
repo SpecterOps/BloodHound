@@ -41,3 +41,11 @@ func NewConfigurationAdapter(store *appdb.Store, service *services.Service) *Con
 func (s *ConfigurationAdapter) GetConfigScheduledAnalysis(ctx context.Context) (services.ScheduledAnalysisParameter, error) {
 	return s.service.GetConfig[services.ScheduledAnalysisParameter](ctx, services.ScheduledAnalysis)
 }
+
+func (s *ConfigurationAdapter) GetConfigAPITokens(ctx context.Context) (services.APITokensParameter, error) {
+	return s.service.GetConfig[services.APITokensParameter](ctx, services.APITokens)
+}
+
+func (s *ConfigurationAdapter) GetConfigAPITokenExpiration(ctx context.Context) (services.APITokenExpirationParameter, error) {
+	return s.service.GetConfig[services.APITokenExpirationParameter](ctx, services.APITokenExpiration)
+}

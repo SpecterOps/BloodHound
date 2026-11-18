@@ -40,6 +40,7 @@ type Identity interface {
 	ListPermissions(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.Permission, error)
 	ListAuthTokens(ctx context.Context, requester services.AuthTokenRequester, queryFilters params.Filters, sortItems params.SortItems) ([]services.AuthToken, error)
 	ListActiveUsersMinimal(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.UserMinimal, error)
+	CreateAuthToken(ctx context.Context, requester services.AuthTokenRequester, request services.CreateAuthTokenRequest) (services.CreatedAuthToken, error)
 }
 
 // Handlers is a dependency injection container for identity handlers.
@@ -177,6 +178,42 @@ func (s *Handlers) ListAuthTokens(response http.ResponseWriter, request *http.Re
 	responses.WriteBasic(ctx, BuildAuthTokenListView(authTokens), http.StatusOK, response)
 }
 
+// CreateAuthToken creates an auth token for the requester, or for the user_id in
+// the body when the requester can manage users. The response is the only place
+// the token's key is ever returned.
+func (s *Handlers) CreateAuthToken(response http.ResponseWriter, request *http.Request) {
+	var (
+		ctx          = request.Context()
+		bhCtx        = bhctx.Get(ctx)
+		user, isUser = auth.GetUserFromAuthCtx(bhCtx.AuthCtx)
+		input        CreateAuthTokenInputView
+	)
+
+	if !isUser {
+		responses.WriteError(ctx, http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, response)
+		return
+	}
+
+	if err := api.ReadJSONRequestPayloadLimited(&input, request); err != nil {
+		responses.WriteError(ctx, http.StatusBadRequest, api.ErrorResponsePayloadUnmarshalError, response)
+		return
+	}
+
+	requester := services.AuthTokenRequester{
+		UserID:         user.ID,
+		IsUser:         true,
+		CanManageUsers: s.authorizer.AllowsPermission(bhCtx.AuthCtx, auth.Permissions().AuthManageUsers),
+	}
+
+	createdToken, err := s.identity.CreateAuthToken(ctx, requester, services.CreateAuthTokenRequest{Name: input.TokenName, UserID: input.UserID})
+	if err != nil {
+		handleIdentityError(request, response, err)
+		return
+	}
+
+	responses.WriteBasic(ctx, BuildCreatedAuthTokenView(createdToken), http.StatusOK, response)
+}
+
 // ListActiveUsersMinimal returns the id, email address and name of every active,
 // non-support user matching the filters and ordering parsed from the request
 // query parameters.
@@ -202,7 +239,11 @@ func handleIdentityError(request *http.Request, response http.ResponseWriter, er
 		responses.WriteError(ctx, http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, response)
 	} else if errors.Is(err, services.ErrInvalidAuthTokenUserID) {
 		responses.WriteError(ctx, http.StatusBadRequest, err.Error(), response)
-	} else if errors.Is(err, services.ErrAuthTokenUserIDRequiresAdmin) || errors.Is(err, services.ErrAuthTokenUserIDOperatorNotAllowed) {
+	} else if errors.Is(err, services.ErrAuthTokenUserNotFound) {
+		// The wrapped database error must not reach the client.
+		responses.WriteError(ctx, http.StatusBadRequest, services.ErrAuthTokenUserNotFound.Error(), response)
+	} else if errors.Is(err, services.ErrAuthTokenUserIDRequiresAdmin) || errors.Is(err, services.ErrAuthTokenUserIDOperatorNotAllowed) ||
+		errors.Is(err, services.ErrAPITokensDisabled) || errors.Is(err, services.ErrAuthTokenTargetRequiresAdmin) {
 		responses.WriteError(ctx, http.StatusForbidden, err.Error(), response)
 	} else if errors.Is(err, context.DeadlineExceeded) {
 		responses.WriteError(ctx, http.StatusInternalServerError, api.ErrorResponseRequestTimeout, response)
