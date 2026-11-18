@@ -27,20 +27,29 @@ import (
 	"github.com/specterops/bloodhound/packages/go/params"
 )
 
-// pgxQuerier lists only the pgx methods this package actually calls against PostgreSQL.
+// pgxQuerier is the read/write surface shared by both the connection pool and
+// an open transaction (pgx.Tx satisfies it), letting a single helper run
+// against either without a tx-vs-pool variant.
 type pgxQuerier interface {
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
-	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+}
+
+// pgxDriver is pgxQuerier plus the ability to open a transaction; only the
+// connection pool satisfies it.
+type pgxDriver interface {
+	pgxQuerier
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }
 
 // Store reads and writes OpenGraph extension schema data to/from PostgreSQL. Callers receive
 // services-layer sentinels rather than raw driver errors.
 type Store struct {
-	db pgxQuerier
+	db pgxDriver
 }
 
 // NewStore returns a Store backed by the provided pgx connection pool.
-func NewStore(db pgxQuerier) *Store {
+func NewStore(db pgxDriver) *Store {
 	return &Store{db: db}
 }
 
