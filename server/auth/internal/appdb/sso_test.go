@@ -77,6 +77,42 @@ func TestStore_ListAuthProviders_SQL(t *testing.T) {
 			},
 		},
 		{
+			name: "Returns an error for malformed OIDC provider JSON",
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " ORDER BY sso.created_at").WithArgs().
+					WillReturnRows(pool.NewRows(providerColumns()).
+						AddRow(int32(1), "OIDC", 2, "oidc", []byte(`{}`), []byte(`{`), nil))
+			},
+			expectStrErr: "decoding OIDC provider",
+			assertResult: func(t *testing.T, providers []services.SSOProvider) {
+				assert.Nil(t, providers)
+			},
+		},
+		{
+			name: "Returns an error for malformed SAML provider JSON",
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " ORDER BY sso.created_at").WithArgs().
+					WillReturnRows(pool.NewRows(providerColumns()).
+						AddRow(int32(2), "SAML", 1, "saml", []byte(`{}`), nil, []byte(`{`)))
+			},
+			expectStrErr: "decoding SAML provider",
+			assertResult: func(t *testing.T, providers []services.SSOProvider) {
+				assert.Nil(t, providers)
+			},
+		},
+		{
+			name: "Returns an error for malformed SSO config JSON",
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " ORDER BY sso.created_at").WithArgs().
+					WillReturnRows(pool.NewRows(providerColumns()).
+						AddRow(int32(1), "OIDC", 2, "oidc", []byte(`{`), []byte(`{"client_id":"client"}`), nil))
+			},
+			expectStrErr: "decoding SSO config",
+			assertResult: func(t *testing.T, providers []services.SSOProvider) {
+				assert.Nil(t, providers)
+			},
+		},
+		{
 			name:      "Applies filter and sort arguments",
 			filters:   params.Filters{"name": {{Field: "name", Operator: params.ApproximatelyEquals, Value: "O'IDC"}}},
 			sortItems: params.SortItems{{Field: "name", Direction: params.Descending}},
@@ -165,6 +201,11 @@ func TestStore_ListAuthProviders_SQL(t *testing.T) {
 		{
 			name:        "Rejects unsafe sort fields before querying",
 			sortItems:   params.SortItems{{Field: "id; DROP TABLE sso_providers", Direction: params.Ascending}},
+			expectedErr: services.ErrInvalidProviderQuery,
+		},
+		{
+			name:        "Rejects unsupported sort directions before querying",
+			sortItems:   params.SortItems{{Field: "name", Direction: "sideways"}},
 			expectedErr: services.ErrInvalidProviderQuery,
 		},
 	}

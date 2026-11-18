@@ -79,6 +79,8 @@ func buildSSOProviderSort(sortItems params.SortItems, columns map[string]string)
 	for _, item := range sortItems {
 		if column, isSortable := columns[item.Field]; !isSortable {
 			return nil, fmt.Errorf("%w: SSO provider sort references unknown field %q", services.ErrInvalidProviderQuery, item.Field)
+		} else if item.Direction != params.Ascending && item.Direction != params.Descending {
+			return nil, fmt.Errorf("%w: invalid sort direction %q", services.ErrInvalidProviderQuery, item.Direction)
 		} else {
 			orderByCols = append(orderByCols, column+" "+strings.ToUpper(string(item.Direction)))
 		}
