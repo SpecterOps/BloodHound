@@ -159,14 +159,14 @@ func (s *featureFlagManager) getCache() *cache {
 // flagGetter returns a closure that checks whether the changelog feature
 // is enabled and, if so, reports the current graph size (nodes + edges).
 // This allows the changelog to size its in-memory cache relative to the graph.
-func flagGetter(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer) func(context.Context) (bool, int, error) {
+func flagGetter(dawgsDB graph.Database, flagProvider appcfg.FlagEvaluator) func(context.Context) (bool, int, error) {
 	return func(ctx context.Context) (bool, int, error) {
-		flag, err := flagProvider.GetFlagByKey(ctx, appcfg.FeatureChangelog)
+		flagEnabled, err := flagProvider.IsEnabled(ctx, appcfg.FeatureChangelog)
 		if err != nil {
 			return false, 0, fmt.Errorf("getting changelog flag: %w", err)
 		}
 
-		if !flag.Enabled {
+		if !flagEnabled {
 			return false, 0, nil
 		}
 

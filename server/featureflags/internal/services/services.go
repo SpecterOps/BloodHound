@@ -27,6 +27,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 	"github.com/specterops/bloodhound/server/audit"
 )
 
@@ -98,7 +99,8 @@ type Auditor interface {
 // Reader provides feature flag read operations without requiring dependencies
 // used only by mutating operations.
 type Reader struct {
-	db Database
+	db           Database
+	featureFlags productfeatures.DatabaseFlags
 }
 
 // Service implements feature-flag use cases on top of a Database implementation.
@@ -113,7 +115,9 @@ func NewReader(databaseInterface Database) *Reader {
 		panic("feature-flag: reader requires a non-nil Database")
 	}
 
-	return &Reader{db: databaseInterface}
+	var reader = &Reader{db: databaseInterface}
+	reader.featureFlags = productfeatures.NewDatabaseFlags(reader.lookupFlagEnabled, ErrNotFound)
+	return reader
 }
 
 // NewService constructs a Service from the supplied Database port. The
@@ -129,7 +133,7 @@ func NewService(db Database, analysisRequester AnalysisRequestSubmitter, auditor
 	if auditor == nil {
 		panic("feature-flag: service requires a non-nil Auditor")
 	}
-	return &Service{Reader: &Reader{db: db}, analysisRequester: analysisRequester, auditor: auditor}
+	return &Service{Reader: NewReader(db), analysisRequester: analysisRequester, auditor: auditor}
 }
 
 // GetFlagByKey returns the feature flag for the supplied key, or ErrNotFound
@@ -140,11 +144,12 @@ func (s *Reader) GetFlagByKey(ctx context.Context, key string) (FeatureFlag, err
 
 // IsEnabled reports whether the feature flag for the supplied key is enabled.
 func (s *Reader) IsEnabled(ctx context.Context, key string) (bool, error) {
+	return s.featureFlags.IsEnabled(ctx, key)
+}
+
+func (s *Reader) lookupFlagEnabled(ctx context.Context, key string) (bool, error) {
 	flag, err := s.db.GetFlagByKey(ctx, key)
-	if err != nil {
-		return false, err
-	}
-	return flag.Enabled, nil
+	return flag.Enabled, err
 }
 
 // GetAllFlags returns all the feature flags

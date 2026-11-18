@@ -65,7 +65,7 @@ func DefaultOptions() Options {
 	}
 }
 
-func NewChangelog(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, opts Options) *Changelog {
+func NewChangelog(dawgsDB graph.Database, flagProvider appcfg.FlagEvaluator, opts Options) *Changelog {
 	// Use dummy HA implementation for BHCE (always primary)
 	flagManager := newFeatureFlagManager(flagGetter(dawgsDB, flagProvider), opts.PollInterval, ha.NewDummyHA())
 	coordinator := newIngestionCoordinator(dawgsDB, opts.RetryConfig)
@@ -78,7 +78,7 @@ func NewChangelog(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, op
 }
 
 // NewChangelogWithHA creates a changelog with a real HA implementation for high-availability deployments.
-func NewChangelogWithHA(dawgsDB graph.Database, flagProvider appcfg.GetFlagByKeyer, opts Options, haMutex ha.HAMutex) *Changelog {
+func NewChangelogWithHA(dawgsDB graph.Database, flagProvider appcfg.FlagEvaluator, opts Options, haMutex ha.HAMutex) *Changelog {
 	flagManager := newFeatureFlagManager(flagGetter(dawgsDB, flagProvider), opts.PollInterval, haMutex)
 	coordinator := newIngestionCoordinator(dawgsDB, opts.RetryConfig)
 

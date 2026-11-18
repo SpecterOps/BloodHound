@@ -112,14 +112,14 @@ func (s Resources) HandleDatabaseWipe(response http.ResponseWriter, request *htt
 
 	deleteGraph := payload.DeleteCollectedGraphData || len(payload.DeleteSourceKinds) > 0 || len(payload.DeleteRelationships) > 0
 	if deleteGraph {
-		if clearGraphDataFlag, err := s.DB.GetFlagByKey(request.Context(), appcfg.FeatureClearGraphData); err != nil {
+		if clearGraphDataEnabled, err := s.DB.IsEnabled(request.Context(), appcfg.FeatureClearGraphData); err != nil {
 			api.WriteErrorResponse(
 				request.Context(),
 				api.BuildErrorResponse(http.StatusInternalServerError, "unable to inspect the feature flag for clearing graph data", request),
 				response,
 			)
 			return
-		} else if !clearGraphDataFlag.Enabled {
+		} else if !clearGraphDataEnabled {
 			api.WriteErrorResponse(
 				request.Context(),
 				api.BuildErrorResponse(http.StatusBadRequest, "deleting graph data is currently disabled", request),

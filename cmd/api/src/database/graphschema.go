@@ -1325,9 +1325,9 @@ func (s *BloodhoundDB) GetPrincipalKindsGraphKinds(ctx context.Context) (graph.K
 	)
 
 	// When FF is disabled, we want to limit to just builtin environment principal kinds
-	if flag, err := s.GetFlagByKey(ctx, appcfg.FeatureOpenGraphFindings); err != nil {
+	if flagEnabled, err := s.IsEnabled(ctx, appcfg.FeatureOpenGraphFindings); err != nil {
 		return nil, err
-	} else if !flag.Enabled {
+	} else if !flagEnabled {
 		if envs, err := s.GetEnvironmentsFiltered(ctx, model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "true"}}}); err != nil {
 			return nil, err
 		} else {

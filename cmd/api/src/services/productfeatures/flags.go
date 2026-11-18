@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Package productfeatures defines product entitlement keys and their defaults.
+// Package productfeatures defines product entitlements and provides evaluation
+// for database-backed feature flags.
 // Feature evaluation and provider management belong to the OpenFeature SDK.
 package productfeatures
 

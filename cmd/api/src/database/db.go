@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/migration"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 	"github.com/specterops/bloodhound/cmd/api/src/services/upload"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"gorm.io/driver/postgres"
@@ -180,10 +181,11 @@ type Database interface {
 }
 
 type BloodhoundDB struct {
-	db         *gorm.DB
-	idResolver auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
-	config     config.Configuration
-	pool       *pgxpool.Pool
+	featureFlags productfeatures.DatabaseFlags
+	db           *gorm.DB
+	idResolver   auth.IdentityResolver // TODO: this really needs to be elsewhere. something something separation of concerns
+	config       config.Configuration
+	pool         *pgxpool.Pool
 }
 
 func (s *BloodhoundDB) Close(ctx context.Context) {
@@ -227,7 +229,9 @@ func (s *BloodhoundDB) Scope(scopeFuncs ...ScopeFunc) *gorm.DB {
 }
 
 func NewBloodhoundDB(db *gorm.DB, pool *pgxpool.Pool, idResolver auth.IdentityResolver, cfg config.Configuration) *BloodhoundDB {
-	return &BloodhoundDB{db: db, pool: pool, idResolver: idResolver, config: cfg}
+	var database = &BloodhoundDB{db: db, pool: pool, idResolver: idResolver, config: cfg}
+	database.featureFlags = productfeatures.NewDatabaseFlags(database.lookupFlagEnabled, ErrNotFound)
+	return database
 }
 
 // Transaction executes the given function within a database transaction.

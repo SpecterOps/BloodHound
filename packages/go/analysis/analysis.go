@@ -302,11 +302,11 @@ func (s analysisPipeline) dispatchAnalysisSteps(run analysisPipelineRun) analysi
 func adPostProcessingOperation(run analysisPipelineRun) (pipelineStepStatus, []error) {
 	var collectedErrors []error
 
-	if ntlmFlag, err := run.db.GetFlagByKey(run.ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
+	if ntlmEnabled, err := run.db.IsEnabled(run.ctx, appcfg.FeatureNTLMPostProcessing); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error retrieving NTLM Post Processing feature flag: %w", err))
 		run.analysisErrs.adPost = true
 		return pipelineStepStatusFailed, collectedErrors
-	} else if stats, err := adAnalysis.Post(run.ctx, run.graphDB, appcfg.GetCitrixRDPSupport(run.ctx, run.db), ntlmFlag.Enabled); err != nil {
+	} else if stats, err := adAnalysis.Post(run.ctx, run.graphDB, appcfg.GetCitrixRDPSupport(run.ctx, run.db), ntlmEnabled); err != nil {
 		collectedErrors = append(collectedErrors, fmt.Errorf("error during ad post: %w", err))
 		run.analysisErrs.adPost = true
 		return pipelineStepStatusFailed, collectedErrors
