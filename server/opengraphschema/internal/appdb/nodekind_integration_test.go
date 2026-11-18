@@ -361,6 +361,29 @@ func TestStore_E2ECustomNodeKinds_Integration(t *testing.T) {
 		assert.JSONEq(t, `{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`, string(storedConfig))
 	})
 
+	t.Run("updates the config while preserving an omitted schema association", func(t *testing.T) {
+		nodeKindToUpdate := created[0]
+		nodeKindToUpdate.SchemaNodeKindId = nil
+		nodeKindToUpdate.Config.Icon.Name = "star"
+
+		updated, err := store.UpdateCustomNodeKind(ctx, nodeKindToUpdate)
+		require.NoError(t, err)
+		assert.Equal(t, created[0].ID, updated.ID)
+		assert.Equal(t, created[0].KindName, updated.KindName)
+		assert.Equal(t, created[0].KindId, updated.KindId)
+		require.NotNil(t, updated.SchemaNodeKindId)
+		assert.Equal(t, seeded.nodeKindID, *updated.SchemaNodeKindId)
+		assert.Equal(t, nodeKindToUpdate.Config, updated.Config)
+
+		var updatedSchemaIcon, updatedSchemaIconColor string
+		require.NoError(t, pool.QueryRow(ctx, `
+			SELECT icon, icon_color FROM schema_node_kinds WHERE id = $1`, seeded.nodeKindID).Scan(
+			&updatedSchemaIcon, &updatedSchemaIconColor,
+		))
+		assert.Equal(t, nodeKindToUpdate.Config.Icon.Name, updatedSchemaIcon)
+		assert.Equal(t, nodeKindToUpdate.Config.Icon.Color, updatedSchemaIconColor)
+	})
+
 	t.Run("rejects a duplicate custom node kind", func(t *testing.T) {
 		_, err := store.CreateCustomNodeKinds(ctx, customNodeKinds[:1])
 		assert.ErrorIs(t, err, services.ErrDuplicateCustomNodeKindName)

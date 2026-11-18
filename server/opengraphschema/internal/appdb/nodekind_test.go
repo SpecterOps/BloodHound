@@ -350,6 +350,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 const (
 	expectedGetCustomNodeKindsSQL = `SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM custom_node_kinds AS cnk JOIN kind AS k ON cnk.kind_id = k.id ORDER BY cnk.id ASC`
 	expectedGetCustomNodeKindSQL  = `SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM custom_node_kinds AS cnk JOIN kind AS k ON cnk.kind_id = k.id WHERE k.name = $1`
+	expectedUpdateCustomNodeKindSQL = `WITH updated_custom_node_kind AS (UPDATE custom_node_kinds AS cnk SET schema_node_kind_id = COALESCE($1, schema_node_kind_id), config = $2::jsonb, updated_at = NOW() FROM kind AS k WHERE k.id = cnk.kind_id AND k.name = $3 RETURNING cnk.id, cnk.kind_id, cnk.schema_node_kind_id, cnk.config) SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM updated_custom_node_kind AS cnk JOIN kind AS k ON cnk.kind_id = k.id`
 )
 
 func TestStore_GetCustomNodeKinds(t *testing.T) {
@@ -486,9 +487,136 @@ func TestStore_GetCustomNodeKind(t *testing.T) {
 	})
 }
 
+func TestStore_UpdateCustomNodeKind(t *testing.T) {
+	t.Parallel()
+
+	var (
+		ctx              = context.Background()
+		schemaNodeKindID = int32(7)
+		customNodeKind   = services.CustomNodeKind{
+			ID:               42,
+			KindId:           99,
+			KindName:         "CustomKind",
+			SchemaNodeKindId: &schemaNodeKindID,
+			Config: services.CustomNodeKindConfig{
+				Icon: services.DisplayNodeIcon{
+					Type:  services.DisplayNodeTypeFontAwesome,
+					Name:  "user",
+					Color: "#fff",
+				},
+			},
+		}
+		configJSON = json.RawMessage(`{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`)
+		columns    = []string{"id", "kind_name", "kind_id", "schema_node_kind_id", "config"}
+	)
+
+	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectBeginTx(pgx.TxOptions{})
+		pool.ExpectQuery(expectedUpdateCustomNodeKindSQL).
+			WithArgs(&schemaNodeKindID, string(configJSON), customNodeKind.KindName).
+			WillReturnRows(pool.NewRows(columns).AddRow(
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
+				&schemaNodeKindID, configJSON,
+			))
+		pool.ExpectQuery(expectedUpdateGraphSchemaNodeKindIconSQL).
+			WithArgs(customNodeKind.Config.Icon.Name, customNodeKind.Config.Icon.Color, schemaNodeKindID).
+			WillReturnRows(pool.NewRows([]string{"icon", "icon_color"}).AddRow(
+				customNodeKind.Config.Icon.Name, customNodeKind.Config.Icon.Color,
+			))
+		pool.ExpectCommit()
+
+		updated, err := store.UpdateCustomNodeKind(ctx, customNodeKind)
+		require.NoError(t, err)
+		assert.Equal(t, customNodeKind, updated)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectBeginTx(pgx.TxOptions{})
+		pool.ExpectQuery(expectedUpdateCustomNodeKindSQL).
+			WithArgs(&schemaNodeKindID, string(configJSON), customNodeKind.KindName).
+			WillReturnRows(pool.NewRows(columns))
+		pool.ExpectRollback()
+
+		updated, err := store.UpdateCustomNodeKind(ctx, customNodeKind)
+		assert.Equal(t, services.CustomNodeKind{}, updated)
+		assert.ErrorIs(t, err, services.ErrCustomNodeKindNotFound)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("query error", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		databaseError := errors.New("db error")
+		pool.ExpectBeginTx(pgx.TxOptions{})
+		pool.ExpectQuery(expectedUpdateCustomNodeKindSQL).
+			WithArgs(&schemaNodeKindID, string(configJSON), customNodeKind.KindName).
+			WillReturnError(databaseError)
+		pool.ExpectRollback()
+
+		updated, err := store.UpdateCustomNodeKind(ctx, customNodeKind)
+		assert.Equal(t, services.CustomNodeKind{}, updated)
+		assert.ErrorIs(t, err, databaseError)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("icon update error rolls back transaction", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		databaseError := errors.New("db error")
+		pool.ExpectBeginTx(pgx.TxOptions{})
+		pool.ExpectQuery(expectedUpdateCustomNodeKindSQL).
+			WithArgs(&schemaNodeKindID, string(configJSON), customNodeKind.KindName).
+			WillReturnRows(pool.NewRows(columns).AddRow(
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
+				&schemaNodeKindID, configJSON,
+			))
+		pool.ExpectQuery(expectedUpdateGraphSchemaNodeKindIconSQL).
+			WithArgs(customNodeKind.Config.Icon.Name, customNodeKind.Config.Icon.Color, schemaNodeKindID).
+			WillReturnError(databaseError)
+		pool.ExpectRollback()
+
+		updated, err := store.UpdateCustomNodeKind(ctx, customNodeKind)
+		assert.Equal(t, services.CustomNodeKind{}, updated)
+		assert.ErrorIs(t, err, databaseError)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+
+	t.Run("schema node kind not found rolls back transaction", func(t *testing.T) {
+		t.Parallel()
+
+		store, pool := newTestStore(t)
+		pool.ExpectBeginTx(pgx.TxOptions{})
+		pool.ExpectQuery(expectedUpdateCustomNodeKindSQL).
+			WithArgs(&schemaNodeKindID, string(configJSON), customNodeKind.KindName).
+			WillReturnRows(pool.NewRows(columns).AddRow(
+				customNodeKind.ID, customNodeKind.KindName, customNodeKind.KindId,
+				&schemaNodeKindID, configJSON,
+			))
+		pool.ExpectQuery(expectedUpdateGraphSchemaNodeKindIconSQL).
+			WithArgs(customNodeKind.Config.Icon.Name, customNodeKind.Config.Icon.Color, schemaNodeKindID).
+			WillReturnRows(pool.NewRows([]string{"icon", "icon_color"}))
+		pool.ExpectRollback()
+
+		updated, err := store.UpdateCustomNodeKind(ctx, customNodeKind)
+		assert.Equal(t, services.CustomNodeKind{}, updated)
+		assert.ErrorIs(t, err, services.ErrNodeKindNotFound)
+		require.NoError(t, pool.ExpectationsWereMet())
+	})
+}
+
 const (
-	expectedGetGraphSchemaNodeKindsSQL   = `SELECT nk.id, nk.kind_id, k.name, nk.schema_extension_id, nk.display_name, nk.description, nk.is_display_kind, nk.icon, nk.icon_color, nk.created_at, nk.updated_at, nk.deleted_at FROM schema_node_kinds AS nk JOIN kind AS k ON nk.kind_id = k.id`
-	expectedCountGraphSchemaNodeKindsSQL = `SELECT COUNT(*) FROM schema_node_kinds AS nk JOIN kind AS k ON nk.kind_id = k.id`
+	expectedGetGraphSchemaNodeKindsSQL       = `SELECT nk.id, nk.kind_id, k.name, nk.schema_extension_id, nk.display_name, nk.description, nk.is_display_kind, nk.icon, nk.icon_color, nk.created_at, nk.updated_at, nk.deleted_at FROM schema_node_kinds AS nk JOIN kind AS k ON nk.kind_id = k.id`
+	expectedCountGraphSchemaNodeKindsSQL     = `SELECT COUNT(*) FROM schema_node_kinds AS nk JOIN kind AS k ON nk.kind_id = k.id`
+	expectedUpdateGraphSchemaNodeKindIconSQL = `UPDATE schema_node_kinds SET icon = $1, icon_color = $2, updated_at = NOW() WHERE id = $3 RETURNING icon, icon_color`
 )
 
 func TestStore_GetGraphSchemaNodeKinds(t *testing.T) {
