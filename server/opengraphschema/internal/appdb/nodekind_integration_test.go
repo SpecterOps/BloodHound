@@ -254,6 +254,137 @@ func TestStore_CreateGraphSchemaNodeKind_Integration(t *testing.T) {
 	}
 }
 
+func TestStore_E2ECustomNodeKinds_Integration(t *testing.T) {
+	var (
+		ctx             = context.Background()
+		store, pool     = setupStore(t)
+		seeded          = seedNodeKind(t, ctx, pool)
+		customNodeKinds = []services.CustomNodeKind{
+			{
+				KindName:         "TestCustomNodeKindA",
+				SchemaNodeKindId: &seeded.nodeKindID,
+				Config: services.CustomNodeKindConfig{
+					Icon: services.DisplayNodeIcon{
+						Type:  services.DisplayNodeTypeFontAwesome,
+						Name:  "user",
+						Color: "#fff",
+					},
+				},
+			},
+			{
+				KindName: "TestCustomNodeKindB",
+				Config: services.CustomNodeKindConfig{
+					Icon: services.DisplayNodeIcon{
+						Type:  services.DisplayNodeTypeFontAwesome,
+						Name:  "star",
+						Color: "#000",
+					},
+				},
+			},
+		}
+	)
+
+	t.Cleanup(func() {
+		for _, customNodeKind := range customNodeKinds {
+			_, err := pool.Exec(ctx, `
+				DELETE FROM custom_node_kinds
+				WHERE kind_id = (SELECT id FROM kind WHERE name = $1)`, customNodeKind.KindName)
+			require.NoError(t, err)
+			_, err = pool.Exec(ctx, `DELETE FROM kind WHERE name = $1`, customNodeKind.KindName)
+			require.NoError(t, err)
+		}
+	})
+
+	// B already exists in kind; A does not, so the batch exercises both upsert paths.
+	var preexistingKindID int32
+	require.NoError(t, pool.QueryRow(ctx, `
+		INSERT INTO kind (name) VALUES ($1) RETURNING id`, customNodeKinds[1].KindName).Scan(&preexistingKindID))
+
+	var created []services.CustomNodeKind
+	if !t.Run("creates a missing kind and reuses an existing kind", func(t *testing.T) {
+		var err error
+
+		created, err = store.CreateCustomNodeKinds(ctx, customNodeKinds)
+		require.NoError(t, err)
+		require.Len(t, created, len(customNodeKinds))
+
+		for i, customNodeKind := range customNodeKinds {
+			assert.Positive(t, created[i].ID)
+			assert.Positive(t, created[i].KindID)
+			assert.Equal(t, customNodeKind.KindName, created[i].KindName)
+			assert.Equal(t, customNodeKind.SchemaNodeKindId, created[i].SchemaNodeKindId)
+			assert.Equal(t, customNodeKind.Config, created[i].Config)
+		}
+		assert.Equal(t, preexistingKindID, created[1].KindID)
+
+		// A should be created exactly once; B should retain its pre-existing kind ID.
+		var createdKindCount int
+		require.NoError(t, pool.QueryRow(ctx, `
+			SELECT count(*) FROM kind WHERE name = $1`, customNodeKinds[0].KindName).Scan(&createdKindCount))
+		assert.Equal(t, 1, createdKindCount)
+	}) {
+		// do not attempt later tests if the first was unsuccessful
+		return
+	}
+
+	t.Run("lists the created custom node kinds", func(t *testing.T) {
+		readCustomNodeKinds, err := store.GetCustomNodeKinds(ctx)
+		require.NoError(t, err)
+		for _, createdCustomNodeKind := range created {
+			assert.Contains(t, readCustomNodeKinds, createdCustomNodeKind)
+		}
+	})
+
+	t.Run("gets a custom node kind by name", func(t *testing.T) {
+		readCustomNodeKind, err := store.GetCustomNodeKind(ctx, customNodeKinds[0].KindName)
+		require.NoError(t, err)
+		assert.Equal(t, created[0], readCustomNodeKind)
+	})
+
+	t.Run("updates the config while preserving an omitted schema association", func(t *testing.T) {
+		nodeKindToUpdate := created[0]
+		nodeKindToUpdate.SchemaNodeKindId = nil
+		nodeKindToUpdate.Config.Icon.Name = "star"
+
+		updated, err := store.UpdateCustomNodeKind(ctx, nodeKindToUpdate)
+		require.NoError(t, err)
+		assert.Equal(t, created[0].ID, updated.ID)
+		assert.Equal(t, created[0].KindName, updated.KindName)
+		assert.Equal(t, created[0].KindID, updated.KindID)
+		require.NotNil(t, updated.SchemaNodeKindId)
+		assert.Equal(t, seeded.nodeKindID, *updated.SchemaNodeKindId)
+		assert.Equal(t, nodeKindToUpdate.Config, updated.Config)
+
+		var updatedSchemaIcon, updatedSchemaIconColor string
+		require.NoError(t, pool.QueryRow(ctx, `
+			SELECT icon, icon_color FROM schema_node_kinds WHERE id = $1`, seeded.nodeKindID).Scan(
+			&updatedSchemaIcon, &updatedSchemaIconColor,
+		))
+		assert.Equal(t, nodeKindToUpdate.Config.Icon.Name, updatedSchemaIcon)
+		assert.Equal(t, nodeKindToUpdate.Config.Icon.Color, updatedSchemaIconColor)
+	})
+
+	t.Run("rejects a duplicate custom node kind", func(t *testing.T) {
+		_, err := store.CreateCustomNodeKinds(ctx, customNodeKinds[:1])
+		assert.ErrorIs(t, err, services.ErrDuplicateCustomNodeKindName)
+	})
+
+	t.Run("deletes the custom node kind and preserves the kind registry entry", func(t *testing.T) {
+		err := store.DeleteCustomNodeKind(ctx, customNodeKinds[0].KindName)
+		require.NoError(t, err)
+
+		var customNodeKindCount, kindCount int
+		require.NoError(t, pool.QueryRow(ctx, `
+			SELECT count(*) FROM custom_node_kinds AS cnk
+			JOIN kind AS k ON k.id = cnk.kind_id
+			WHERE k.name = $1`, customNodeKinds[0].KindName).Scan(&customNodeKindCount))
+		require.NoError(t, pool.QueryRow(ctx, `
+			SELECT count(*) FROM kind WHERE name = $1`, customNodeKinds[0].KindName).Scan(&kindCount))
+		assert.Zero(t, customNodeKindCount)
+		assert.Equal(t, 1, kindCount)
+	})
+}
+
 func TestStore_GetGraphSchemaNodeKinds_Integration(t *testing.T) {
 	type testSetupData struct {
 		filters      params.Filters
