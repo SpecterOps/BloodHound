@@ -79,7 +79,7 @@ export type AuditLog = {
     actor_name: string;
     actor_email: string;
     action: string;
-    fields: Record<string, unknown>;
+    fields: Record<string, unknown> | null;
     request_id: string;
     source_ip_address: string;
     status: string;
