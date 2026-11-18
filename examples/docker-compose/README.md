@@ -82,6 +82,46 @@ in your `.env` file under `BLOODHOUND_TAG`.
 See the [wiki](https://github.com/SpecterOps/BloodHound/wiki/Using-Environment-Variables-For-Sensitive-Configuration) for
 more information on using environment variables for sensitive configuration options.
 
+### PostgreSQL Graph Traversal Limits
+
+When using the `pg` graph driver, configure budgets for open-ended graph traversals with the following settings:
+
+| JSON key | Environment variable | Unit | Default |
+| --- | --- | --- | --- |
+| `database.traversal_state_limit` | `bhe_database_traversal_state_limit` | Candidate trail states | `0` (inherit) |
+| `database.traversal_byte_limit` | `bhe_database_traversal_byte_limit` | Cumulative estimated trail bytes | `0` (inherit) |
+
+Set either limit independently to a positive integer to override its budget. Omitting a value or setting it to `0`
+inherits the corresponding PostgreSQL session setting (`dawgs.traversal_state_limit` or `dawgs.traversal_byte_limit`),
+including role, database, or connection startup configuration. If the inherited setting is unset or empty, the
+fallbacks are **100,000 candidate trail states** and **67,108,864 bytes (64 MiB)**. Negative values cause PostgreSQL
+graph connection initialization to fail.
+
+Budgets account for admitted traversal work and reset for each graph query, shared across its multipart stages.
+Exceeding either budget fails the query with SQLSTATE `54000`. Increasing a budget can increase execution time and
+temporary storage use.
+
+To set these limits in `bloodhound.config.json`, add the fields to its `database` object. This example sets a state
+budget of 1,000,000 and a byte budget of 256 MiB:
+
+```json
+{
+  "database": {
+    "traversal_state_limit": 1000000,
+    "traversal_byte_limit": 268435456
+  }
+}
+```
+
+To use environment variables instead, uncomment the corresponding entries in `.env.example`, copy them to `.env`,
+and set the desired values. Also add these entries to the `bloodhound` service's existing `environment` list in
+`docker-compose.yml` so Compose passes the values into the container:
+
+```yaml
+- bhe_database_traversal_state_limit=${bhe_database_traversal_state_limit:-0}
+- bhe_database_traversal_byte_limit=${bhe_database_traversal_byte_limit:-0}
+```
+
 ## FAQ
 
 ### Q: "I'm wanting to connect to BloodHound on a host other than localhost, how do I allow it?"
