@@ -59,9 +59,6 @@ func TestGetSavedQuery(t *testing.T) {
 		})
 		databaseInterface = harness.DB
 		server            = harness.Server
-		ownerID           = uuid.Must(uuid.NewV4())
-		readerID          = uuid.Must(uuid.NewV4())
-		adminID           = uuid.Must(uuid.NewV4())
 	)
 
 	allRoles, err := databaseInterface.GetAllRoles(ctx, "", model.SQLFilter{})
@@ -69,35 +66,32 @@ func TestGetSavedQuery(t *testing.T) {
 	userRole, found := allRoles.FindByName(auth.RoleUser)
 	require.True(t, found)
 
-	ownerToken := servertest.MintJWT(t, ctx, databaseInterface, harness.Auther, model.User{
-		Unique:        model.Unique{ID: ownerID},
+	owner, ownerToken := servertest.MintUserAndJWT(t, ctx, databaseInterface, harness.Auther, model.User{
 		PrincipalName: "saved-query-owner@example.com",
 		EmailAddress:  null.StringFrom("saved-query-owner@example.com"),
 		EULAAccepted:  true,
 		Roles:         model.Roles{userRole},
 	})
-	readerToken := servertest.MintJWT(t, ctx, databaseInterface, harness.Auther, model.User{
-		Unique:        model.Unique{ID: readerID},
+	reader, readerToken := servertest.MintUserAndJWT(t, ctx, databaseInterface, harness.Auther, model.User{
 		PrincipalName: "saved-query-reader@example.com",
 		EmailAddress:  null.StringFrom("saved-query-reader@example.com"),
 		EULAAccepted:  true,
 		Roles:         model.Roles{userRole},
 	})
 	adminToken := servertest.MintJWT(t, ctx, databaseInterface, harness.Auther, model.User{
-		Unique:        model.Unique{ID: adminID},
 		PrincipalName: "saved-query-admin@example.com",
 		EmailAddress:  null.StringFrom("saved-query-admin@example.com"),
 		EULAAccepted:  true,
 		Roles:         model.Roles{servertest.AdminRole(t, ctx, databaseInterface)},
 	})
 
-	privateQuery, err := databaseInterface.CreateSavedQuery(ctx, ownerID, "Private query", "MATCH (n) RETURN n", "Private", nil, nil, "")
+	privateQuery, err := databaseInterface.CreateSavedQuery(ctx, owner.ID, "Private query", "MATCH (n) RETURN n", "Private", nil, nil, "")
 	require.NoError(t, err)
-	sharedQuery, err := databaseInterface.CreateSavedQuery(ctx, ownerID, "Shared query", "MATCH (n) RETURN n", "Shared", nil, nil, "")
+	sharedQuery, err := databaseInterface.CreateSavedQuery(ctx, owner.ID, "Shared query", "MATCH (n) RETURN n", "Shared", nil, nil, "")
 	require.NoError(t, err)
-	_, err = databaseInterface.CreateSavedQueryPermissionsToUsers(ctx, sharedQuery.ID, readerID)
+	_, err = databaseInterface.CreateSavedQueryPermissionsToUsers(ctx, sharedQuery.ID, reader.ID)
 	require.NoError(t, err)
-	publicQuery, err := databaseInterface.CreateSavedQuery(ctx, ownerID, "Public query", "MATCH (n) RETURN n", "Public", nil, nil, "")
+	publicQuery, err := databaseInterface.CreateSavedQuery(ctx, owner.ID, "Public query", "MATCH (n) RETURN n", "Public", nil, nil, "")
 	require.NoError(t, err)
 	_, err = databaseInterface.CreateSavedQueryPermissionToPublic(ctx, publicQuery.ID)
 	require.NoError(t, err)
