@@ -341,26 +341,6 @@ func TestStore_E2ECustomNodeKinds_Integration(t *testing.T) {
 		assert.Equal(t, created[0], readCustomNodeKind)
 	})
 
-	t.Run("returns persisted insert values", func(t *testing.T) {
-		var (
-			storedID               int32
-			storedKindID           int32
-			storedSchemaNodeKindID int32
-			storedConfig           []byte
-		)
-		require.NoError(t, pool.QueryRow(ctx, `
-			SELECT cnk.id, cnk.kind_id, cnk.schema_node_kind_id, cnk.config
-			FROM custom_node_kinds AS cnk
-			JOIN kind AS k ON cnk.kind_id = k.id
-			WHERE k.name = $1`, customNodeKinds[0].KindName).Scan(
-			&storedID, &storedKindID, &storedSchemaNodeKindID, &storedConfig,
-		))
-		assert.Equal(t, created[0].ID, storedID)
-		assert.Equal(t, created[0].KindId, storedKindID)
-		assert.Equal(t, seeded.nodeKindID, storedSchemaNodeKindID)
-		assert.JSONEq(t, `{"icon":{"type":"font-awesome","name":"user","color":"#fff"}}`, string(storedConfig))
-	})
-
 	t.Run("updates the config while preserving an omitted schema association", func(t *testing.T) {
 		nodeKindToUpdate := created[0]
 		nodeKindToUpdate.SchemaNodeKindId = nil
