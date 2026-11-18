@@ -22,6 +22,7 @@ const shape = { borderRadius: 8 };
 
 export const lightTheme = {
     primary: '#33318F',
+    primaryVariant: '#0D0A30',
     secondary: '#1A300F',
     tertiary: '#5CC791',
     link: '#1A300F',
@@ -40,6 +41,7 @@ export const lightTheme = {
 
 export const darkTheme = {
     primary: '#33318F',
+    primaryVariant: '#8D8BF8',
     secondary: '#1A300F',
     tertiary: '#5CC791',
     link: '#99A3FF',
@@ -60,6 +62,7 @@ const getHtmlTag = () => (typeof document !== 'undefined' ? document.documentEle
 
 const ThemeCSSVars = {
     primary: '--primary',
+    primaryVariant: '--primary-variant',
     secondary: '--secondary',
     tertiary: '--tertiary',
     link: '--link',
@@ -86,12 +89,13 @@ export type Theme = typeof lightTheme;
  * defined on the `<html>` element.
  *
  * Whenever the `<html>` class list changes (e.g., switching themes), the
- * hook re-reads the CSS variables, updating the returned theme object.
+ * hook re-reads the CSS variables and dark-mode status, updating the returned theme object.
  */
 export const useTheme = () => {
     const htmlTag = getHtmlTag();
 
-    const [theme, setTheme] = useState<Theme>(htmlTag?.classList.contains('dark') ? darkTheme : lightTheme);
+    const [isDarkMode, setIsDarkMode] = useState(htmlTag?.classList.contains('dark') ?? false);
+    const [theme, setTheme] = useState<Theme>(isDarkMode ? darkTheme : lightTheme);
 
     const updateTheme = useCallback(() => {
         const htmlTag = getHtmlTag();
@@ -106,6 +110,7 @@ export const useTheme = () => {
         const neutralQuinary = computedStyles.getPropertyValue(ThemeCSSVars.neutral.quinary);
 
         const primary = computedStyles.getPropertyValue(ThemeCSSVars.primary);
+        const primaryVariant = computedStyles.getPropertyValue(ThemeCSSVars.primaryVariant);
         const secondary = computedStyles.getPropertyValue(ThemeCSSVars.secondary);
         const tertiary = computedStyles.getPropertyValue(ThemeCSSVars.tertiary);
 
@@ -113,8 +118,10 @@ export const useTheme = () => {
         const error = computedStyles.getPropertyValue(ThemeCSSVars.error);
         const contrast = computedStyles.getPropertyValue(ThemeCSSVars.contrast);
 
+        setIsDarkMode(htmlTag.classList.contains('dark'));
         setTheme({
             primary,
+            primaryVariant,
             secondary,
             tertiary,
             link,
@@ -158,5 +165,5 @@ export const useTheme = () => {
         };
     }, [mutationCallback, updateTheme]);
 
-    return theme;
+    return { ...theme, isDarkMode };
 };
