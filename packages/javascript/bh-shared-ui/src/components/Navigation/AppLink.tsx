@@ -22,20 +22,21 @@ import {
     persistSearchParams,
 } from '../../utils/searchParams/searchParams';
 
-export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps) => {
-    if (discardQueryParams) {
-        return (
-            <Link to={to} {...props}>
-                {children}
-            </Link>
-        );
-    }
-
-    const search = persistSearchParams(GloballySupportedSearchParams);
-    const toWithParams = applyPreservedParams(to, search);
+/**
+ * A link that preserves globally supported query parameters when navigating.
+ *
+ * Set `discardQueryParams` to skip preserving query parameters from the current URL.
+ * Query parameters explicitly included in `to` are unaffected by this flag.
+ */
+export const AppLink = (
+    { children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps
+) => {
+    const destination = discardQueryParams
+        ? to
+        : applyPreservedParams(to, persistSearchParams(GloballySupportedSearchParams));
 
     return (
-        <Link to={toWithParams} {...props}>
+        <Link to={destination} {...props}>
             {children}
         </Link>
     );
