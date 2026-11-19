@@ -535,6 +535,6 @@ export const communityIntegrations = generallyAvailable([
         logoPath: '/img/logo-red-transparent-logo-only.svg',
         description:
             'Utilities for local BHCE projects, data collection, Cypher workflows, enrichment, and interoperability with other tools.',
-        href: 'https://github.com/dadevel/bloodhoundcli',
+        href: 'https://github.com/SpecterOps/bloodhound-cli',
     },
 ] satisfies readonly GenerallyAvailableCatalogItem[]);

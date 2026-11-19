@@ -112,6 +112,12 @@ describe('Marketplace', () => {
             'href',
             'https://github.com/mwnickerson/bloodhound_mcp'
         );
+
+        const cliCard = screen.getByRole('article', { name: 'BloodHound CLI' });
+        expect(within(cliCard).getByRole('link', { name: /Learn More BloodHound CLI/ })).toHaveAttribute(
+            'href',
+            'https://github.com/SpecterOps/bloodhound-cli'
+        );
         expect(screen.queryByText(/upgrade your license/i)).not.toBeInTheDocument();
     });
 
