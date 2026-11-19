@@ -368,25 +368,25 @@ func routeTemplateFor(muxRouter *mux.Router, r *http.Request) string {
 	return template
 }
 
-// highValueHandlers defines the set of API endpoints that should receive detailed
-// per-handler metrics. These are Tier 1 endpoints representing critical business
-// logic, performance-sensitive operations, and frequently-used functionality.
+// defaultMetricEndpoints returns a fresh allowlist of endpoints tracked by default.
 //
 // All other endpoints will be grouped under the "other" handler label to limit
 // cardinality in the ApiRequestDuration metric while maintaining visibility into
 // the most important endpoints.
-var highValueHandlers = map[string]bool{
-	// Graph Query & Search - Core functionality
-	"/api/v2/graphs/cypher":        true, // Primary graph query endpoint
-	"/api/v2/graphs/shortest-path": true, // Pathfinding queries
-	"/api/v2/pathfinding":          true, // Alternative pathfinding
-	"/api/v2/search":               true, // Global search
-	"/api/v2/graph-search":         true, // Graph-specific search
+func defaultMetricEndpoints() map[string]bool {
+	return map[string]bool{
+		// Graph Query & Search - Core functionality
+		"/api/v2/graphs/cypher":        true, // Primary graph query endpoint
+		"/api/v2/graphs/shortest-path": true, // Pathfinding queries
+		"/api/v2/pathfinding":          true, // Alternative pathfinding
+		"/api/v2/search":               true, // Global search
+		"/api/v2/graph-search":         true, // Graph-specific search
 
-	// Data Ingestion - Performance critical
-	"/api/v2/ingest":                           true, // Primary collector ingestion
-	"/api/v2/file-upload/start":                true, // Generic file upload
-	"/api/v2/file-upload/{file_upload_job_id}": true, // File processing
+		// Data Ingestion - Performance critical
+		"/api/v2/ingest":                           true, // Primary collector ingestion
+		"/api/v2/file-upload/start":                true, // Generic file upload
+		"/api/v2/file-upload/{file_upload_job_id}": true, // File processing
+	}
 }
 
 // normalizeHandlerLabel takes a route template and returns either the template
@@ -394,11 +394,11 @@ var highValueHandlers = map[string]bool{
 //
 // This prevents cardinality explosion in ApiRequestDuration by only tracking
 // detailed metrics for Tier 1 endpoints while still counting all requests.
-func normalizeHandlerLabel(template string) string {
+func normalizeHandlerLabel(template string, endpoints map[string]bool) string {
 	if template == unmatchedRouteLabel {
 		return unmatchedRouteLabel
 	}
-	if highValueHandlers[template] {
+	if endpoints[template] {
 		return template
 	}
 	return "other"
@@ -407,11 +407,16 @@ func normalizeHandlerLabel(template string) string {
 // MetricsMiddleware wires the API request pipeline to the Prometheus metrics declared in metrics.go. It must be
 // registered as pre-route middleware so that unmatched requests are still counted; the muxRouter argument is used to
 // resolve the matched route template for the "handler" label without dispatching the request twice.
-func MetricsMiddleware(muxRouter *mux.Router) mux.MiddlewareFunc {
+func MetricsMiddleware(muxRouter *mux.Router, additionalEndpoints []string) mux.MiddlewareFunc {
+	var endpoints = defaultMetricEndpoints()
+	for _, endpoint := range additionalEndpoints {
+		endpoints[endpoint] = true
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			handlerLabel := routeTemplateFor(muxRouter, r)
-			curriedDuration, err := ApiRequestDuration.CurryWith(prometheus.Labels{"handler": normalizeHandlerLabel(handlerLabel)})
+			curriedDuration, err := ApiRequestDuration.CurryWith(prometheus.Labels{"handler": normalizeHandlerLabel(handlerLabel, endpoints)})
 			if err != nil {
 				slog.ErrorContext(r.Context(), "Failed to curry request duration metric", attr.Error(err))
 				next.ServeHTTP(w, r)
