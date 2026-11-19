@@ -28,9 +28,7 @@ import {
  * Set `discardQueryParams` to skip preserving query parameters from the current URL.
  * Query parameters explicitly included in `to` are unaffected by this flag.
  */
-export const AppLink = (
-    { children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps
-) => {
+export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps) => {
     const destination = discardQueryParams
         ? to
         : applyPreservedParams(to, persistSearchParams(GloballySupportedSearchParams));
