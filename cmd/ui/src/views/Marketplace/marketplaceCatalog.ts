@@ -530,8 +530,8 @@ export const communityIntegrations = generallyAvailable([
     },
     {
         name: 'BloodHound CLI',
-        author: 'dadevel',
-        publisher: 'community',
+        author: 'SpecterOps',
+        publisher: 'specterops',
         logoPath: '/img/logo-red-transparent-logo-only.svg',
         description:
             'Utilities for local BHCE projects, data collection, Cypher workflows, enrichment, and interoperability with other tools.',
