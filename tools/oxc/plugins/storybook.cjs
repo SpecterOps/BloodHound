@@ -14,5 +14,28 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+const path = require('node:path');
 const { fixupPluginRules } = require('@eslint/compat');
-module.exports = fixupPluginRules(require('eslint-plugin-storybook'));
+const storybook = require('eslint-plugin-storybook');
+
+const noUninstalledAddons = storybook.rules['no-uninstalled-addons'];
+
+module.exports = fixupPluginRules({
+    ...storybook,
+    rules: {
+        ...storybook.rules,
+        'no-uninstalled-addons': {
+            ...noUninstalledAddons,
+            create(context) {
+                // The upstream rule reads from the working directory by default.
+                const workspaceOptions = {
+                    packageJsonLocation: path.resolve(path.dirname(context.filename), '..', 'package.json'),
+                };
+                const workspaceContext = Object.create(context, {
+                    options: { value: [workspaceOptions, ...context.options] },
+                });
+                return noUninstalledAddons.create(workspaceContext);
+            },
+        },
+    },
+});

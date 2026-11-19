@@ -13,7 +13,7 @@
         "build": "yarn check-types && rollup --config rollup.config.js",
         "lint": "oxlint src --report-unused-disable-directives-severity error --max-warnings 0",
         "test": "echo \"Warning: no test specified\"",
-        "check-types": "tsc --noEmit --pretty",
+        "check-types": "tsrs --noEmit --pretty",
         "format": "prettier --write \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\"",
         "check-format": "prettier  --list-different \"src/**/*.@(js|jsx|ts|tsx|md|html|css|scss|json)\""
     },
@@ -23,11 +23,12 @@
     "devDependencies": {
         "@rollup/plugin-typescript": "^11.1.6",
         "@vitest/coverage-v8": "^4.1.11",
-        "oxlint": "1.89.0",
+        "oxlint": "1.94.0",
         "prettier": "^3.2.5",
         "prettier-plugin-organize-imports": "^4.1.0",
         "rollup": "^4.59.0",
         "rollup-plugin-delete": "^2.0.0",
+        "tsrs": "7.1.0-beta.tsrs2",
         "typescript": "^5.9.3"
     }
 }

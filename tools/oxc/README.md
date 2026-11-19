@@ -1,7 +1,8 @@
 # Oxlint configuration
 
-Workspace `lint` scripts use the repository-pinned Oxlint version. Prettier remains
-the formatter, and TypeScript retains its existing build and type-checking roles.
+Workspace `lint` scripts use the repository-pinned Oxlint version. Prettier
+formats the code. The workspace `check-types` scripts use tsrs, and the library
+build plugins use the TypeScript compiler API.
 
 ## Shared policy
 
@@ -17,9 +18,9 @@ categories, settings, and ignore patterns stay in workspace configs because thos
 fields are not inherited. An explicit `plugins: []` inherits the shared native
 plugin list without adding Oxlint's defaults.
 
-The initial rule policy preserves the previous ESLint setup. Recommended category
-presets and type-aware linting are not enabled. The Oxlint configs are the lint
-policy going forward and can be improved directly.
+The rule policy preserves the previous ESLint setup. The root `lint:types` command
+uses the same rules as the workspace `lint` scripts and enables Oxlint's type-aware
+backend and compiler diagnostics.
 
 ## JavaScript rule adapters
 
@@ -48,6 +49,12 @@ lint. Native `no-unused-vars` skips declaration files (`.d.ts`).
 Run `yarn lint` from either repository root. Stbernard consumes Oxlint JSON for
 code-quality reporting and preserves severity and line locations. Its parser
 checks remain normal Go unit tests.
+
+After building the shared UI libraries, run `yarn lint:types` from either repository
+root to lint and type-check in one Oxlint invocation. The BHE command covers the
+BHE UI and BHCE workspaces. The standalone BHCE command covers the BHCE UI, Dev
+Portal, and shared packages. Both commands report compiler diagnostics for files
+in their lint scope. Use `yarn check-types` for full workspace type checking.
 
 The migration fixtures, ESLint policy snapshots, and disposable audit tool are
 kept separately on `bfaulkner/oxlint-parity-evidence`. They document the initial

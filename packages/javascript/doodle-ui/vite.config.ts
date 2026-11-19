@@ -13,14 +13,14 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-/// <reference types="vitest" />
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, type UserConfig } from 'vite';
 import dts from 'vite-plugin-dts';
+import type { TestUserConfig } from 'vitest/config';
 // https://vitejs.dev/config/
 
-export default defineConfig({
+const config: UserConfig & { test: TestUserConfig } = {
     plugins: [react(), dts({ rollupTypes: true, exclude: ['**/*.stories.{ts,tsx}'] })],
     build: {
         lib: {
@@ -38,4 +38,6 @@ export default defineConfig({
         testTimeout: 60000, // 1 minute,
         clearMocks: true,
     },
-});
+};
+
+export default defineConfig(config);
