@@ -25754,7 +25754,7 @@
         }
       },
       "query.jobs.hydrate-last-job": {
-        "name": "hydrateLastJob",
+        "name": "hydrate_last_job",
         "in": "query",
         "required": false,
         "description": "When true, includes a last_job field containing the most recent job record for each returned client or collector job profile. When false or not supplied, last_job is omitted entirely.",
@@ -28599,7 +28599,9 @@
                     "name",
                     "version",
                     "is_builtin",
-                    "namespace"
+                    "namespace",
+                    "created_at",
+                    "updated_at"
                   ],
                   "properties": {
                     "id": {
@@ -28617,6 +28619,16 @@
                     },
                     "namespace": {
                       "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
                     }
                   }
                 }
@@ -28635,7 +28647,9 @@
                 "name": "Active Directory",
                 "version": "v1.0.0",
                 "is_builtin": true,
-                "namespace": "AD"
+                "namespace": "AD",
+                "created_at": "2026-01-01T00:00:00Z",
+                "updated_at": "2026-01-01T00:00:00Z"
               }
             ]
           }
