@@ -410,6 +410,7 @@ var basicHandlers = map[ingest.DataType]basicIngestHandler{
 	ingest.DataTypeSite:           defaultBasicHandler(convertSiteData),
 	ingest.DataTypeSiteServer:     defaultBasicHandler(convertSiteServerData),
 	ingest.DataTypeSiteSubnet:     defaultBasicHandler(convertSiteSubnetData),
+	ingest.DataTypeDMSA:           defaultBasicHandler(convertDMSAData),
 }
 
 var sourceKindHandlers = map[ingest.DataType]sourceKindIngestHandler{
