@@ -227,16 +227,13 @@ func TestService_Complete(t *testing.T) {
 		commitID     = uuid.Must(uuid.NewV4())
 		operationErr = errors.New("operation failed")
 		writeErr     = errors.New("write failed")
-		entry        = services.AuditLogEntry{
-			Action: services.ActionUpdateParameter,
-			Fields: map[string]any{"key": "value"},
-		}
 	)
 
 	tests := []struct {
 		name             string
 		buildContext     func() context.Context
 		identityResolver mockIdentityResolver
+		nilFields        bool
 		operationErr     error
 		writeErr         error
 		expected         expected
@@ -249,6 +246,12 @@ func TestService_Complete(t *testing.T) {
 			name:         "Success: writes failure outcome with operation error",
 			operationErr: operationErr,
 			expected:     expected{status: services.StatusFailure, fields: map[string]any{"key": "value", "error": operationErr.Error()}},
+		},
+		{
+			name:         "Success: writes failure outcome with nil fields",
+			nilFields:    true,
+			operationErr: operationErr,
+			expected:     expected{status: services.StatusFailure, fields: map[string]any{"error": operationErr.Error()}},
 		},
 		{
 			name:     "Error: audit insert failure",
@@ -289,7 +292,11 @@ func TestService_Complete(t *testing.T) {
 				ctx              = context.Background()
 				database         = &mockDatabase{err: testCase.writeErr}
 				identityResolver = mockIdentityResolver{err: errors.New("identity unavailable")}
+				entry            = services.AuditLogEntry{Action: services.ActionUpdateParameter, Fields: map[string]any{"key": "value"}}
 			)
+			if testCase.nilFields {
+				entry.Fields = nil
+			}
 			if testCase.buildContext != nil {
 				ctx = testCase.buildContext()
 				identityResolver = testCase.identityResolver
@@ -317,7 +324,11 @@ func TestService_Complete(t *testing.T) {
 			assert.Equal(t, testCase.expected.requestID, database.logs[0].RequestID)
 			assert.Equal(t, testCase.expected.sourceIPAddress, database.logs[0].SourceIPAddress)
 			assert.Equal(t, testCase.expected.actorID, database.logs[0].ActorID)
-			assert.Equal(t, map[string]any{"key": "value"}, entry.Fields)
+			if testCase.nilFields {
+				assert.Nil(t, entry.Fields)
+			} else {
+				assert.Equal(t, testCase.expected.fields, entry.Fields)
+			}
 		})
 	}
 }

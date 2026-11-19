@@ -119,10 +119,9 @@ func (s *Service) Complete(ctx context.Context, commitID uuid.UUID, entry AuditL
 func (s *Service) newLog(ctx context.Context, commitID uuid.UUID, entry AuditLogEntry, status Status, operationErr error) AuditLog {
 	var (
 		requestContext = bhctx.Get(ctx)
-		fields         = make(map[string]any, len(entry.Fields)+1)
 		auditLog       = AuditLog{
 			Action:          entry.Action,
-			Fields:          fields,
+			Fields:          entry.Fields,
 			RequestID:       requestContext.RequestID,
 			SourceIPAddress: requestContext.RequestIP,
 			Status:          status,
@@ -130,11 +129,11 @@ func (s *Service) newLog(ctx context.Context, commitID uuid.UUID, entry AuditLog
 		}
 	)
 
-	for key, value := range entry.Fields {
-		fields[key] = value
-	}
 	if operationErr != nil {
-		fields["error"] = operationErr.Error()
+		if auditLog.Fields == nil {
+			auditLog.Fields = make(map[string]any)
+		}
+		auditLog.Fields["error"] = operationErr.Error()
 	}
 
 	if identity, err := s.identityResolver.GetIdentity(requestContext.AuthCtx); err == nil {
