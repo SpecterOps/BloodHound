@@ -20,10 +20,12 @@ package appdb_test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -31,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
@@ -1153,4 +1156,101 @@ func TestStore_NullColumns_Integration(t *testing.T) {
 			testCase.expected.assertResponse(t, ctx, mock, seeded{permissionID: permissionID, roleID: roleID, userID: userID})
 		})
 	}
+}
+
+func newCreatedAuthToken(t *testing.T, ownerID uuid.UUID, creatorID uuid.UUID, name string) services.CreatedAuthToken {
+	t.Helper()
+
+	tokenID, err := uuid.NewV4()
+	require.NoError(t, err)
+
+	return services.CreatedAuthToken{
+		AuthToken: services.AuthToken{
+			ID:         tokenID,
+			UserID:     uuid.NullUUID{UUID: ownerID, Valid: true},
+			Name:       sql.NullString{String: name, Valid: true},
+			HmacMethod: "hmac-sha2-256",
+			LastAccess: time.Now().UTC(),
+			ExpiresAt:  sql.NullTime{Time: time.Now().UTC().AddDate(0, 0, 30), Valid: true},
+			CreatedBy:  uuid.NullUUID{UUID: creatorID, Valid: true},
+		},
+		Key: "secret-key-" + name,
+	}
+}
+
+func countRows(t *testing.T, ctx context.Context, pool *pgxpool.Pool, query string, args ...any) int {
+	t.Helper()
+
+	var count int
+	require.NoError(t, pool.QueryRow(ctx, query, args...).Scan(&count))
+	return count
+}
+
+func TestStore_CreateAuthToken_Integration(t *testing.T) {
+	t.Run("inserts the token with its key and one success audit row without the key", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			ownerID     = seedUser(t, ctx, pool, "create-token-owner", false)
+			authCtx     = authenticatedContext(ownerID)
+			inputToken  = newCreatedAuthToken(t, ownerID, ownerID, "created")
+			storedKey   string
+			auditName   string
+		)
+
+		createdToken, err := store.CreateAuthToken(authCtx, inputToken)
+		require.NoError(t, err)
+
+		assert.Equal(t, inputToken.ID, createdToken.ID)
+		assert.Equal(t, inputToken.Key, createdToken.Key)
+		assert.Equal(t, inputToken.UserID, createdToken.UserID)
+		assert.Equal(t, inputToken.CreatedBy, createdToken.CreatedBy)
+		assert.Equal(t, "created", createdToken.Name.String)
+		assert.Equal(t, "hmac-sha2-256", createdToken.HmacMethod)
+		assert.WithinDuration(t, inputToken.ExpiresAt.Time, createdToken.ExpiresAt.Time, time.Millisecond)
+		assert.False(t, createdToken.CreatedAt.IsZero())
+		assert.Equal(t, createdToken.CreatedAt, createdToken.UpdatedAt)
+
+		require.NoError(t, pool.QueryRow(ctx, `SELECT key FROM auth_tokens WHERE id = $1`, inputToken.ID.String()).Scan(&storedKey))
+		assert.Equal(t, inputToken.Key, storedKey)
+
+		require.NoError(t, pool.QueryRow(ctx,
+			`SELECT fields->>'name' FROM audit_logs WHERE action = $1 AND status = 'success' AND fields->>'id' = $2 AND actor_id = $3`,
+			string(model.AuditLogActionCreateAuthToken), inputToken.ID.String(), ownerID.String(),
+		).Scan(&auditName))
+		assert.Equal(t, "created", auditName)
+		assert.Equal(t, 1, countRows(t, ctx, pool, `SELECT count(*) FROM audit_logs WHERE fields->>'id' = $1`, inputToken.ID.String()))
+		assert.Zero(t, countRows(t, ctx, pool, `SELECT count(*) FROM audit_logs WHERE fields->>'id' = $1 AND fields ? 'key'`, inputToken.ID.String()))
+	})
+
+	t.Run("unknown owner returns ErrAuthTokenUserNotFound and writes nothing", func(t *testing.T) {
+		var (
+			ctx          = context.Background()
+			store, pool  = setupStoreAndPool(t)
+			creatorID    = seedUser(t, ctx, pool, "create-token-admin", false)
+			missingOwner = uuid.Must(uuid.NewV4())
+			inputToken   = newCreatedAuthToken(t, missingOwner, creatorID, "orphan")
+		)
+
+		_, err := store.CreateAuthToken(authenticatedContext(creatorID), inputToken)
+		require.ErrorIs(t, err, services.ErrAuthTokenUserNotFound)
+
+		assert.Zero(t, countRows(t, ctx, pool, `SELECT count(*) FROM auth_tokens WHERE id = $1`, inputToken.ID.String()))
+		assert.Zero(t, countRows(t, ctx, pool, `SELECT count(*) FROM audit_logs WHERE fields->>'id' = $1`, inputToken.ID.String()))
+	})
+
+	t.Run("audit failure rolls back the token insert", func(t *testing.T) {
+		var (
+			ctx         = context.Background()
+			store, pool = setupStoreAndPool(t)
+			ownerID     = seedUser(t, ctx, pool, "create-token-rollback", false)
+			inputToken  = newCreatedAuthToken(t, ownerID, ownerID, "rolled-back")
+		)
+
+		// No authenticated user on the context makes the audit insert fail after the token insert succeeded.
+		_, err := store.CreateAuthToken(ctx, inputToken)
+		require.ErrorContains(t, err, "no authenticated user on context")
+
+		assert.Zero(t, countRows(t, ctx, pool, `SELECT count(*) FROM auth_tokens WHERE id = $1`, inputToken.ID.String()))
+	})
 }

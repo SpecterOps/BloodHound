@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -237,6 +238,14 @@ func TestRegister_RegistersRoutes(t *testing.T) {
 			expected:   expected{routeRegistered: true},
 		},
 		{
+			name: "Success: POST /api/v2/tokens is registered",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodPost, "/api/v2/tokens", nil)
+			},
+			setupMocks: func(mock) {},
+			expected:   expected{routeRegistered: true},
+		},
+		{
 			name: "Success: GET /api/v2/bloodhound-users-minimal is registered",
 			buildRequest: func() *http.Request {
 				return httptest.NewRequest(http.MethodGet, "/api/v2/bloodhound-users-minimal", nil)
@@ -332,6 +341,14 @@ func TestRegister_RoutesRequireAuthentication(t *testing.T) {
 			name: "Error: unauthenticated GET /api/v2/tokens - 401",
 			buildRequest: func() *http.Request {
 				return httptest.NewRequest(http.MethodGet, "/api/v2/tokens", nil)
+			},
+			setupMocks: func(mock) {},
+			expected:   expected{responseCode: http.StatusUnauthorized},
+		},
+		{
+			name: "Error: unauthenticated POST /api/v2/tokens - 401",
+			buildRequest: func() *http.Request {
+				return httptest.NewRequest(http.MethodPost, "/api/v2/tokens", strings.NewReader(`{"token_name":"my token"}`))
 			},
 			setupMocks: func(mock) {},
 			expected:   expected{responseCode: http.StatusUnauthorized},

@@ -53,6 +53,126 @@ func (_m *MockConfigurationAdapter) EXPECT() *MockConfigurationAdapter_Expecter 
 	return &MockConfigurationAdapter_Expecter{mock: &_m.Mock}
 }
 
+// GetConfigAPITokenExpiration provides a mock function for the type MockConfigurationAdapter
+func (_mock *MockConfigurationAdapter) GetConfigAPITokenExpiration(ctx context.Context) (appcfg.APITokenExpirationParameter, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetConfigAPITokenExpiration")
+	}
+
+	var r0 appcfg.APITokenExpirationParameter
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (appcfg.APITokenExpirationParameter, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) appcfg.APITokenExpirationParameter); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		r0 = ret.Get(0).(appcfg.APITokenExpirationParameter)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockConfigurationAdapter_GetConfigAPITokenExpiration_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetConfigAPITokenExpiration'
+type MockConfigurationAdapter_GetConfigAPITokenExpiration_Call struct {
+	*mock.Call
+}
+
+// GetConfigAPITokenExpiration is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockConfigurationAdapter_Expecter) GetConfigAPITokenExpiration(ctx interface{}) *MockConfigurationAdapter_GetConfigAPITokenExpiration_Call {
+	return &MockConfigurationAdapter_GetConfigAPITokenExpiration_Call{Call: _e.mock.On("GetConfigAPITokenExpiration", ctx)}
+}
+
+func (_c *MockConfigurationAdapter_GetConfigAPITokenExpiration_Call) Run(run func(ctx context.Context)) *MockConfigurationAdapter_GetConfigAPITokenExpiration_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockConfigurationAdapter_GetConfigAPITokenExpiration_Call) Return(v appcfg.APITokenExpirationParameter, err error) *MockConfigurationAdapter_GetConfigAPITokenExpiration_Call {
+	_c.Call.Return(v, err)
+	return _c
+}
+
+func (_c *MockConfigurationAdapter_GetConfigAPITokenExpiration_Call) RunAndReturn(run func(ctx context.Context) (appcfg.APITokenExpirationParameter, error)) *MockConfigurationAdapter_GetConfigAPITokenExpiration_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetConfigAPITokens provides a mock function for the type MockConfigurationAdapter
+func (_mock *MockConfigurationAdapter) GetConfigAPITokens(ctx context.Context) (appcfg.APITokensParameter, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetConfigAPITokens")
+	}
+
+	var r0 appcfg.APITokensParameter
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (appcfg.APITokensParameter, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) appcfg.APITokensParameter); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		r0 = ret.Get(0).(appcfg.APITokensParameter)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockConfigurationAdapter_GetConfigAPITokens_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetConfigAPITokens'
+type MockConfigurationAdapter_GetConfigAPITokens_Call struct {
+	*mock.Call
+}
+
+// GetConfigAPITokens is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockConfigurationAdapter_Expecter) GetConfigAPITokens(ctx interface{}) *MockConfigurationAdapter_GetConfigAPITokens_Call {
+	return &MockConfigurationAdapter_GetConfigAPITokens_Call{Call: _e.mock.On("GetConfigAPITokens", ctx)}
+}
+
+func (_c *MockConfigurationAdapter_GetConfigAPITokens_Call) Run(run func(ctx context.Context)) *MockConfigurationAdapter_GetConfigAPITokens_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockConfigurationAdapter_GetConfigAPITokens_Call) Return(v appcfg.APITokensParameter, err error) *MockConfigurationAdapter_GetConfigAPITokens_Call {
+	_c.Call.Return(v, err)
+	return _c
+}
+
+func (_c *MockConfigurationAdapter_GetConfigAPITokens_Call) RunAndReturn(run func(ctx context.Context) (appcfg.APITokensParameter, error)) *MockConfigurationAdapter_GetConfigAPITokens_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetConfigScheduledAnalysis provides a mock function for the type MockConfigurationAdapter
 func (_mock *MockConfigurationAdapter) GetConfigScheduledAnalysis(ctx context.Context) (appcfg.ScheduledAnalysisParameter, error) {
 	ret := _mock.Called(ctx)

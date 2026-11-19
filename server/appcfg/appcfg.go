@@ -33,12 +33,18 @@ import (
 	"github.com/specterops/bloodhound/server/featureflags"
 )
 
-type ScheduledAnalysisParameter = services.ScheduledAnalysisParameter
+type (
+	ScheduledAnalysisParameter  = services.ScheduledAnalysisParameter
+	APITokensParameter          = services.APITokensParameter
+	APITokenExpirationParameter = services.APITokenExpirationParameter
+)
 
 // ConfigurationAdapter supplies GetConfig<Type> methods for fetching typed parameter values.
 // If any problem is encountered, these methods log a warning and return both the parameter default value and an error.
 type ConfigurationAdapter interface {
 	GetConfigScheduledAnalysis(ctx context.Context) (ScheduledAnalysisParameter, error)
+	GetConfigAPITokens(ctx context.Context) (APITokensParameter, error)
+	GetConfigAPITokenExpiration(ctx context.Context) (APITokenExpirationParameter, error)
 }
 
 func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {

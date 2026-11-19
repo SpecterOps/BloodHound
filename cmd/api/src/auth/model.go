@@ -18,16 +18,11 @@ package auth
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 )
@@ -175,44 +170,4 @@ func GetUserFromAuthCtx(ctx Context) (model.User, bool) {
 	default:
 		return model.User{}, false
 	}
-}
-
-// NewUserAuthToken creates a new User model.AuthToken using the details provided
-//
-// This isn't an ideal location for this function but it was determined to be the best place "for now".
-// See https://specterops.atlassian.net/browse/BED-3367
-func NewUserAuthToken(ownerId string, tokenName string, hmacMethod string, createdById uuid.UUID) (model.AuthToken, error) {
-	var (
-		tokenBytes = make([]byte, 40)
-	)
-
-	ownerUuid, err := uuid.FromString(ownerId)
-	if err != nil {
-		return model.AuthToken{}, err
-	}
-
-	authToken := model.AuthToken{
-		UserID:     uuid.NullUUID{UUID: ownerUuid, Valid: true},
-		HmacMethod: hmacMethod,
-		LastAccess: time.Now().UTC(),
-		Name:       null.StringFrom(tokenName),
-		CreatedBy:  uuid.NullUUID{UUID: createdById, Valid: true},
-	}
-
-	if hmacMethod != HMAC_SHA2_256 {
-		return authToken, fmt.Errorf("HMAC method %s is not supported", hmacMethod)
-	}
-
-	if id, err := uuid.NewV4(); err != nil {
-		return authToken, err
-	} else {
-		authToken.ID = id
-	}
-
-	if _, err := rand.Read(tokenBytes); err != nil {
-		return authToken, nil
-	}
-
-	authToken.Key = base64.StdEncoding.EncodeToString(tokenBytes)
-	return authToken, nil
 }

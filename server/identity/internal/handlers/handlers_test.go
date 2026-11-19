@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -1295,6 +1296,207 @@ func TestUserMinimalListView_FilterParsingContract(t *testing.T) {
 
 			assert.Equal(t, testCase.expected.responseCode, recorder.Code)
 			assert.Equal(t, testCase.expected.filters, parsed)
+		})
+	}
+}
+
+func TestHandlers_CreateAuthToken(t *testing.T) {
+	type mock struct {
+		identity *mocks.MockIdentity
+	}
+
+	type expected struct {
+		responseCode   int
+		responseHeader http.Header
+		responseBody   func(t *testing.T, body []byte)
+	}
+
+	type testData struct {
+		name         string
+		buildRequest func() *http.Request
+		setupMocks   func(mock mock)
+		expected     expected
+	}
+
+	var (
+		unexpectedErr = errors.New("unexpected database failure")
+		userID        = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		otherUserID   = uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222")
+		tokenID       = uuid.FromStringOrNil("33333333-3333-3333-3333-333333333333")
+		lastAccess    = time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+		jsonHeader    = http.Header{"Content-Type": []string{"application/json"}}
+		adminUser     = model.User{
+			Unique: model.Unique{ID: userID},
+			Roles:  model.Roles{{Permissions: model.Permissions{auth.Permissions().AuthManageUsers}}},
+		}
+		nonAdminUser      = model.User{Unique: model.Unique{ID: userID}}
+		nonAdminRequester = services.AuthTokenRequester{UserID: userID, IsUser: true}
+		createdToken      = services.CreatedAuthToken{
+			AuthToken: services.AuthToken{
+				ID:         tokenID,
+				UserID:     uuid.NullUUID{UUID: userID, Valid: true},
+				Name:       sql.NullString{String: "my token", Valid: true},
+				HmacMethod: "hmac-sha2-256",
+				LastAccess: lastAccess,
+				ExpiresAt:  sql.NullTime{Time: lastAccess.AddDate(0, 0, 30), Valid: true},
+				CreatedBy:  uuid.NullUUID{UUID: userID, Valid: true},
+				CreatedAt:  lastAccess,
+				UpdatedAt:  lastAccess,
+			},
+			Key: "secret-key",
+		}
+	)
+
+	buildRequest := func(owner any, contentType string, body string) func() *http.Request {
+		return func() *http.Request {
+			request := httptest.NewRequest(http.MethodPost, "/api/v2/tokens", strings.NewReader(body))
+			if contentType != "" {
+				request.Header.Set("Content-Type", contentType)
+			}
+			return bhctx.SetRequestContext(request, &bhctx.Context{AuthCtx: auth.Context{Owner: owner}})
+		}
+	}
+
+	assertErrorMessage := func(message string) func(t *testing.T, body []byte) {
+		return func(t *testing.T, body []byte) {
+			var envelope struct {
+				Errors []struct {
+					Message string `json:"message"`
+				} `json:"errors"`
+			}
+			require.NoError(t, json.Unmarshal(body, &envelope))
+			require.Len(t, envelope.Errors, 1)
+			assert.Equal(t, message, envelope.Errors[0].Message)
+		}
+	}
+
+	serviceReturnsError := func(serviceErr error) func(mock mock) {
+		return func(mock mock) {
+			mock.identity.EXPECT().CreateAuthToken(testifyMock.Anything, testifyMock.Anything, testifyMock.Anything).Return(services.CreatedAuthToken{}, serviceErr)
+		}
+	}
+
+	tt := []testData{
+		{
+			name:         "Success: legacy created token JSON contract including the key is reproduced - 200",
+			buildRequest: buildRequest(nonAdminUser, "application/json", `{"token_name":"my token"}`),
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().CreateAuthToken(testifyMock.Anything, nonAdminRequester, services.CreateAuthTokenRequest{Name: "my token"}).Return(createdToken, nil)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseHeader: jsonHeader,
+				responseBody: func(t *testing.T, body []byte) {
+					var envelope struct {
+						Data json.RawMessage `json:"data"`
+					}
+					require.NoError(t, json.Unmarshal(body, &envelope))
+					assert.JSONEq(t, `{
+						"user_id": "11111111-1111-1111-1111-111111111111",
+						"name": "my token",
+						"key": "secret-key",
+						"hmac_method": "hmac-sha2-256",
+						"last_access": "2026-01-02T03:04:05Z",
+						"expires_at": {"Time": "2026-02-01T03:04:05Z", "Valid": true},
+						"created_by": "11111111-1111-1111-1111-111111111111",
+						"id": "33333333-3333-3333-3333-333333333333",
+						"created_at": "2026-01-02T03:04:05Z",
+						"updated_at": "2026-01-02T03:04:05Z",
+						"deleted_at": {"Time": "0001-01-01T00:00:00Z", "Valid": false}
+					}`, string(envelope.Data))
+				},
+			},
+		},
+		{
+			name:         "Success: admin requester and target user_id are passed to the service - 200",
+			buildRequest: buildRequest(adminUser, "application/json", fmt.Sprintf(`{"token_name":"my token","user_id":%q}`, otherUserID.String())),
+			setupMocks: func(mock mock) {
+				mock.identity.EXPECT().CreateAuthToken(
+					testifyMock.Anything,
+					services.AuthTokenRequester{UserID: userID, IsUser: true, CanManageUsers: true},
+					services.CreateAuthTokenRequest{Name: "my token", UserID: otherUserID.String()},
+				).Return(createdToken, nil)
+			},
+			expected: expected{responseCode: http.StatusOK, responseHeader: jsonHeader},
+		},
+		{
+			name:         "Error: no user on the auth context - 500",
+			buildRequest: buildRequest(nil, "application/json", `{"token_name":"my token"}`),
+			setupMocks:   func(mock) {},
+			expected:     expected{responseCode: http.StatusInternalServerError, responseHeader: jsonHeader},
+		},
+		{
+			name:         "Error: non-JSON Content-Type - 400",
+			buildRequest: buildRequest(nonAdminUser, "text/plain", `{"token_name":"my token"}`),
+			setupMocks:   func(mock) {},
+			expected:     expected{responseCode: http.StatusBadRequest, responseHeader: jsonHeader, responseBody: assertErrorMessage("error unmarshalling JSON payload")},
+		},
+		{
+			name:         "Error: empty body - 400",
+			buildRequest: buildRequest(nonAdminUser, "application/json", ""),
+			setupMocks:   func(mock) {},
+			expected:     expected{responseCode: http.StatusBadRequest, responseHeader: jsonHeader, responseBody: assertErrorMessage("error unmarshalling JSON payload")},
+		},
+		{
+			name:         "Error: API tokens are disabled - 403",
+			buildRequest: buildRequest(nonAdminUser, "application/json", `{"token_name":"my token"}`),
+			setupMocks:   serviceReturnsError(services.ErrAPITokensDisabled),
+			expected:     expected{responseCode: http.StatusForbidden, responseHeader: jsonHeader, responseBody: assertErrorMessage("API key creation is disabled")},
+		},
+		{
+			name:         "Error: non-admin creates token for another user - 403",
+			buildRequest: buildRequest(nonAdminUser, "application/json", `{"token_name":"my token"}`),
+			setupMocks:   serviceReturnsError(services.ErrAuthTokenTargetRequiresAdmin),
+			expected:     expected{responseCode: http.StatusForbidden, responseHeader: jsonHeader, responseBody: assertErrorMessage("missing permission to create tokens for other users")},
+		},
+		{
+			name:         "Error: user_id is not a UUID - 400",
+			buildRequest: buildRequest(adminUser, "application/json", `{"token_name":"my token","user_id":"not-a-uuid"}`),
+			setupMocks:   serviceReturnsError(fmt.Errorf("%w: bad value", services.ErrInvalidAuthTokenUserID)),
+			expected:     expected{responseCode: http.StatusBadRequest, responseHeader: jsonHeader, responseBody: assertErrorMessage("invalid UUID: bad value")},
+		},
+		{
+			name:         "Error: target user does not exist hides the database error - 400",
+			buildRequest: buildRequest(adminUser, "application/json", `{"token_name":"my token"}`),
+			setupMocks:   serviceReturnsError(fmt.Errorf("%w: ERROR: violates foreign key constraint (SQLSTATE 23503)", services.ErrAuthTokenUserNotFound)),
+			expected:     expected{responseCode: http.StatusBadRequest, responseHeader: jsonHeader, responseBody: assertErrorMessage("user_id does not match an existing user")},
+		},
+		{
+			name:         "Error: key generation fails - 500",
+			buildRequest: buildRequest(nonAdminUser, "application/json", `{"token_name":"my token"}`),
+			setupMocks:   serviceReturnsError(fmt.Errorf("%w: entropy unavailable", services.ErrAuthTokenKeyGeneration)),
+			expected:     expected{responseCode: http.StatusInternalServerError, responseHeader: jsonHeader},
+		},
+		{
+			name:         "Error: service fails - 500",
+			buildRequest: buildRequest(nonAdminUser, "application/json", `{"token_name":"my token"}`),
+			setupMocks:   serviceReturnsError(unexpectedErr),
+			expected:     expected{responseCode: http.StatusInternalServerError, responseHeader: jsonHeader},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				identityMock = mocks.NewMockIdentity(t)
+				handlerSet   = handlers.NewHandlersContainer(identityMock, auth.NewAuthorizer(nil))
+				muxRouter    = mux.NewRouter()
+				recorder     = httptest.NewRecorder()
+			)
+
+			muxRouter.HandleFunc("/api/v2/tokens", handlerSet.CreateAuthToken).Methods(http.MethodPost)
+			testCase.setupMocks(mock{identity: identityMock})
+
+			muxRouter.ServeHTTP(recorder, testCase.buildRequest())
+
+			status, header, body := testutils.ProcessResponse(t, recorder)
+			assert.Equal(t, testCase.expected.responseCode, status)
+			assert.Equal(t, testCase.expected.responseHeader, header)
+			if testCase.expected.responseBody != nil {
+				testCase.expected.responseBody(t, []byte(body))
+			}
 		})
 	}
 }

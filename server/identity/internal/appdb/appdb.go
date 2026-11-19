@@ -19,13 +19,20 @@ package appdb
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jackc/pgx/v5"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/params"
+	"github.com/specterops/bloodhound/packages/go/pgerrors"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
 )
 
@@ -38,6 +45,9 @@ const (
 	tableETAC             = "environment_targeted_access_control"
 	tableAuthSecrets      = "auth_secrets"
 	tableAuthTokens       = "auth_tokens"
+	tableAuditLogs        = "audit_logs"
+
+	constraintUsersAuthTokens = "fk_users_auth_tokens"
 )
 
 var (
@@ -80,6 +90,7 @@ type queryExecer interface {
 
 type pgxQuerier interface {
 	queryExecer
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }
 
 type permission struct {
@@ -1101,4 +1112,134 @@ func (s *Store) ListActiveUsersMinimal(ctx context.Context, queryFilters params.
 	}
 
 	return result, nil
+}
+
+// TODO: This will be used in middleware and will need to be removed when implemented
+func insertAuditLog(ctx context.Context, tx pgx.Tx, action model.AuditLogAction, auditData model.AuditData) error {
+	var (
+		commitID, err = uuid.NewV4()
+		bheCtx        = bhctx.Get(ctx)
+		user, isUser  = auth.GetUserFromAuthCtx(bheCtx.AuthCtx)
+	)
+	if err != nil {
+		return fmt.Errorf("generating commit id: %w", err)
+	}
+	if !isUser {
+		return fmt.Errorf("no authenticated user on context")
+	}
+
+	fields, err := json.Marshal(auditData)
+	if err != nil {
+		return fmt.Errorf("marshalling audit fields: %w", err)
+	}
+
+	insertBuilder := sqlbuilder.PostgreSQL.NewInsertBuilder()
+	insertBuilder.InsertInto(tableAuditLogs)
+	insertBuilder.Cols(
+		"created_at", "actor_id", "actor_name", "actor_email",
+		"action", "fields", "request_id", "source_ip_address",
+		"status", "commit_id",
+	)
+	insertBuilder.Values(
+		time.Now().UTC(),
+		user.ID.String(),
+		user.PrincipalName,
+		user.EmailAddress.ValueOrZero(),
+		string(action),
+		string(fields),
+		bheCtx.RequestID,
+		bheCtx.RequestIP,
+		string(model.AuditLogStatusSuccess),
+		commitID.String(),
+	)
+
+	sqlQuery, args := insertBuilder.Build()
+	_, err = tx.Exec(ctx, sqlQuery, args...)
+	return err
+}
+
+// authTokenAuditData matches the fields legacy model.AuthToken.AuditData records.
+// The key is deliberately absent.
+func authTokenAuditData(authToken services.AuthToken) model.AuditData {
+	var tokenName any
+	if authToken.Name.Valid {
+		tokenName = authToken.Name.String
+	}
+
+	return model.AuditData{
+		"id":          authToken.ID,
+		"user_id":     authToken.UserID,
+		"client_id":   nil,
+		"created_by":  authToken.CreatedBy,
+		"name":        tokenName,
+		"last_access": authToken.LastAccess,
+		"expires_at":  authToken.ExpiresAt,
+	}
+}
+
+// CreateAuthToken inserts the token and its audit log row in one transaction.
+func (s *Store) CreateAuthToken(ctx context.Context, authToken services.CreatedAuthToken) (services.CreatedAuthToken, error) {
+	var (
+		insertBuilder = sqlbuilder.PostgreSQL.NewInsertBuilder()
+		now           = time.Now().UTC()
+		tx            pgx.Tx
+		insertedRows  pgx.Rows
+		insertedRow   authTokenRow
+		createdToken  services.CreatedAuthToken
+		err           error
+	)
+
+	tx, err = s.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return services.CreatedAuthToken{}, fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer func() {
+		// Rollback is a no-op once the transaction has been committed.
+		_ = tx.Rollback(ctx)
+	}()
+
+	insertBuilder.InsertInto(tableAuthTokens)
+	insertBuilder.Cols("id", "user_id", "name", "key", "hmac_method", "last_access", "expires_at", "created_by", "created_at", "updated_at")
+	insertBuilder.Values(
+		authToken.ID.String(),
+		authToken.UserID,
+		authToken.Name,
+		authToken.Key,
+		authToken.HmacMethod,
+		authToken.LastAccess,
+		authToken.ExpiresAt,
+		authToken.CreatedBy,
+		now,
+		now,
+	)
+	insertBuilder.SQL("RETURNING " + strings.Join(validAuthTokenColumns, ", "))
+
+	sqlQuery, args := insertBuilder.Build()
+
+	// pgx reports constraint violations when the returned row is read, so both
+	// calls need the foreign key check.
+	if insertedRows, err = tx.Query(ctx, sqlQuery, args...); err != nil {
+		return services.CreatedAuthToken{}, insertAuthTokenError(err)
+	} else if insertedRow, err = pgx.CollectExactlyOneRow(insertedRows, pgx.RowToStructByName[authTokenRow]); err != nil {
+		return services.CreatedAuthToken{}, insertAuthTokenError(err)
+	}
+
+	createdToken = services.CreatedAuthToken{AuthToken: toAuthToken(insertedRow), Key: authToken.Key}
+
+	if err = insertAuditLog(ctx, tx, model.AuditLogActionCreateAuthToken, authTokenAuditData(createdToken.AuthToken)); err != nil {
+		return services.CreatedAuthToken{}, fmt.Errorf("inserting audit log: %w", err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		return services.CreatedAuthToken{}, fmt.Errorf("committing transaction: %w", err)
+	}
+
+	return createdToken, nil
+}
+
+func insertAuthTokenError(err error) error {
+	if pgerrors.IsForeignKeyViolation(err, constraintUsersAuthTokens) {
+		return fmt.Errorf("%w: %w", services.ErrAuthTokenUserNotFound, err)
+	}
+	return fmt.Errorf("inserting auth token: %w", err)
 }

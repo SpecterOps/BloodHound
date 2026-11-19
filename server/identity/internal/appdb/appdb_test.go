@@ -24,7 +24,11 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pashagolub/pgxmock/v6"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
+	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
+	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/identity/internal/appdb"
 	"github.com/specterops/bloodhound/server/identity/internal/services"
@@ -1349,6 +1353,220 @@ func TestStore_ListAuthTokens(t *testing.T) {
 			default:
 				require.NoError(t, err)
 				assert.Equal(t, testCase.expected.authTokens, result)
+			}
+			require.NoError(t, pool.ExpectationsWereMet())
+		})
+	}
+}
+
+const (
+	expectedCreateAuthTokenSQL = `INSERT INTO auth_tokens (id, user_id, name, key, hmac_method, last_access, expires_at, created_by, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING user_id, name, hmac_method, last_access, id, created_at, updated_at, expires_at, created_by`
+	expectedAuditInsertSQL     = `INSERT INTO audit_logs (created_at, actor_id, actor_name, actor_email, action, fields, request_id, source_ip_address, status, commit_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+)
+
+// authenticatedContext mirrors what the auth middleware attaches to a real request;
+// the audit log reads its actor from it.
+func authenticatedContext(userID uuid.UUID) context.Context {
+	return bhctx.Set(context.Background(), &bhctx.Context{
+		RequestID: "test-request",
+		RequestIP: "127.0.0.1",
+		AuthCtx: auth.Context{
+			Owner: model.User{
+				Unique:        model.Unique{ID: userID},
+				PrincipalName: "test-user",
+			},
+		},
+	})
+}
+
+func TestStore_CreateAuthToken(t *testing.T) {
+	type mock struct {
+		pool pgxmock.PgxPoolIface
+	}
+
+	type expected struct {
+		authToken   services.CreatedAuthToken
+		err         error
+		errContains string
+	}
+
+	type testData struct {
+		name       string
+		ctx        context.Context
+		setupMocks func(mock mock)
+		expected   expected
+	}
+
+	var (
+		dbErr      = errors.New("connection refused")
+		ownerID    = uuid.FromStringOrNil("11111111-1111-1111-1111-111111111111")
+		creatorID  = uuid.FromStringOrNil("22222222-2222-2222-2222-222222222222")
+		tokenID    = uuid.FromStringOrNil("33333333-3333-3333-3333-333333333333")
+		lastAccess = time.Date(2026, 3, 1, 12, 0, 0, 0, time.UTC)
+		expiresAt  = time.Date(2026, 3, 31, 12, 0, 0, 0, time.UTC)
+		createdAt  = time.Date(2026, 3, 1, 12, 0, 1, 0, time.UTC)
+		authCtx    = authenticatedContext(creatorID)
+		inputToken = services.CreatedAuthToken{
+			AuthToken: services.AuthToken{
+				ID:         tokenID,
+				UserID:     uuid.NullUUID{UUID: ownerID, Valid: true},
+				Name:       sql.NullString{String: "my token", Valid: true},
+				HmacMethod: "hmac-sha2-256",
+				LastAccess: lastAccess,
+				ExpiresAt:  sql.NullTime{Time: expiresAt, Valid: true},
+				CreatedBy:  uuid.NullUUID{UUID: creatorID, Valid: true},
+			},
+			Key: "secret-key",
+		}
+		insertArgs = []any{
+			tokenID.String(),
+			inputToken.UserID,
+			inputToken.Name,
+			"secret-key",
+			"hmac-sha2-256",
+			lastAccess,
+			inputToken.ExpiresAt,
+			inputToken.CreatedBy,
+			pgxmock.AnyArg(), // created_at
+			pgxmock.AnyArg(), // updated_at
+		}
+		insertedRow = func(mock mock) *pgxmock.Rows {
+			return mock.pool.NewRows(authTokenRowColumns()).
+				AddRow(ownerID.String(), "my token", "hmac-sha2-256", lastAccess, tokenID.String(), createdAt, createdAt, expiresAt, creatorID.String())
+		}
+		auditArgs = []any{
+			pgxmock.AnyArg(),   // created_at
+			creatorID.String(), // actor_id
+			"test-user",        // actor_name
+			"",                 // actor_email
+			string(model.AuditLogActionCreateAuthToken),
+			pgxmock.AnyArg(), // fields (json)
+			"test-request",
+			"127.0.0.1",
+			string(model.AuditLogStatusSuccess),
+			pgxmock.AnyArg(), // commit_id
+		}
+	)
+
+	tt := []testData{
+		{
+			name: "Success: token and audit row are committed together",
+			ctx:  authCtx,
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectBegin()
+				mock.pool.ExpectQuery(expectedCreateAuthTokenSQL).WithArgs(insertArgs...).WillReturnRows(insertedRow(mock))
+				mock.pool.ExpectExec(expectedAuditInsertSQL).WithArgs(auditArgs...).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+				mock.pool.ExpectCommit()
+			},
+			expected: expected{authToken: services.CreatedAuthToken{
+				AuthToken: services.AuthToken{
+					ID:         tokenID,
+					UserID:     uuid.NullUUID{UUID: ownerID, Valid: true},
+					Name:       sql.NullString{String: "my token", Valid: true},
+					HmacMethod: "hmac-sha2-256",
+					LastAccess: lastAccess,
+					ExpiresAt:  sql.NullTime{Time: expiresAt, Valid: true},
+					CreatedBy:  uuid.NullUUID{UUID: creatorID, Valid: true},
+					CreatedAt:  createdAt,
+					UpdatedAt:  createdAt,
+				},
+				Key: "secret-key",
+			}},
+		},
+		{
+			name: "Error: beginning the transaction fails - 500",
+			ctx:  authCtx,
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectBegin().WillReturnError(dbErr)
+			},
+			expected: expected{err: dbErr, errContains: "beginning transaction"},
+		},
+		{
+			name: "Error: unknown owner maps to ErrAuthTokenUserNotFound and rolls back - 400",
+			ctx:  authCtx,
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectBegin()
+				mock.pool.ExpectQuery(expectedCreateAuthTokenSQL).WithArgs(insertArgs...).
+					WillReturnError(&pgconn.PgError{Code: "23503", ConstraintName: "fk_users_auth_tokens"})
+				mock.pool.ExpectRollback()
+			},
+			expected: expected{err: services.ErrAuthTokenUserNotFound},
+		},
+		{
+			name: "Error: unknown creator is not mapped and rolls back - 500",
+			ctx:  authCtx,
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectBegin()
+				mock.pool.ExpectQuery(expectedCreateAuthTokenSQL).WithArgs(insertArgs...).
+					WillReturnError(&pgconn.PgError{Code: "23503", ConstraintName: "fk_auth_tokens_created_by"})
+				mock.pool.ExpectRollback()
+			},
+			expected: expected{errContains: "inserting auth token"},
+		},
+		{
+			name: "Error: reading the inserted row fails and rolls back - 500",
+			ctx:  authCtx,
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectBegin()
+				mock.pool.ExpectQuery(expectedCreateAuthTokenSQL).WithArgs(insertArgs...).WillReturnRows(insertedRow(mock).RowError(0, dbErr))
+				mock.pool.ExpectRollback()
+			},
+			expected: expected{err: dbErr, errContains: "inserting auth token"},
+		},
+		{
+			name: "Error: audit insert fails and rolls back - 500",
+			ctx:  authCtx,
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectBegin()
+				mock.pool.ExpectQuery(expectedCreateAuthTokenSQL).WithArgs(insertArgs...).WillReturnRows(insertedRow(mock))
+				mock.pool.ExpectExec(expectedAuditInsertSQL).WithArgs(auditArgs...).WillReturnError(dbErr)
+				mock.pool.ExpectRollback()
+			},
+			expected: expected{err: dbErr, errContains: "inserting audit log"},
+		},
+		{
+			name: "Error: no authenticated user on the context rolls back - 500",
+			ctx:  context.Background(),
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectBegin()
+				mock.pool.ExpectQuery(expectedCreateAuthTokenSQL).WithArgs(insertArgs...).WillReturnRows(insertedRow(mock))
+				mock.pool.ExpectRollback()
+			},
+			expected: expected{errContains: "no authenticated user on context"},
+		},
+		{
+			name: "Error: commit fails - 500",
+			ctx:  authCtx,
+			setupMocks: func(mock mock) {
+				mock.pool.ExpectBegin()
+				mock.pool.ExpectQuery(expectedCreateAuthTokenSQL).WithArgs(insertArgs...).WillReturnRows(insertedRow(mock))
+				mock.pool.ExpectExec(expectedAuditInsertSQL).WithArgs(auditArgs...).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+				mock.pool.ExpectCommit().WillReturnError(dbErr)
+			},
+			expected: expected{err: dbErr, errContains: "committing transaction"},
+		},
+	}
+
+	for _, testCase := range tt {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			store, pool := newTestStore(t)
+			testCase.setupMocks(mock{pool: pool})
+
+			result, err := store.CreateAuthToken(testCase.ctx, inputToken)
+			switch {
+			case testCase.expected.err != nil || testCase.expected.errContains != "":
+				assert.Equal(t, services.CreatedAuthToken{}, result)
+				if testCase.expected.err != nil {
+					assert.ErrorIs(t, err, testCase.expected.err)
+				}
+				if testCase.expected.errContains != "" {
+					assert.ErrorContains(t, err, testCase.expected.errContains)
+				}
+			default:
+				require.NoError(t, err)
+				assert.Equal(t, testCase.expected.authToken, result)
 			}
 			require.NoError(t, pool.ExpectationsWereMet())
 		})
