@@ -36,4 +36,4 @@ export const linkVariants = cva('inline-flex items-center rounded-sm focus:outli
     },
 });
 
-export const linkExternalIconClasses = 'ml-0.5 shrink-0 text-[0.85em] align-baseline';
+export const linkExternalIconClasses = 'ml-1.5 shrink-0 text-[0.85em] align-baseline';

@@ -19,11 +19,11 @@ import { cn } from '../utils';
 export const tabsListClasses = 'inline-flex text-base text-[color:var(--tabs-text)] items-center justify-center gap-4';
 
 export const tabsTriggerClasses = cn(
-    'grid grid-cols-1 text-center whitespace-nowrap p-2',
+    'grid grid-cols-1 text-center whitespace-nowrap p-2 border-b border-b-transparent',
     'focus:outline-none',
     'focus-visible:focus-ring',
     'disabled:pointer-events-none disabled:opacity-50',
-    'data-[state=active]:font-bold data-[state=active]:border-b-[color:var(--tabs-active-accent)] data-[state=active]:border-b-[1px] data-[state=active]:text-[color:var(--tabs-active-accent)]'
+    'data-[state=active]:font-bold data-[state=active]:border-b-[color:var(--tabs-active-accent)] data-[state=active]:text-[color:var(--tabs-active-accent)]'
 );
 
 export const tabsContentClasses = 'mt-2 focus:outline-none focus-visible:focus-ring';
