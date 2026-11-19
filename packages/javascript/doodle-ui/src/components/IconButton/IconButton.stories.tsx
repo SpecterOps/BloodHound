@@ -190,7 +190,7 @@ Use the \`variant\` prop rather than applying Button variant classes through \`c
 
 ### Sizing and color
 
-The \`size\` prop controls the icon's width and height in pixels. It defaults to \`16\`. IconButton adds \`8px\` of padding on each side, so \`size={16}\` produces a \`32px × 32px\` button.
+The \`size\` prop controls the icon's width and height in pixels. It defaults to \`16\`. IconButton adds \`8px\` of padding on each side. With \`size={16}\`, the default variant measures \`32px × 32px\` and the primary and secondary variants measure \`34px × 34px\`, including a \`1px\` border on each side.
 
 Icons inherit the button's text color through \`currentColor\`. Prefer a variant for standard colors and use \`className\` only for a deliberate local override.
 

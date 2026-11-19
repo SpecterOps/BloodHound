@@ -24,7 +24,7 @@ export const defaultIconButtonClasses = cn(
 );
 
 export const iconPrimaryClasses = [
-    'bg-primary text-[color:var(--button-primary-text)] shadow-outer-1',
+    'border border-transparent bg-primary text-[color:var(--button-primary-text)] shadow-outer-1',
     'hover:bg-secondary',
     'focus-visible:bg-secondary',
     'active:bg-[color:var(--button-primary-active-fill)]',
@@ -36,7 +36,7 @@ export const iconSecondaryClasses = [
     'hover:bg-secondary hover:text-[color:var(--button-highlight-text)]',
     'focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
     'active:bg-[color:var(--button-secondary-active-fill)] active:text-[color:var(--button-secondary-text)]',
-    'disabled:border-0 disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none',
+    'disabled:border-transparent disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none',
 ];
 
 export const IconButtonVariants = cva(
