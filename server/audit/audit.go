@@ -17,8 +17,6 @@
 // Package audit provides shared audit-log behavior for feature modules.
 package audit
 
-//go:generate go tool mockery
-
 import (
 	"context"
 
@@ -39,20 +37,33 @@ const (
 
 var ErrAuditLog = services.ErrAuditLog
 
-// AuditRequestAdapter records the intent and outcome rows that make up one legacy audit event.
-type AuditRequestAdapter interface {
+type auditService interface {
 	Begin(ctx context.Context, entry Entry) (uuid.UUID, error)
 	Complete(ctx context.Context, commitID uuid.UUID, entry Entry, operationErr error) error
 }
 
-// NewAuditRequestAdapter constructs the audit module's store and service layers.
-func NewAuditRequestAdapter(pool *pgxpool.Pool, identityResolver auth.IdentityResolver) AuditRequestAdapter {
+// AuditLogAdapter exposes audit logging to consuming feature slices without
+// exposing the audit slice's internal service implementation.
+type AuditLogAdapter struct {
+	service auditService
+}
+
+// NewAuditLogAdapter constructs the audit module's store and service layers.
+func NewAuditLogAdapter(pool *pgxpool.Pool, identityResolver auth.IdentityResolver) *AuditLogAdapter {
 	if pool == nil {
-		panic("audit: NewAuditRequestAdapter requires a non-nil Pool")
+		panic("audit: NewAuditLogAdapter requires a non-nil Pool")
 	}
 	if identityResolver == nil {
-		panic("audit: NewAuditRequestAdapter requires a non-nil IdentityResolver")
+		panic("audit: NewAuditLogAdapter requires a non-nil IdentityResolver")
 	}
 
-	return services.NewService(appdb.NewStore(pool), identityResolver)
+	return &AuditLogAdapter{service: services.NewService(appdb.NewStore(pool), identityResolver)}
+}
+
+func (s *AuditLogAdapter) Begin(ctx context.Context, entry Entry) (uuid.UUID, error) {
+	return s.service.Begin(ctx, entry)
+}
+
+func (s *AuditLogAdapter) Complete(ctx context.Context, commitID uuid.UUID, entry Entry, operationErr error) error {
+	return s.service.Complete(ctx, commitID, entry, operationErr)
 }

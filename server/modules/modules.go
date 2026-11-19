@@ -89,13 +89,13 @@ func Register(deps Deps) {
 		deps.AlertPublisher = alerts.NewAlertEventPublisher()
 	}
 
-	auditAdapter := audit.NewAuditRequestAdapter(deps.Pool, deps.IdentityResolver)
+	auditLogAdapter := audit.NewAuditLogAdapter(deps.Pool, deps.IdentityResolver)
 
 	analysis.Register(deps.Router, deps.Pool)
-	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects, auditAdapter)
+	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects, auditLogAdapter)
 	serverauth.Register(deps.Router, deps.Pool)
 	identity.Register(deps.Router, deps.Pool)
-	featureflags.Register(deps.Router, deps.Pool, auditAdapter)
+	featureflags.Register(deps.Router, deps.Pool, auditLogAdapter)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
 	opengraphschema.Register(deps.Router, deps.Pool)
 	dataquality.Register(deps.Router, deps.Pool)

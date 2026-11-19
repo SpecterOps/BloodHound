@@ -30,11 +30,11 @@ import (
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 	"github.com/specterops/bloodhound/server/appcfg/internal/routes"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
-	"github.com/specterops/bloodhound/server/audit"
 	"github.com/specterops/bloodhound/server/featureflags"
 )
 
 type ScheduledAnalysisParameter = services.ScheduledAnalysisParameter
+type Auditor = services.Auditor
 
 // ConfigurationAdapter supplies GetConfig<Type> methods for fetching typed parameter values.
 // If any problem is encountered, these methods log a warning and return both the parameter default value and an error.
@@ -61,7 +61,7 @@ type ConfigUpdateSideEffecter interface {
 // Register builds the appcfg store -> service -> handler chain and attaches
 // the appcfg routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
-func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter, auditor audit.AuditRequestAdapter) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter, auditor Auditor) {
 	var (
 		ffReader   = featureflags.NewFeatureFlagRequestAdapter(pool)
 		store      = appdb.NewStore(pool)

@@ -142,7 +142,7 @@ func getFeatureFlagsPostgresConfig(t *testing.T) pgtestdb.Config {
 // and returns its GET handler.
 func newGetAllFlagsHandler(db *database.BloodhoundDB) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
-	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()), audit.NewAuditRequestAdapter(db.Pool(), auth.NewIdentityResolver()))
+	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()), audit.NewAuditLogAdapter(db.Pool(), auth.NewIdentityResolver()))
 	return handlers.NewHandlersContainer(svc).GetAllFlags
 }
 
@@ -150,7 +150,7 @@ func newGetAllFlagsHandler(db *database.BloodhoundDB) http.HandlerFunc {
 // by a pgx-backed featureflags stack and wrapped with auth-injecting middleware.
 func newToggleFlagHandler(db *database.BloodhoundDB, userID uuid.UUID) http.HandlerFunc {
 	store := appdb.NewStore(db.Pool())
-	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()), audit.NewAuditRequestAdapter(db.Pool(), auth.NewIdentityResolver()))
+	svc := services.NewService(store, analysis.NewAnalysisRequestSubmitter(db.Pool()), audit.NewAuditLogAdapter(db.Pool(), auth.NewIdentityResolver()))
 	return injectAuthMiddleware(handlers.NewHandlersContainer(svc).ToggleFlag, userID)
 }
 
