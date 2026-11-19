@@ -93,6 +93,15 @@ func NewHarness(t *testing.T, registerRoutes func(routerInst *router.Router, db 
 func MintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, auther api.Authenticator, user model.User) string {
 	t.Helper()
 
+	_, token := MintUserAndJWT(t, ctx, db, auther, user)
+	return token
+}
+
+// MintUserAndJWT persists the given user and returns both the database-backed
+// user and a valid bearer token for that user.
+func MintUserAndJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, auther api.Authenticator, user model.User) (model.User, string) {
+	t.Helper()
+
 	authSecret := model.AuthSecret{
 		Digest:       "dummy-digest-for-e2e-test",
 		DigestMethod: "argon2",
@@ -111,7 +120,7 @@ func MintJWT(t *testing.T, ctx context.Context, db *database.BloodhoundDB, authe
 
 	token, err := auther.CreateSession(ctx, dbUser, *dbUser.AuthSecret)
 	require.NoError(t, err)
-	return token
+	return dbUser, token
 }
 
 // AdminRole returns the Administrator role from the database, which carries all
