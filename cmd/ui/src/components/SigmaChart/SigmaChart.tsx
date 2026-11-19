@@ -60,6 +60,7 @@ const SigmaChart = forwardRef<RefAttributes<HTMLDivElement>, SigmaChartProps>(fu
     ref
 ) {
     const theme = useTheme();
+    // Each graph gets fresh program constructors and a renderer-local glyph texture atlas.
     const nodeProgramClasses = useMemo(
         () => ({
             combined: getNodeCombinedProgram(),

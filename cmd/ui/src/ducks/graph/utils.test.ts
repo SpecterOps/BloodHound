@@ -14,7 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { getDistanceBetween, getEdgeDataFromKey, getNodeOffset } from 'src/ducks/graph/utils';
+import { MultiDirectedGraph } from 'graphology';
+import { getDistanceBetween, getEdgeDataFromKey, getNodeOffset, getVisibleGraphExtent } from 'src/ducks/graph/utils';
 
 describe('getEdgeDataFromKey', () => {
     it('should return null if the edge key does not have enough information', () => {
@@ -47,4 +48,11 @@ describe('getNodeOffset', () => {
     it('returns the difference between the node and the position', () => {
         expect(getNodeOffset({ x: 2, y: 1 }, { x: 3, y: 2 })).toEqual({ x: 1, y: 1 });
     });
+});
+
+it('excludes hidden renderer objects from explicit fit extents', () => {
+    const graph = new MultiDirectedGraph();
+    graph.addNode('visible', { x: 10, y: 20 });
+    graph.addNode('hidden', { x: -1000, y: 2000, hidden: true });
+    expect(getVisibleGraphExtent(graph)).toEqual({ x: [10, 10], y: [20, 20] });
 });

@@ -169,9 +169,33 @@ const graphGetMidpoint = (graphExtent: { x: Extent; y: Extent }): Coordinates =>
     return { x: midX, y: midY };
 };
 
-const centerCameraOnGraph = (sigma: Sigma<AbstractGraph<Attributes, Attributes, Attributes>>): void => {
+/** Visible projection bounds for explicit fit; hidden cache objects are excluded. */
+export function getVisibleGraphExtent(graph: AbstractGraph<Attributes, Attributes, Attributes>): {
+    x: Extent;
+    y: Extent;
+} {
+    let bounds: { x: Extent; y: Extent } | undefined;
+    graph.forEachNode((_id, node) => {
+        if (node.hidden) {
+            return;
+        }
+
+        if (!bounds) {
+            bounds = { x: [node.x, node.x], y: [node.y, node.y] };
+        } else {
+            bounds.x = [Math.min(bounds.x[0], node.x), Math.max(bounds.x[1], node.x)];
+            bounds.y = [Math.min(bounds.y[0], node.y), Math.max(bounds.y[1], node.y)];
+        }
+    });
+    return bounds ?? { x: [0, 0], y: [0, 0] };
+}
+
+const centerCameraOnGraph = (
+    sigma: Sigma<AbstractGraph<Attributes, Attributes, Attributes>>,
+    visibleOnly = false
+): void => {
     const graph = sigma.getGraph();
-    const extent = graphExtent(graph);
+    const extent = visibleOnly ? getVisibleGraphExtent(graph) : graphExtent(graph);
     const camera = sigma.getCamera();
     const currentRatio = camera.ratio;
     const newCameraState: CameraState = camera.getState();
@@ -214,8 +238,8 @@ const centerCameraOnGraph = (sigma: Sigma<AbstractGraph<Attributes, Attributes, 
     );
 };
 
-const calculateNewBBox = (sigma: Sigma): { x: Extent; y: Extent } => {
-    const originalExtent = graphExtent(sigma.getGraph());
+const calculateNewBBox = (sigma: Sigma, visibleOnly = false): { x: Extent; y: Extent } => {
+    const originalExtent = visibleOnly ? getVisibleGraphExtent(sigma.getGraph()) : graphExtent(sigma.getGraph());
     const midpoint = graphGetMidpoint(originalExtent);
     const { width, height } = sigma.getDimensions();
 
@@ -225,9 +249,12 @@ const calculateNewBBox = (sigma: Sigma): { x: Extent; y: Extent } => {
     };
 };
 
-export const resetCamera = (sigma: Sigma<AbstractGraph<Attributes, Attributes, Attributes>>): void => {
-    sigma.setCustomBBox(calculateNewBBox(sigma));
+export const resetCamera = (
+    sigma: Sigma<AbstractGraph<Attributes, Attributes, Attributes>>,
+    visibleOnly = false
+): void => {
+    sigma.setCustomBBox(calculateNewBBox(sigma, visibleOnly));
     setTimeout(() => {
-        centerCameraOnGraph(sigma);
+        centerCameraOnGraph(sigma, visibleOnly);
     }, 250);
 };

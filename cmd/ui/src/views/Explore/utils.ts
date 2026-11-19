@@ -59,7 +59,7 @@ export const sequentialLayout = (graph: MultiDirectedGraph) => {
     assignDagre();
 };
 
-type GraphOptions = {
+export type GraphOptions = {
     theme: Theme;
     darkMode: boolean;
     customIcons: IconDictionary;
@@ -70,7 +70,7 @@ type GraphOptions = {
     edgeTraversability?: EdgeTraversability;
 };
 
-export const initGraph = (items: GraphData, options: GraphOptions) => {
+export const initGraph = (items: GraphData, options: GraphOptions, initializePositions = true) => {
     const graph = new MultiDirectedGraph();
 
     const { nodes, edges } = items;
@@ -94,10 +94,10 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
     initGraphNodes(graph, nodes, { ...options, themedOptions });
     initGraphEdges(graph, edges, { ...options, themedOptions });
 
-    random.assign(graph, { scale: 1000 });
-
-    // RUN DEFAULT LAYOUT
-    sequentialLayout(graph);
+    if (initializePositions) {
+        random.assign(graph, { scale: 1000 });
+        sequentialLayout(graph);
+    }
 
     return graph;
 };
@@ -212,7 +212,7 @@ const initGraphEdges = (
     const lookupSet = new Set<string>();
     const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
         const groupKey = getEdgeGroupKey(edge);
-        const edgeKey = getEdgeKey(edge);
+        const edgeKey = edge.exploreGraphId ?? `${REL_ID_PREFIX}${edge.id}`;
 
         if (!groups[groupKey]) {
             groups[groupKey] = [];
@@ -255,7 +255,7 @@ const initGraphEdges = (
 
             // Handle edge groups that have a mix of directions that edges travel between source and target.
             // We can use the value of the enum to indicate which direction the curve should bend
-            const groupStart = group.split('_')[0];
+            const groupStart = JSON.parse(group)[0];
             const edgeDirection = groupStart === edge.source ? EdgeDirection.FORWARDS : EdgeDirection.BACKWARDS;
 
             if (edgeShouldBeCurved) {
@@ -270,7 +270,12 @@ const initGraphEdges = (
                 edgeParams.groupSize = groupSize;
             }
 
-            graph.addEdgeWithKey(`${REL_ID_PREFIX}${edge.id}`, edge.source, edge.target, edgeParams);
+            graph.addEdgeWithKey(
+                edge.exploreGraphId ?? `${REL_ID_PREFIX}${edge.id}`,
+                edge.source,
+                edge.target,
+                edgeParams
+            );
         }
     }
 };
@@ -281,5 +286,5 @@ const getEdgeKey = (edge: GraphEdge) => {
 
 const getEdgeGroupKey = (edge: GraphEdge) => {
     const identifiers = [edge.source, edge.target].sort();
-    return `${identifiers[0]}_${identifiers[1]}`;
+    return JSON.stringify(identifiers);
 };

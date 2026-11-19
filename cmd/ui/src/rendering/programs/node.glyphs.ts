@@ -101,7 +101,6 @@ class AbstractNodeGlyphsProgram extends AbstractNodeProgram {
  * "built" for each sigma instance:
  */
 export default function getNodeGlyphsProgram(glyphCapacity = 4): typeof AbstractNodeGlyphsProgram {
-    const CIRCLES = glyphCapacity + 1;
     /**
      * These attributes are shared between all instances of this exact class,
      * returned by this call to getNodeProgramImage:
@@ -280,9 +279,12 @@ export default function getNodeGlyphsProgram(glyphCapacity = 4): typeof Abstract
         dimLocation: GLint;
         bgColorLocation: GLint;
         latestRenderParams?: RenderParams;
+        private glyphSlots = glyphCapacity;
+        private readonly glyphRenderer: Sigma;
 
         constructor(gl: WebGLRenderingContext, renderer: Sigma) {
             super(gl, vertexShaderSource, fragmentShaderSource, POINTS, ATTRIBUTES);
+            this.glyphRenderer = renderer;
 
             rebindTextureFns.push(() => {
                 if (this && this.rebindTexture) this.rebindTexture();
@@ -390,7 +392,12 @@ export default function getNodeGlyphsProgram(glyphCapacity = 4): typeof Abstract
 
         // We need to override this method to multiply the default array size by number of glyphs + 1 node
         allocate(capacity: number): void {
-            this.array = new Float32Array(this.points * this.attributes * capacity * CIRCLES);
+            // Sigma retains this program instance; read the current glyph capacity at each buffer allocation.
+            this.glyphSlots = Math.max(
+                glyphCapacity,
+                this.glyphRenderer.getGraph().getAttribute('glyphCapacity') ?? glyphCapacity
+            );
+            this.array = new Float32Array(this.points * this.attributes * capacity * (this.glyphSlots + 1));
         }
 
         process(
@@ -405,9 +412,9 @@ export default function getNodeGlyphsProgram(glyphCapacity = 4): typeof Abstract
             hidden: boolean,
             offset: number
         ): void {
-            let i = offset * POINTS * ATTRIBUTES * CIRCLES;
+            let i = offset * POINTS * ATTRIBUTES * (this.glyphSlots + 1);
             if (hidden) {
-                this.array.fill(0, i, i + POINTS * ATTRIBUTES * CIRCLES);
+                this.array.fill(0, i, i + POINTS * ATTRIBUTES * (this.glyphSlots + 1));
                 return;
             }
             const dim = data.dimFactor ?? (data.isDimmed ? DIM_FACTOR : NO_DIM_FACTOR);
@@ -430,7 +437,7 @@ export default function getNodeGlyphsProgram(glyphCapacity = 4): typeof Abstract
 
             i += POINTS * ATTRIBUTES;
 
-            const glyphs = Array.from({ length: glyphCapacity }, (_, index) => data.glyphs?.[index]);
+            const glyphs = Array.from({ length: this.glyphSlots }, (_, index) => data.glyphs?.[index]);
 
             for (const glyph of glyphs) {
                 if (glyph) {

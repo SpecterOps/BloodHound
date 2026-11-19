@@ -60,7 +60,6 @@ export function exploreGraphQueryFactory(
     }
 }
 
-// Hook for maintaining the top level graph query powering the explore page
 export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
     const params = useExploreParams();
     const { onError, ...rest } = options;
@@ -75,7 +74,7 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
 
     const queryConfig = query.getQueryConfig();
 
-    return useQuery({
+    const graphQuery = useQuery({
         ...queryConfig,
         onError: (error: any) => {
             const { message, key } = query.getErrorMessage(error);
@@ -90,6 +89,8 @@ export const useExploreGraph = (options: ExploreGraphQueryOptions = {}) => {
         ...rest,
         ...userSettings,
     });
+
+    return { ...graphQuery, graphQueryKey: queryConfig.queryKey };
 };
 
 export type UserSettings = {

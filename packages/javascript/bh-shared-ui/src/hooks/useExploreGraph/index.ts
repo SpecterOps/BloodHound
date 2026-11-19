@@ -21,3 +21,5 @@ export * from './useNodeSearch';
 export * from './usePathfindingFilters';
 export * from './usePathfindingSearch';
 export * from './utils';
+
+export * from './useExploreSourceGraph';

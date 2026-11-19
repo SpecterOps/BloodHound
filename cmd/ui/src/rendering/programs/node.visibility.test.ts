@@ -14,6 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { MultiDirectedGraph } from 'graphology';
+import type Sigma from 'sigma/sigma';
 import getNodeCombinedProgram from './node.combined';
 import getNodeGlyphsProgram, { GlyphLocation } from './node.glyphs';
 
@@ -22,9 +24,13 @@ it.each([
     ['glyph nodes', () => getNodeGlyphsProgram(6), 3 * 13 * 7],
 ] as const)('clears every hidden triangle for %s without touching the next node', (_name, factory, stride) => {
     const Program = factory();
-    const program = Object.create(Program.prototype) as InstanceType<typeof Program>;
-    const array = new Float32Array(stride * 2).fill(123);
-    Object.assign(program, { array });
+    const graph = new MultiDirectedGraph();
+    graph.setAttribute('glyphCapacity', 6);
+    const renderer = { getGraph: () => graph, refresh: vi.fn() } as unknown as Sigma;
+    const context = document.createElement('canvas').getContext('webgl')!;
+    const program = new Program(context, renderer);
+    program.allocate(2);
+    const array = program.array.fill(123);
     const data = {
         x: 10,
         y: 20,

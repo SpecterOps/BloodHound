@@ -18,7 +18,6 @@ import {
     BaseExploreLayoutOptions,
     ContextMenuPrivilegeZonesEnabled,
     DEFAULT_PINNED_COLUMN_KEYS,
-    EdgeTraversability,
     ExploreTable,
     FeatureFlag,
     GraphControls,
@@ -30,6 +29,7 @@ import {
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
+    discoverLeafGroups,
     glyphUtils,
     isNodeResponse,
     isWebGLEnabled,
@@ -43,15 +43,16 @@ import {
     useExploreTableAutoDisplay,
     useFeatureFlag,
     useGraphHasData,
+    useGraphProjection,
     useKeybindings,
     useTagGlyphs,
     useTheme,
     useToggle,
+    type GroupingRule,
+    type SourceItemRef,
 } from 'bh-shared-ui';
 import { ProgressBar } from 'doodle-ui';
-import { MultiDirectedGraph } from 'graphology';
-import { Attributes } from 'graphology-types';
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { SigmaNodeEventPayload } from 'sigma/sigma';
 import { NoDataFileUploadDialogWithLinks } from 'src/components/NoDataFileUploadDialogWithLinks';
@@ -65,11 +66,12 @@ import {
 } from 'src/ducks/global/actions';
 import { useSigmaExploreGraph } from 'src/hooks/useSigmaExploreGraph';
 import { useAppDispatch, useAppSelector } from 'src/store';
-import { initGraph, standardLayout } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
-import { applyRepresentativeNodes, graphBounds, representativeGlyphs, representativeSets } from './representativeNodes';
+import { useSigmaProjectionView } from './projection/useSigmaProjectionView';
 import { transformIconDictionary } from './svgIcons';
+
+const groupingRules: readonly GroupingRule[] = [{ id: 'equivalent-leaves', discover: discoverLeafGroups }];
 
 const GraphView: FC = () => {
     /* Hooks */
@@ -89,40 +91,31 @@ const GraphView: FC = () => {
     const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
 
     const graphQuery = useSigmaExploreGraph();
-    const nodeSets = useMemo(() => (graphQuery.data ? representativeSets(graphQuery.data) : {}), [graphQuery.data]);
-    const [expandedNodes, setExpandedNodes] = useState<ReadonlySet<string>>(new Set());
-    useEffect(() => setExpandedNodes(new Set()), [graphQuery.data]);
     const { data: edgeTraversability } = useEdgeTraversability();
-    // Read at graph build time so traversability updates do not rebuild the graph or rerun its layout.
-    const edgeTraversabilityRef = useRef(edgeTraversability);
-    edgeTraversabilityRef.current = edgeTraversability;
-    // The traversability map whose dashed edge styles are applied to the most recently built graph.
-    const appliedEdgeTraversabilityRef = useRef<EdgeTraversability>();
-
+    const selectedSourceItem: SourceItemRef | undefined =
+        selectedItem && graphQuery.sourceGraph
+            ? {
+                  kind: Object.hasOwn(graphQuery.sourceGraph.edges, selectedItem) ? 'edge' : 'node',
+                  id: selectedItem,
+              }
+            : undefined;
+    const projection = useGraphProjection({
+        source: graphQuery.sourceGraph,
+        queryKey: graphQuery.graphQueryKey,
+        rules: groupingRules,
+        selectedSourceItem,
+    });
     // Automatically select the first node when performing a node search, or clear selection for pathfinding searches
     useAutomaticGraphActions(graphQuery.data);
 
     const graphHasDataQuery = useGraphHasData();
 
-    const [graphologyGraph, setGraphologyGraph] = useState<MultiDirectedGraph<Attributes, Attributes, Attributes>>();
-    const revealedMembers =
-        selectedItem && graphologyGraph?.hasEdge(selectedItem)
-            ? graphologyGraph.extremities(selectedItem)
-            : [selectedItem];
-    const effectivelyExpanded = new Set([
-        ...expandedNodes,
-        ...Object.entries(nodeSets)
-            .filter(([, set]) => set.members.some((member) => revealedMembers.includes(member)))
-            .map(([id]) => id),
-    ]);
     const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
 
     const sigmaChartRef = useRef<any>(null);
 
     const darkMode = useAppSelector((state) => state.global.view.darkMode);
     const exploreLayout = useAppSelector((state) => state.global.view.exploreLayout);
-    const exploreLayoutRef = useRef(exploreLayout);
-    exploreLayoutRef.current = exploreLayout;
     const selectedColumns = useAppSelector((state) => state.global.view.selectedExploreTableColumns);
     const pinnedColumns = useAppSelector((state) => state.global.view.pinnedExploreTableColumns);
     const isExploreTableSelected = useAppSelector((state) => state.global.view.isExploreTableSelected);
@@ -151,65 +144,37 @@ const GraphView: FC = () => {
             hideNodes: displayTable,
             tagGlyphs,
             pzFeatureFlagEnabled: pzFeatureFlag?.enabled,
+            edgeTraversability,
         };
-    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphs, pzFeatureFlag?.enabled]);
+    }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphs, pzFeatureFlag?.enabled, edgeTraversability]);
 
-    // Initialize graph data for rendering with sigmajs
-    useEffect(() => {
-        if (!graphQuery.data) return;
-
-        const graphData = graphQuery.data;
-
-        if (graphOptions.hideNodes) {
-            setGraphologyGraph(undefined);
-        } else {
-            const currentEdgeTraversability = edgeTraversabilityRef.current;
-            const graph = initGraph(graphData, { ...graphOptions, edgeTraversability: currentEdgeTraversability });
-            if (exploreLayoutRef.current === 'standard') standardLayout(graph);
-            graph.setAttribute(
-                'glyphCapacity',
-                Object.values(nodeSets).reduce(
-                    (capacity, set) => Math.max(capacity, representativeGlyphs(graph, set.members).length + 1),
-                    4
-                )
-            );
-            graph.setAttribute('originalBBox', graphBounds(graph));
-            graph.setAttribute('representativeSets', nodeSets);
-            appliedEdgeTraversabilityRef.current = currentEdgeTraversability;
-            setGraphologyGraph(graph);
-        }
-    }, [graphQuery.data, graphOptions, nodeSets]);
-
-    useEffect(() => {
-        if (graphologyGraph?.getAttribute('representativeSets') === nodeSets) {
-            applyRepresentativeNodes(graphologyGraph, nodeSets, expandedNodes, selectedItem);
-        }
-    }, [graphologyGraph, nodeSets, expandedNodes, selectedItem]);
-
-    // Update styles when schema metadata arrives without rebuilding the graph or its layout.
-    useEffect(() => {
-        if (!graphologyGraph || appliedEdgeTraversabilityRef.current === edgeTraversability) return;
-
-        graphologyGraph.updateEachEdgeAttributes(
-            (_edgeId, attributes) => ({ ...attributes, dashed: !edgeTraversability.get(attributes.kind) }),
-            { attributes: ['dashed'] }
-        );
-        appliedEdgeTraversabilityRef.current = edgeTraversability;
-    }, [graphologyGraph, edgeTraversability]);
+    const { graph: graphologyGraph, index: rendererIndex } = useSigmaProjectionView({
+        source: graphQuery.sourceGraph,
+        projected: projection.graph,
+        groups: projection.groups,
+        queryKey: graphQuery.graphQueryKey,
+        options: graphOptions,
+        layout: exploreLayout,
+    });
 
     /* useCallback Event Handlers must appear before return statement */
     const handleContextMenu = useCallback(
         (event: SigmaNodeEventPayload) => {
-            if (nodeSets[event.node]) return;
-            setSelectedItem(event.node);
+            const item = rendererIndex?.sourceItems[event.node];
+            if (!item) {
+                return;
+            }
+            setSelectedItem(item.id);
             setContextMenu({ mouseX: event.event.original.clientX, mouseY: event.event.original.clientY });
         },
-        [setContextMenu, setSelectedItem, nodeSets]
+        [setContextMenu, setSelectedItem, rendererIndex]
     );
 
     const handleKebabMenuClick = useCallback(
         (nodeInfo: NodeClickInfo) => {
-            if (!nodeInfo.id) return;
+            if (!nodeInfo.id) {
+                return;
+            }
             setSelectedItem(nodeInfo.id);
             setContextMenu({ mouseX: nodeInfo.x, mouseY: nodeInfo.y });
         },
@@ -348,13 +313,22 @@ const GraphView: FC = () => {
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}
                 onClickEdge={(id) => {
-                    if (!graphologyGraph?.getEdgeAttribute(id, 'representative')) setSelectedItem(id);
+                    const item = rendererIndex?.sourceItems[id];
+                    if (item) {
+                        setSelectedItem(item.id);
+                    }
                 }}
                 onClickNode={(id) => {
-                    if (!nodeSets[id]) setSelectedItem(id);
+                    const item = rendererIndex?.sourceItems[id];
+                    if (item) {
+                        setSelectedItem(item.id);
+                    }
                 }}
                 onDoubleClickNode={(id) => {
-                    if (nodeSets[id]) setExpandedNodes((previous) => new Set([...previous, id]));
+                    const groupId = rendererIndex?.groupIds[id];
+                    if (groupId) {
+                        projection.expandGroup(groupId);
+                    }
                 }}
                 onClickStage={clearSelectedItem}
                 handleContextMenu={handleContextMenu}
@@ -385,13 +359,13 @@ const GraphView: FC = () => {
                         }}
                     />
                     <GraphSimplificationControls
-                        canCollapse={effectivelyExpanded.size > 0}
-                        canExpand={Object.keys(nodeSets).some((id) => !effectivelyExpanded.has(id))}
+                        canCollapse={!displayTable && projection.canCollapse}
+                        canExpand={!displayTable && projection.canExpand}
                         onCollapse={() => {
                             clearSelectedItem();
-                            setExpandedNodes(new Set());
+                            projection.collapseAll();
                         }}
-                        onExpand={() => setExpandedNodes(new Set(Object.keys(nodeSets)))}
+                        onExpand={projection.expandAll}
                     />
                 </div>
             </div>

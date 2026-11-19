@@ -33,7 +33,7 @@ import { bezier } from 'src/rendering/utils/bezier';
 import { blendHexColors, getNodeRadius } from 'src/rendering/utils/utils';
 import { useAppSelector } from 'src/store';
 import { preventAllDefaults } from 'src/utils';
-import { graphBounds } from 'src/views/Explore/representativeNodes';
+import { graphBounds } from 'src/views/Explore/projection/sigmaProjection';
 import { sequentialLayout, standardLayout } from 'src/views/Explore/utils';
 import { getFullPathHighlightedEntities, getIsHighlightedItemInGraph } from './utils';
 
@@ -101,9 +101,18 @@ export const GraphEvents = forwardRef(function GraphEvents(
 
     const sigma = useSigma();
     const graph = sigma.getGraph();
+    const sourceGraph = graph.getAttribute('sourceGraph') ?? graph;
     useLayoutEffect(() => {
         sigma.setCustomBBox(graph.getAttribute('originalBBox') ?? null);
     }, [sigma, graph]);
+
+    const projectionRevision = graph.getAttribute('projectionRevision');
+    useLayoutEffect(() => {
+        // Drain graph updates before a queued hover/edge-label frame can use stale caches.
+        if (projectionRevision !== undefined) {
+            sigma.refresh();
+        }
+    }, [sigma, graph, projectionRevision]);
 
     const registerEvents = useRegisterEvents();
     const setSettings = useSetSettings();
@@ -136,18 +145,18 @@ export const GraphEvents = forwardRef(function GraphEvents(
                 }
             },
             resetCamera: () => {
-                resetCamera(sigma);
+                resetCamera(sigma, true);
             },
 
             runSequentialLayout: () => {
                 sequentialLayout(graph);
-                sigma.setCustomBBox(graphBounds(graph));
-                resetCamera(sigma);
+                sigma.setCustomBBox(graphBounds(graph, true));
+                resetCamera(sigma, true);
             },
             runStandardLayout: () => {
                 standardLayout(graph);
-                sigma.setCustomBBox(graphBounds(graph));
-                resetCamera(sigma);
+                sigma.setCustomBBox(graphBounds(graph, true));
+                resetCamera(sigma, true);
             },
         };
     }, [sigma, graph]);
@@ -288,13 +297,13 @@ export const GraphEvents = forwardRef(function GraphEvents(
     ]);
 
     const isHighlightedItemInGraph = useMemo(
-        () => getIsHighlightedItemInGraph(graph, highlightedItem),
-        [graph, highlightedItem]
+        () => getIsHighlightedItemInGraph(sourceGraph, highlightedItem),
+        [sourceGraph, highlightedItem]
     );
 
     const { highlightedNodeIds, highlightedEdgeIds } = useMemo(
-        () => getFullPathHighlightedEntities(graph, highlightedItem),
-        [graph, highlightedItem]
+        () => getFullPathHighlightedEntities(sourceGraph, highlightedItem),
+        [sourceGraph, highlightedItem]
     );
 
     useLayoutEffect(() => {
@@ -306,12 +315,14 @@ export const GraphEvents = forwardRef(function GraphEvents(
         const labelDimFactor = darkMode ? 0.3 : 0.1;
 
         // Reducers belong to this renderer; useSetSettings replays retained callbacks onto replacement instances.
+        // A collapsed node or redirected edge represents all of its source IDs for highlight matching.
         sigma.setSetting('nodeReducer', (node, data) => {
             const camera = sigma.getCamera();
+            const sourceNodeIds: string[] = data.sourceNodeIds ?? [node];
             const isDimmed =
                 isExploreGraphHighlight !== false &&
                 !!highlightedItem &&
-                !highlightedNodeIds.has(node) &&
+                !sourceNodeIds.some((id) => highlightedNodeIds.has(id)) &&
                 isHighlightedItemInGraph;
 
             return {
@@ -332,10 +343,11 @@ export const GraphEvents = forwardRef(function GraphEvents(
         });
         sigma.setSetting('edgeReducer', (edge, data) => {
             const camera = sigma.getCamera();
+            const sourceEdgeIds: string[] = data.sourceEdgeIds ?? [edge];
             const isDimmed =
                 isExploreGraphHighlight !== false &&
                 !!highlightedItem &&
-                !highlightedEdgeIds.has(edge) &&
+                !sourceEdgeIds.some((id) => highlightedEdgeIds.has(id)) &&
                 isHighlightedItemInGraph;
 
             const newData: Attributes = {
@@ -379,7 +391,7 @@ export const GraphEvents = forwardRef(function GraphEvents(
     }, [draggedNode, setSettings, showEdgeLabels]);
 
     useLayoutEffect(() => {
-        resetCamera(sigma);
+        resetCamera(sigma, true);
     }, [sigma]);
 
     useLayoutEffect(() => {
