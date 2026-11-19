@@ -22,6 +22,12 @@
 # Optional collector versions; empty values use the latest stable GitHub release.
 ARG SHARPHOUND_VERSION=""
 ARG AZUREHOUND_VERSION=""
+# Create an empty metadata stage for explicit versions
+ARG SHARPHOUND_RELEASE_SOURCE=${SHARPHOUND_VERSION:+explicit-release}
+ARG AZUREHOUND_RELEASE_SOURCE=${AZUREHOUND_VERSION:+explicit-release}
+
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.21 AS explicit-release
+RUN touch /tmp/version
 
 FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.21 AS sharphound-latest-release
 ADD https://api.github.com/repos/SpecterOps/SharpHound/releases/latest /tmp/sharphound-release.json
@@ -33,6 +39,10 @@ ADD https://api.github.com/repos/SpecterOps/AzureHound/releases/latest /tmp/azur
 RUN set -eux; \
     sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' /tmp/azurehound-release.json > /tmp/version
 
+# Select explicit or latest release stage, buildkit will prune the unused stages, avoiding extra api calls.
+FROM --platform=$BUILDPLATFORM ${SHARPHOUND_RELEASE_SOURCE:-sharphound-latest-release} AS sharphound-release
+FROM --platform=$BUILDPLATFORM ${AZUREHOUND_RELEASE_SOURCE:-azurehound-latest-release} AS azurehound-release
+
 ########
 # Resolve and validate collector versions
 ################
@@ -40,8 +50,8 @@ FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.21 AS collector-versio
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
-COPY --from=sharphound-latest-release /tmp/version /tmp/sharphound-latest-version
-COPY --from=azurehound-latest-release /tmp/version /tmp/azurehound-latest-version
+COPY --from=sharphound-release /tmp/version /tmp/sharphound-latest-version
+COPY --from=azurehound-release /tmp/version /tmp/azurehound-latest-version
 
 # Build arg versions take precedence over latest version
 RUN set -eu; \
