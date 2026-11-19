@@ -121,7 +121,7 @@ func TestStore_GetExtension(t *testing.T) {
 const (
 	expectedListExtensionsSQL         = `SELECT id, name, display_name, version, is_builtin, namespace, created_at, updated_at FROM schema_extensions ORDER BY id ASC`
 	expectedCreateExtensionSQL        = `INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, display_name, version, is_builtin, namespace, created_at, updated_at`
-	expectedUpdateExtensionSQL        = `UPDATE schema_extensions SET name = $1, display_name = $2, version = $3, namespace = $4, updated_at = $5 WHERE id = $6 RETURNING id, name, display_name, version, is_builtin, namespace`
+	expectedUpdateExtensionSQL        = `UPDATE schema_extensions SET name = $1, display_name = $2, version = $3, namespace = $4, updated_at = $5 WHERE id = $6 RETURNING id, name, display_name, version, is_builtin, namespace, created_at, updated_at`
 	expectedDeleteExtensionBuiltinSQL = `SELECT is_builtin FROM schema_extensions WHERE id = $1`
 	expectedDeleteExtensionSQL        = `DELETE FROM schema_extensions WHERE id = $1 RETURNING id`
 )
@@ -306,7 +306,7 @@ func TestStore_UpdateExtension(t *testing.T) {
 			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedUpdateExtensionSQL).
 					WithArgs(input.Name, input.DisplayName, input.Version, input.Namespace, pgxmock.AnyArg(), input.ID).
-					WillReturnRows(pool.NewRows([]string{"id", "name", "display_name", "version", "is_builtin", "namespace"}))
+					WillReturnRows(pool.NewRows(extensionColumns()))
 			},
 			wantErr: services.ErrExtensionNotFound,
 		},
@@ -342,7 +342,7 @@ func TestStore_UpdateExtension(t *testing.T) {
 			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectQuery(expectedUpdateExtensionSQL).
 					WithArgs(input.Name, input.DisplayName, input.Version, input.Namespace, pgxmock.AnyArg(), input.ID).
-					WillReturnRows(pool.NewRows([]string{"id", "name", "display_name", "version", "is_builtin", "namespace"}).CloseError(databaseError))
+					WillReturnRows(pool.NewRows(extensionColumns()).CloseError(databaseError))
 			},
 			errorContext: "reading updated extension",
 		},

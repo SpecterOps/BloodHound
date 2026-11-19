@@ -170,7 +170,7 @@ func (s *Store) ListExtensions(ctx context.Context, extensionFilters params.Filt
 }
 
 // CreateExtension creates a new row in the extensions table.
-// An Extension struct is returned, populated with the value as it stands in the database.
+// Returns an Extension populated with the value as it stands in the database.
 func (s *Store) CreateExtension(ctx context.Context, extension services.Extension) (services.Extension, error) {
 	// TODO BED-10577: also insert audit log
 
@@ -189,10 +189,7 @@ func (s *Store) CreateExtension(ctx context.Context, extension services.Extensio
 		time.Now(),
 		time.Now(),
 	)
-	insertBuilder.Returning(
-		"id", "name", "display_name", "version", "is_builtin", "namespace",
-		"created_at", "updated_at",
-	)
+	insertBuilder.Returning(extensionColumns...)
 
 	sqlQuery, args := insertBuilder.Build()
 
@@ -240,7 +237,7 @@ func (s *Store) UpdateExtension(ctx context.Context, extension services.Extensio
 	)
 
 	updateBuilder.Where(updateBuilder.Equal("id", extension.ID))
-	updateBuilder.Returning("id", "name", "display_name", "version", "is_builtin", "namespace")
+	updateBuilder.Returning(extensionColumns...)
 
 	sqlQuery, args := updateBuilder.Build()
 
@@ -256,6 +253,8 @@ func (s *Store) UpdateExtension(ctx context.Context, extension services.Extensio
 }
 
 func (s *Store) DeleteExtension(ctx context.Context, extensionID int32) error {
+	// TODO BED-10577: also insert audit log
+
 	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return fmt.Errorf("beginning transaction: %s", err)

@@ -184,7 +184,11 @@ func TestStore_UpdateExtension_Integration(t *testing.T) {
 			Version:     input.Version,
 			Namespace:   input.Namespace,
 			IsBuiltin:   true,
+			CreatedAt:   updatedExtension.CreatedAt,
+			UpdatedAt:   updatedExtension.UpdatedAt,
 		}, updatedExtension)
+		assert.False(t, updatedExtension.CreatedAt.IsZero())
+		assert.False(t, updatedExtension.UpdatedAt.IsZero())
 
 		persistedExtension, err := store.GetExtension(ctx, extensionID)
 		require.NoError(t, err)
@@ -362,6 +366,16 @@ func TestStore_ListExtensions_Integration(t *testing.T) {
 		store, pool = setupStore(t)
 	)
 
+	normalizeExtensionTimestamps := func(extensions []services.Extension) []services.Extension {
+		normalized := make([]services.Extension, len(extensions))
+		copy(normalized, extensions)
+		for i := range normalized {
+			normalized[i].CreatedAt = normalized[i].CreatedAt.UTC()
+			normalized[i].UpdatedAt = normalized[i].UpdatedAt.UTC()
+		}
+		return normalized
+	}
+
 	_, err := pool.Exec(ctx, `DELETE FROM schema_extensions WHERE is_builtin = true`)
 	require.NoError(t, err)
 
@@ -518,7 +532,7 @@ func TestStore_ListExtensions_Integration(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				assert.Equal(t, want.extensions, actual)
+				assert.Equal(t, normalizeExtensionTimestamps(want.extensions), normalizeExtensionTimestamps(actual))
 				assert.Equal(t, want.count, count)
 			}
 		})
