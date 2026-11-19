@@ -32,6 +32,7 @@ properties:
         properties:
           extension_policies:
             type: array
+            items: {}
             minItems: 1
             nullable: false
     properties:
