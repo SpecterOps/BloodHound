@@ -36,12 +36,8 @@ describe('SubNav', () => {
         expect(screen.getByRole('navigation')).toBeInTheDocument();
         expect(screen.getByText(testSectionTitle)).toBeInTheDocument();
         expect(screen.getByText(testNavItem.label)).toBeInTheDocument();
-        expect(
-            screen.getByRole('link', { name: `Navigate to ${testNavItem.path.replace(/\//g, ' ').trim()}` })
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole('link', { name: `Navigate to ${testNavItem.path.replace(/\//g, ' ').trim()}` })
-        ).toHaveAttribute('href', testNavItem.path);
+        expect(screen.getByRole('link', { name: testNavItem.label })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: testNavItem.label })).toHaveAttribute('href', testNavItem.path);
     });
 
     it('should render many sections with many navigation items', () => {
@@ -80,12 +76,8 @@ describe('SubNav', () => {
 
             for (const item of section.items) {
                 expect(screen.getByText(item.label)).toBeInTheDocument();
-                expect(
-                    screen.getByRole('link', { name: `Navigate to ${item.path.replace(/\//g, ' ').trim()}` })
-                ).toBeInTheDocument();
-                expect(
-                    screen.getByRole('link', { name: `Navigate to ${item.path.replace(/\//g, ' ').trim()}` })
-                ).toHaveAttribute('href', item.path);
+                expect(screen.getByRole('link', { name: item.label })).toBeInTheDocument();
+                expect(screen.getByRole('link', { name: item.label })).toHaveAttribute('href', item.path);
             }
         }
     });
