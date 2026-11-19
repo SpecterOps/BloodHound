@@ -47,7 +47,7 @@ import {
     UpdateAssetGroupTagRequest,
 } from 'js-client-library';
 import isEmpty from 'lodash/isEmpty';
-import { FC, useCallback, useContext, useEffect, useState } from 'react';
+import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import DeleteConfirmationDialog from '../../../../components/DeleteConfirmationDialog';
 import { useTagLimits } from '../../../../hooks';
@@ -146,6 +146,7 @@ export const TagForm: FC = () => {
     });
 
     const { control, getValues, handleSubmit, reset, setValue } = form;
+    const previousTagId = useRef(tagId);
 
     const createTagMutation = useCreateAssetGroupTag();
     const updateTagMutation = usePatchAssetGroupTag(tagId);
@@ -291,6 +292,9 @@ export const TagForm: FC = () => {
     );
 
     useEffect(() => {
+        const isSameTag = previousTagId.current === tagId;
+        previousTagId.current = tagId;
+
         if (tagQuery.data) {
             reset({
                 name: tagQuery.data.name,
@@ -299,9 +303,12 @@ export const TagForm: FC = () => {
                 require_certify: tagQuery.data.require_certify || false,
                 analysis_enabled: tagQuery.data.analysis_enabled || false,
                 glyph: tagQuery.data.glyph === null ? '' : tagQuery.data.glyph,
+                enable_all_rules: isSameTag ? getValues('enable_all_rules') : undefined,
             });
+        } else if (!isSameTag) {
+            reset({ ...getValues(), enable_all_rules: undefined });
         }
-    }, [tagQuery.data, reset]);
+    }, [tagId, tagQuery.data, getValues, reset]);
 
     if (tagQuery.isLoading)
         return (
