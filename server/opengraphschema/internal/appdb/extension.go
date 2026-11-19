@@ -105,11 +105,11 @@ func (s *Store) GetExtension(ctx context.Context, id int32) (services.Extension,
 	}
 }
 
-// GetExtensions gets all the rows from the extensions table that match the given filter,
+// ListExtensions gets all the rows from the extensions table that match the given filter,
 // sorted by the given sorts and paged by the given pagination params.
 // It returns a slice of Extension structs populated with the data,
 // as well as an integer giving the total number of rows returned by the query (excluding any given pagination)
-func (s *Store) GetExtensions(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]services.Extension, int, error) {
+func (s *Store) ListExtensions(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]services.Extension, int, error) {
 	var (
 		extensions = []services.Extension{}
 	)

@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
 var (
@@ -49,6 +51,6 @@ func (s *Service) GetExtension(ctx context.Context, id int32) (Extension, error)
 	return s.db.GetExtension(ctx, id)
 }
 
-func (s *Service) ListExtensions(ctx context.Context) ([]Extension, error) {
-	return s.db.ListExtensions(ctx)
+func (s *Service) ListExtensions(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]Extension, int, error) {
+	return s.db.ListExtensions(ctx, extensionFilters, sort, skip, limit)
 }

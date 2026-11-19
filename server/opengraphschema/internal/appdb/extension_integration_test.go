@@ -356,7 +356,7 @@ func TestStore_DeleteExtension_Integration(t *testing.T) {
 	})
 }
 
-func TestStore_GetExtensions_Integration(t *testing.T) {
+func TestStore_ListExtensions_Integration(t *testing.T) {
 	var (
 		ctx         = context.Background()
 		store, pool = setupStore(t)
@@ -507,7 +507,7 @@ func TestStore_GetExtensions_Integration(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			for index, input := range test.queries {
-				actual, count, err := store.GetExtensions(ctx, input.filters, input.sort, input.skip, input.limit)
+				actual, count, err := store.ListExtensions(ctx, input.filters, input.sort, input.skip, input.limit)
 				want := test.want[index]
 
 				if want.err != "" {
