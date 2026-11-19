@@ -889,74 +889,6 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
     ];
 }
-export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryRelationshipKind[] {
-    return [
-        ActiveDirectoryRelationshipKind.Owns,
-        ActiveDirectoryRelationshipKind.GenericAll,
-        ActiveDirectoryRelationshipKind.GenericWrite,
-        ActiveDirectoryRelationshipKind.WriteOwner,
-        ActiveDirectoryRelationshipKind.WriteDACL,
-        ActiveDirectoryRelationshipKind.MemberOf,
-        ActiveDirectoryRelationshipKind.ForceChangePassword,
-        ActiveDirectoryRelationshipKind.AllExtendedRights,
-        ActiveDirectoryRelationshipKind.AddMember,
-        ActiveDirectoryRelationshipKind.HasSession,
-        ActiveDirectoryRelationshipKind.GPLink,
-        ActiveDirectoryRelationshipKind.AllowedToDelegate,
-        ActiveDirectoryRelationshipKind.CoerceToTGT,
-        ActiveDirectoryRelationshipKind.AllowedToAct,
-        ActiveDirectoryRelationshipKind.AdminTo,
-        ActiveDirectoryRelationshipKind.CanPSRemote,
-        ActiveDirectoryRelationshipKind.CanRDP,
-        ActiveDirectoryRelationshipKind.ExecuteDCOM,
-        ActiveDirectoryRelationshipKind.HasSIDHistory,
-        ActiveDirectoryRelationshipKind.AddSelf,
-        ActiveDirectoryRelationshipKind.DCSync,
-        ActiveDirectoryRelationshipKind.ReadLAPSPassword,
-        ActiveDirectoryRelationshipKind.ReadGMSAPassword,
-        ActiveDirectoryRelationshipKind.DumpSMSAPassword,
-        ActiveDirectoryRelationshipKind.SQLAdmin,
-        ActiveDirectoryRelationshipKind.AddAllowedToAct,
-        ActiveDirectoryRelationshipKind.WriteSPN,
-        ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
-        ActiveDirectoryRelationshipKind.SyncLAPSPassword,
-        ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
-        ActiveDirectoryRelationshipKind.WriteGPLink,
-        ActiveDirectoryRelationshipKind.GoldenCert,
-        ActiveDirectoryRelationshipKind.ADCSESC1,
-        ActiveDirectoryRelationshipKind.ADCSESC3,
-        ActiveDirectoryRelationshipKind.ADCSESC4,
-        ActiveDirectoryRelationshipKind.ADCSESC6a,
-        ActiveDirectoryRelationshipKind.ADCSESC6b,
-        ActiveDirectoryRelationshipKind.ADCSESC9a,
-        ActiveDirectoryRelationshipKind.ADCSESC9b,
-        ActiveDirectoryRelationshipKind.ADCSESC10a,
-        ActiveDirectoryRelationshipKind.ADCSESC10b,
-        ActiveDirectoryRelationshipKind.ADCSESC13,
-        ActiveDirectoryRelationshipKind.ADCSESC16,
-        ActiveDirectoryRelationshipKind.SyncedToADUser,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCSRPC,
-        ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
-        ActiveDirectoryRelationshipKind.OwnsLimitedRights,
-        ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
-        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
-        ActiveDirectoryRelationshipKind.HasTrustKeys,
-        ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
-        ActiveDirectoryRelationshipKind.WritePublicInformation,
-        ActiveDirectoryRelationshipKind.ManageCA,
-        ActiveDirectoryRelationshipKind.ManageCertificates,
-        ActiveDirectoryRelationshipKind.ServerIs,
-        ActiveDirectoryRelationshipKind.Contains,
-        ActiveDirectoryRelationshipKind.DCFor,
-        ActiveDirectoryRelationshipKind.SameForestTrust,
-        ActiveDirectoryRelationshipKind.SpoofSIDHistory,
-        ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
-        ActiveDirectoryRelationshipKind.ProtectAdminGroups,
-    ];
-}
 export enum AzureNodeKind {
     Entity = 'AZBase',
     VMScaleSet = 'AZVMScaleSet',
@@ -1375,11 +1307,25 @@ export function AzurePathfindingEdges(): AzureRelationshipKind[] {
 }
 export enum CommonNodeKind {
     MigrationData = 'MigrationData',
+    Zone = 'Zone',
 }
 export function CommonNodeKindToDisplay(value: CommonNodeKind): string | undefined {
     switch (value) {
         case CommonNodeKind.MigrationData:
             return 'MigrationData';
+        case CommonNodeKind.Zone:
+            return 'Zone';
+        default:
+            return undefined;
+    }
+}
+export enum CommonRelationshipKind {
+    MemberOfZone = 'MemberOfZone',
+}
+export function CommonRelationshipKindToDisplay(value: CommonRelationshipKind): string | undefined {
+    switch (value) {
+        case CommonRelationshipKind.MemberOfZone:
+            return 'MemberOfZone';
         default:
             return undefined;
     }
@@ -1451,4 +1397,7 @@ export function CommonKindPropertiesToDisplay(value: CommonKindProperties): stri
         default:
             return undefined;
     }
+}
+export function CommonPathfindingEdges(): CommonRelationshipKind[] {
+    return [CommonRelationshipKind.MemberOfZone];
 }

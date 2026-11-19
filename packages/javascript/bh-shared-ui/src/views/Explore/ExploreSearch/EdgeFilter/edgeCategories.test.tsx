@@ -13,13 +13,18 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { ActiveDirectoryPathfindingEdgesMatchFrontend, AzurePathfindingEdges } from '../../../../graphSchema';
+import {
+    ActiveDirectoryPathfindingEdges,
+    AzurePathfindingEdges,
+    CommonPathfindingEdges,
+} from '../../../../graphSchema';
+import { COMMON_EDGE_CATEGORY } from './edgeCategories';
 import { getEdgeListFromCategory } from './utils';
 
 describe('Make sure pathfinding filterable edges match schemagen', () => {
     it('matches all AD edges', () => {
         const adEdges = getEdgeListFromCategory('Active Directory');
-        const adSchemaEdges = ActiveDirectoryPathfindingEdgesMatchFrontend();
+        const adSchemaEdges = ActiveDirectoryPathfindingEdges();
 
         const difference = getDifferenceCount(adEdges, adSchemaEdges);
         expect(difference).toEqual(0);
@@ -30,6 +35,14 @@ describe('Make sure pathfinding filterable edges match schemagen', () => {
         const azSchemaEdges = AzurePathfindingEdges();
 
         const difference = getDifferenceCount(azEdges, azSchemaEdges);
+        expect(difference).toEqual(0);
+    });
+
+    it('matches all common edges', () => {
+        const commonEdges = getEdgeListFromCategory('Common', [COMMON_EDGE_CATEGORY]);
+        const commonSchemaEdges = CommonPathfindingEdges();
+
+        const difference = getDifferenceCount(commonEdges, commonSchemaEdges);
         expect(difference).toEqual(0);
     });
 });
