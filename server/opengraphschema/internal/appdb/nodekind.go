@@ -465,6 +465,7 @@ func (s *Store) CreateCustomNodeKinds(ctx context.Context, customNodeKinds []ser
 
 		// Insert the custom node kind and join kind to retrieve the non-stored kind name.
 		if row, err := insertCustomNodeKind(ctx, tx, customNodeKind); err != nil {
+			return emptyCustomNodeKinds, err
 		} else if created, err := toCustomNodeKind(row); err != nil {
 			return emptyCustomNodeKinds, fmt.Errorf("creating custom node kind %q: %w", customNodeKind.KindName, err)
 		} else {
