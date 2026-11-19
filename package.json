@@ -36,7 +36,7 @@
         "eslint-plugin-storybook": "patch:eslint-plugin-storybook@npm%3A0.8.0#~/.yarn/patches/eslint-plugin-storybook-npm-0.8.0-8d2a99710e.patch",
         "oxlint": "1.94.0",
         "prettier": "^3.2.5",
-        "tsrs": "7.1.0-beta.tsrs2",
+        "tsrs": "7.1.0-beta.tsrs3",
         "typescript": "^5.9.3"
     },
     "resolutions": {

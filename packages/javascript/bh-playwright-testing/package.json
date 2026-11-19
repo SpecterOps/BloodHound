@@ -26,7 +26,7 @@
         "oxlint": "1.94.0",
         "playwright-core": "^1.59.1",
         "prettier": "^3.2.5",
-        "tsrs": "7.1.0-beta.tsrs2",
+        "tsrs": "7.1.0-beta.tsrs3",
         "typescript": "^5.9.3"
     }
 }

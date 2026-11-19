@@ -28,7 +28,7 @@
         "prettier-plugin-organize-imports": "^4.1.0",
         "rollup": "^4.59.0",
         "rollup-plugin-delete": "^2.0.0",
-        "tsrs": "7.1.0-beta.tsrs2",
+        "tsrs": "7.1.0-beta.tsrs3",
         "typescript": "^5.9.3"
     }
 }
