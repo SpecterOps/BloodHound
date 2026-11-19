@@ -36,13 +36,13 @@ import (
 type ScheduledAnalysisParameter = services.ScheduledAnalysisParameter
 type Auditor = services.Auditor
 
-// ConfigurationAdapter supplies GetConfig<Type> methods for fetching typed parameter values.
+// ConfigurationReadAdapter supplies GetConfig<Type> methods for fetching typed parameter values.
 // If any problem is encountered, these methods log a warning and return both the parameter default value and an error.
-type ConfigurationAdapter interface {
+type ConfigurationReadAdapter interface {
 	GetConfigScheduledAnalysis(ctx context.Context) (ScheduledAnalysisParameter, error)
 }
 
-func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
+func NewConfigurationReadAdapter(pool *pgxpool.Pool) ConfigurationReadAdapter {
 	var (
 		store  = appdb.NewStore(pool)
 		reader = services.NewReader(store)
