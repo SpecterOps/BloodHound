@@ -115,7 +115,7 @@ func (s *Store) GetExtensions(ctx context.Context, extensionFilters params.Filte
 	)
 
 	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
-	selectBuilder.Select("id", "name", "display_name", "version", "is_builtin", "namespace")
+	selectBuilder.Select(extensionColumns...)
 	selectBuilder.From(tableSchemaExtensions)
 
 	countBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
@@ -191,6 +191,7 @@ func (s *Store) CreateExtension(ctx context.Context, extension services.Extensio
 	)
 	insertBuilder.Returning(
 		"id", "name", "display_name", "version", "is_builtin", "namespace",
+		"created_at", "updated_at",
 	)
 
 	sqlQuery, args := insertBuilder.Build()

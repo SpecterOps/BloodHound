@@ -147,6 +147,8 @@ func TestStore_CreateExtension_Integration(t *testing.T) {
 			assert.Equal(t, test.extension.Version, createdExtension.Version)
 			assert.Equal(t, test.extension.Namespace, createdExtension.Namespace)
 			assert.False(t, createdExtension.IsBuiltin)
+			assert.False(t, createdExtension.CreatedAt.IsZero())
+			assert.False(t, createdExtension.UpdatedAt.IsZero())
 
 			persistedExtension, err := store.GetExtension(ctx, createdExtension.ID)
 			require.NoError(t, err)
@@ -369,20 +371,22 @@ func TestStore_GetExtensions_Integration(t *testing.T) {
 		version     string
 		isBuiltin   bool
 		namespace   string
+		createdAt   time.Time
+		updatedAt   time.Time
 	}
 
 	var extensions []services.Extension
 	for _, extension := range []extensionData{
-		{name: "ExtensionAlpha", displayName: "Alpha Extension", version: "1.0.0", isBuiltin: true, namespace: "ALP"},
-		{name: "ExtensionBeta", displayName: "Beta Extension", version: "1.1.0", isBuiltin: false, namespace: "BET"},
-		{name: "ExtensionGamma", displayName: "Gamma Extension", version: "2.0.0", isBuiltin: true, namespace: "GAM"},
+		{name: "ExtensionAlpha", displayName: "Alpha Extension", version: "1.0.0", isBuiltin: true, namespace: "ALP", createdAt: time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC), updatedAt: time.Date(2026, time.January, 2, 0, 0, 0, 0, time.UTC)},
+		{name: "ExtensionBeta", displayName: "Beta Extension", version: "1.1.0", isBuiltin: false, namespace: "BET", createdAt: time.Date(2026, time.January, 3, 0, 0, 0, 0, time.UTC), updatedAt: time.Date(2026, time.January, 4, 0, 0, 0, 0, time.UTC)},
+		{name: "ExtensionGamma", displayName: "Gamma Extension", version: "2.0.0", isBuiltin: true, namespace: "GAM", createdAt: time.Date(2026, time.January, 5, 0, 0, 0, 0, time.UTC), updatedAt: time.Date(2026, time.January, 6, 0, 0, 0, 0, time.UTC)},
 	} {
 		var extensionID int32
 		require.NoError(t, pool.QueryRow(ctx, `
-			INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace)
-			VALUES ($1, $2, $3, $4, $5)
+			INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
 			RETURNING id`,
-			extension.name, extension.displayName, extension.version, extension.isBuiltin, extension.namespace,
+			extension.name, extension.displayName, extension.version, extension.isBuiltin, extension.namespace, extension.createdAt, extension.updatedAt,
 		).Scan(&extensionID))
 
 		extensions = append(extensions, services.Extension{
@@ -392,6 +396,8 @@ func TestStore_GetExtensions_Integration(t *testing.T) {
 			Version:     extension.version,
 			IsBuiltin:   extension.isBuiltin,
 			Namespace:   extension.namespace,
+			CreatedAt:   extension.createdAt,
+			UpdatedAt:   extension.updatedAt,
 		})
 	}
 
