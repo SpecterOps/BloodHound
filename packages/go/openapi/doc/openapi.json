@@ -25772,7 +25772,7 @@
         }
       },
       "query.jobs.hydrate-last-job": {
-        "name": "hydrateLastJob",
+        "name": "hydrate_last_job",
         "in": "query",
         "required": false,
         "description": "When true, includes a last_job field containing the most recent job record for each returned client or collector job profile. When false or not supplied, last_job is omitted entirely.",
