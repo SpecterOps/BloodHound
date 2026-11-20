@@ -20,7 +20,8 @@ parameters:
 get:
   operationId: GetUserEntitySqlAdminRights
   summary: Get User entity SQL admin rights
-  description: Get a list, graph, or count of the systems this user has SQL admin rights to.
+  deprecated: true
+  description: The SQLAdmin relationship has been retired. Returns an empty list or graph.
   tags:
     - AD Users
     - Community

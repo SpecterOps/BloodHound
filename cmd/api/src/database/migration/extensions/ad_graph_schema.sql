@@ -209,7 +209,6 @@ BEGIN
 	PERFORM genscript_upsert_kind('ReadLAPSPassword');
 	PERFORM genscript_upsert_kind('ReadGMSAPassword');
 	PERFORM genscript_upsert_kind('DumpSMSAPassword');
-	PERFORM genscript_upsert_kind('SQLAdmin');
 	PERFORM genscript_upsert_kind('AddAllowedToAct');
 	PERFORM genscript_upsert_kind('WriteSPN');
 	PERFORM genscript_upsert_kind('AddKeyCredentialLink');
@@ -335,7 +334,6 @@ BEGIN
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ReadLAPSPassword', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'ReadGMSAPassword', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'DumpSMSAPassword', '', true);
-	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'SQLAdmin', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddAllowedToAct', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'WriteSPN', '', true);
 	PERFORM genscript_upsert_schema_relationship_kind(extension_id, 'AddKeyCredentialLink', '', true);

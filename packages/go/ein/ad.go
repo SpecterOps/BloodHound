@@ -679,40 +679,9 @@ func ParseACEData(targetNode IngestibleNode, aces []ACE, targetID string, target
 	return converted
 }
 
-func convertSPNData(spns []SPNTarget, sourceID string) []IngestibleRelationship {
-	converted := make([]IngestibleRelationship, 0, len(spns))
-
-	for _, s := range spns {
-		if kind, err := ParseKind(s.Service); err != nil {
-			slog.Error(
-				"Error during convertSPNData",
-				attr.Error(err),
-			)
-		} else {
-			converted = append(converted, NewIngestibleRelationship(
-				IngestibleEndpoint{
-					Value: sourceID,
-					Kind:  ad.User,
-				},
-				IngestibleEndpoint{
-					Value: s.ComputerSID,
-					Kind:  ad.Computer,
-				},
-				IngestibleRel{
-					RelProps: map[string]any{ad.IsACL.String(): true, "port": s.Port},
-					RelType:  kind,
-				},
-			))
-		}
-	}
-
-	return converted
-}
-
 func ParseUserMiscData(user User) []IngestibleRelationship {
 	data := make([]IngestibleRelationship, 0)
 
-	data = append(data, convertSPNData(user.SPNTargets, user.ObjectIdentifier)...)
 	if rel := ParsePrimaryGroup(user.IngestBase, ad.User, user.PrimaryGroupSID); rel.IsValid() {
 		data = append(data, rel)
 	}
