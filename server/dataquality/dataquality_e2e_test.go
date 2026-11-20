@@ -29,6 +29,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
@@ -48,6 +49,7 @@ func TestE2E_GetDataQualityAggregations(t *testing.T) {
 			modules.Register(modules.Deps{
 				Router: routerInst, Pool: databaseInstance.Pool(), Graph: &graph.DatabaseSwitch{},
 				DogTags: dogtags.NewTestService(dogtags.TestOverrides{}), ConfigUpdateSideEffects: databaseInstance,
+				IdentityResolver:    auth.NewIdentityResolver(),
 				RateLimitMiddleware: func() mux.MiddlewareFunc { return middleware.DefaultRateLimitMiddleware(databaseInstance) },
 			})
 		})

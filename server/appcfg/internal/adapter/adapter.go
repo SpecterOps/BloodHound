@@ -19,25 +19,21 @@ package adapter
 import (
 	"context"
 
-	"github.com/specterops/bloodhound/server/appcfg/internal/appdb"
 	"github.com/specterops/bloodhound/server/appcfg/internal/services"
 )
 
 type ConfigurationAdapter struct {
-	db      *appdb.Store
-	service *services.Service
+	reader *services.Reader
 }
 
-func NewConfigurationAdapter(store *appdb.Store, service *services.Service) *ConfigurationAdapter {
-	if store == nil {
-		panic("appcfg: adapter requires a non-nil database")
-	} else if service == nil {
-		panic("appcfg: adapter requires a non-nil configuration service")
+func NewConfigurationAdapter(reader *services.Reader) *ConfigurationAdapter {
+	if reader == nil {
+		panic("appcfg: adapter requires a non-nil configuration reader")
 	}
 
-	return &ConfigurationAdapter{db: store, service: service}
+	return &ConfigurationAdapter{reader: reader}
 }
 
 func (s *ConfigurationAdapter) GetConfigScheduledAnalysis(ctx context.Context) (services.ScheduledAnalysisParameter, error) {
-	return s.service.GetConfig[services.ScheduledAnalysisParameter](ctx, services.ScheduledAnalysis)
+	return s.reader.GetConfig[services.ScheduledAnalysisParameter](ctx, services.ScheduledAnalysis)
 }
