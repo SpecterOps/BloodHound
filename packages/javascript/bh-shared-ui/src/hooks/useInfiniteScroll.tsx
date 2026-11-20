@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { UIEvent, useCallback, useEffect, useRef } from 'react';
+import { RefObject, UIEvent, useCallback, useEffect, useRef } from 'react';
 
 type InfiniteScrollOptions = {
     canFetchMore: boolean;
@@ -21,6 +21,7 @@ type InfiniteScrollOptions = {
     fetchMore: () => Promise<unknown>;
     loadedCount: number;
     threshold?: number;
+    scrollContainerRef?: RefObject<HTMLDivElement>;
 };
 
 export const useInfiniteScroll = ({
@@ -29,6 +30,7 @@ export const useInfiniteScroll = ({
     fetchMore,
     loadedCount,
     threshold = 100,
+    scrollContainerRef,
 }: InfiniteScrollOptions) => {
     const scrollRef = useRef<HTMLDivElement>(null);
     const isFetchMorePendingRef = useRef(false);
@@ -51,8 +53,14 @@ export const useInfiniteScroll = ({
     // Checks if we need to fetch more rows immediately after render instead of waiting for onScroll to fire -- handles the case
     // where the first page of results does not fill the table height.
     useEffect(() => {
-        fetchMoreDataOnBottomReached(scrollRef.current);
-    }, [fetchMoreDataOnBottomReached, loadedCount]);
+        const scrollContainer = scrollContainerRef?.current ?? scrollRef.current;
+        fetchMoreDataOnBottomReached(scrollContainer);
+        if (!scrollContainerRef || !scrollContainer) return;
+
+        const handleScroll = () => fetchMoreDataOnBottomReached(scrollContainer);
+        scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+        return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }, [fetchMoreDataOnBottomReached, loadedCount, scrollContainerRef]);
 
     return {
         scrollRef,
