@@ -550,6 +550,12 @@ func TestResourceWithinScope(t *testing.T) {
 		assert.True(t, ein.ResourceWithinScope(vmID, rgScope))
 	})
 
+	t.Run("resource group scope with unicode characters", func(t *testing.T) {
+		vmUnicode := "/subscriptions/sub-1/resourceGroups/équipe/providers/Microsoft.Compute/virtualMachines/vm-1"
+		rgScope := "/subscriptions/sub-1/resourceGroups/équipe"
+		assert.True(t, ein.ResourceWithinScope(vmUnicode, rgScope))
+	})
+
 	t.Run("different resource group returns false", func(t *testing.T) {
 		rgScope := "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/other-rg"
 		assert.False(t, ein.ResourceWithinScope(vmID, rgScope))

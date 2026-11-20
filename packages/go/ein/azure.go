@@ -44,7 +44,7 @@ const (
 )
 
 var (
-	resourceGroupLevel = regexp.MustCompile(`(?i)^[\w\d\-\/]+/resourcegroups/[a-zA-Z0-9_\-\.()]+$`)
+	resourceGroupLevel = regexp.MustCompile(`(?i)^[\w\d\-\/]+/resourcegroups/[\p{L}\p{Nd}_\-\.()]+$`)
 	ErrInvalidType     = errors.New("invalid type returned from directory object")
 )
 
