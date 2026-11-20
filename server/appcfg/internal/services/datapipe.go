@@ -47,6 +47,6 @@ type DatapipeStatus struct {
 	NextScheduledAnalysisAt null.Time
 }
 
-func (s *Service) GetDatapipeStatus(ctx context.Context) (DatapipeStatus, error) {
+func (s *Reader) GetDatapipeStatus(ctx context.Context) (DatapipeStatus, error) {
 	return s.db.GetDatapipeStatus(ctx)
 }

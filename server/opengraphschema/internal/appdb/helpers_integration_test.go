@@ -34,9 +34,7 @@ type testSetupData struct {
 	extensionID int32
 }
 
-// seedNodeKind inserts a schema_extensions row, a kind row and a schema_node_kinds row
-// wiring them together, registers a cascade-delete cleanup and returns the seeded ids.
-func seedNodeKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+func seedExtension(t *testing.T, ctx context.Context, pool *pgxpool.Pool) int32 {
 	t.Helper()
 
 	var extensionID int32
@@ -48,6 +46,15 @@ func seedNodeKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSet
 		_, err := pool.Exec(ctx, `DELETE FROM schema_extensions WHERE id = $1`, extensionID)
 		require.NoError(t, err)
 	})
+
+	return extensionID
+}
+
+// seedNodeKind inserts a kind and a schema_node_kinds row for a seeded extension.
+func seedNodeKind(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
+	t.Helper()
+
+	extensionID := seedExtension(t, ctx, pool)
 
 	var kindID int32
 	require.NoError(t, pool.QueryRow(ctx, `

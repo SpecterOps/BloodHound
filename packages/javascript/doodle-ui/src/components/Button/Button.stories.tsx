@@ -19,8 +19,6 @@ import { DocsPage } from '@storybook/blocks';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, within } from '@storybook/test';
 import { useTheme } from '@storybook/theming';
-import { ChevronRight } from 'lucide-react';
-import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { Button, TextButton as TextButtonComponent } from './Button';
 
 const ButtonDocsPage = () => {
@@ -278,43 +276,6 @@ export const Secondary: ButtonStory = {
                 </Button>
             </div>
         </>
-    ),
-};
-
-export const IconAlignment: ButtonStory = {
-    parameters: {
-        docs: {
-            description: {
-                story: 'Compare text-only buttons with leading and trailing icons from Font Awesome, AppIcon, and Lucide. Text and icons should remain centered with consistent button heights.',
-            },
-        },
-    },
-    render: (args) => (
-        <div className='flex flex-col gap-4'>
-            {(['primary', 'secondary'] as const).map((variant) => (
-                <div key={variant} className='flex items-center gap-4'>
-                    <Button {...args} variant={variant}>
-                        Next
-                    </Button>
-                    <Button {...args} variant={variant}>
-                        <FontAwesomeIcon icon={faStar} aria-hidden='true' />
-                        Next
-                    </Button>
-                    <Button {...args} variant={variant}>
-                        Next
-                        <AppIcon.Info aria-hidden='true' />
-                    </Button>
-                    <Button {...args} variant={variant}>
-                        Next
-                        <ChevronRight aria-hidden='true' />
-                    </Button>
-                    <Button {...args} variant={variant} disabled>
-                        <FontAwesomeIcon icon={faStar} aria-hidden='true' />
-                        Next
-                    </Button>
-                </div>
-            ))}
-        </div>
     ),
 };
 

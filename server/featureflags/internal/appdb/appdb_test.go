@@ -21,11 +21,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	"github.com/pashagolub/pgxmock/v6"
-	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/server/featureflags/internal/appdb"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
 	"github.com/stretchr/testify/assert"
@@ -44,8 +40,6 @@ const (
 	expectedSelectAllSQL = `SELECT id, created_at, updated_at, key, name, description, enabled, user_updatable FROM feature_flags`
 
 	expectedUpdateSQL = `UPDATE feature_flags SET enabled = $1, updated_at = $2 WHERE id = $3`
-
-	expectedAuditInsertSQL = `INSERT INTO audit_logs (created_at, actor_id, actor_name, actor_email, action, fields, request_id, source_ip_address, status, commit_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
 )
 
 func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
@@ -58,22 +52,6 @@ func newTestStore(t *testing.T) (*appdb.Store, pgxmock.PgxPoolIface) {
 
 func flagColumns() []string {
 	return []string{"id", "created_at", "updated_at", "key", "name", "description", "enabled", "user_updatable"}
-}
-
-// authenticatedContext attaches a bhctx.Context carrying the supplied user as
-// the auth owner, mirroring what the auth middleware does on real requests.
-// SetFlag's audit-log path reads the actor from this context.
-func authenticatedContext(userID uuid.UUID) context.Context {
-	return bhctx.Set(context.Background(), &bhctx.Context{
-		RequestID: "test-request",
-		RequestIP: "127.0.0.1",
-		AuthCtx: auth.Context{
-			Owner: model.User{
-				Unique:        model.Unique{ID: userID},
-				PrincipalName: "test-user",
-			},
-		},
-	})
 }
 
 func TestStore_GetFlagByKey(t *testing.T) {
@@ -305,8 +283,6 @@ func TestStore_SetFlag(t *testing.T) {
 	}
 
 	var (
-		userID   = uuid.Must(uuid.NewV4())
-		authCtx  = authenticatedContext(userID)
 		flag     = services.FeatureFlag{ID: 42, Key: services.FeatureAlerts, Name: "Alerts", Enabled: true, UserUpdatable: false}
 		userFlag = services.FeatureFlag{ID: 42, Key: services.FeatureAlerts, Name: "Alerts", Enabled: true, UserUpdatable: true}
 		dbErr    = errors.New("connection refused")
@@ -330,27 +306,13 @@ func TestStore_SetFlag(t *testing.T) {
 			},
 		},
 		{
-			name: "Success: commits both the update and an audit entry when the flag is user-updatable",
-			args: args{ctx: authCtx, flag: userFlag},
+			name: "Success: commits the update when the flag is user-updatable",
+			args: args{ctx: context.Background(), flag: userFlag},
 			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectBegin()
 				pool.ExpectExec(expectedUpdateSQL).
 					WithArgs(true, pgxmock.AnyArg(), int32(42)).
 					WillReturnResult(pgxmock.NewResult("UPDATE", 1))
-				pool.ExpectExec(expectedAuditInsertSQL).
-					WithArgs(
-						pgxmock.AnyArg(), // created_at
-						userID.String(),  // actor_id
-						"test-user",      // actor_name
-						"",               // actor_email
-						string(model.AuditLogActionToggleEarlyAccessFeatureFlag), // action
-						pgxmock.AnyArg(),                    // fields (json)
-						"test-request",                      // request_id
-						"127.0.0.1",                         // source_ip_address
-						string(model.AuditLogStatusSuccess), // status
-						pgxmock.AnyArg(),                    // commit_id
-					).
-					WillReturnResult(pgxmock.NewResult("INSERT", 1))
 				pool.ExpectCommit()
 			},
 		},
@@ -376,7 +338,7 @@ func TestStore_SetFlag(t *testing.T) {
 		},
 		{
 			name: "Error: rolls back and returns ErrNotFound when the UPDATE matches no rows",
-			args: args{ctx: authCtx, flag: userFlag},
+			args: args{ctx: context.Background(), flag: userFlag},
 			setupMock: func(pool pgxmock.PgxPoolIface) {
 				pool.ExpectBegin()
 				pool.ExpectExec(expectedUpdateSQL).
@@ -385,36 +347,6 @@ func TestStore_SetFlag(t *testing.T) {
 				pool.ExpectRollback()
 			},
 			want: want{err: services.ErrNotFound},
-		},
-		{
-			name: "Error: rolls back when the audit insert fails for a user-updatable flag",
-			args: args{ctx: authCtx, flag: userFlag},
-			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectBegin()
-				pool.ExpectExec(expectedUpdateSQL).
-					WithArgs(true, pgxmock.AnyArg(), int32(42)).
-					WillReturnResult(pgxmock.NewResult("UPDATE", 1))
-				pool.ExpectExec(expectedAuditInsertSQL).
-					WithArgs(
-						pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(),
-						pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(),
-					).
-					WillReturnError(dbErr)
-				pool.ExpectRollback()
-			},
-			want: want{err: dbErr},
-		},
-		{
-			name: "Error: returns an error when no authenticated user is on the context",
-			args: args{ctx: context.Background(), flag: userFlag},
-			setupMock: func(pool pgxmock.PgxPoolIface) {
-				pool.ExpectBegin()
-				pool.ExpectExec(expectedUpdateSQL).
-					WithArgs(true, pgxmock.AnyArg(), int32(42)).
-					WillReturnResult(pgxmock.NewResult("UPDATE", 1))
-				pool.ExpectRollback()
-			},
-			want: want{errContains: "no authenticated user on context"},
 		},
 	}
 

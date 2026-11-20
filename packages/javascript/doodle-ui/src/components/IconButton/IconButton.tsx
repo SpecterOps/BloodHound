@@ -20,7 +20,6 @@ import { AccessibleIcon } from '../AccessibleIcon';
 import { Tooltip, type TooltipPosition } from '../Tooltip';
 import { cn, cnWithState } from '../utils';
 import { iconButtonDisabledTriggerClasses, iconButtonIconClasses, IconButtonVariants } from './IconButton.styles';
-
 export { IconButtonVariants } from './IconButton.styles';
 
 export interface IconButtonProps extends Omit<BaseUIButton.Props, 'children' | 'className' | 'render'> {

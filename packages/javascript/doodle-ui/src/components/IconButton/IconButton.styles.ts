@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
-import { buttonBaseClasses, buttonBorderRadiusClasses } from '../Button/Button.styles';
+import { buttonBaseClasses } from '../Button/Button.styles';
 import { cn } from '../utils';
 
 export const defaultIconButtonClasses = cn(
@@ -23,28 +23,27 @@ export const defaultIconButtonClasses = cn(
     'focus-visible:ring-transparent focus-visible:ring-offset-0 focus-visible:ring-offset-transparent focus-visible:text-primary'
 );
 
-export const iconPrimaryClasses = [
-    'border border-transparent bg-primary text-[color:var(--button-primary-text)] shadow-outer-1',
+export const iconPrimaryClasses = cn(
+    'bg-primary text-[color:var(--button-primary-text)] shadow-outer-1',
     'hover:bg-secondary',
     'focus-visible:bg-secondary',
     'active:bg-[color:var(--button-primary-active-fill)]',
-    'disabled:shadow-none disabled:bg-[color:var(--button-disabled-fill)]',
-];
+    'disabled:shadow-none disabled:bg-[color:var(--button-disabled-fill)]'
+);
 
-export const iconSecondaryClasses = [
-    'border border-[color:var(--button-secondary-fill)] bg-transparent text-[color:var(--button-secondary-text)] shadow-outer-1',
+export const iconSecondaryClasses = cn(
+    'bg-[color:var(--button-secondary-fill)] text-[color:var(--button-secondary-text)] shadow-outer-1',
     'hover:bg-secondary hover:text-[color:var(--button-highlight-text)]',
     'focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
     'active:bg-[color:var(--button-secondary-active-fill)] active:text-[color:var(--button-secondary-text)]',
-    'disabled:border-transparent disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none',
-];
+    'disabled:bg-[color:var(--button-disabled-fill)] disabled:shadow-none'
+);
 
 export const IconButtonVariants = cva(
     cn(
         buttonBaseClasses,
-        buttonBorderRadiusClasses,
         'inline-grid h-fit aspect-square box-border',
-        'shrink-0 place-items-center align-middle border-0 p-2'
+        'shrink-0 place-items-center align-middle rounded-full border-0 p-2'
     ),
     {
         variants: {
