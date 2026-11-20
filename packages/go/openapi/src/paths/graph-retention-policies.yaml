@@ -38,3 +38,33 @@ get:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+put:
+  operationId: UpdateRetentionPolicies
+  summary: Create or replace included graph retention policies
+  description: Requires admin permissions and the retention_policies feature flag (404 while disabled). Each included policy is a full replacement requiring enabled and ttl; extension policies also require extension_id. Omitted policies remain unchanged. All replacements and the successful-change audit are committed atomically; errors never partially apply the request. Empty updates, duplicate extension IDs, missing required fields, invalid IDs, unknown extensions, unknown fields, and invalid TTLs return 400. This endpoint cannot reset or delete policies; extension reset belongs to the dedicated extension DELETE endpoint. HasSession settings are separate and are not accepted or returned.
+  tags: [Graph Retention Policies, Enterprise]
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: './../schemas/request.graph-retention-policies.yaml'
+  responses:
+    200:
+      description: The base policy and all configured extension overrides.
+      content:
+        application/json:
+          schema:
+            $ref: './../schemas/response.graph-retention-policies.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'

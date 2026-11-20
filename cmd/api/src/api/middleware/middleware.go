@@ -383,6 +383,11 @@ var highValueHandlers = map[string]bool{
 	"/api/v2/search":               true, // Global search
 	"/api/v2/graph-search":         true, // Graph-specific search
 
+	// Graph retention policy configuration - use route templates to bound cardinality.
+	"/api/v2/graph-retention-policies":                                  true,
+	"/api/v2/graph-retention-policies/base/policy":                      true,
+	"/api/v2/graph-retention-policies/extensions/{extension_id}/policy": true,
+
 	// Data Ingestion - Performance critical
 	"/api/v2/ingest":                           true, // Primary collector ingestion
 	"/api/v2/file-upload/start":                true, // Generic file upload
