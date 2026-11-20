@@ -49,10 +49,11 @@ InnerElement.displayName = 'IconListUnorderedList';
 
 const IconCard: FC<{
     iconName: IconName | undefined;
+    isSelected: boolean;
     onClick: (iconName: IconName) => void;
     position: number;
     total: number;
-}> = ({ iconName, onClick, position, total }) => (
+}> = ({ iconName, isSelected, onClick, position, total }) => (
     <div
         role='listitem'
         aria-hidden={!iconName || undefined}
@@ -61,6 +62,7 @@ const IconCard: FC<{
         className='flex h-36 w-40 flex-col items-center justify-start'>
         <TextButton
             aria-label={`${iconName}-glyph`}
+            aria-pressed={iconName ? isSelected : undefined}
             className={clsx(
                 ['relative', !iconName && 'invisible'],
                 'flex size-24 shrink-0 flex-col justify-center !p-0 focus-visible:rounded-sm focus-visible:text-primary dark:focus-visible:text-primary'
@@ -78,12 +80,14 @@ const IconCard: FC<{
     </div>
 );
 
-const Row = ({
-    data,
-    index: row,
-    style,
-}: ListChildComponentProps<{ filteredList: IconList; onClick: (iconName: IconName) => void }>) => {
-    const { filteredList, onClick } = data;
+type VirtualizedIconListProps = {
+    filteredList: IconList;
+    selectedIcon?: IconName;
+    onClick: (iconName: IconName) => void;
+};
+
+const Row = ({ data, index: row, style }: ListChildComponentProps<VirtualizedIconListProps>) => {
+    const { filteredList, selectedIcon, onClick } = data;
     const length = 5;
 
     return (
@@ -93,7 +97,8 @@ const Row = ({
                 return (
                     <IconCard
                         key={row * length + index}
-                        iconName={icon ? icon.id : undefined}
+                        iconName={icon?.id}
+                        isSelected={icon?.id === selectedIcon}
                         onClick={onClick}
                         position={row * length + index + 1}
                         total={filteredList.length}
@@ -104,18 +109,12 @@ const Row = ({
     );
 };
 
-export const VirtualizedIconList = ({
-    filteredList,
-    onClick,
-}: {
-    filteredList: IconList;
-    onClick: (iconName: IconName) => void;
-}) => {
+export const VirtualizedIconList = ({ filteredList, selectedIcon, onClick }: VirtualizedIconListProps) => {
     return (
         <FixedSizeList
             height={64 * 9}
             itemCount={Math.ceil(filteredList.length / 5)}
-            itemData={{ filteredList, onClick }}
+            itemData={{ filteredList, selectedIcon, onClick }}
             itemSize={64 * 3}
             innerElementType={InnerElement}
             width='100%'
@@ -223,6 +222,7 @@ const GlyphSelectDialog: React.FC<{
                         <div className='p-2 size-full bg-neutral-3 rounded-md'>
                             <VirtualizedIconList
                                 filteredList={filteredList}
+                                selectedIcon={selectedIcon}
                                 onClick={(iconName) => {
                                     setSelectedIcon(iconName);
                                 }}

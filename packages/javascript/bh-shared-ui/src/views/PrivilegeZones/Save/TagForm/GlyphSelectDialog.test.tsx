@@ -53,7 +53,6 @@ describe('Glyph Select Dialog', () => {
             expect(glyph).toHaveAttribute('aria-setsize', String(freeIconsList.length));
             expect(glyph).toHaveAttribute('aria-posinset', String(index + 1));
         });
-        expect(screen.getByRole('status')).toHaveTextContent(`${freeIconsList.length} matching results`);
     });
 
     it('announces filtered results without moving focus or making the list live', async () => {
@@ -101,6 +100,7 @@ describe('Glyph Select Dialog', () => {
         try {
             const searchInput = screen.getByRole('textbox', { name: 'Filter glyphs' });
             const status = screen.getByRole('status');
+            expect(status).toHaveTextContent(`${freeIconsList.length} matching results`);
             const initialMessage = status.firstChild;
 
             act(() => searchInput.focus());
@@ -135,14 +135,31 @@ describe('Glyph Select Dialog', () => {
 
         expect(screen.getByText('Current Selection:')).toBeInTheDocument();
         expect(screen.getAllByText('lightbulb')).toHaveLength(2);
+        await user.type(screen.getByRole('textbox', { name: 'Filter glyphs' }), 'lightbulb');
+        expect(screen.getByRole('button', { name: 'lightbulb-glyph', pressed: true })).toBeInTheDocument();
+    });
+
+    it('exposes only the current glyph as pressed after keyboard selection', async () => {
+        render(<GlyphSelectDialog selected='0' open={true} onCancel={onCancel} onSelect={onSelect} />);
+
+        const list = within(screen.getByRole('list', { name: 'Glyphs' }));
+        const selectedGlyph = list.getByRole('button', { name: '0-glyph', pressed: true });
+        const otherGlyph = list.getByRole('button', { name: '1-glyph', pressed: false });
+        otherGlyph.focus();
+        await user.keyboard('{Enter}');
+
+        expect(otherGlyph).toHaveFocus();
+        expect(list.getAllByRole('button', { pressed: true })).toEqual([otherGlyph]);
+        expect(selectedGlyph).toHaveAttribute('aria-pressed', 'false');
     });
 
     it('clears the selected icon when clicking the card', async () => {
-        render(<GlyphSelectDialog selected={'lightbulb'} open={true} onCancel={onCancel} onSelect={onSelect} />);
+        render(<GlyphSelectDialog selected='0' open={true} onCancel={onCancel} onSelect={onSelect} />);
 
         await user.click(screen.getByRole('button', { name: 'Clear selection' }));
 
         expect(screen.getByText('None Selected')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '0-glyph', pressed: false })).toBeInTheDocument();
     });
 
     it('focuses the search input without opening the clear-selection tooltip when reopened', async () => {
