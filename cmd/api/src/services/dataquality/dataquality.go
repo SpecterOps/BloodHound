@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -237,7 +238,7 @@ func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualitySt
 
 					if err := operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
 						// Get completeness lastly
-						if userSessionCompleteness, err := adAnalysis.FetchUserSessionCompleteness(tx, domainSID); err != nil {
+						if userSessionCompleteness, err := adAnalysis.FetchUserSessionCompleteness(tx, time.Time{}, domainSID); err != nil {
 							return err
 						} else {
 							mutex.Lock()
@@ -252,7 +253,7 @@ func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualitySt
 					}
 
 					if err := operation.SubmitReader(func(ctx context.Context, tx graph.Transaction, _ chan<- any) error {
-						if localGroupCompleteness, err := adAnalysis.FetchLocalGroupCompleteness(tx, domainSID); err != nil {
+						if localGroupCompleteness, err := adAnalysis.FetchLocalGroupCompleteness(tx, time.Time{}, domainSID); err != nil {
 							return err
 						} else {
 							mutex.Lock()
@@ -275,13 +276,13 @@ func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualitySt
 			}
 
 			// Get completeness lastly
-			if userSessionCompleteness, err := adAnalysis.FetchUserSessionCompleteness(tx); err != nil {
+			if userSessionCompleteness, err := adAnalysis.FetchUserSessionCompleteness(tx, time.Time{}); err != nil {
 				return err
 			} else if userSessionCompleteness.ActiveUserCount > 0 {
 				aggregation.SessionCompleteness = float32(userSessionCompleteness.ActiveUserCountWithSessions / userSessionCompleteness.ActiveUserCount)
 			}
 
-			if localGroupCompleteness, err := adAnalysis.FetchLocalGroupCompleteness(tx); err != nil {
+			if localGroupCompleteness, err := adAnalysis.FetchLocalGroupCompleteness(tx, time.Time{}); err != nil {
 				return err
 			} else if localGroupCompleteness.ActiveComputerCount > 0 {
 				aggregation.LocalGroupCompleteness = float32(localGroupCompleteness.ActiveComputerCountWithAdmins / localGroupCompleteness.ActiveComputerCount)

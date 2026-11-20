@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
@@ -56,6 +57,7 @@ func dataQualityGraphStats(ctx context.Context, db database.Database, graphDB gr
 
 		stats        = make(model.DataQualityStats, 0)
 		aggregations = make(model.DataQualityAggregations, 0)
+		now          = time.Now().UTC()
 	)
 
 	if newUUID, err := uuid.NewV4(); err != nil {
@@ -91,7 +93,7 @@ func dataQualityGraphStats(ctx context.Context, db database.Database, graphDB gr
 				return stats, aggregations, err
 			}
 
-			countMetrics, seenKinds, err := countMetricsPerEnvironment(ctx, graphDB, extension, graph.StringKind(environment.EnvironmentKindName), environmentSourceKind.ToKind(), relationshipKinds)
+			countMetrics, seenKinds, err := countMetricsPerEnvironment(ctx, graphDB, extension, graph.StringKind(environment.EnvironmentKindName), environmentSourceKind.ToKind(), relationshipKinds, now)
 			if err != nil {
 				return stats, aggregations, fmt.Errorf("could not count metrics for environment kind %s: %w", environment.EnvironmentKindName, err)
 			}
@@ -144,7 +146,7 @@ func getEnvironmentSourceKind(ctx context.Context, db database.Database, environ
 	return kinds[0], nil
 }
 
-func countMetricsPerEnvironment(ctx context.Context, graphDB graph.Database, extension model.GraphSchemaExtension, environmentKind graph.Kind, sourceKind graph.Kind, relationshipKinds graph.Kinds) ([]countResults, map[string]struct{}, error) {
+func countMetricsPerEnvironment(ctx context.Context, graphDB graph.Database, extension model.GraphSchemaExtension, environmentKind graph.Kind, sourceKind graph.Kind, relationshipKinds graph.Kinds, now time.Time) ([]countResults, map[string]struct{}, error) {
 	var (
 		results              []countResults
 		seenCountedKindNames = map[string]struct{}{}
@@ -175,7 +177,7 @@ func countMetricsPerEnvironment(ctx context.Context, graphDB graph.Database, ext
 			// Custom metrics for extensions (Hardcoded for now but can be dynamic later)
 			switch extension.Name {
 			case "AD":
-				if customMetrics, err := countADCustomMetricsForEnvironment(tx, extension, environmentID); err != nil {
+				if customMetrics, err := countADCustomMetricsForEnvironment(tx, extension, environmentID, now); err != nil {
 					return err
 				} else {
 					results = append(results, customMetrics...)
@@ -189,12 +191,12 @@ func countMetricsPerEnvironment(ctx context.Context, graphDB graph.Database, ext
 	return results, seenCountedKindNames, err
 }
 
-func countADCustomMetricsForEnvironment(tx graph.Transaction, extension model.GraphSchemaExtension, environmentID string) ([]countResults, error) {
-	userSessionCompleteness, err := adAnalysis.FetchUserSessionCompleteness(tx, environmentID)
+func countADCustomMetricsForEnvironment(tx graph.Transaction, extension model.GraphSchemaExtension, environmentID string, now time.Time) ([]countResults, error) {
+	userSessionCompleteness, err := adAnalysis.FetchUserSessionCompleteness(tx, now, environmentID)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user session completeness for environment %s: %w", environmentID, err)
 	}
-	localGroupCompleteness, err := adAnalysis.FetchLocalGroupCompleteness(tx, environmentID)
+	localGroupCompleteness, err := adAnalysis.FetchLocalGroupCompleteness(tx, now, environmentID)
 	if err != nil {
 		return nil, fmt.Errorf("could not get local group completeness for environment %s: %w", environmentID, err)
 	}

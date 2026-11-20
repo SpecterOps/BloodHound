@@ -1580,7 +1580,9 @@ type LocalGroupCompletenessResult struct {
 	ActiveComputerCount           float64
 }
 
-func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (LocalGroupCompletenessResult, error) {
+// FetchLocalGroupCompleteness anchors the activity window to referenceTime, or to
+// the most recent eligible computer logon when referenceTime is zero.
+func FetchLocalGroupCompleteness(tx graph.Transaction, referenceTime time.Time, domainSIDs ...string) (LocalGroupCompletenessResult, error) {
 	if computers, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		filters := []graph.Criteria{
 			query.Kind(query.Node(), ad.Computer),
@@ -1597,17 +1599,19 @@ func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (Lo
 	})); err != nil {
 		return LocalGroupCompletenessResult{}, err
 	} else {
-		mostRecentLogonTimestamp := time.Unix(0, 0)
-
-		for _, computer := range computers {
-			if lastLogonTimestamp, err := computer.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
-				return LocalGroupCompletenessResult{}, err
-			} else if lastLogonTimestamp.After(mostRecentLogonTimestamp) {
-				mostRecentLogonTimestamp = lastLogonTimestamp
+		activityReferenceTime := referenceTime
+		if activityReferenceTime.IsZero() {
+			activityReferenceTime = time.Unix(0, 0)
+			for _, computer := range computers {
+				if lastLogonTimestamp, err := computer.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
+					return LocalGroupCompletenessResult{}, err
+				} else if lastLogonTimestamp.After(activityReferenceTime) {
+					activityReferenceTime = lastLogonTimestamp
+				}
 			}
 		}
 
-		activityThreshold := mostRecentLogonTimestamp.Add(-fourteenDays)
+		activityThreshold := activityReferenceTime.Add(-fourteenDays)
 
 		for _, computer := range computers {
 			if passwordLastSet, err := computer.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
@@ -1656,7 +1660,9 @@ type UserSessionCompletenessResult struct {
 	ActiveUserCount             float64
 }
 
-func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (UserSessionCompletenessResult, error) {
+// FetchUserSessionCompleteness anchors the activity window to referenceTime, or to
+// the most recent eligible user logon when referenceTime is zero.
+func FetchUserSessionCompleteness(tx graph.Transaction, referenceTime time.Time, domainSIDs ...string) (UserSessionCompletenessResult, error) {
 	if users, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		filters := []graph.Criteria{
 			query.Kind(query.Node(), ad.User),
@@ -1672,17 +1678,19 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (U
 	})); err != nil {
 		return UserSessionCompletenessResult{}, err
 	} else {
-		mostRecentLogonTimestamp := time.Unix(0, 0)
-
-		for _, user := range users {
-			if userLastLogonTimestamp, err := user.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
-				return UserSessionCompletenessResult{}, err
-			} else if userLastLogonTimestamp.After(mostRecentLogonTimestamp) {
-				mostRecentLogonTimestamp = userLastLogonTimestamp
+		activityReferenceTime := referenceTime
+		if activityReferenceTime.IsZero() {
+			activityReferenceTime = time.Unix(0, 0)
+			for _, user := range users {
+				if userLastLogonTimestamp, err := user.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
+					return UserSessionCompletenessResult{}, err
+				} else if userLastLogonTimestamp.After(activityReferenceTime) {
+					activityReferenceTime = userLastLogonTimestamp
+				}
 			}
 		}
 
-		activityThreshold := mostRecentLogonTimestamp.Add(-fourteenDays)
+		activityThreshold := activityReferenceTime.Add(-fourteenDays)
 
 		for _, user := range users {
 			if userLastLogonTimestamp, err := user.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
