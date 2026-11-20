@@ -27,17 +27,14 @@ ARG AZUREHOUND_RELEASE_SOURCE=${AZUREHOUND_VERSION:+explicit-release}
 FROM docker.io/library/alpine:3.21 AS explicit-release
 RUN touch /tmp/version
 
+# Download the version marker attached to each latest stable release.
 FROM docker.io/library/alpine:3.21 AS sharphound-latest-release
-ADD https://api.github.com/repos/SpecterOps/SharpHound/releases/latest /tmp/sharphound-release.json
-RUN set -eux; \
-    sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' /tmp/sharphound-release.json > /tmp/version
+ADD https://github.com/SpecterOps/SharpHound/releases/latest/download/version.txt /tmp/version
 
 FROM docker.io/library/alpine:3.21 AS azurehound-latest-release
-ADD https://api.github.com/repos/SpecterOps/AzureHound/releases/latest /tmp/azurehound-release.json
-RUN set -eux; \
-    sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' /tmp/azurehound-release.json > /tmp/version
+ADD https://github.com/SpecterOps/AzureHound/releases/latest/download/version.txt /tmp/version
 
-# Select explicit or latest release stage, buildkit will prune the unused stages, avoiding extra api calls.
+# BuildKit prunes the unused version stage
 FROM ${SHARPHOUND_RELEASE_SOURCE:-sharphound-latest-release} AS sharphound-release
 FROM ${AZUREHOUND_RELEASE_SOURCE:-azurehound-latest-release} AS azurehound-release
 
