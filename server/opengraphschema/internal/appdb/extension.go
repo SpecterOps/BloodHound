@@ -268,6 +268,9 @@ func (s *Store) DeleteExtension(ctx context.Context, extensionID int32) error {
 	selectBuiltinBuilder.Select("is_builtin")
 	selectBuiltinBuilder.From(tableSchemaExtensions)
 	selectBuiltinBuilder.Where(selectBuiltinBuilder.Equal("id", extensionID))
+	// Lock the extension to prevent race condition changes to node kinds while
+	// the transaction is in progress
+	selectBuiltinBuilder.ForUpdate()
 	sql, args := selectBuiltinBuilder.Build()
 
 	var isBuiltin bool
