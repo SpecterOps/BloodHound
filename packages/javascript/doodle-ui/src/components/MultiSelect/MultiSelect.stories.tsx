@@ -79,26 +79,44 @@ export const Default: Story = {
 };
 
 export const OptionRows: Story = {
+    parameters: {
+        docs: {
+            description: {
+                story: 'Hover the selected row to see its checkbox keep the selected fill and checkmark colors while the border follows the row hover color. Unselected checkboxes use input-border-default at rest. Click a row to toggle its selection.',
+            },
+        },
+    },
     args: { options: [], value: [], onValueChange: () => {} },
-    render: () => (
-        <div className='w-60 border rounded-md'>
-            <MultiSelectOptionRow option={{ value: 'a', label: 'Menu Item A' }} checked={false} onSelect={() => {}} />
-            <MultiSelectOptionRow option={{ value: 'b', label: 'Menu Item B' }} checked={true} onSelect={() => {}} />
-            <MultiSelectOptionRow
-                option={{
-                    value: 'c',
-                    label: 'A very long label that should be truncated when it overflows the container',
-                }}
-                checked={false}
-                onSelect={() => {}}
-            />
-            <MultiSelectOptionRow
-                option={{ value: 'd', label: 'Menu Item D (disabled)', disabled: true }}
-                checked={false}
-                onSelect={() => {}}
-            />
-        </div>
-    ),
+    render: () => {
+        const [value, setValue] = useState(['b']);
+        const handleSelect = (selectedValue: string) =>
+            setValue((current) =>
+                current.includes(selectedValue)
+                    ? current.filter((item) => item !== selectedValue)
+                    : [...current, selectedValue]
+            );
+
+        return (
+            <div className='w-60 border rounded-md'>
+                {[
+                    { value: 'a', label: 'Menu Item A' },
+                    { value: 'b', label: 'Menu Item B' },
+                    {
+                        value: 'c',
+                        label: 'A very long label that should be truncated when it overflows the container',
+                    },
+                    { value: 'd', label: 'Menu Item D (disabled)', disabled: true },
+                ].map((option) => (
+                    <MultiSelectOptionRow
+                        key={option.value}
+                        option={option}
+                        checked={value.includes(option.value)}
+                        onSelect={handleSelect}
+                    />
+                ))}
+            </div>
+        );
+    },
 };
 
 export const WithSelectAll: Story = {

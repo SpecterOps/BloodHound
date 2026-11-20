@@ -43,6 +43,7 @@ export type SubNavItem = {
     component: React.LazyExoticComponent<React.FC>;
     adminOnly: boolean;
     featureFlag?: string;
+    hideWhenFeatureFlagEnabled?: string;
     permissions?: Permission[];
 };
 

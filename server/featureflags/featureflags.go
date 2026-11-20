@@ -33,10 +33,11 @@ import (
 )
 
 const (
-	FeatureOpenHoundSupport           = services.FeatureOpenHoundSupport
-	FeatureManagedOpenHoundCollection = services.FeatureManagedOpenHoundCollection
-	FeatureAlerts                     = services.FeatureAlerts
-	FeatureArtifactExpirationCleanup  = services.FeatureArtifactExpirationCleanup
+	FeatureOpenHoundSupport             = services.FeatureOpenHoundSupport
+	FeatureManagedOpenHoundCollection   = services.FeatureManagedOpenHoundCollection
+	FeatureAlerts                       = services.FeatureAlerts
+	FeatureArtifactExpirationCleanup    = services.FeatureArtifactExpirationCleanup
+	FeatureOpenGraphExtensionManagement = services.FeatureOpenGraphExtensionManagement
 )
 
 type Auditor = services.Auditor

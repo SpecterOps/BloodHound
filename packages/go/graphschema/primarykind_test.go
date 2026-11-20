@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
@@ -42,8 +43,8 @@ func Test_PrimaryNodeKind(t *testing.T) {
 	})
 
 	t.Run("detects zone kind", func(t *testing.T) {
-		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{Zone})
-		require.Equal(t, Zone, primaryKind)
+		primaryKind := PrimaryDisplayKind(nil, graph.Kinds{common.Zone})
+		require.Equal(t, common.Zone, primaryKind)
 	})
 
 	t.Run("falls back to base kind if no valid kinds", func(t *testing.T) {

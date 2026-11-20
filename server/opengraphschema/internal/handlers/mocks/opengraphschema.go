@@ -184,3 +184,65 @@ func (_c *MockOpenGraphSchema_GetRelationshipKind_Call) RunAndReturn(run func(ct
 	_c.Call.Return(run)
 	return _c
 }
+
+// ListExtensions provides a mock function for the type MockOpenGraphSchema
+func (_mock *MockOpenGraphSchema) ListExtensions(ctx context.Context) ([]services.Extension, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListExtensions")
+	}
+
+	var r0 []services.Extension
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]services.Extension, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []services.Extension); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]services.Extension)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockOpenGraphSchema_ListExtensions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListExtensions'
+type MockOpenGraphSchema_ListExtensions_Call struct {
+	*mock.Call
+}
+
+// ListExtensions is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockOpenGraphSchema_Expecter) ListExtensions(ctx interface{}) *MockOpenGraphSchema_ListExtensions_Call {
+	return &MockOpenGraphSchema_ListExtensions_Call{Call: _e.mock.On("ListExtensions", ctx)}
+}
+
+func (_c *MockOpenGraphSchema_ListExtensions_Call) Run(run func(ctx context.Context)) *MockOpenGraphSchema_ListExtensions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockOpenGraphSchema_ListExtensions_Call) Return(extensions []services.Extension, err error) *MockOpenGraphSchema_ListExtensions_Call {
+	_c.Call.Return(extensions, err)
+	return _c
+}
+
+func (_c *MockOpenGraphSchema_ListExtensions_Call) RunAndReturn(run func(ctx context.Context) ([]services.Extension, error)) *MockOpenGraphSchema_ListExtensions_Call {
+	_c.Call.Return(run)
+	return _c
+}

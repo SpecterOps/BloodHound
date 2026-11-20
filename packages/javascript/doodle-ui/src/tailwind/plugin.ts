@@ -34,7 +34,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             inherits: 'false',
             'initial-value': '225deg',
         },
-        ' :root': {
+        ' :root, .light': {
             // SHARED (same in light and dark)
             '--common-dark': common.dark,
             '--common-white': common.white,

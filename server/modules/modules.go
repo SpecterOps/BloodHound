@@ -25,7 +25,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
 	apiauth "github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
-	alerts "github.com/specterops/bloodhound/server/alerts"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphretention"
+	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/appcfg"
 	"github.com/specterops/bloodhound/server/audit"
@@ -35,6 +36,7 @@ import (
 	"github.com/specterops/bloodhound/server/graphdb"
 	"github.com/specterops/bloodhound/server/identity"
 	"github.com/specterops/bloodhound/server/opengraphschema"
+	"github.com/specterops/bloodhound/server/savedqueries"
 	"github.com/specterops/dawgs/graph"
 )
 
@@ -48,10 +50,13 @@ type Deps struct {
 	Graph            graph.Database
 	DogTags          dogtags.Service
 	AlertPublisher   alerts.Publisher
+	IdentityOptions  []identity.Option
 	IdentityResolver apiauth.IdentityResolver
 	// Included to allow the config module to continue requesting some side effect
 	// legacy DB requests until that functionality can be migrated to onion
 	ConfigUpdateSideEffects appcfg.ConfigUpdateSideEffecter
+	// Included for backwards compatibility for the config onion
+	GraphRetentionManager graphretention.GraphRetentionManager
 	// RateLimitMiddleware is installed once for matched routes before authentication.
 	RateLimitMiddleware func() mux.MiddlewareFunc
 }
@@ -90,13 +95,15 @@ func Register(deps Deps) {
 	}
 
 	auditLogAdapter := audit.NewAuditLogAdapter(deps.Pool, deps.IdentityResolver)
+	featureFlagAdapter := featureflags.NewFeatureFlagRequestAdapter(deps.Pool)
 
 	analysis.Register(deps.Router, deps.Pool)
-	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects, auditLogAdapter)
+	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects, deps.GraphRetentionManager, auditLogAdapter)
 	serverauth.Register(deps.Router, deps.Pool)
-	identity.Register(deps.Router, deps.Pool)
+	identity.Register(deps.Router, deps.Pool, deps.IdentityOptions...)
 	featureflags.Register(deps.Router, deps.Pool, auditLogAdapter)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
-	opengraphschema.Register(deps.Router, deps.Pool)
+	opengraphschema.Register(deps.Router, deps.Pool, featureFlagAdapter)
 	dataquality.Register(deps.Router, deps.Pool)
+	savedqueries.Register(deps.Router, deps.Pool)
 }

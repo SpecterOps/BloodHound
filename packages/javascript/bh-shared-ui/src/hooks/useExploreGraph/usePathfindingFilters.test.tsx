@@ -15,11 +15,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { act, renderHook } from '../../test-utils';
+import {
+    BUILTIN_EDGE_CATEGORIES,
+    COMMON_EDGE_CATEGORY,
+} from '../../views/Explore/ExploreSearch/EdgeFilter/edgeCategories';
 import { INITIAL_FILTERS } from './queries';
 import { usePathfindingFilters } from './usePathfindingFilters';
-import { extractEdgeTypes } from './utils';
+import { extractEdgeTypes, getInitialPathFilters } from './utils';
 
 const TEST_FILTER = INITIAL_FILTERS[0];
+
+// test-utils renders without an AppNameProvider, so the hook sees BloodHound Enterprise and includes the common category
+const ENTERPRISE_INITIAL_FILTERS = getInitialPathFilters([...BUILTIN_EDGE_CATEGORIES, COMMON_EDGE_CATEGORY]);
 
 describe('usePathfindingFilters', () => {
     it('initializes the list with all filters checked by default', async () => {
@@ -27,7 +34,7 @@ describe('usePathfindingFilters', () => {
 
         await act(() => hook.result.current.initialize());
 
-        expect(hook.result.current.selectedFilters).toEqual(INITIAL_FILTERS);
+        expect(hook.result.current.selectedFilters).toEqual(ENTERPRISE_INITIAL_FILTERS);
     });
 
     it('will update the selected filters based on the values stored in query params when the initialize function is called', async () => {
@@ -60,7 +67,7 @@ describe('usePathfindingFilters', () => {
         await act(() => hook.result.current.handleUpdateFilters([TEST_FILTER]));
         await act(() => hook.result.current.initialize());
 
-        expect(hook.result.current.selectedFilters).toEqual(INITIAL_FILTERS);
+        expect(hook.result.current.selectedFilters).toEqual(ENTERPRISE_INITIAL_FILTERS);
         expect(window.location.search).toEqual('');
     });
 });

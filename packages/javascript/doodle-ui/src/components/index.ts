@@ -20,6 +20,7 @@ export * from './Alert';
 export * from './Badge';
 export * from './Breadcrumbs';
 export * from './Button';
+export * from './ButtonGroup';
 export * from './Calendar';
 export * from './Card';
 export * from './Carousel';

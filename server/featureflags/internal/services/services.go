@@ -34,11 +34,12 @@ import (
 // defined in cmd/api/src/model/appcfg but are redeclared here so consumers do
 // not need to import the appcfg package.
 const (
-	FeatureOpenHoundSupport           = "openhound_support"
-	FeatureManagedOpenHoundCollection = "managed_openhound_collection"
-	FeatureAlerts                     = "alerts"
-	FeatureFindingsPrioritizationV0   = appcfg.FeatureFindingsPrioritizationV0
-	FeatureArtifactExpirationCleanup  = "artifact_expiration_cleanup"
+	FeatureOpenHoundSupport             = "openhound_support"
+	FeatureManagedOpenHoundCollection   = "managed_openhound_collection"
+	FeatureAlerts                       = "alerts"
+	FeatureFindingsPrioritizationV0     = appcfg.FeatureFindingsPrioritizationV0
+	FeatureArtifactExpirationCleanup    = "artifact_expiration_cleanup"
+	FeatureOpenGraphExtensionManagement = "opengraph_extension_management"
 )
 
 // Request source values used by the feature flags slice.
