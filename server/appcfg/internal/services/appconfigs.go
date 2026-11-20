@@ -76,6 +76,10 @@ func (s Service) ValidateValue(key ParameterKey, value types.JSONBObject) utils.
 		return utils.Errors{err}
 	} else if errs := validation.Validate(paramTypePointer.Interface()); errs != nil {
 		return errs
+	} else if parameterValidator, ok := paramTypePointer.Interface().(interface{ Validate() error }); ok {
+		if err := parameterValidator.Validate(); err != nil {
+			return utils.Errors{err}
+		}
 	}
 
 	return nil
