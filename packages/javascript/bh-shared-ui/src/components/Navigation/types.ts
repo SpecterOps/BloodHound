@@ -42,6 +42,7 @@ type NavItemBase = {
 };
 
 export type NavActionItem = NavItemBase & {
+    /** Trailing content; decorative controls must be hidden and made inert by the caller. */
     control?: ReactNode;
     onClick?: () => void;
 };

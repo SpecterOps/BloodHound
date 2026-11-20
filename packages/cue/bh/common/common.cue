@@ -27,8 +27,7 @@ import (
 Properties: [...types.#StringEnum]
 NodeKinds: [...types.#Kind]
 RelationshipKinds: [...types.#Kind]
-InboundRelationshipKinds: [...types.#Kind]
-OutboundRelationshipKinds: [...types.#Kind]
+PathfindingRelationships: [...types.#Kind]
 
 // Property name enumerations
 ObjectID: types.#StringEnum & {
@@ -201,12 +200,25 @@ MigrationData: types.#Kind & {
 	representation: "MigrationData"
 }
 
+Zone: types.#Kind & {
+	symbol:         "Zone"
+	schema:         "common"
+	representation: "Zone"
+}
+
+MemberOfZone: types.#Kind & {
+	symbol:         "MemberOfZone"
+	schema:         "common"
+	representation: "MemberOfZone"
+}
+
 NodeKinds: [
 	MigrationData,
+	Zone,
 ]
 
 RelationshipKinds: [
+	MemberOfZone,
 ]
 
-InboundRelationshipKinds: list.Concat([ad.InboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])
-OutboundRelationshipKinds: list.Concat([ad.OutboundRelationshipKinds, azure.InboundOutboundRelationshipKinds])
+PathfindingRelationships: list.Concat([ad.PathfindingRelationships, azure.PathfindingRelationships, [MemberOfZone]])
