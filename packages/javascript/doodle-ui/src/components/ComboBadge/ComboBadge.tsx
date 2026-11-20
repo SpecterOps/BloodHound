@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import * as React from 'react';
 import { cn } from '../utils';
 import { AdornmentVariants, comboBadgeLabelClasses, ComboBadgeVariants } from './ComboBadge.styles';
 
@@ -29,24 +30,32 @@ interface ComboBadgeProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'ar
     disableAdornment?: boolean;
 }
 
-const ComboBadge = (props: ComboBadgeProps) => {
-    const {
-        label,
-        adornment,
-        ariaLabel,
-        type = 'slideLeft',
-        displayAdornment = false,
-        disableAdornment = false,
-        className,
-        ...rest
-    } = props;
-
-    return (
-        <div role='status' aria-label={ariaLabel} className={cn(ComboBadgeVariants({ type }), className)} {...rest}>
+const ComboBadge = React.forwardRef<HTMLDivElement, ComboBadgeProps>(
+    (
+        {
+            label,
+            adornment,
+            ariaLabel,
+            type = 'slideLeft',
+            displayAdornment = false,
+            disableAdornment = false,
+            className,
+            ...rest
+        },
+        ref
+    ) => (
+        <div
+            ref={ref}
+            role='status'
+            aria-label={ariaLabel}
+            className={cn(ComboBadgeVariants({ type }), className)}
+            {...rest}>
             <div className={cn(comboBadgeLabelClasses, { peer: !disableAdornment })}>{label}</div>
             {adornment ? <div className={cn(AdornmentVariants({ type, displayAdornment }))}>{adornment}</div> : null}
         </div>
-    );
-};
+    )
+);
+
+ComboBadge.displayName = 'ComboBadge';
 
 export { ComboBadge };
