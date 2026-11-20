@@ -122,7 +122,7 @@ const (
 	expectedListExtensionsSQL         = `SELECT id, name, display_name, version, is_builtin, namespace, created_at, updated_at FROM schema_extensions ORDER BY id ASC`
 	expectedCreateExtensionSQL        = `INSERT INTO schema_extensions (name, display_name, version, is_builtin, namespace, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, display_name, version, is_builtin, namespace, created_at, updated_at`
 	expectedUpdateExtensionSQL        = `UPDATE schema_extensions SET name = $1, display_name = $2, version = $3, namespace = $4, updated_at = $5 WHERE id = $6 RETURNING id, name, display_name, version, is_builtin, namespace, created_at, updated_at`
-	expectedDeleteExtensionBuiltinSQL = `SELECT is_builtin FROM schema_extensions WHERE id = $1`
+	expectedDeleteExtensionBuiltinSQL = `SELECT is_builtin FROM schema_extensions WHERE id = $1 FOR UPDATE`
 	expectedDeleteExtensionSQL        = `DELETE FROM schema_extensions WHERE id = $1 RETURNING id`
 )
 

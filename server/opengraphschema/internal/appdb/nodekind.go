@@ -482,6 +482,7 @@ func (s *Store) CreateCustomNodeKinds(ctx context.Context, customNodeKinds []ser
 
 // insertCustomNodeKind just inserts the given node kind returning the inserted value as a DB type.
 // It does not upsert a kind row or sync values with any other tables.
+// Duplicate key failures will be ignored.
 func insertCustomNodeKind(ctx context.Context, db pgxQuerier, customNodeKind services.CustomNodeKind) (customNodeKindRow, error) {
 	config, err := json.Marshal(customNodeKind.Config)
 	if err != nil {
@@ -493,13 +494,15 @@ func insertCustomNodeKind(ctx context.Context, db pgxQuerier, customNodeKind ser
 		selectBuilder = sqlbuilder.PostgreSQL.NewSelectBuilder()
 	)
 
-	insertBuilder.InsertInto(tableCustomNodeKinds)
+	// using InsertIgnore to ignore conflicts on existing rows
+	insertBuilder.InsertIgnoreInto(tableCustomNodeKinds)
 	insertBuilder.Cols("config", "schema_node_kind_id", "kind_id")
 	insertBuilder.Values(
 		sqlbuilder.Build("$0::jsonb", string(config)),
 		customNodeKind.SchemaNodeKindId,
 		customNodeKind.KindID,
 	)
+
 	insertBuilder.Returning("id", "kind_id", "schema_node_kind_id", "config")
 
 	selectBuilder.With(sqlbuilder.PostgreSQL.NewCTEBuilder().With(
@@ -514,7 +517,9 @@ func insertCustomNodeKind(ctx context.Context, db pgxQuerier, customNodeKind ser
 	insertQuery, insertArgs := selectBuilder.Build()
 	if rows, err := db.Query(ctx, insertQuery, insertArgs...); err != nil {
 		return customNodeKindRow{}, checkCustomNodeKindError(fmt.Errorf("creating custom node kind %q: %w", customNodeKind.KindName, err))
-	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[customNodeKindRow]); err != nil {
+	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[customNodeKindRow]); errors.Is(err, pgx.ErrNoRows) {
+		return customNodeKindRow{}, fmt.Errorf("creating custom node kind %q: %w", customNodeKind.KindName, services.ErrDuplicateCustomNodeKindName)
+	} else if err != nil {
 		return customNodeKindRow{}, checkCustomNodeKindError(fmt.Errorf("creating custom node kind %q: %w", customNodeKind.KindName, err))
 	} else {
 		return row, nil

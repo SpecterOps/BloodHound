@@ -358,6 +358,38 @@ func TestStore_DeleteExtension_Integration(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("success_-_deletes_extension_when_custom_node_kind_already_exists", func(t *testing.T) {
+		store, pool := setupStore(t)
+		data := seedNodeKind(t, ctx, pool)
+		existingConfig := `{"icon":{"type":"font-awesome","name":"star","color":"#000000"}}`
+
+		_, err := pool.Exec(ctx, `UPDATE schema_node_kinds SET is_display_kind = false WHERE id = $1`, data.nodeKindID)
+		require.NoError(t, err)
+
+		_, err = pool.Exec(ctx, `
+			INSERT INTO custom_node_kinds (config, schema_node_kind_id, kind_id)
+			VALUES ($1::jsonb, NULL, $2)`, existingConfig, data.kindID)
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			_, err := pool.Exec(ctx, `DELETE FROM custom_node_kinds WHERE kind_id = $1`, data.kindID)
+			require.NoError(t, err)
+		})
+
+		require.NoError(t, store.DeleteExtension(ctx, data.extensionID))
+
+		var extensionCount, schemaNodeKindCount, customNodeKindCount int
+		require.NoError(t, pool.QueryRow(ctx, `SELECT COUNT(*) FROM schema_extensions WHERE id = $1`, data.extensionID).Scan(&extensionCount))
+		require.NoError(t, pool.QueryRow(ctx, `SELECT COUNT(*) FROM schema_node_kinds WHERE id = $1`, data.nodeKindID).Scan(&schemaNodeKindCount))
+		require.NoError(t, pool.QueryRow(ctx, `SELECT COUNT(*) FROM custom_node_kinds WHERE kind_id = $1`, data.kindID).Scan(&customNodeKindCount))
+		assert.Zero(t, extensionCount)
+		assert.Zero(t, schemaNodeKindCount)
+		assert.Equal(t, 1, customNodeKindCount)
+
+		var storedConfig []byte
+		require.NoError(t, pool.QueryRow(ctx, `SELECT config FROM custom_node_kinds WHERE kind_id = $1`, data.kindID).Scan(&storedConfig))
+		assert.JSONEq(t, existingConfig, string(storedConfig))
+	})
 }
 
 func TestStore_ListExtensions_Integration(t *testing.T) {
