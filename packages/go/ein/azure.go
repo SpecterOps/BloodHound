@@ -44,7 +44,7 @@ const (
 )
 
 var (
-	resourceGroupLevel = regexp.MustCompile(`^[\\w\\d\\-\\/]*/resourceGroups/[0-9a-zA-Z]+$`)
+	resourceGroupLevel = regexp.MustCompile(`(?i)^[\w\d\-\/]+/resourcegroups/[\p{L}\p{Nd}_\-\.()]+$`)
 	ErrInvalidType     = errors.New("invalid type returned from directory object")
 )
 
@@ -2165,7 +2165,7 @@ func ResourceWithinScope(resource, scope string) bool {
 		return true
 	}
 
-	if resourceGroupLevel.MatchString(scope) && strings.HasPrefix(strings.ToLower(resource), strings.ToLower(scope)) {
+	if resourceGroupLevel.MatchString(scope) && strings.HasPrefix(strings.ToLower(resource), strings.ToLower(strings.TrimRight(scope, "/"))+"/") {
 		return true
 	}
 	return false
