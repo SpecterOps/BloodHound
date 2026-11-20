@@ -16,7 +16,7 @@
 
 import * as React from 'react';
 
-import { useDndContext, useDndMonitor } from '@dnd-kit/core';
+import { type DragMoveEvent, useDndContext, useDndMonitor } from '@dnd-kit/core';
 import { hasSortableData, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { faGripVertical } from '@fortawesome/free-solid-svg-icons';
@@ -44,16 +44,8 @@ import {
 type TableDragDelta = { x: number; y: number };
 const TableDragDeltasContext = React.createContext<React.MutableRefObject<Map<string, TableDragDelta>> | null>(null);
 
-const TableDragMonitor = ({ dragDeltas }: { dragDeltas: Map<string, TableDragDelta> }) => {
-    useDndMonitor({
-        onDragMove: ({ active, delta }) => {
-            if (typeof active.id === 'string') {
-                dragDeltas.set(active.id, delta);
-            }
-        },
-        onDragEnd: () => dragDeltas.clear(),
-        onDragCancel: () => dragDeltas.clear(),
-    });
+const TableDragMonitor = ({ onMove, onReset }: { onMove: (event: DragMoveEvent) => void; onReset: () => void }) => {
+    useDndMonitor({ onDragMove: onMove, onDragEnd: onReset, onDragCancel: onReset });
     return null;
 };
 
@@ -64,9 +56,18 @@ const Table = React.forwardRef<
     const { active } = useDndContext();
     const dragDeltas = React.useRef(new Map<string, TableDragDelta>());
 
+    const recordDragDelta = ({ active, delta }: DragMoveEvent) => {
+        if (typeof active.id === 'string') {
+            dragDeltas.current.set(active.id, delta);
+        }
+    };
+    const resetDragDeltas = () => dragDeltas.current.clear();
+
     return (
         <TableDragDeltasContext.Provider value={dragDeltas}>
-            {active && hasSortableData(active) && <TableDragMonitor dragDeltas={dragDeltas.current} />}
+            {active && hasSortableData(active) && (
+                <TableDragMonitor onMove={recordDragDelta} onReset={resetDragDeltas} />
+            )}
             <div
                 className={cn(
                     tableContainerClasses,
