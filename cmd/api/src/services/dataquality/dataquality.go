@@ -241,7 +241,9 @@ func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualitySt
 							return err
 						} else {
 							mutex.Lock()
-							stat.SessionCompleteness = nan.Float64(userSessionCompleteness)
+							if userSessionCompleteness.ActiveUserCount > 0 {
+								stat.SessionCompleteness = nan.Float64(userSessionCompleteness.ActiveUserCountWithSessions / userSessionCompleteness.ActiveUserCount)
+							}
 							mutex.Unlock()
 							return nil
 						}
@@ -254,7 +256,9 @@ func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualitySt
 							return err
 						} else {
 							mutex.Lock()
-							stat.LocalGroupCompleteness = nan.Float64(localGroupCompleteness)
+							if localGroupCompleteness.ActiveComputerCount > 0 {
+								stat.LocalGroupCompleteness = nan.Float64(localGroupCompleteness.ActiveComputerCountWithAdmins / localGroupCompleteness.ActiveComputerCount)
+							}
 							mutex.Unlock()
 							return nil
 						}
@@ -273,14 +277,14 @@ func adGraphStats(ctx context.Context, db graph.Database) (model.ADDataQualitySt
 			// Get completeness lastly
 			if userSessionCompleteness, err := adAnalysis.FetchUserSessionCompleteness(tx); err != nil {
 				return err
-			} else {
-				aggregation.SessionCompleteness = float32(userSessionCompleteness)
+			} else if userSessionCompleteness.ActiveUserCount > 0 {
+				aggregation.SessionCompleteness = float32(userSessionCompleteness.ActiveUserCountWithSessions / userSessionCompleteness.ActiveUserCount)
 			}
 
 			if localGroupCompleteness, err := adAnalysis.FetchLocalGroupCompleteness(tx); err != nil {
 				return err
-			} else {
-				aggregation.LocalGroupCompleteness = float32(localGroupCompleteness)
+			} else if localGroupCompleteness.ActiveComputerCount > 0 {
+				aggregation.LocalGroupCompleteness = float32(localGroupCompleteness.ActiveComputerCountWithAdmins / localGroupCompleteness.ActiveComputerCount)
 			}
 		}
 
