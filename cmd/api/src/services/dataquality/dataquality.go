@@ -510,7 +510,7 @@ func SaveDataQuality(ctx context.Context, db database.Database, graphDB graph.Da
 	if openGraphDataQualityFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphDataQuality); err != nil {
 		return fmt.Errorf("could not get open graph data quality feature flag: %w", err)
 	} else if openGraphDataQualityFlag.Enabled {
-		if stats, aggregations, err := openGraphStats(ctx, db, graphDB); err != nil {
+		if stats, aggregations, err := dataQualityGraphStats(ctx, db, graphDB); err != nil {
 			return fmt.Errorf("could not get open graph stats: %w", err)
 		} else {
 			if len(stats) == 0 {
