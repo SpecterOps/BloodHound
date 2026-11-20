@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import * as React from 'react';
 
 import { useSortable } from '@dnd-kit/sortable';
@@ -22,57 +23,55 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Cell, Header } from '@tanstack/react-table';
 import { IconButton } from '../IconButton';
 import { cn } from '../utils';
+import {
+    tableBodyClasses,
+    tableCaptionClasses,
+    tableCellClasses,
+    tableClasses,
+    tableContainerClasses,
+    tableContainerOverflowClasses,
+    tableDragHandleClasses,
+    tableDragHandleCursorClasses,
+    tableDraggingCellClasses,
+    tableFooterClasses,
+    tableHeadClasses,
+    tableHeadContentClasses,
+    tableHeaderClasses,
+    tableRowClasses,
+} from './Table.styles';
 
 const Table = React.forwardRef<
     HTMLTableElement,
     React.HTMLAttributes<HTMLTableElement> & { disableDefaultOverflowAuto?: boolean; tableContainerClassName?: string }
 >(({ className, disableDefaultOverflowAuto, tableContainerClassName, ...props }, ref) => (
-    <div className={cn('relative w-full', { 'overflow-auto': !disableDefaultOverflowAuto }, tableContainerClassName)}>
-        <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
+    <div
+        className={cn(
+            tableContainerClasses,
+            !disableDefaultOverflowAuto && tableContainerOverflowClasses,
+            tableContainerClassName
+        )}>
+        <table ref={ref} className={cn(tableClasses, className)} {...props} />
     </div>
 ));
 Table.displayName = 'Table';
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-    ({ className, ...props }, ref) => (
-        <thead ref={ref} className={cn('[&_tr]:border-b bg-[color:var(--table-fill)]', className)} {...props} />
-    )
+    ({ className, ...props }, ref) => <thead ref={ref} className={cn(tableHeaderClasses, className)} {...props} />
 );
 TableHeader.displayName = 'TableHeader';
 
 const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-    ({ className, ...props }, ref) => (
-        <tbody
-            ref={ref}
-            className={cn('[&_tr:last-child]:border-0 bg-[color:var(--table-fill)]', className)}
-            {...props}
-        />
-    )
+    ({ className, ...props }, ref) => <tbody ref={ref} className={cn(tableBodyClasses, className)} {...props} />
 );
 TableBody.displayName = 'TableBody';
 
 const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-    ({ className, ...props }, ref) => (
-        <tfoot
-            ref={ref}
-            className={cn('border-t bg-muted/50 font-medium [&>tr]:last:border-b-0', className)}
-            {...props}
-        />
-    )
+    ({ className, ...props }, ref) => <tfoot ref={ref} className={cn(tableFooterClasses, className)} {...props} />
 );
 TableFooter.displayName = 'TableFooter';
 
 const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(
-    ({ className, ...props }, ref) => (
-        <tr
-            ref={ref}
-            className={cn(
-                'border-b-[length:var(--table-row-border-width)] transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
-                className
-            )}
-            {...props}
-        />
-    )
+    ({ className, ...props }, ref) => <tr ref={ref} className={cn(tableRowClasses, className)} {...props} />
 );
 TableRow.displayName = 'TableRow';
 
@@ -103,11 +102,7 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
     return (
         <th
             ref={setNodeRef}
-            className={cn(
-                'h-12 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0',
-                className,
-                isDragging ? '!bg-[color:var(--table-dragging-fill)]' : ''
-            )}
+            className={cn(tableHeadClasses, className, isDragging ? tableDraggingCellClasses : '')}
             {...props}
             style={{
                 ...headerStyle,
@@ -115,11 +110,14 @@ const TableHead = React.forwardRef(function TableHead<TData, TValue>(
                 zIndex: zIndex,
                 left: leftValue,
             }}>
-            <div ref={ref} className='flex items-center'>
+            <div ref={ref} className={tableHeadContentClasses}>
                 {enableDragging && header?.id !== 'empty-column' && (
                     <IconButton
                         aria-label='Drag to reorder'
-                        className={cn('rounded-sm', isDragging ? 'cursor-grabbing' : 'cursor-grab')}
+                        className={cn(
+                            tableDragHandleClasses,
+                            tableDragHandleCursorClasses[isDragging ? 'dragging' : 'idle']
+                        )}
                         {...attributes}
                         {...listeners}>
                         <FontAwesomeIcon icon={faGripVertical} />
@@ -158,11 +156,7 @@ const TableCell = React.forwardRef(function TableCell<TData, TValue>(
     return (
         <td
             ref={setNodeRef}
-            className={cn(
-                'p-4 pl-0 align-middle [&:has([role=checkbox])]:pr-0',
-                className,
-                isDragging ? '!bg-[color:var(--table-dragging-fill)]' : ''
-            )}
+            className={cn(tableCellClasses, className, isDragging ? tableDraggingCellClasses : '')}
             {...props}
             style={{ ...cellStyle, ...propsStyle, zIndex: zIndex, left: leftValue }}>
             <div ref={ref}>{props.children}</div>
@@ -174,9 +168,7 @@ const TableCell = React.forwardRef(function TableCell<TData, TValue>(
 TableCell.displayName = 'TableCell';
 
 const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttributes<HTMLTableCaptionElement>>(
-    ({ className, ...props }, ref) => (
-        <caption ref={ref} className={cn('mt-4 text-sm text-muted-foreground', className)} {...props} />
-    )
+    ({ className, ...props }, ref) => <caption ref={ref} className={cn(tableCaptionClasses, className)} {...props} />
 );
 TableCaption.displayName = 'TableCaption';
 
