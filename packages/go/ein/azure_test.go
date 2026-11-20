@@ -495,4 +495,74 @@ func TestConvertAzureVirtualMachineAvereContributorToRels(t *testing.T) {
 
 		require.Len(t, rels, 0)
 	})
+
+	t.Run("creates relationship when role assigned at resource group scope", func(t *testing.T) {
+		data := models.VirtualMachineAvereContributors{
+			VirtualMachineId: virtualMachineId,
+			AvereContributors: []models.VirtualMachineAvereContributor{
+				{
+					VirtualMachineId: virtualMachineId,
+					AvereContributor: azure2.RoleAssignment{
+						Properties: azure2.RoleAssignmentPropertiesWithScope{
+							PrincipalId: principalId,
+							Scope:       "/subscriptions/sub-1/resourceGroups/rg-1",
+						},
+					},
+				},
+			},
+		}
+
+		rels := ein.ConvertAzureVirtualMachineAvereContributorToRels(data)
+
+		require.Len(t, rels, 1)
+		assert.Equal(t, principalId, rels[0].Source.Value)
+		assert.Equal(t, azure.Entity, rels[0].Source.Kind)
+		assert.Equal(t, virtualMachineId, rels[0].Target.Value)
+		assert.Equal(t, azure.VM, rels[0].Target.Kind)
+		assert.Equal(t, azure.AvereContributor, rels[0].RelType)
+	})
+}
+
+func TestResourceWithinScope(t *testing.T) {
+	vmID := "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-prod-01/providers/Microsoft.Compute/virtualMachines/vm-1"
+
+	t.Run("exact match", func(t *testing.T) {
+		assert.True(t, ein.ResourceWithinScope(vmID, vmID))
+	})
+
+	t.Run("case insensitive exact match", func(t *testing.T) {
+		assert.True(t, ein.ResourceWithinScope(vmID, strings.ToUpper(vmID)))
+	})
+
+	t.Run("resource group scope with hyphen", func(t *testing.T) {
+		rgScope := "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-prod-01"
+		assert.True(t, ein.ResourceWithinScope(vmID, rgScope))
+	})
+
+	t.Run("resource group scope with underscore", func(t *testing.T) {
+		vmUnder := "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg_prod_01/providers/Microsoft.Compute/virtualMachines/vm-1"
+		rgScope := "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg_prod_01"
+		assert.True(t, ein.ResourceWithinScope(vmUnder, rgScope))
+	})
+
+	t.Run("resource group scope case insensitive", func(t *testing.T) {
+		rgScope := "/subscriptions/12345678-1234-1234-1234-123456789012/resourcegroups/rg-prod-01"
+		assert.True(t, ein.ResourceWithinScope(vmID, rgScope))
+	})
+
+	t.Run("different resource group returns false", func(t *testing.T) {
+		rgScope := "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/other-rg"
+		assert.False(t, ein.ResourceWithinScope(vmID, rgScope))
+	})
+
+	t.Run("resource group with common prefix does not bleed permissions", func(t *testing.T) {
+		vmSibling := "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-prod-01-extra/providers/Microsoft.Compute/virtualMachines/vm-1"
+		rgScope := "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-prod-01"
+		assert.False(t, ein.ResourceWithinScope(vmSibling, rgScope))
+	})
+
+	t.Run("subscription level scope returns false", func(t *testing.T) {
+		subScope := "/subscriptions/12345678-1234-1234-1234-123456789012"
+		assert.False(t, ein.ResourceWithinScope(vmID, subScope))
+	})
 }
