@@ -39,8 +39,14 @@ const ContextObserver = ({ observe }: { observe: (context: ReturnType<typeof use
     return null;
 };
 
-const DraggableTable = ({ observe }: { observe: (context: ReturnType<typeof useDndContext>) => void }) => {
-    const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() });
+const DraggableTable = ({
+    rows = data,
+    observe,
+}: {
+    rows?: typeof data;
+    observe: (context: ReturnType<typeof useDndContext>) => void;
+}) => {
+    const table = useReactTable({ data: rows, columns, getCoreRowModel: getCoreRowModel() });
     const sensors = useSensors(useSensor(KeyboardSensor));
 
     return (
@@ -61,7 +67,7 @@ const DraggableTable = ({ observe }: { observe: (context: ReturnType<typeof useD
                         {table.getRowModel().rows.map((row) => (
                             <TableRow key={row.id}>
                                 {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id} cell={cell}>
+                                    <TableCell key={cell.id} cell={cell} enableDragging={row.index !== 0}>
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                     </TableCell>
                                 ))}
@@ -120,17 +126,22 @@ const TableWithDisabledCell = ({
 describe('Table column dragging', () => {
     afterEach(() => vi.restoreAllMocks());
 
-    it('keeps the header registered as the active node when keyboard dragging with body rows', async () => {
+    it('moves enabled and disabled cells with their header during a keyboard drag', async () => {
         vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 200, 40));
         const observe = vi.fn();
         const user = userEvent.setup();
         render(<DraggableTable observe={observe} />);
 
         const header = screen.getByRole('columnheader', { name: /Name/ });
+        const disabledCell = screen.getByRole('cell', { name: 'First row' });
+        const enabledCell = screen.getByRole('cell', { name: 'Second row' });
         const context = () => observe.mock.lastCall![0] as ReturnType<typeof useDndContext>;
 
         expect(context().draggableNodes.get('name')?.node.current).toBe(header);
         expect(context().droppableContainers.get('name')?.node.current).toBe(header);
+
+        fireEvent.keyDown(disabledCell, { code: 'Space' });
+        expect(context().active).toBeNull();
 
         await user.tab();
         expect(screen.getByRole('button', { name: 'Drag to reorder' })).toHaveFocus();
@@ -140,8 +151,9 @@ describe('Table column dragging', () => {
         expect(context().active?.id).toBe('name');
         fireEvent.keyDown(document, { code: 'ArrowRight' });
         await waitFor(() => {
-            expect(screen.getByRole('cell', { name: 'First row' }).style.transform).toBe(header.style.transform);
             expect(header.style.transform).toContain('25px');
+            expect(enabledCell.style.transform).toBe(header.style.transform);
+            expect(disabledCell.style.transform).toBe(header.style.transform);
         });
         fireEvent.keyDown(document, { code: 'Escape' });
         await waitFor(() => expect(context().active).toBeNull());
@@ -178,6 +190,37 @@ describe('Table column dragging', () => {
             const newCell = screen.getByRole('cell', { name: 'Third A' });
             expect(newCell.style.transform).toBe(header.style.transform);
         });
+        fireEvent.keyDown(document, { code: 'Escape' });
+        await waitFor(() => expect(context().active).toBeNull());
+    });
+
+    it.each(['Space', 'Escape'])('tracks movement with an empty body and resets after %s', async (finishKey) => {
+        vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 200, 40));
+        const observe = vi.fn();
+        const user = userEvent.setup();
+        const { rerender } = render(<DraggableTable rows={[]} observe={observe} />);
+        const header = screen.getByRole('columnheader', { name: /Name/ });
+        const context = () => observe.mock.lastCall![0] as ReturnType<typeof useDndContext>;
+
+        await user.tab();
+        await user.keyboard('[Space]');
+        await waitFor(() => expect(context().activeNode).toBe(header));
+        fireEvent.keyDown(document, { code: 'ArrowRight' });
+        await waitFor(() => expect(header.style.transform).toContain('25px'));
+
+        rerender(<DraggableTable observe={observe} />);
+        expect(screen.getByRole('cell', { name: 'First row' }).style.transform).toBe(header.style.transform);
+
+        rerender(<DraggableTable rows={[]} observe={observe} />);
+        fireEvent.keyDown(document, { code: finishKey });
+        await waitFor(() => expect(context().active).toBeNull());
+
+        await user.keyboard('[Space]');
+        await waitFor(() => expect(context().over?.id).toBe('name'));
+        rerender(<DraggableTable observe={observe} />);
+        expect(screen.getByRole('cell', { name: 'First row' }).style.transform).toBe('translate3d(0px, 0px, 0)');
+        fireEvent.keyDown(document, { code: 'Escape' });
+        await waitFor(() => expect(context().active).toBeNull());
     });
 
     it('renders plain cells without a drag context', () => {
