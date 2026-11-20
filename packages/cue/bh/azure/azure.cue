@@ -17,7 +17,6 @@
 package azure
 
 import (
-	"list"
 	"pkg.specterops.io/schemas/bh/types:types"
 )
 
@@ -30,7 +29,6 @@ AbusableAppRoleRelationshipKinds: [... types.#Kind]
 ControlRelationshipKinds: [...types.#Kind]
 ExecutionPrivilegeKinds: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
-InboundOutboundRelationshipKinds: [...types.#Kind]
 
 // Property name enumerations
 AppOwnerOrganizationID: types.#StringEnum & {
@@ -947,8 +945,8 @@ ExecutionPrivilegeKinds: [
 	ExecuteCommand,
 ]
 
-// Edges that are used during inbound and outbound traversals
-InboundOutboundRelationshipKinds: [
+// Edges that are traversable in pathfinding and analysis
+PathfindingRelationships: [
 	AvereContributor,
 	Contributor,
 	GetCertificates,
@@ -992,5 +990,3 @@ InboundOutboundRelationshipKinds: [
 	Contains,
 	AZAuthenticatesTo
 ]
-
-PathfindingRelationships: list.Concat([InboundOutboundRelationshipKinds])

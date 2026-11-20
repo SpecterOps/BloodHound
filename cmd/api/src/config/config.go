@@ -64,6 +64,8 @@ type DatabaseConfiguration struct {
 	Secret                string `json:"secret"`
 	MaxConcurrentSessions int    `json:"max_concurrent_sessions"`
 	EnableRDSIAMAuth      bool   `json:"enable_rds_iam_auth"`
+	TraversalStateLimit   int64  `json:"traversal_state_limit"`
+	TraversalByteLimit    int64  `json:"traversal_byte_limit"`
 }
 
 // missingRDSIAMAuthFields returns structured database fields required to build an RDS IAM auth token connection string.

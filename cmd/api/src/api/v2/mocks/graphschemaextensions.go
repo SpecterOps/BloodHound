@@ -104,21 +104,6 @@ func (mr *MockOpenGraphSchemaServiceMockRecorder) GetSchemaFindings(ctx, filters
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchemaFindings", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).GetSchemaFindings), ctx, filters, sort, skip, limit)
 }
 
-// ListExtensions mocks base method.
-func (m *MockOpenGraphSchemaService) ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListExtensions", ctx)
-	ret0, _ := ret[0].(model.GraphSchemaExtensions)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListExtensions indicates an expected call of ListExtensions.
-func (mr *MockOpenGraphSchemaServiceMockRecorder) ListExtensions(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExtensions", reflect.TypeOf((*MockOpenGraphSchemaService)(nil).ListExtensions), ctx)
-}
-
 // UpsertOpenGraphExtension mocks base method.
 func (m *MockOpenGraphSchemaService) UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error) {
 	m.ctrl.T.Helper()

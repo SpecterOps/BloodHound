@@ -47,7 +47,6 @@ import (
 //go:generate go run go.uber.org/mock/mockgen -copyright_file ../../../../../LICENSE.header -destination=./mocks/graphschemaextensions.go -package=mocks . OpenGraphSchemaService
 type OpenGraphSchemaService interface {
 	UpsertOpenGraphExtension(ctx context.Context, openGraphExtension model.GraphExtensionInput) (bool, error)
-	ListExtensions(ctx context.Context) (model.GraphSchemaExtensions, error)
 	DeleteExtension(ctx context.Context, extensionID int32) error
 	GetEnvironmentKindsAndSchemaEnvironmentData(ctx context.Context, onlyBuiltin bool) (graph.Kinds, model.EnvironmentKindsToEnvironment, error)
 	GetSchemaFindings(ctx context.Context, filters model.Filters, sort model.Sort, skip, limit int) ([]model.SchemaFinding, int, error)
@@ -340,42 +339,6 @@ func decodeFileIntoPayload(extension *model.GraphExtensionPayload, schemaDecoded
 	}
 
 	return nil
-}
-
-type ExtensionsResponse struct {
-	Extensions []ExtensionInfo `json:"extensions"`
-}
-
-type ExtensionInfo struct {
-	ID        int32  `json:"id"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-	Version   string `json:"version"`
-	IsBuiltIn bool   `json:"is_builtin"`
-}
-
-func (s Resources) ListExtensions(response http.ResponseWriter, request *http.Request) {
-	var (
-		ctx = request.Context()
-	)
-
-	if extensions, err := s.OpenGraphSchemaService.ListExtensions(ctx); err != nil {
-		api.WriteErrorResponse(ctx, api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
-		return
-	} else {
-		var extensionsResponse = make([]ExtensionInfo, len(extensions))
-		for i, extension := range extensions {
-			extensionsResponse[i] = ExtensionInfo{
-				ID:        extension.ID,
-				Name:      extension.DisplayName,
-				Version:   extension.Version,
-				IsBuiltIn: extension.IsBuiltin,
-				Namespace: extension.Namespace,
-			}
-		}
-
-		api.WriteBasicResponse(ctx, ExtensionsResponse{Extensions: extensionsResponse}, http.StatusOK, response)
-	}
 }
 
 func (s Resources) DeleteExtension(response http.ResponseWriter, request *http.Request) {

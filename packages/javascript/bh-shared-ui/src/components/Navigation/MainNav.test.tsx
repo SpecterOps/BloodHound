@@ -23,7 +23,7 @@ import { createMatchMediaController } from '../../testing';
 import { SubNavItem } from '../../types';
 import { AppIcon } from '../AppIcon';
 import MainNav from './MainNav';
-import { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavLinkItem } from './types';
+import { MainNavData, MainNavDataListItem, MainNavLogoDataObject, NavActionItem, NavLinkItem } from './types';
 
 const MainNavLogoData: MainNavLogoDataObject = {
     project: {
@@ -323,6 +323,13 @@ describe('Keyboard shortcuts', () => {
 });
 
 describe('MainNav collapsed item content', () => {
+    const controlItem: NavActionItem = {
+        label: 'Control Item',
+        icon: <AppIcon.LineChart size={24} />,
+        onClick: vi.fn(),
+        control: <span data-testid='test-control'>control</span>,
+        testId: 'global_nav-test-control',
+    };
     const collapsibleNavData: MainNavData = {
         ...mainNavData,
         secondaryList: [
@@ -333,13 +340,7 @@ describe('MainNav collapsed item content', () => {
                 target: '_blank',
                 testId: 'global_nav-test-external',
             },
-            {
-                label: 'Control Item',
-                icon: <AppIcon.LineChart size={24} />,
-                onClick: vi.fn(),
-                control: <span data-testid='test-control'>control</span>,
-                testId: 'global_nav-test-control',
-            },
+            controlItem,
         ],
     };
     const renderNav = (isExpanded: boolean) => {
@@ -357,6 +358,62 @@ describe('MainNav collapsed item content', () => {
         expect(
             within(screen.getByTestId('global_nav-test-external')).getByText('arrow-up-right-from-square')
         ).toBeInTheDocument();
+    });
+    it.each([
+        ['button', <button key='button'>Control action</button>],
+        [
+            'link',
+            <a key='link' href='/settings'>
+                Control action
+            </a>,
+        ],
+        ['textbox', <input key='textbox' aria-label='Control action' />],
+    ] as const)(
+        'exposes an interactive %s control to assistive technology and keyboard focus',
+        async (role, control) => {
+            const user = userEvent.setup();
+            window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(true));
+            render(
+                <MainNav
+                    mainNavData={{
+                        ...mainNavData,
+                        secondaryList: [{ ...controlItem, control }],
+                    }}
+                />
+            );
+
+            const interactiveControl = screen.getByRole(role, { name: 'Control action' });
+            expect(interactiveControl.closest('[aria-hidden="true"]')).toBeNull();
+            screen.getByTestId('global_nav-test-control').focus();
+            await user.tab();
+            expect(interactiveControl).toHaveFocus();
+        }
+    );
+    it('keeps an explicitly decorative inert control out of the menu item name', () => {
+        window.localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, JSON.stringify(true));
+        render(
+            <MainNav
+                mainNavData={{
+                    ...mainNavData,
+                    secondaryList: [
+                        {
+                            ...controlItem,
+                            label: 'Dark Mode',
+                            control: (
+                                <div aria-hidden='true' ref={(node) => node?.setAttribute('inert', '')}>
+                                    <button role='switch' aria-checked='false'>
+                                        Dark Mode indicator
+                                    </button>
+                                </div>
+                            ),
+                        },
+                    ],
+                }}
+            />
+        );
+
+        expect(screen.getByRole('button', { name: 'Dark Mode' })).toBeInTheDocument();
+        expect(screen.queryByRole('switch')).not.toBeInTheDocument();
     });
     it('hides the control and external link icon when collapsed', () => {
         renderNav(false);

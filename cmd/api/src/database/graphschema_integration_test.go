@@ -33,6 +33,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -4640,7 +4641,7 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 			assert: func(t *testing.T, testSuite IntegrationTestSuite) {
 				var (
 					expectedDisplayKind = graphschema.DisplayKind{
-						Name: graphschema.Zone.String(),
+						Name: common.Zone.String(),
 						Icon: graphschema.DisplayNodeIcon{
 							Name:  "shield",
 							Color: "blue",
@@ -4649,14 +4650,14 @@ func TestDatabase_GetDisplayGraphKinds(t *testing.T) {
 					}
 					extension = createTestExtension(t, testSuite, "zone_display_test", "Zone display test", "1.0.0", "Test")
 				)
-				createTestNodeKind(t, testSuite, graphschema.Zone.String(), extension.ID, "Zone", "Zone display metadata", true, "shield", "blue")
+				createTestNodeKind(t, testSuite, common.Zone.String(), extension.ID, "Zone", "Zone display metadata", true, "shield", "blue")
 				defer func() {
 					require.NoError(t, testSuite.BHDatabase.DeleteGraphSchemaExtension(testSuite.Context, extension.ID))
 				}()
 
 				displayKinds, err := testSuite.BHDatabase.GetPrimaryDisplayKinds(testSuite.Context)
 				require.NoError(t, err)
-				assert.Equal(t, expectedDisplayKind, displayKinds[graphschema.Zone])
+				assert.Equal(t, expectedDisplayKind, displayKinds[common.Zone])
 			},
 		},
 		{

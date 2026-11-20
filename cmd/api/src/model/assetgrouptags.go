@@ -117,6 +117,8 @@ type AssetGroupTag struct {
 	RequireCertify  null.Bool         `json:"require_certify"`
 	AnalysisEnabled null.Bool         `json:"analysis_enabled"`
 	Glyph           null.String       `json:"glyph"`
+	// SystemKey is a permanent application-owned identity, excluded from the public API.
+	SystemKey null.String `json:"-"`
 }
 
 type AssetGroupTags []AssetGroupTag

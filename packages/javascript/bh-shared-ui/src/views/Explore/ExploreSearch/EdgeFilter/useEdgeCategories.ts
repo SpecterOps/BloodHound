@@ -15,23 +15,29 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useMemo } from 'react';
 import { useEdgeTypesQuery } from '../../../../hooks/useEdgeTypes';
-import { BUILTIN_EDGE_CATEGORIES } from './edgeCategories';
+import { useIsEnterprise } from '../../../../providers/AppNameProvider';
+import { BUILTIN_EDGE_CATEGORIES, COMMON_EDGE_CATEGORY } from './edgeCategories';
 import { filterUnneededTypes, mapEdgeTypesToCategory } from './utils';
 
 // this hook combines our hardcoded edge categories with an OpenGraph category pulled from the API
 export const useEdgeCategories = () => {
     const edgeTypesQuery = useEdgeTypesQuery();
+    const isEnterprise = useIsEnterprise();
 
-    // append traversable opengraph edges (if the query is enabled and they exist) to our built-in categories from edgeCategories.ts
+    // append the common category (Enterprise only) and traversable opengraph edges (if the query is enabled and they
+    // exist) to our built-in categories from edgeCategories.ts
     const edgeCategories = useMemo(() => {
+        const builtinCategories = isEnterprise
+            ? [...BUILTIN_EDGE_CATEGORIES, COMMON_EDGE_CATEGORY]
+            : BUILTIN_EDGE_CATEGORIES;
         const customEdgeTypes = filterUnneededTypes(edgeTypesQuery.data);
 
         if (customEdgeTypes && customEdgeTypes.length > 0) {
-            return [...BUILTIN_EDGE_CATEGORIES, mapEdgeTypesToCategory(customEdgeTypes, 'OpenGraph')];
+            return [...builtinCategories, mapEdgeTypesToCategory(customEdgeTypes, 'OpenGraph')];
         } else {
-            return BUILTIN_EDGE_CATEGORIES;
+            return builtinCategories;
         }
-    }, [edgeTypesQuery.data]);
+    }, [edgeTypesQuery.data, isEnterprise]);
 
     return {
         isLoading: edgeTypesQuery.isLoading,
