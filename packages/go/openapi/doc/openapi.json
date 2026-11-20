@@ -22705,6 +22705,20 @@
                                 "format": "date-time",
                                 "description": "Timestamp of last update."
                               },
+                              "source_principal_labels": {
+                                "type": "array",
+                                "description": "List of labels on the source principal at the time of finding calculation. Empty when unavailable or for list findings.",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "target_principal_labels": {
+                                "type": "array",
+                                "description": "List of labels on the target principal at the time of finding calculation. Empty when unavailable.",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
                               "archived_at": {
                                 "type": "string",
                                 "format": "date-time",
@@ -22746,7 +22760,9 @@
                           "status": "active",
                           "id": 101,
                           "first_seen": "2026-04-11T00:30:18.491666Z",
-                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                          "last_seen": "2026-04-14T16:57:35.675609Z",
+                          "source_principal_labels": [],
+                          "target_principal_labels": []
                         },
                         {
                           "severity": "high",
@@ -22769,7 +22785,9 @@
                           "status": "accepted",
                           "id": 102,
                           "first_seen": "2026-04-11T00:30:18.491666Z",
-                          "last_seen": "2026-04-14T16:57:35.675609Z"
+                          "last_seen": "2026-04-14T16:57:35.675609Z",
+                          "source_principal_labels": [],
+                          "target_principal_labels": []
                         },
                         {
                           "severity": "moderate",
@@ -22793,6 +22811,8 @@
                           "id": 103,
                           "first_seen": "2026-03-01T08:00:00.000000Z",
                           "last_seen": "2026-04-20T12:00:00.000000Z",
+                          "source_principal_labels": [],
+                          "target_principal_labels": [],
                           "archived_at": "2026-04-20T12:00:00.000000Z"
                         }
                       ]
