@@ -80,8 +80,17 @@ func (s *Resources) ListADUserSessions(response http.ResponseWriter, request *ht
 	s.handleAdRelatedEntityQuery(response, request, "ListADUserSessions", adAnalysis.FetchUserSessionPaths, adAnalysis.FetchUserSessions)
 }
 
+// The deprecated SQLAdmin endpoints preserve their response shapes after the edge is retired.
+func emptySQLAdminPaths(graph.Transaction, *graph.Node) (graph.PathSet, error) {
+	return graph.NewPathSet(), nil
+}
+
+func emptySQLAdminList(graph.Transaction, *graph.Node, int, int) (graph.NodeSet, error) {
+	return graph.NodeSet{}, nil
+}
+
 func (s *Resources) ListADUserSQLAdminRights(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADUserSQLAdminRights", adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionOutbound), adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound))
+	s.handleAdRelatedEntityQuery(response, request, "ListADUserSQLAdminRights", emptySQLAdminPaths, emptySQLAdminList)
 }
 
 func (s *Resources) ListADGroupSessions(response http.ResponseWriter, request *http.Request) {
@@ -117,7 +126,7 @@ func (s *Resources) ListADGroupMembers(response http.ResponseWriter, request *ht
 }
 
 func (s *Resources) ListADComputerSQLAdmins(response http.ResponseWriter, request *http.Request) {
-	s.handleAdRelatedEntityQuery(response, request, "ListADComputerSQLAdmins", adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionInbound), adAnalysis.CreateSQLAdminListDelegate(graph.DirectionInbound))
+	s.handleAdRelatedEntityQuery(response, request, "ListADComputerSQLAdmins", emptySQLAdminPaths, emptySQLAdminList)
 }
 
 func (s *Resources) ListADComputerConstrainedDelegationUsers(response http.ResponseWriter, request *http.Request) {
