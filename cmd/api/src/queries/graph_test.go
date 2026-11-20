@@ -253,6 +253,22 @@ func TestQueries_BuildEntityQueryParams_DataTypeCount(t *testing.T) {
 	require.Equal(t, 0, params.Limit)
 }
 
+func TestQueries_BuildEntityQueryParams_EmptySortBy(t *testing.T) {
+	req, err := http.NewRequest("GET", "/api/v2/users/S-1-5-21-570004220-2248230615-4072641716-4001/admin-rights", nil)
+	require.Nil(t, err)
+
+	req = mux.SetURLVars(req, map[string]string{"object_id": "1"})
+
+	q := url.Values{}
+	q.Add("sort_by", "")
+	req.URL.RawQuery = q.Encode()
+
+	params, err := queries.BuildEntityQueryParams(req, "", nil, nil)
+	require.Nil(t, err)
+	require.Equal(t, 0, params.Skip)
+	require.Equal(t, 10, params.Limit)
+}
+
 func TestQueries_GetEntityResults(t *testing.T) {
 	var (
 		mockCtrl  = gomock.NewController(t)
