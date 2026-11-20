@@ -144,7 +144,7 @@ func (s *Store) ListExtensions(ctx context.Context, extensionFilters params.Filt
 		return nil, 0, err
 	}
 
-	extensionRows := []extensionRow{}
+	var extensionRows []extensionRow
 	sqlQuery, args := selectBuilder.Build()
 	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
 		return nil, 0, fmt.Errorf("error fetching data: %w", err)
