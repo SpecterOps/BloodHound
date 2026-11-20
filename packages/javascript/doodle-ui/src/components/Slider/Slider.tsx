@@ -22,6 +22,7 @@ import {
     sliderControlStyles,
     sliderIndicatorStyles,
     sliderRootStyles,
+    sliderStyles,
     sliderThumbDotStyles,
     sliderThumbStyles,
     sliderTrackStyles,
@@ -141,7 +142,11 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
         return (
             <SliderPrimitive.Root
                 ref={ref}
-                className={cnWithState(sliderRootStyles, showValue && invalidValue && 'mb-5', className)}
+                className={cnWithState(
+                    sliderRootStyles,
+                    showValue && invalidValue && sliderStyles.invalidValueSpacing,
+                    className
+                )}
                 min={min}
                 max={max}
                 step={validatedStep}
@@ -150,7 +155,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                 onValueChange={handleValueChange}
                 onValueCommitted={onValueCommitted}
                 {...props}>
-                <div className='min-w-0 flex-1'>
+                <div className={sliderStyles.controlWrapper}>
                     <SliderPrimitive.Control className={sliderControlStyles}>
                         <SliderPrimitive.Track className={sliderTrackStyles}>
                             <SliderPrimitive.Indicator className={sliderIndicatorStyles({ active: isActive })} />
@@ -166,22 +171,22 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                         <div
                             aria-hidden='true'
                             className={cn(
-                                'relative h-7 text-[10px] leading-4',
-                                disabled ? 'text-disabled' : 'text-main'
+                                sliderStyles.ticks,
+                                disabled ? sliderStyles.disabledText : sliderStyles.text
                             )}>
                             {tickValues.map((tick) => (
                                 <span
                                     key={tick}
-                                    className='absolute flex -translate-x-1/2 rtl:translate-x-1/2 flex-col items-center gap-1'
+                                    className={sliderStyles.tick}
                                     style={{ insetInlineStart: `${((tick - min) / (max - min)) * 100}%` }}>
                                     <span
                                         className={cn(
-                                            'size-1 rounded-full',
+                                            sliderStyles.tickDot,
                                             disabled
-                                                ? 'bg-disabled'
+                                                ? sliderStyles.disabledTick
                                                 : tick <= displayValue && isActive
-                                                  ? 'bg-[color:var(--slider-current-color,var(--primary))]'
-                                                  : 'bg-[color:var(--slider-tick-fill)]'
+                                                  ? sliderStyles.activeTick
+                                                  : sliderStyles.inactiveTick
                                         )}
                                     />
                                     <span>
@@ -195,7 +200,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                 </div>
                 {showValue && (
                     <SliderPrimitive.Value
-                        className='relative shrink-0'
+                        className={sliderStyles.value}
                         htmlFor={undefined}
                         render={(valueProps, { disabled: isDisabled }) => (
                             <div {...valueProps}>
@@ -223,14 +228,17 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                                             setDraftValue(null);
                                         }
                                     }}
-                                    className={cn('h-7 w-16 px-2 py-1 text-xs', valueSuffix && 'pr-5')}
+                                    className={cn(
+                                        sliderStyles.valueInput,
+                                        valueSuffix && sliderStyles.valueInputWithSuffix
+                                    )}
                                 />
                                 {valueSuffix && (
                                     <span
                                         id={suffixId}
                                         className={cn(
-                                            'pointer-events-none absolute end-2 top-1.5 text-xs',
-                                            isDisabled ? 'text-disabled' : 'text-main'
+                                            sliderStyles.valueSuffix,
+                                            isDisabled ? sliderStyles.disabledText : sliderStyles.text
                                         )}>
                                         {valueSuffix}
                                     </span>
@@ -240,10 +248,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
                     />
                 )}
                 {showValue && invalidValue && (
-                    <span
-                        id={errorId}
-                        role='alert'
-                        className='absolute start-0 top-full text-xs text-status-error-main'>
+                    <span id={errorId} role='alert' className={sliderStyles.valueError}>
                         Enter a value between {min} and {max}.
                     </span>
                 )}

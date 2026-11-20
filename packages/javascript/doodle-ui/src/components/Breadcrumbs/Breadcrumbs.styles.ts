@@ -24,3 +24,9 @@ export const breadcrumbLinkClasses =
 export const breadcrumbPageClasses = 'font-bold text-[color:var(--breadcrumb-page-text)]';
 
 export const breadcrumbEllipsisClasses = 'flex h-9 w-9 items-center justify-center';
+
+export const breadcrumbsStyles = {
+    separator: '[&>svg]:w-3.5 [&>svg]:h-3.5',
+    ellipsisIcon: 'h-4 w-4',
+    screenReader: 'sr-only',
+};

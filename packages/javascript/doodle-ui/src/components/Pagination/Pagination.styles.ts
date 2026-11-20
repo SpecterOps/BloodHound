@@ -28,3 +28,10 @@ export const paginationPageSizeClasses = 'flex justify-center items-center gap-2
 export const paginationControlsClasses = 'px-1 py-2 mx-2';
 
 export const paginationDisabledControlClasses = 'disabled:text-[color:var(--pagination-disabled-text)] px-1 py-2 mx-2';
+
+export const paginationStyles = {
+    previous: 'gap-1 pl-2.5',
+    next: 'gap-1 pr-2.5',
+    selectTrigger: 'w-fit gap-2',
+    tableNav: 'text-sm tabular-nums',
+};

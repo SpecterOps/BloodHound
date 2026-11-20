@@ -77,3 +77,16 @@ export const multiSelectSearchInputClasses = cn(
     'placeholder:text-[color:var(--input-placeholder-text)]',
     'focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
 );
+
+export const multiSelectStyles = {
+    triggerLabel: 'truncate',
+    openCaret: 'rotate-180',
+    optionWrapper: 'p-1',
+    optionText: 'text-base font-normal leading-4',
+    disabledRow: 'cursor-not-allowed bg-[color:var(--button-disabled-fill)] text-disabled',
+    optionLabel: 'min-w-0 flex-1 truncate text-inherit',
+    loadingSkeleton: 'h-4 flex-1',
+    error: 'px-3 py-2 text-status-error-main',
+    scrollArea: 'max-h-60 [&_[data-radix-scroll-area-viewport]]:max-h-60',
+    optionsList: 'p-1 pr-2',
+};

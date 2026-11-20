@@ -19,6 +19,7 @@ import * as React from 'react';
 import { Controller, FormProvider, type ControllerProps, type FieldPath, type FieldValues } from 'react-hook-form';
 import { Label } from '../Label';
 import { cn } from '../utils';
+import { formDescriptionClasses, formItemClasses, formLabelClasses, formMessageClasses } from './Form.styles';
 import { useFormField } from './useFormField';
 import { FormFieldContext, FormItemContext } from './utils';
 
@@ -42,7 +43,7 @@ function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
 
     return (
         <FormItemContext.Provider value={{ id }}>
-            <div data-slot='form-item' className={cn('grid gap-2', className)} {...props} />
+            <div data-slot='form-item' className={cn(formItemClasses, className)} {...props} />
         </FormItemContext.Provider>
     );
 }
@@ -54,7 +55,7 @@ function FormLabel({ className, ...props }: React.ComponentProps<typeof LabelPri
         <Label
             data-slot='form-label'
             data-error={!!error}
-            className={cn('data-[error=true]:text-error', className)}
+            className={cn(formLabelClasses, className)}
             htmlFor={formItemId}
             {...props}
         />
@@ -78,7 +79,14 @@ function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
 function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
     const { formDescriptionId } = useFormField();
 
-    return <p data-slot='form-description' id={formDescriptionId} className={cn('text-sm', className)} {...props} />;
+    return (
+        <p
+            data-slot='form-description'
+            id={formDescriptionId}
+            className={cn(formDescriptionClasses, className)}
+            {...props}
+        />
+    );
 }
 
 function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
@@ -90,7 +98,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
     }
 
     return (
-        <p data-slot='form-message' id={formMessageId} className={cn('text-error text-sm', className)} {...props}>
+        <p data-slot='form-message' id={formMessageId} className={cn(formMessageClasses, className)} {...props}>
             {body}
         </p>
     );

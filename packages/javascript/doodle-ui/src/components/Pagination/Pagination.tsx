@@ -30,6 +30,7 @@ import {
     paginationLinkClasses,
     paginationNavClasses,
     paginationPageSizeClasses,
+    paginationStyles,
 } from './Pagination.styles';
 
 const PaginationNav = ({ className, ...props }: React.ComponentProps<'nav'>) => (
@@ -48,7 +49,7 @@ type PaginationLinkProps = {
 } & React.ComponentProps<'button'>;
 
 const PaginationItem = forwardRef<HTMLDivElement, React.ComponentProps<'div'>>(({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('', className)} {...props} />
+    <div ref={ref} className={cn(className)} {...props} />
 ));
 PaginationItem.displayName = 'PaginationItem';
 
@@ -69,7 +70,7 @@ const PaginationPrevious = ({ onClick, className, ...props }: React.ComponentPro
     <PaginationLink
         onClick={onClick}
         aria-label='Go to previous page'
-        className={cn('gap-1 pl-2.5', className)}
+        className={cn(paginationStyles.previous, className)}
         {...props}>
         <FontAwesomeIcon icon={faChevronLeft} />
     </PaginationLink>
@@ -77,7 +78,11 @@ const PaginationPrevious = ({ onClick, className, ...props }: React.ComponentPro
 PaginationPrevious.displayName = 'PaginationPrevious';
 
 const PaginationNext = ({ onClick, className, ...props }: React.ComponentProps<typeof PaginationLink>) => (
-    <PaginationLink onClick={onClick} aria-label='Go to next page' className={cn('gap-1 pr-2.5', className)} {...props}>
+    <PaginationLink
+        onClick={onClick}
+        aria-label='Go to next page'
+        className={cn(paginationStyles.next, className)}
+        {...props}>
         <FontAwesomeIcon icon={faChevronRight} />
     </PaginationLink>
 );
@@ -99,7 +104,7 @@ const PaginationSelect = (props: PaginationSelectProps) => {
 
     return (
         <Select {...rest}>
-            <SelectTrigger className='w-fit gap-2'>
+            <SelectTrigger className={paginationStyles.selectTrigger}>
                 <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectPortal>
@@ -154,7 +159,7 @@ const Pagination: React.FC<PaginationProps> = (props) => {
     const selectItems = paginationOptions ?? ['5', '10', '25', '100'];
 
     return (
-        <PaginationNav className={cn('text-sm tabular-nums', className)} {...rest}>
+        <PaginationNav className={cn(paginationStyles.tableNav, className)} {...rest}>
             <PaginationContent>
                 <PaginationItem className={paginationPageSizeClasses}>
                     Rows per page:

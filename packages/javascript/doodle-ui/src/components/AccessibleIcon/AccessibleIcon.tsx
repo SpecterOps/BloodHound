@@ -16,6 +16,7 @@
 import * as React from 'react';
 import { Tooltip, type TooltipPosition } from '../Tooltip';
 import { cn } from '../utils';
+import { accessibleIconClasses } from './AccessibleIcon.styles';
 
 interface AccessibleIconBaseProps {
     'aria-hidden'?: boolean;
@@ -53,11 +54,11 @@ export const AccessibleIcon: React.FC<AccessibleIconProps> = ({
         ariaHidden ? { 'aria-hidden': true } : { 'aria-label': accessibleLabel }
     );
 
-    if (ariaHidden || hideTooltip) return <span className={cn('inline-flex', className)}>{iconElement}</span>;
+    if (ariaHidden || hideTooltip) return <span className={cn(accessibleIconClasses, className)}>{iconElement}</span>;
 
     return (
         <Tooltip tooltip={tooltipLabel} tooltipPosition={tooltipPosition}>
-            <span className={cn('inline-flex', className)}>{iconElement}</span>
+            <span className={cn(accessibleIconClasses, className)}>{iconElement}</span>
         </Tooltip>
     );
 };

@@ -26,6 +26,7 @@ import {
     checkboxIndeterminateIconClasses,
     checkboxIndicatorClasses,
     checkboxLabelClasses,
+    checkboxStyles,
 } from './Checkbox.styles';
 
 interface CheckboxProps
@@ -105,9 +106,9 @@ const CheckboxWithLabel = React.forwardRef<React.ElementRef<typeof Checkbox>, Ch
                 <Typography
                     variant='caption'
                     className={cn(
-                        'cursor-pointer font-normal leading-[18px]',
-                        error && 'peer-data-[state=unchecked]:text-status-error-main',
-                        disabled && 'cursor-not-allowed',
+                        checkboxStyles.labelText,
+                        error && checkboxStyles.labelError,
+                        disabled && checkboxStyles.disabledLabel,
                         labelClassName
                     )}>
                     {label}

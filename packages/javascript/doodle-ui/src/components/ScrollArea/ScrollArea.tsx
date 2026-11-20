@@ -17,7 +17,7 @@
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import * as React from 'react';
 import { cn } from '../utils';
-import { scrollAreaScrollbarClasses, scrollAreaThumbClasses } from './ScrollArea.styles';
+import { scrollAreaScrollbarClasses, scrollAreaStyles, scrollAreaThumbClasses } from './ScrollArea.styles';
 
 interface ScrollbarProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> {
     scrollbarWidth?: number;
@@ -29,7 +29,7 @@ interface ScrollbarProps extends React.ComponentPropsWithoutRef<typeof ScrollAre
 const ScrollArea = React.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Root>, ScrollbarProps>(
     ({ className, scrollbarWidth, thumbHeight, scrollbarColor, thumbColor, children, ...props }, ref) => (
         <>
-            <ScrollAreaPrimitive.Root ref={ref} type='auto' {...props} className={cn('overflow-hidden', className)}>
+            <ScrollAreaPrimitive.Root ref={ref} type='auto' {...props} className={cn(scrollAreaStyles.root, className)}>
                 <ScrollAreaViewport
                     scrollbarWidth={scrollbarWidth}
                     thumbHeight={thumbHeight}
@@ -70,7 +70,7 @@ const ScrollAreaViewport = React.forwardRef<React.ElementRef<typeof ScrollAreaPr
 
         return (
             <>
-                <ScrollAreaPrimitive.Viewport ref={ref} className={cn('w-full h-full')} {...props}>
+                <ScrollAreaPrimitive.Viewport ref={ref} className={cn(scrollAreaStyles.viewport)} {...props}>
                     {children}
                 </ScrollAreaPrimitive.Viewport>
                 <ScrollAreaScrollbar
@@ -78,7 +78,7 @@ const ScrollAreaViewport = React.forwardRef<React.ElementRef<typeof ScrollAreaPr
                         width: scrollbarWidth ? `${scrollbarWidth}px` : '6px',
                         backgroundColor: scrollbarColor ? scrollbarColor : 'transparent',
                     }}
-                    className='z-10'
+                    className={scrollAreaStyles.track}
                     orientation='vertical'>
                     <ScrollAreaThumb
                         style={{

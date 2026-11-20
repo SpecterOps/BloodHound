@@ -58,3 +58,5 @@ export const AdornmentVariants = cva(
 
 export const comboBadgeLabelClasses =
     'text-primary dark:text-neutral-light-1 bg-neutral-light-5 dark:bg-neutral-dark-5 rounded inline-block px-4 py-2 relative z-20';
+
+export const comboBadgePeerClasses = 'peer';

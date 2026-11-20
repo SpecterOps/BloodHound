@@ -17,7 +17,7 @@ import { Button as BaseUIButton } from '@base-ui/react/button';
 import type { VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cnWithState } from '../utils';
-import { ButtonVariants, TextButtonBaseClasses } from './Button.styles';
+import { ButtonVariants, TextButtonVariants } from './Button.styles';
 export { ButtonVariants, TextButtonBaseClasses, TextButtonVariants } from './Button.styles';
 
 export interface ButtonProps extends BaseUIButton.Props, VariantProps<typeof ButtonVariants> {}
@@ -65,8 +65,7 @@ export const TextButton = React.forwardRef<React.ComponentRef<typeof BaseUIButto
                 disabled={disabled}
                 type={type}
                 className={cnWithState(
-                    TextButtonBaseClasses,
-                    fontColor === 'primary' ? 'text-primary' : 'text-main',
+                    TextButtonVariants({ fontColor: fontColor === 'primary' ? 'primary' : 'default' }),
                     className
                 )}
             />

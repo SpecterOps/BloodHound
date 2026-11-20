@@ -16,6 +16,7 @@
 import { Progress as ProgressPrimitive } from '@base-ui/react/progress';
 import * as React from 'react';
 import { cnWithState } from '../utils';
+import { progressBarIndicatorClasses, progressBarRootClasses, progressBarTrackClasses } from './ProgressBar.styles';
 
 type ProgressBarProps = Omit<
     ProgressPrimitive.Root.Props,
@@ -35,9 +36,9 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(({ classN
         value={value}
         min={0}
         max={100}
-        className={cnWithState('w-full', className)}>
-        <ProgressPrimitive.Track className='relative h-2 w-full overflow-hidden bg-neutral-200 dark:bg-gray-700'>
-            <ProgressPrimitive.Indicator className='h-full bg-primary motion-safe:transition-[width] data-[indeterminate]:w-1/3 motion-safe:data-[indeterminate]:animate-progress-indeterminate' />
+        className={cnWithState(progressBarRootClasses, className)}>
+        <ProgressPrimitive.Track className={progressBarTrackClasses}>
+            <ProgressPrimitive.Indicator className={progressBarIndicatorClasses} />
         </ProgressPrimitive.Track>
     </ProgressPrimitive.Root>
 ));

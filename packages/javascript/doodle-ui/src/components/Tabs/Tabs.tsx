@@ -13,9 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import * as React from 'react';
 import { cn } from '../utils';
+import { tabsContentClasses, tabsListClasses, tabsTriggerClasses } from './Tabs.styles';
 
 const Tabs = TabsPrimitive.Root;
 
@@ -23,14 +25,7 @@ const TabsList = React.forwardRef<
     React.ElementRef<typeof TabsPrimitive.List>,
     React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
 >(({ className, ...props }, ref) => (
-    <TabsPrimitive.List
-        ref={ref}
-        className={cn(
-            'inline-flex text-base text-[color:var(--tabs-text)] items-center justify-center gap-4',
-            className
-        )}
-        {...props}
-    />
+    <TabsPrimitive.List ref={ref} className={cn(tabsListClasses, className)} {...props} />
 ));
 TabsList.displayName = TabsPrimitive.List.displayName;
 
@@ -41,10 +36,7 @@ const TabsTrigger = React.forwardRef<
     return (
         <TabsPrimitive.Trigger
             ref={ref}
-            className={cn(
-                'grid grid-cols-1 text-center whitespace-nowrap p-2 focus:outline-none focus-visible:focus-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:font-bold data-[state=active]:border-b-[color:var(--tabs-active-accent)] data-[state=active]:border-b-[1px] data-[state=active]:text-[color:var(--tabs-active-accent)]',
-                className
-            )}
+            className={cn(tabsTriggerClasses, className)}
             {...props}></TabsPrimitive.Trigger>
     );
 });
@@ -54,11 +46,7 @@ const TabsContent = React.forwardRef<
     React.ElementRef<typeof TabsPrimitive.Content>,
     React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
 >(({ className, ...props }, ref) => (
-    <TabsPrimitive.Content
-        ref={ref}
-        className={cn('mt-2 focus:outline-none focus-visible:focus-ring', className)}
-        {...props}
-    />
+    <TabsPrimitive.Content ref={ref} className={cn(tabsContentClasses, className)} {...props} />
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 

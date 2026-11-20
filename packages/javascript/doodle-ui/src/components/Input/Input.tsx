@@ -18,7 +18,7 @@ import * as React from 'react';
 import { Label } from '../Label';
 import { Typography } from '../Typography';
 import { cn } from '../utils';
-import { InputVariants } from './Input.styles';
+import { inputStyles, InputVariants } from './Input.styles';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement>, VariantProps<typeof InputVariants> {
     label?: React.ReactNode;
@@ -89,18 +89,21 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         }
 
         return (
-            <div className={cn('grid gap-1.5', fieldClassName)}>
+            <div className={cn(inputStyles.field, fieldClassName)}>
                 <Label htmlFor={inputId} className={labelClassName}>
                     {label}{' '}
                     {required && (
-                        <span aria-hidden='true' className='text-status-error-main'>
+                        <span aria-hidden='true' className={inputStyles.requiredIndicator}>
                             *
                         </span>
                     )}
                 </Label>
                 {input}
                 {helperText && (
-                    <Typography variant='body2' id={helperTextId} className={cn('text-main', helperTextClassName)}>
+                    <Typography
+                        variant='body2'
+                        id={helperTextId}
+                        className={cn(inputStyles.helperText, helperTextClassName)}>
                         {helperText}
                     </Typography>
                 )}
@@ -109,7 +112,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                         variant='body2'
                         id={errorMessageId}
                         role='alert'
-                        className={cn('text-error', errorMessageClassName)}>
+                        className={cn(inputStyles.errorMessage, errorMessageClassName)}>
                         {errorMessage}
                     </Typography>
                 )}

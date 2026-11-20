@@ -29,3 +29,19 @@ export const dataTableCellClasses = 'text-left overflow-x-clip -outline-offset-2
 export const dataTableResizeIndicatorClasses = `resizer opacity-0 absolute top-0 right-0 w-1 bg-[color:var(--data-table-resize-fill)] cursor-col-resize select-none touch-none group-hover:opacity-100 group-[.isResizing~_&:hover]:opacity-0 group-[.isResizing~_&:hover]:cursor-default [th:has(~_.isResizing)_>_&]:!opacity-0 [th:has(~_.isResizing)_>_&]:cursor-default`;
 
 export const dataTableActiveResizeIndicatorClasses = 'bg-[color:var(--data-table-resize-active-fill)] opacity-100';
+
+export const dataTableStyles = {
+    screenReader: 'sr-only',
+    externalScroll: 'flex-auto',
+    fillHeight: 'flex-1 min-h-0 overflow-auto',
+    emptyWrapper: 'pb-0',
+    fillContainer: 'h-full',
+    fixedLayout: 'table-fixed',
+    empty: 'h-full after:hidden',
+    emptyHeader: 'h-px',
+    resizingHead: 'isResizing',
+    pointerRow: 'cursor-pointer',
+    defaultRow: 'cursor-default',
+    noData: 'h-24 text-center',
+    pinDialogActions: 'flex justify-end gap-4',
+};

@@ -22,6 +22,7 @@ import {
     menuContentStyles,
     menuItemStyles,
     menuSeparatorStyles,
+    menuStyles,
     menuSubContentStyles,
     menuSubTriggerStyles,
 } from './Menu.styles';
@@ -38,11 +39,7 @@ const MenuTrigger = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
 >(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Trigger
-        ref={ref}
-        className={cn('focus:outline-none', 'focus-visible:focus-ring data-[state=open]:focus-ring', className)}
-        {...props}
-    />
+    <DropdownMenuPrimitive.Trigger ref={ref} className={cn(menuStyles.trigger, className)} {...props} />
 ));
 MenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName;
 
@@ -88,9 +85,9 @@ const MenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.
                 children
             ) : (
                 <>
-                    {iconLeft && icon && <span className='mr-2 flex items-center'>{icon}</span>}
-                    <span className='flex-1 leading-4'>{children}</span>
-                    {secondaryMenu && <FontAwesomeIcon icon={faCaretRight} className='ml-2' />}
+                    {iconLeft && icon && <span className={menuStyles.itemIcon}>{icon}</span>}
+                    <span className={menuStyles.itemLabel}>{children}</span>
+                    {secondaryMenu && <FontAwesomeIcon icon={faCaretRight} className={menuStyles.submenuIcon} />}
                 </>
             )}
         </DropdownMenuPrimitive.Item>
@@ -105,7 +102,7 @@ const MenuLabel = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.Label>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label>
 >(({ className, ...props }, ref) => (
-    <DropdownMenuPrimitive.Label ref={ref} className={cn('px-2 py-1.5 text-sm font-semibold', className)} {...props} />
+    <DropdownMenuPrimitive.Label ref={ref} className={cn(menuStyles.label, className)} {...props} />
 ));
 MenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
 
@@ -122,8 +119,8 @@ const MenuSubTrigger = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger>
 >(({ className, children, ...props }, ref) => (
     <DropdownMenuPrimitive.SubTrigger ref={ref} className={cn(menuSubTriggerStyles, className)} {...props}>
-        <span className='flex flex-1 items-center'>{children}</span>
-        <FontAwesomeIcon icon={faCaretRight} className='ml-2' />
+        <span className={menuStyles.subTriggerLabel}>{children}</span>
+        <FontAwesomeIcon icon={faCaretRight} className={menuStyles.submenuIcon} />
     </DropdownMenuPrimitive.SubTrigger>
 ));
 MenuSubTrigger.displayName = DropdownMenuPrimitive.SubTrigger.displayName;
@@ -134,9 +131,14 @@ MenuSubTrigger.displayName = DropdownMenuPrimitive.SubTrigger.displayName;
 const MenuSubContent = React.forwardRef<
     React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
     React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
->(({ className, ...props }, ref) => (
+>(({ className, sideOffset = 6, ...props }, ref) => (
     <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.SubContent ref={ref} className={cn(menuSubContentStyles, className)} {...props} />
+        <DropdownMenuPrimitive.SubContent
+            ref={ref}
+            sideOffset={sideOffset}
+            className={cn(menuSubContentStyles, className)}
+            {...props}
+        />
     </DropdownMenuPrimitive.Portal>
 ));
 MenuSubContent.displayName = DropdownMenuPrimitive.SubContent.displayName;
