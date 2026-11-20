@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/packages/go/responses"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 )
@@ -75,7 +76,7 @@ func buildExtensionsView(extensions []services.Extension) ExtensionsView {
 
 func (s *Handlers) ListExtensions(response http.ResponseWriter, request *http.Request) {
 	var ctx = request.Context()
-	if extensions, err := s.service.ListExtensions(ctx); err != nil {
+	if extensions, _, err := s.service.ListExtensions(ctx, nil, params.SortItems{{Field: "display_name", Direction: params.Ascending}}, 0, 0); err != nil {
 		responses.WriteInternalServerError(ctx, err, response)
 	} else {
 		responses.WriteBasic(ctx, buildExtensionsView(extensions), http.StatusOK, response)
