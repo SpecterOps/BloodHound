@@ -29,16 +29,19 @@ allOf:
         format: int32
       metric_type:
         type: string
-        enum:
-          - node
-          - relationship
+        description: |
+          Metric category. Built-in categories include node and relationship.
+          Extension-defined categories use <namespace>_<metric-type>.
+          Additional categories may be introduced by installed extensions.
+        example: AD_session_completeness
       metric_name:
         type: string
+        description: Graph kind name or extension-defined metric component name.
       metric_value:
         type: number
         format: double
       kind_id:
-        description: The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.
+        description: The graph kind ID when the metric name resolves to a known kind; otherwise null.
         type: integer
         format: int32
         nullable: true
