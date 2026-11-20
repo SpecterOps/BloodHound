@@ -25,14 +25,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/peterldowns/pgtestdb"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
-	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
-	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration/utils"
 	"github.com/specterops/bloodhound/server/featureflags/internal/appdb"
 	"github.com/specterops/bloodhound/server/featureflags/internal/services"
@@ -177,26 +174,6 @@ func seedFlag(t *testing.T, ctx context.Context, pool *pgxpool.Pool, key, name s
 	return id
 }
 
-// authedContext attaches a bhctx.Context carrying the supplied user as the
-// auth owner. SetFlag's audit-log path requires this when UserUpdatable is true.
-func authedContext(t *testing.T) context.Context {
-	t.Helper()
-
-	userID, err := uuid.NewV4()
-	require.NoError(t, err)
-
-	return bhctx.Set(context.Background(), &bhctx.Context{
-		RequestID: "integration-request",
-		RequestIP: "127.0.0.1",
-		AuthCtx: auth.Context{
-			Owner: model.User{
-				Unique:        model.Unique{ID: userID},
-				PrincipalName: "integration-user",
-			},
-		},
-	})
-}
-
 func TestStore_GetFlagByID_Integration(t *testing.T) {
 	type testCase struct {
 		name    string
@@ -311,7 +288,7 @@ func TestStore_SetFlag_Integration(t *testing.T) {
 
 	tests := []testCase{
 		{
-			name: "Success: flips a non-user-updatable flag without writing an audit log",
+			name: "Success: flips a non-user-updatable flag",
 			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
 				id := seedFlag(t, ctx, pool, "set_flag_locked", "Locked", false, false)
 				return testSetupData{ctx: ctx, id: id}
@@ -324,20 +301,13 @@ func TestStore_SetFlag_Integration(t *testing.T) {
 				require.NoError(t, err)
 				assert.True(t, got.Enabled)
 
-				var auditCount int
-				require.NoError(t, pool.QueryRow(data.ctx,
-					"SELECT COUNT(*) FROM audit_logs WHERE action = $1",
-					string(model.AuditLogActionToggleEarlyAccessFeatureFlag),
-				).Scan(&auditCount))
-				assert.Zero(t, auditCount, "no audit log should be written for non-user-updatable flags")
 			},
 		},
 		{
-			name: "Success: flips a user-updatable flag and writes an audit log",
+			name: "Success: flips a user-updatable flag",
 			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
-				authenticatedContext := authedContext(t)
-				id := seedFlag(t, authenticatedContext, pool, "set_flag_unlocked", "Unlocked", false, true)
-				return testSetupData{ctx: authenticatedContext, id: id}
+				id := seedFlag(t, ctx, pool, "set_flag_unlocked", "Unlocked", false, true)
+				return testSetupData{ctx: ctx, id: id}
 			},
 			assert: func(t *testing.T, data testSetupData, store *appdb.Store, pool *pgxpool.Pool, setErr error) {
 				t.Helper()
@@ -347,30 +317,20 @@ func TestStore_SetFlag_Integration(t *testing.T) {
 				require.NoError(t, err)
 				assert.True(t, got.Enabled)
 
-				var auditCount int
-				require.NoError(t, pool.QueryRow(data.ctx,
-					"SELECT COUNT(*) FROM audit_logs WHERE action = $1 AND actor_name = $2",
-					string(model.AuditLogActionToggleEarlyAccessFeatureFlag),
-					"integration-user",
-				).Scan(&auditCount))
-				assert.Equal(t, 1, auditCount, "exactly one audit log should be written")
 			},
 		},
 		{
-			name: "Error: returns an error when no authenticated user is on the context for a user-updatable flag",
+			name: "Success: updates a user-updatable flag without authentication context",
 			setup: func(t *testing.T, ctx context.Context, pool *pgxpool.Pool) testSetupData {
 				id := seedFlag(t, ctx, pool, "set_flag_anon", "Anon", false, true)
 				return testSetupData{ctx: ctx, id: id}
 			},
 			assert: func(t *testing.T, data testSetupData, store *appdb.Store, pool *pgxpool.Pool, setErr error) {
 				t.Helper()
-				require.Error(t, setErr)
-				assert.ErrorContains(t, setErr, "no authenticated user on context")
-
-				// Transaction should have rolled back, leaving the flag disabled.
+				require.NoError(t, setErr)
 				got, err := store.GetFlagByID(data.ctx, data.id)
 				require.NoError(t, err)
-				assert.False(t, got.Enabled, "rolled-back update must not be visible")
+				assert.True(t, got.Enabled)
 			},
 		},
 	}

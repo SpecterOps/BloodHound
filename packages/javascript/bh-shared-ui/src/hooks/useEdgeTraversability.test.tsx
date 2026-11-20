@@ -79,6 +79,7 @@ describe('useEdgeTraversability', () => {
         expect(result.current.traversabilityQuery.data.get('Enroll')).toBe(false);
         await waitFor(() => expect(result.current.featureQuery.isSuccess).toBe(true));
         expect(result.current.traversabilityQuery.data.get('AdminTo')).toBe(true);
+        expect(result.current.traversabilityQuery.data.get('MemberOfZone')).toBe(true);
         expect(result.current.traversabilityQuery.data.get('Unknown')).toBe(false);
         expect(requestMetadata).not.toHaveBeenCalled();
     });

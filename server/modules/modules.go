@@ -23,12 +23,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	apiauth "github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/cmd/api/src/services/graphretention"
 	"github.com/specterops/bloodhound/server/alerts"
 	"github.com/specterops/bloodhound/server/analysis"
 	"github.com/specterops/bloodhound/server/appcfg"
-	"github.com/specterops/bloodhound/server/auth"
+	"github.com/specterops/bloodhound/server/audit"
+	serverauth "github.com/specterops/bloodhound/server/auth"
 	"github.com/specterops/bloodhound/server/dataquality"
 	"github.com/specterops/bloodhound/server/featureflags"
 	"github.com/specterops/bloodhound/server/graphdb"
@@ -43,12 +45,13 @@ import (
 // cutting dependencies (graph database, filesystem, caches, etc.) are added
 // here so that every module has a single, consistent place to pull from.
 type Deps struct {
-	Router          *router.Router
-	Pool            *pgxpool.Pool
-	Graph           graph.Database
-	DogTags         dogtags.Service
-	AlertPublisher  alerts.Publisher
-	IdentityOptions []identity.Option
+	Router           *router.Router
+	Pool             *pgxpool.Pool
+	Graph            graph.Database
+	DogTags          dogtags.Service
+	AlertPublisher   alerts.Publisher
+	IdentityOptions  []identity.Option
+	IdentityResolver apiauth.IdentityResolver
 	// Included to allow the config module to continue requesting some side effect
 	// legacy DB requests until that functionality can be migrated to onion
 	ConfigUpdateSideEffects appcfg.ConfigUpdateSideEffecter
@@ -80,6 +83,9 @@ func Register(deps Deps) {
 	if deps.RateLimitMiddleware == nil {
 		panic("modules: Register requires a non-nil RateLimitMiddleware")
 	}
+	if deps.IdentityResolver == nil {
+		panic("modules: Register requires a non-nil IdentityResolver")
+	}
 	if err := deps.Router.EnsureMatchedRouteRateLimit(deps.RateLimitMiddleware); err != nil {
 		panic("modules: failed to install RateLimitMiddleware: " + err.Error())
 	}
@@ -88,13 +94,14 @@ func Register(deps Deps) {
 		deps.AlertPublisher = alerts.NewAlertEventPublisher()
 	}
 
+	auditLogAdapter := audit.NewAuditLogAdapter(deps.Pool, deps.IdentityResolver)
 	featureFlagAdapter := featureflags.NewFeatureFlagRequestAdapter(deps.Pool)
 
 	analysis.Register(deps.Router, deps.Pool)
-	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects, deps.GraphRetentionManager)
-	auth.Register(deps.Router, deps.Pool)
+	appcfg.Register(deps.Router, deps.Pool, deps.ConfigUpdateSideEffects, deps.GraphRetentionManager, auditLogAdapter)
+	serverauth.Register(deps.Router, deps.Pool)
 	identity.Register(deps.Router, deps.Pool, deps.IdentityOptions...)
-	featureflags.Register(deps.Router, deps.Pool)
+	featureflags.Register(deps.Router, deps.Pool, auditLogAdapter)
 	graphdb.Register(deps.Router, deps.Pool, deps.Graph, deps.DogTags)
 	opengraphschema.Register(deps.Router, deps.Pool, featureFlagAdapter)
 	dataquality.Register(deps.Router, deps.Pool)

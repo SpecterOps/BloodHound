@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pashagolub/pgxmock/v6"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/appdb"
@@ -226,7 +225,7 @@ func TestStore_CreateGraphSchemaNodeKind(t *testing.T) {
 
 const (
 	expectedUpsertCustomNodeKindSQL = `SELECT id FROM upsert_kind($1)`
-	expectedInsertCustomNodeKindSQL = `WITH inserted_custom_node_kind AS (INSERT INTO custom_node_kinds (config, schema_node_kind_id, kind_id) VALUES ($1::jsonb, $2, $3) RETURNING id, kind_id, schema_node_kind_id, config) SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM inserted_custom_node_kind AS cnk JOIN kind AS k ON cnk.kind_id = k.id`
+	expectedInsertCustomNodeKindSQL = `WITH inserted_custom_node_kind AS (INSERT INTO custom_node_kinds (config, schema_node_kind_id, kind_id) VALUES ($1::jsonb, $2, $3) ON CONFLICT DO NOTHING RETURNING id, kind_id, schema_node_kind_id, config) SELECT cnk.id, k.name AS kind_name, cnk.kind_id, cnk.schema_node_kind_id, cnk.config FROM inserted_custom_node_kind AS cnk JOIN kind AS k ON cnk.kind_id = k.id`
 )
 
 func TestStore_CreateCustomNodeKinds(t *testing.T) {
@@ -301,10 +300,7 @@ func TestStore_CreateCustomNodeKinds(t *testing.T) {
 			WillReturnRows(pool.NewRows([]string{"id"}).AddRow(int32(99)))
 		pool.ExpectQuery(expectedInsertCustomNodeKindSQL).
 			WithArgs(configJSON, &schemaNodeKindID, int32(99)).
-			WillReturnError(&pgconn.PgError{
-				Code:           appdb.PostgresUniqueViolationCode,
-				ConstraintName: "custom_node_kinds_kind_id_key",
-			})
+			WillReturnRows(pool.NewRows([]string{"id", "kind_name", "kind_id", "schema_node_kind_id", "config"}))
 		pool.ExpectRollback()
 
 		created, err := store.CreateCustomNodeKinds(ctx, []services.CustomNodeKind{customNodeKind})
@@ -805,8 +801,8 @@ func TestStore_GetGraphSchemaNodeKinds(t *testing.T) {
 				},
 			},
 			setupMock:     func(pgxmock.PgxPoolIface) {},
-			wantNodeKinds: []services.NodeKind{},
-			wantErr:       errors.New(`node kind filter references unknown field "unknown"`),
+			wantNodeKinds: nil,
+			wantErr:       errors.New(`filter references unknown field "unknown"`),
 		},
 		{
 			name: "error_-_rejects_invalid_sort_direction",
@@ -817,8 +813,8 @@ func TestStore_GetGraphSchemaNodeKinds(t *testing.T) {
 				},
 			},
 			setupMock:     func(pgxmock.PgxPoolIface) {},
-			wantNodeKinds: []services.NodeKind{},
-			wantErr:       fmt.Errorf("%w: %q", services.ErrInvalidSortDirection, "sideways"),
+			wantNodeKinds: nil,
+			wantErr:       errors.New("invalid sort direction \"sideways\""),
 		},
 	}
 
