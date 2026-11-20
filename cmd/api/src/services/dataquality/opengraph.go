@@ -26,6 +26,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -44,12 +45,9 @@ type envPropertyKeys struct {
 }
 
 type countResults struct {
-	environmentID string
-
+	environmentID      string
 	countsByMetricName metricCounts
-
-	metricType  model.DataQualityMetricType
-	metricValue float64
+	metricType         string
 }
 
 func dataQualityGraphStats(ctx context.Context, db database.Database, graphDB graph.Database) (model.DataQualityStats, model.DataQualityAggregations, error) {
@@ -93,7 +91,7 @@ func dataQualityGraphStats(ctx context.Context, db database.Database, graphDB gr
 				return stats, aggregations, err
 			}
 
-			countMetrics, seenKinds, err := countMetricsPerEnvironment(ctx, graphDB, graph.StringKind(environment.EnvironmentKindName), environmentSourceKind.ToKind(), relationshipKinds)
+			countMetrics, seenKinds, err := countMetricsPerEnvironment(ctx, graphDB, extension, graph.StringKind(environment.EnvironmentKindName), environmentSourceKind.ToKind(), relationshipKinds)
 			if err != nil {
 				return stats, aggregations, fmt.Errorf("could not count metrics for environment kind %s: %w", environment.EnvironmentKindName, err)
 			}
@@ -146,7 +144,7 @@ func getEnvironmentSourceKind(ctx context.Context, db database.Database, environ
 	return kinds[0], nil
 }
 
-func countMetricsPerEnvironment(ctx context.Context, graphDB graph.Database, environmentKind graph.Kind, sourceKind graph.Kind, relationshipKinds graph.Kinds) ([]countResults, map[string]struct{}, error) {
+func countMetricsPerEnvironment(ctx context.Context, graphDB graph.Database, extension model.GraphSchemaExtension, environmentKind graph.Kind, sourceKind graph.Kind, relationshipKinds graph.Kinds) ([]countResults, map[string]struct{}, error) {
 	var (
 		results              []countResults
 		seenCountedKindNames = map[string]struct{}{}
@@ -175,7 +173,14 @@ func countMetricsPerEnvironment(ctx context.Context, graphDB graph.Database, env
 			}
 
 			// Custom metrics for extensions (Hardcoded for now but can be dynamic later)
-
+			switch extension.Name {
+			case "AD":
+				if customMetrics, err := countADCustomMetricsForEnvironment(tx, extension, environmentID); err != nil {
+					return err
+				} else {
+					results = append(results, customMetrics...)
+				}
+			}
 		}
 
 		return nil
@@ -184,11 +189,41 @@ func countMetricsPerEnvironment(ctx context.Context, graphDB graph.Database, env
 	return results, seenCountedKindNames, err
 }
 
+func countADCustomMetricsForEnvironment(tx graph.Transaction, extension model.GraphSchemaExtension, environmentID string) ([]countResults, error) {
+	userSessionCompleteness, err := adAnalysis.FetchUserSessionCompleteness(tx, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get user session completeness for environment %s: %w", environmentID, err)
+	}
+	localGroupCompleteness, err := adAnalysis.FetchLocalGroupCompleteness(tx, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get local group completeness for environment %s: %w", environmentID, err)
+	}
+
+	return []countResults{
+		{
+			environmentID: environmentID,
+			metricType:    fmt.Sprintf("%s_%s", extension.Namespace, model.DataQualityMetricTypeSessionCompleteness),
+			countsByMetricName: metricCounts{
+				"active_user_count_with_sessions": int(userSessionCompleteness.ActiveUserCountWithSessions),
+				"active_user_count":               int(userSessionCompleteness.ActiveUserCount),
+			},
+		},
+		{
+			environmentID: environmentID,
+			metricType:    fmt.Sprintf("%s_%s", extension.Namespace, model.DataQualityMetricTypeLocalGroupCompleteness),
+			countsByMetricName: metricCounts{
+				"active_computer_count_with_admins": int(localGroupCompleteness.ActiveComputerCountWithAdmins),
+				"active_computer_count":             int(localGroupCompleteness.ActiveComputerCount),
+			},
+		},
+	}, nil
+}
+
 func countNodeMetricsForEnvironment(tx graph.Transaction, sourceKind graph.Kind, environmentID string, membershipProperty string, seenCountedKindNames map[string]struct{}) (countResults, error) {
 	var (
 		results = countResults{
 			environmentID:      environmentID,
-			metricType:         model.DataQualityMetricTypeNode,
+			metricType:         string(model.DataQualityMetricTypeNode),
 			countsByMetricName: make(metricCounts),
 		}
 	)
@@ -220,7 +255,7 @@ func countRelationshipMetricsForEnvironment(tx graph.Transaction, sourceKind gra
 	var (
 		results = countResults{
 			environmentID:      environmentID,
-			metricType:         model.DataQualityMetricTypeRelationship,
+			metricType:         string(model.DataQualityMetricTypeRelationship),
 			countsByMetricName: make(metricCounts),
 		}
 	)
@@ -276,7 +311,9 @@ func getEnvironmentIDs(ctx context.Context, tx graph.Transaction, environmentKin
 			slog.WarnContext(ctx, "Environment node does not have a valid ID property",
 				slog.Uint64("node_id", uint64(environment.ID)),
 				slog.String("environment_kind", environmentKind.String()),
-				slog.String("id_property", environmentIDProperty), attr.Error(err))
+				slog.String("id_property", environmentIDProperty),
+				attr.Error(err),
+			)
 			continue
 		}
 
@@ -328,7 +365,7 @@ func buildDataQualityStats(runID string, extension model.GraphSchemaExtension, e
 				SchemaExtensionID:       extension.ID,
 				SchemaEnvironmentKindID: environment.EnvironmentKindId,
 				EnvironmentID:           counts.environmentID,
-				MetricType:              counts.metricType,
+				MetricType:              model.DataQualityMetricType(counts.metricType),
 				MetricName:              metricName,
 				MetricValue:             float64(count),
 				KindID:                  kindIDsByName[metricName],
