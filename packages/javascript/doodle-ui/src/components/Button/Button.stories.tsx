@@ -49,6 +49,8 @@ const meta = {
             page: ButtonDocsPage,
             description: {
                 component: `
+### **[View the Button design in Figma](https://www.figma.com/design/pqlfSCxXVB5MjX5Gq50rW8/Alpha-%F0%9F%90%95?node-id=83-610&m=dev)**
+
 ### Use a Button to perform an action
 
 Use a [Link](http://localhost:6006/?path=/docs/components-link--docs) to navigate to another location.

@@ -16,14 +16,20 @@
 import { cva } from 'class-variance-authority';
 import { cn } from '../utils';
 
-export const buttonBaseClasses = cn(
+export const buttonBaseClasses = [
     'inline-flex items-center justify-center whitespace-nowrap transition-colors',
     'focus:outline-none focus-visible:focus-ring',
     'disabled:text-[color:var(--button-disabled-text)] disabled:pointer-events-none',
-    'has-[svg]:gap-2 [&>svg]:shrink-0'
-);
+    'has-[svg]:gap-2 [&>svg]:shrink-0',
+];
 
-const containedButtonGeometryClasses = 'rounded p-2 text-sm/none';
+export const buttonBorderRadiusClasses = 'rounded';
+
+const containedButtonGeometryClasses = cn(
+    buttonBorderRadiusClasses,
+    // Optically align icons with the text glyphs rather than just the line box.
+    'p-2 text-sm/5 [&>svg]:size-4 [&>svg]:-translate-y-px'
+);
 
 const containedButtonStateClasses = cn(
     'hover:bg-secondary hover:text-inverse',
