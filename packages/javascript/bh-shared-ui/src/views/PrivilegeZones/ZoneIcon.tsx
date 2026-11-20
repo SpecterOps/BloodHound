@@ -53,7 +53,7 @@ export const ZoneIcon: FC<ZoneIconProps> = ({
         role: 'img',
         className: cn(
             !privilegeZoneAnalysisEnabled && 'mb-0.5 -ml-1 text-status-warning-main',
-            privilegeZoneAnalysisEnabled && 'text-[#8E8C95]',
+            privilegeZoneAnalysisEnabled && 'text-disabled',
             iconClasses
         ),
     };
