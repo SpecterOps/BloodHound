@@ -77,7 +77,7 @@ type MockDatabase_CreateAuditLog_Call struct {
 
 // CreateAuditLog is a helper method to define mock.On call
 //   - ctx context.Context
-//   - auditLog services.Log
+//   - auditLog services.AuditLog
 func (_e *MockDatabase_Expecter) CreateAuditLog(ctx interface{}, auditLog interface{}) *MockDatabase_CreateAuditLog_Call {
 	return &MockDatabase_CreateAuditLog_Call{Call: _e.mock.On("CreateAuditLog", ctx, auditLog)}
 }
