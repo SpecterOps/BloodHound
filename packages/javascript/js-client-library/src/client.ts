@@ -876,6 +876,9 @@ class BHEAPIClient {
             options
         );
 
+    deleteCollectorJobSchedule = (scheduleId: string, options?: RequestOptions) =>
+        this.baseClient.delete<void>(`/api/v2/collie-job-schedules/${scheduleId}`, options);
+
     deleteCollectorJobProfile = (profileId: string, options?: RequestOptions) =>
         this.baseClient.delete<void>(`/api/v2/collie-job-profiles/${profileId}`, options);
 
