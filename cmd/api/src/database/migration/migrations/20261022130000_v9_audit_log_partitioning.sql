@@ -1,0 +1,223 @@
+-- Copyright 2026 Specter Ops, Inc.
+--
+-- Licensed under the Apache License, Version 2.0
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
+-- SPDX-License-Identifier: Apache-2.0
+
+-- +goose NO TRANSACTION
+-- +goose Up
+
+-- The copy runs in one transaction and restarts from an empty staging table
+-- after a failure. audit_logs_old is retained as a recovery snapshot.
+
+-- +goose StatementBegin
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_log_status') THEN
+        CREATE TYPE audit_log_status AS ENUM ('intent', 'success', 'failure');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_log_source') THEN
+        CREATE TYPE audit_log_source AS ENUM ('middleware', 'legacy');
+    END IF;
+END $$;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM pg_partitioned_table partitioned_table
+        JOIN pg_class table_class ON table_class.oid = partitioned_table.partrelid
+        WHERE table_class.relname = 'audit_logs' AND partitioned_table.partstrat = 'r'
+    ) THEN
+        RETURN;
+    END IF;
+
+    DROP TABLE IF EXISTS audit_logs_partitioned;
+    CREATE TABLE audit_logs_partitioned (
+        id                  BIGINT NOT NULL DEFAULT nextval('audit_logs_id_seq'),
+        created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+        action              TEXT NOT NULL,
+        actor_id            TEXT,
+        actor_name          TEXT,
+        actor_email         TEXT DEFAULT NULL,
+        request_id          TEXT,
+        source_ip_address   TEXT,
+        status              audit_log_status DEFAULT 'intent',
+        commit_id           TEXT,
+        fields              JSONB,
+        source              audit_log_source DEFAULT 'middleware',
+        PRIMARY KEY (id, created_at)
+    ) PARTITION BY RANGE (created_at);
+END $$;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+DO $$
+DECLARE
+    current_month DATE := DATE '2024-01-01';
+    partition_end_date DATE := (date_trunc('month', CURRENT_TIMESTAMP) + interval '2 months')::date;
+BEGIN
+    IF to_regclass('audit_logs_partitioned') IS NULL THEN
+        RETURN;
+    END IF;
+
+    WHILE current_month < partition_end_date LOOP
+        EXECUTE format(
+            'CREATE TABLE IF NOT EXISTS audit_logs_%s PARTITION OF audit_logs_partitioned
+             FOR VALUES FROM (%L) TO (%L)',
+            to_char(current_month, 'YYYY_MM'),
+            current_month,
+            current_month + interval '1 month'
+        );
+        current_month := current_month + interval '1 month';
+    END LOOP;
+
+    EXECUTE 'CREATE TABLE IF NOT EXISTS audit_logs_default PARTITION OF audit_logs_partitioned DEFAULT';
+END $$;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+DO $$
+DECLARE
+    batch_size CONSTANT BIGINT := 50000;
+    source_max BIGINT;
+    window_high BIGINT;
+    window_low BIGINT := 0;
+BEGIN
+    IF to_regclass('audit_logs_partitioned') IS NULL THEN
+        RETURN;
+    END IF;
+
+    SELECT COALESCE(MAX(id), 0) INTO source_max FROM audit_logs;
+
+    WHILE window_low < source_max LOOP
+        window_high := window_low + batch_size;
+
+        INSERT INTO audit_logs_partitioned (
+            id, created_at, action, actor_id, actor_name, actor_email,
+            request_id, source_ip_address, status, commit_id, fields, source
+        )
+        SELECT
+            id,
+            COALESCE(created_at, '2020-01-01'::timestamptz),
+            action,
+            actor_id,
+            actor_name,
+            actor_email,
+            request_id,
+            source_ip_address,
+            status::text::audit_log_status,
+            commit_id,
+            fields,
+            'legacy'
+        FROM audit_logs
+        WHERE id > window_low AND id <= window_high
+        ON CONFLICT (id, created_at) DO NOTHING;
+
+        window_low := window_high;
+    END LOOP;
+END $$;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+DO $$
+DECLARE
+    max_id BIGINT;
+    sequence_value BIGINT;
+    source_count BIGINT;
+    staging_count BIGINT;
+BEGIN
+    IF to_regclass('audit_logs_partitioned') IS NULL THEN
+        RETURN;
+    END IF;
+
+    SELECT count(*) INTO source_count FROM audit_logs;
+    SELECT count(*) INTO staging_count FROM audit_logs_partitioned;
+
+    IF staging_count <> source_count THEN
+        RAISE EXCEPTION 'audit_logs backfill incomplete: source=% staging=%', source_count, staging_count;
+    END IF;
+
+    ALTER SEQUENCE audit_logs_id_seq OWNED BY NONE;
+    ALTER TABLE audit_logs RENAME TO audit_logs_old;
+
+    -- Free the canonical index names for the replacement table.
+    ALTER INDEX IF EXISTS idx_audit_logs_created_at RENAME TO idx_audit_logs_old_created_at;
+    ALTER INDEX IF EXISTS idx_audit_logs_actor_id RENAME TO idx_audit_logs_old_actor_id;
+    ALTER INDEX IF EXISTS idx_audit_logs_actor_email RENAME TO idx_audit_logs_old_actor_email;
+    ALTER INDEX IF EXISTS idx_audit_logs_action RENAME TO idx_audit_logs_old_action;
+    ALTER INDEX IF EXISTS idx_audit_logs_source_ip_address RENAME TO idx_audit_logs_old_source_ip_address;
+    ALTER INDEX IF EXISTS idx_audit_logs_status RENAME TO idx_audit_logs_old_status;
+
+    ALTER TABLE audit_logs_partitioned RENAME TO audit_logs;
+    ALTER SEQUENCE audit_logs_id_seq OWNED BY audit_logs.id;
+
+    SELECT MAX(id) INTO max_id FROM audit_logs;
+    SELECT last_value INTO sequence_value FROM audit_logs_id_seq;
+
+    IF max_id IS NOT NULL AND max_id > sequence_value THEN
+        PERFORM setval('audit_logs_id_seq', max_id, true);
+    END IF;
+END $$;
+-- +goose StatementEnd
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_id ON audit_logs(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_email ON audit_logs(actor_email);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_source_ip_address ON audit_logs(source_ip_address);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON audit_logs(status);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_source ON audit_logs(source);
+
+-- +goose Down
+-- Development teardown only. Production rollback requires a reviewed procedure
+-- that preserves writes made after the table swap.
+DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS audit_logs_partitioned CASCADE;
+DROP TABLE IF EXISTS audit_logs_old CASCADE;
+
+DROP TYPE IF EXISTS audit_log_status;
+DROP TYPE IF EXISTS audit_log_source;
+
+CREATE SEQUENCE IF NOT EXISTS audit_logs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id                  BIGINT PRIMARY KEY DEFAULT nextval('audit_logs_id_seq'),
+    created_at          TIMESTAMPTZ,
+    action              TEXT NOT NULL,
+    actor_id            TEXT,
+    actor_name          TEXT,
+    actor_email         TEXT DEFAULT NULL,
+    request_id          TEXT,
+    source_ip_address   TEXT,
+    status              VARCHAR(15) DEFAULT 'intent' CHECK (status IN ('intent', 'success', 'failure')),
+    commit_id           TEXT,
+    fields              JSONB
+);
+
+ALTER SEQUENCE audit_logs_id_seq OWNED BY audit_logs.id;
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_id ON audit_logs(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_email ON audit_logs(actor_email);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_source_ip_address ON audit_logs(source_ip_address);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_status ON audit_logs(status);

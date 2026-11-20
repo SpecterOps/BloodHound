@@ -130,3 +130,11 @@ func TestMatches_FailureErrMsg(t *testing.T) {
 
 	assert.False(t, errMsgEntry1.Matches(errMsgEntry2), "Expected errMsgsEntry1 not to match errMsgEntry2")
 }
+
+func TestAuditLogs_SourceMetadata(t *testing.T) {
+	var auditLogs AuditLogs
+
+	assert.True(t, auditLogs.IsSortable("source"))
+	assert.True(t, auditLogs.IsString("source"))
+	assert.Equal(t, []FilterOperator{Equals, NotEquals}, auditLogs.ValidFilters()["source"])
+}

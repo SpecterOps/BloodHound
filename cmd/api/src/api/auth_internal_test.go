@@ -72,6 +72,7 @@ func buildAuditLog(testCtx context.Context, status model.AuditLogEntryStatus, us
 		SourceIpAddress: bhCtx.RequestIP,
 		Status:          status,
 		CommitID:        commitId,
+		Source:          model.AuditLogSourceLegacy,
 	}
 
 	if user.ID.String() != "00000000-0000-0000-0000-000000000000" {
