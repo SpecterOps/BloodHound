@@ -42,7 +42,6 @@ func buildValidKinds() PrimaryDisplayKinds {
 			azure.Relationships(),
 			common.NodeKinds(),
 			common.Relationships(),
-			{Zone, MemberOfZone},
 		}
 	)
 

@@ -468,6 +468,8 @@ func (s *PGMigrator) OpenPostgresGraphConnection() (graph.Database, error) {
 			GraphQueryMemoryLimit: size.Gibibyte,
 			ConnectionString:      s.cfg.Database.PostgreSQLConnectionString(),
 			Pool:                  pool,
+			TraversalStateLimit:   s.cfg.Database.TraversalStateLimit,
+			TraversalByteLimit:    s.cfg.Database.TraversalByteLimit,
 		})
 	}
 }

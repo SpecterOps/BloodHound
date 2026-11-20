@@ -116,6 +116,7 @@ import IssuedSignedBy from './IssuedSignedBy/IssuedSignedBy';
 import ManageCA from './ManageCA/ManageCA';
 import ManageCertificates from './ManageCertificates/ManageCertificates';
 import MemberOf from './MemberOf/MemberOf';
+import MemberOfZone from './MemberOfZone/MemberOfZone';
 import NTAuthStoreFor from './NTAuthStoreFor/NTAuthStoreFor';
 import OIDGroupLink from './OIDGroupLink/OIDGroupLink';
 import Owns from './Owns/Owns';
@@ -160,6 +161,7 @@ export type EdgeInfoProps = {
 const EdgeInfoComponents = {
     GenericAll: GenericAll,
     MemberOf: MemberOf,
+    MemberOfZone: MemberOfZone,
     AllExtendedRights: AllExtendedRights,
     AdminTo: AdminTo,
     HasSession: HasSession,

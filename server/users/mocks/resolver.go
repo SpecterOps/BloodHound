@@ -20,7 +20,7 @@
 package mocks
 
 import (
-	"net/http"
+	"context"
 
 	"github.com/specterops/bloodhound/server/users"
 	mock "github.com/stretchr/testify/mock"
@@ -54,8 +54,8 @@ func (_m *MockResolver) EXPECT() *MockResolver_Expecter {
 }
 
 // Resolve provides a mock function for the type MockResolver
-func (_mock *MockResolver) Resolve(r *http.Request) (users.User, bool) {
-	ret := _mock.Called(r)
+func (_mock *MockResolver) Resolve(ctx context.Context) (users.User, bool) {
+	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Resolve")
@@ -63,18 +63,18 @@ func (_mock *MockResolver) Resolve(r *http.Request) (users.User, bool) {
 
 	var r0 users.User
 	var r1 bool
-	if returnFunc, ok := ret.Get(0).(func(*http.Request) (users.User, bool)); ok {
-		return returnFunc(r)
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (users.User, bool)); ok {
+		return returnFunc(ctx)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*http.Request) users.User); ok {
-		r0 = returnFunc(r)
+	if returnFunc, ok := ret.Get(0).(func(context.Context) users.User); ok {
+		r0 = returnFunc(ctx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(users.User)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(*http.Request) bool); ok {
-		r1 = returnFunc(r)
+	if returnFunc, ok := ret.Get(1).(func(context.Context) bool); ok {
+		r1 = returnFunc(ctx)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
@@ -87,16 +87,16 @@ type MockResolver_Resolve_Call struct {
 }
 
 // Resolve is a helper method to define mock.On call
-//   - r *http.Request
-func (_e *MockResolver_Expecter) Resolve(r interface{}) *MockResolver_Resolve_Call {
-	return &MockResolver_Resolve_Call{Call: _e.mock.On("Resolve", r)}
+//   - ctx context.Context
+func (_e *MockResolver_Expecter) Resolve(ctx interface{}) *MockResolver_Resolve_Call {
+	return &MockResolver_Resolve_Call{Call: _e.mock.On("Resolve", ctx)}
 }
 
-func (_c *MockResolver_Resolve_Call) Run(run func(r *http.Request)) *MockResolver_Resolve_Call {
+func (_c *MockResolver_Resolve_Call) Run(run func(ctx context.Context)) *MockResolver_Resolve_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 *http.Request
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].(*http.Request)
+			arg0 = args[0].(context.Context)
 		}
 		run(
 			arg0,
@@ -110,7 +110,7 @@ func (_c *MockResolver_Resolve_Call) Return(user users.User, b bool) *MockResolv
 	return _c
 }
 
-func (_c *MockResolver_Resolve_Call) RunAndReturn(run func(r *http.Request) (users.User, bool)) *MockResolver_Resolve_Call {
+func (_c *MockResolver_Resolve_Call) RunAndReturn(run func(ctx context.Context) (users.User, bool)) *MockResolver_Resolve_Call {
 	_c.Call.Return(run)
 	return _c
 }
