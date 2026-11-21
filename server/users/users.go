@@ -18,7 +18,7 @@ package users
 //go:generate go tool mockery
 
 import (
-	"net/http"
+	"context"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
@@ -26,17 +26,51 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
 
+// AuthenticatedUser contains the authentication attributes commonly needed to identify
+// and authorize the caller of a request. This type is intended to stay small.
+// feature-specific user data belongs in the owning slice's domain types rather
+// than being added here.
+type AuthenticatedUser struct {
+	ID              uuid.UUID
+	PrincipalName   string
+	EmailAddress    string
+	Administrator   bool
+	AllEnvironments bool
+}
+
+func (s AuthenticatedUser) GetID() uuid.UUID {
+	return s.ID
+}
+
+func (s AuthenticatedUser) IsAdministrator() bool {
+	return s.Administrator
+}
+
+func (s AuthenticatedUser) HasAllEnvironments() bool {
+	return s.AllEnvironments
+}
+
 // User is the minimal interface for a user in the BHE system.
 type User interface {
 	GetID() uuid.UUID
 	HasAllEnvironments() bool
 }
 
-// Resolver extracts a User from an HTTP request. Implementations are responsible
+type administrator interface {
+	IsAdministrator() bool
+}
+
+// IsAdministrator reports whether the user exposes and has administrator access.
+func IsAdministrator(user User) bool {
+	administratorUser, ok := user.(administrator)
+	return ok && administratorUser.IsAdministrator()
+}
+
+// Resolver extracts a User from a request context. Implementations are responsible
 // for reading authentication context, validating credentials, and returning the
 // authenticated user.
 type Resolver interface {
-	Resolve(r *http.Request) (User, bool)
+	Resolve(ctx context.Context) (User, bool)
 }
 
 // RequestContextResolver is the production implementation of Resolver that
@@ -49,13 +83,23 @@ func NewResolver() *RequestContextResolver {
 }
 
 // Resolve extracts a User from the request's BloodHound context.
-func (s *RequestContextResolver) Resolve(r *http.Request) (User, bool) {
+func (s *RequestContextResolver) Resolve(ctx context.Context) (User, bool) {
 	var (
-		bhContext = bhctx.FromRequest(r)
+		bhContext = bhctx.Get(ctx)
 		modelUser model.User
 		ok        bool
 	)
 
 	modelUser, ok = auth.GetUserFromAuthCtx(bhContext.AuthCtx)
-	return &modelUser, ok
+	if !ok {
+		return AuthenticatedUser{}, false
+	}
+
+	return AuthenticatedUser{
+		ID:              modelUser.ID,
+		PrincipalName:   modelUser.PrincipalName,
+		EmailAddress:    modelUser.EmailAddress.ValueOrZero(),
+		Administrator:   modelUser.Roles.Has(model.Role{Name: auth.RoleAdministrator}),
+		AllEnvironments: modelUser.HasAllEnvironments(),
+	}, true
 }

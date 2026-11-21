@@ -33,22 +33,36 @@ import {
 } from 'doodle-ui';
 import React, { FC, forwardRef, useEffect, useRef, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
-import { AppIcon } from '../../../../components';
+import { AppIcon, DebouncedAnnouncement } from '../../../../components';
 import { IconList, freeIconsList } from '../../../../utils';
 
 const InnerElement = forwardRef<HTMLUListElement, any>(({ style, ...rest }, ref) => (
-    <ul ref={ref} style={{ ...style, overflowX: 'hidden', marginTop: 0, overflowY: 'auto' }} {...rest} />
+    <ul
+        aria-label='Glyphs'
+        ref={ref}
+        style={{ ...style, overflowX: 'hidden', marginTop: 0, overflowY: 'auto' }}
+        {...rest}
+    />
 ));
 
 InnerElement.displayName = 'IconListUnorderedList';
 
-const IconCard: FC<{ iconName: IconName | undefined; onClick: (iconName: IconName) => void }> = ({
-    iconName,
-    onClick,
-}) => (
-    <div className='flex h-36 w-40 flex-col items-center justify-start'>
+const IconCard: FC<{
+    iconName: IconName | undefined;
+    isSelected: boolean;
+    onClick: (iconName: IconName) => void;
+    position: number;
+    total: number;
+}> = ({ iconName, isSelected, onClick, position, total }) => (
+    <div
+        role='listitem'
+        aria-hidden={!iconName || undefined}
+        aria-posinset={iconName ? position : undefined}
+        aria-setsize={iconName ? total : undefined}
+        className='flex h-36 w-40 flex-col items-center justify-start'>
         <TextButton
             aria-label={`${iconName}-glyph`}
+            aria-pressed={iconName ? isSelected : undefined}
             className={clsx(
                 ['relative', !iconName && 'invisible'],
                 'flex size-24 shrink-0 flex-col justify-center !p-0 focus-visible:rounded-sm focus-visible:text-primary dark:focus-visible:text-primary'
@@ -66,36 +80,41 @@ const IconCard: FC<{ iconName: IconName | undefined; onClick: (iconName: IconNam
     </div>
 );
 
-const Row = ({
-    data,
-    index: row,
-    style,
-}: ListChildComponentProps<{ filteredList: IconList; onClick: (iconName: IconName) => void }>) => {
-    const { filteredList, onClick } = data;
+type VirtualizedIconListProps = {
+    filteredList: IconList;
+    selectedIcon?: IconName;
+    onClick: (iconName: IconName) => void;
+};
+
+const Row = ({ data, index: row, style }: ListChildComponentProps<VirtualizedIconListProps>) => {
+    const { filteredList, selectedIcon, onClick } = data;
     const length = 5;
 
     return (
-        <li className={'flex justify-evenly items-center'} style={{ ...style }}>
+        <li role='presentation' className={'flex justify-evenly items-center'} style={{ ...style }}>
             {Array.from({ length }, (_, index) => {
                 const icon = filteredList[row * length + index];
-                return <IconCard key={row * length + index} iconName={icon ? icon.id : undefined} onClick={onClick} />;
+                return (
+                    <IconCard
+                        key={row * length + index}
+                        iconName={icon?.id}
+                        isSelected={icon?.id === selectedIcon}
+                        onClick={onClick}
+                        position={row * length + index + 1}
+                        total={filteredList.length}
+                    />
+                );
             })}
         </li>
     );
 };
 
-export const VirtualizedIconList = ({
-    filteredList,
-    onClick,
-}: {
-    filteredList: IconList;
-    onClick: (iconName: IconName) => void;
-}) => {
+export const VirtualizedIconList = ({ filteredList, selectedIcon, onClick }: VirtualizedIconListProps) => {
     return (
         <FixedSizeList
             height={64 * 9}
             itemCount={Math.ceil(filteredList.length / 5)}
-            itemData={{ filteredList, onClick }}
+            itemData={{ filteredList, selectedIcon, onClick }}
             itemSize={64 * 3}
             innerElementType={InnerElement}
             width='100%'
@@ -115,6 +134,9 @@ const GlyphSelectDialog: React.FC<{
     const [selectedIcon, setSelectedIcon] = useState<IconName | undefined>(selected);
     const [query, setQuery] = useState('');
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const filteredList = freeIconsList.filter(
+        (icon) => icon.id.includes(query) || icon.label.toLowerCase().includes(query)
+    );
 
     const handleChange: React.ChangeEventHandler<HTMLInputElement> | undefined = (e) =>
         setQuery(e.target.value.toLowerCase());
@@ -180,6 +202,7 @@ const GlyphSelectDialog: React.FC<{
                                 <AppIcon.MagnifyingGlass className='absolute left-2 top-[50%] -mt-[8px] pointer-events-none' />
                                 <Input
                                     ref={searchInputRef}
+                                    aria-label='Filter glyphs'
                                     placeholder='Search'
                                     variant='outlined'
                                     onChange={handleChange}
@@ -188,11 +211,18 @@ const GlyphSelectDialog: React.FC<{
                             </span>
                         </div>
 
+                        <DebouncedAnnouncement
+                            announcementKey={query}
+                            message={
+                                filteredList.length === 0
+                                    ? 'No results found'
+                                    : `${filteredList.length} matching ${filteredList.length === 1 ? 'result' : 'results'}`
+                            }
+                        />
                         <div className='p-2 size-full bg-neutral-3 rounded-md'>
                             <VirtualizedIconList
-                                filteredList={freeIconsList.filter(
-                                    (icon) => icon.id.includes(query) || icon.label.toLowerCase().includes(query)
-                                )}
+                                filteredList={filteredList}
+                                selectedIcon={selectedIcon}
                                 onClick={(iconName) => {
                                     setSelectedIcon(iconName);
                                 }}

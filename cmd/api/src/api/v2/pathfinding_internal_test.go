@@ -21,13 +21,14 @@ import (
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_parseRelationshipKindsParam(t *testing.T) {
-	validKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships())
-	validTraversableKinds := graph.Kinds(ad.PathfindingRelationshipsMatchFrontend()).Concatenate(azure.PathfindingRelationships())
+	validKinds := graph.Kinds(ad.Relationships()).Concatenate(azure.Relationships()).Concatenate(common.Relationships())
+	validTraversableKinds := graph.Kinds(common.PathfindingRelationships())
 
 	// Default case
 	kinds, operator, err := parseRelationshipKindsParam(validKinds, "")
@@ -66,4 +67,19 @@ func Test_parseRelationshipKindsParam(t *testing.T) {
 	require.Equal(t, 2, len(kinds))
 	require.True(t, kinds.ContainsOneOf(ad.Contains))
 	require.True(t, kinds.ContainsOneOf(ad.GenericAll))
+
+	// MemberOfZone is a common-schema kind that is both valid and traversable
+	kinds, operator, err = parseRelationshipKindsParam(validKinds, "in:MemberOfZone")
+
+	require.Nil(t, err)
+	require.Equal(t, "in", operator)
+	require.Equal(t, graph.Kinds{common.MemberOfZone}, kinds)
+
+	kinds, operator, err = parseRelationshipKindsParam(validTraversableKinds, "in:Contains,MemberOfZone")
+
+	require.Nil(t, err)
+	require.Equal(t, "in", operator)
+	require.Equal(t, 2, len(kinds))
+	require.True(t, kinds.ContainsOneOf(ad.Contains))
+	require.True(t, kinds.ContainsOneOf(common.MemberOfZone))
 }

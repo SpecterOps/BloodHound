@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { Link, LinkProps, Path } from 'react-router-dom';
+import { Link, LinkProps } from 'react-router-dom';
 import {
     AppNavigateProps,
     GloballySupportedSearchParams,
@@ -22,22 +22,19 @@ import {
     persistSearchParams,
 } from '../../utils/searchParams/searchParams';
 
+/**
+ * A link that preserves globally supported query parameters when navigating.
+ *
+ * Set `discardQueryParams` to skip preserving query parameters from the current URL.
+ * Query parameters explicitly included in `to` are unaffected by this flag.
+ */
 export const AppLink = ({ children, to, discardQueryParams, ...props }: LinkProps & AppNavigateProps) => {
-    const path = typeof to === 'string' ? to : (to as Partial<Path>).pathname || '';
-
-    if (discardQueryParams) {
-        return (
-            <Link to={to} aria-label={`Navigate to ${path.replace(/\//g, ' ').trim()}`} {...props}>
-                {children}
-            </Link>
-        );
-    }
-
-    const search = persistSearchParams(GloballySupportedSearchParams);
-    const toWithParams = applyPreservedParams(to, search);
+    const destination = discardQueryParams
+        ? to
+        : applyPreservedParams(to, persistSearchParams(GloballySupportedSearchParams));
 
     return (
-        <Link to={toWithParams} aria-label={`Navigate to ${path.replace(/\//g, ' ').trim()}`} {...props}>
+        <Link to={destination} {...props}>
             {children}
         </Link>
     );

@@ -22,6 +22,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -388,31 +389,37 @@ func (_c *MockDatabase_GetRelationshipKind_Call) RunAndReturn(run func(ctx conte
 }
 
 // ListExtensions provides a mock function for the type MockDatabase
-func (_mock *MockDatabase) ListExtensions(ctx context.Context) ([]services.Extension, error) {
-	ret := _mock.Called(ctx)
+func (_mock *MockDatabase) ListExtensions(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip int, limit int) ([]services.Extension, int, error) {
+	ret := _mock.Called(ctx, extensionFilters, sort, skip, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListExtensions")
 	}
 
 	var r0 []services.Extension
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]services.Extension, error)); ok {
-		return returnFunc(ctx)
+	var r1 int
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, params.Filters, params.SortItems, int, int) ([]services.Extension, int, error)); ok {
+		return returnFunc(ctx, extensionFilters, sort, skip, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) []services.Extension); ok {
-		r0 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, params.Filters, params.SortItems, int, int) []services.Extension); ok {
+		r0 = returnFunc(ctx, extensionFilters, sort, skip, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]services.Extension)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = returnFunc(ctx)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, params.Filters, params.SortItems, int, int) int); ok {
+		r1 = returnFunc(ctx, extensionFilters, sort, skip, limit)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(int)
 	}
-	return r0, r1
+	if returnFunc, ok := ret.Get(2).(func(context.Context, params.Filters, params.SortItems, int, int) error); ok {
+		r2 = returnFunc(ctx, extensionFilters, sort, skip, limit)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
 }
 
 // MockDatabase_ListExtensions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListExtensions'
@@ -422,29 +429,53 @@ type MockDatabase_ListExtensions_Call struct {
 
 // ListExtensions is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *MockDatabase_Expecter) ListExtensions(ctx interface{}) *MockDatabase_ListExtensions_Call {
-	return &MockDatabase_ListExtensions_Call{Call: _e.mock.On("ListExtensions", ctx)}
+//   - extensionFilters params.Filters
+//   - sort params.SortItems
+//   - skip int
+//   - limit int
+func (_e *MockDatabase_Expecter) ListExtensions(ctx interface{}, extensionFilters interface{}, sort interface{}, skip interface{}, limit interface{}) *MockDatabase_ListExtensions_Call {
+	return &MockDatabase_ListExtensions_Call{Call: _e.mock.On("ListExtensions", ctx, extensionFilters, sort, skip, limit)}
 }
 
-func (_c *MockDatabase_ListExtensions_Call) Run(run func(ctx context.Context)) *MockDatabase_ListExtensions_Call {
+func (_c *MockDatabase_ListExtensions_Call) Run(run func(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip int, limit int)) *MockDatabase_ListExtensions_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
+		var arg1 params.Filters
+		if args[1] != nil {
+			arg1 = args[1].(params.Filters)
+		}
+		var arg2 params.SortItems
+		if args[2] != nil {
+			arg2 = args[2].(params.SortItems)
+		}
+		var arg3 int
+		if args[3] != nil {
+			arg3 = args[3].(int)
+		}
+		var arg4 int
+		if args[4] != nil {
+			arg4 = args[4].(int)
+		}
 		run(
 			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4,
 		)
 	})
 	return _c
 }
 
-func (_c *MockDatabase_ListExtensions_Call) Return(extensions []services.Extension, err error) *MockDatabase_ListExtensions_Call {
-	_c.Call.Return(extensions, err)
+func (_c *MockDatabase_ListExtensions_Call) Return(extensions []services.Extension, n int, err error) *MockDatabase_ListExtensions_Call {
+	_c.Call.Return(extensions, n, err)
 	return _c
 }
 
-func (_c *MockDatabase_ListExtensions_Call) RunAndReturn(run func(ctx context.Context) ([]services.Extension, error)) *MockDatabase_ListExtensions_Call {
+func (_c *MockDatabase_ListExtensions_Call) RunAndReturn(run func(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip int, limit int) ([]services.Extension, int, error)) *MockDatabase_ListExtensions_Call {
 	_c.Call.Return(run)
 	return _c
 }

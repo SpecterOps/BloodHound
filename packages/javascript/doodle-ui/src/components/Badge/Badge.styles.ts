@@ -14,21 +14,22 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { cn } from '../utils';
 
-const badgeBaseClasses = [
+const badgeBaseClasses = cn(
     'inline-flex min-w-16 items-center justify-center',
     'rounded px-2 py-1',
-    'text-base text-main',
-];
+    'text-base text-main'
+);
 
 export const BadgeVariants = cva(badgeBaseClasses, {
     variants: {
         variant: {
             fill: 'bg-[color:var(--badge-surface)]',
-            outline: [
+            outline: cn(
                 'border border-[color:var(--badge-accent)] bg-[color:var(--badge-grey-surface)]',
-                '[&>span>svg]:text-[color:var(--badge-accent)]',
-            ],
+                '[&>span>svg]:text-[color:var(--badge-accent)]'
+            ),
         },
         color: {
             primary: '[--badge-surface:var(--badge-primary-surface)] [--badge-accent:var(--badge-primary-accent)]',
@@ -60,6 +61,6 @@ export const BadgeVariants = cva(badgeBaseClasses, {
     },
 });
 
-export const badgeIconClasses = ['badge-icon flex shrink-0 items-center', '[&>svg]:h-3 [&>svg]:w-3'];
+export const badgeIconClasses = cn('badge-icon flex shrink-0 items-center', '[&>svg]:h-3 [&>svg]:w-3');
 
 export const badgeLabelClasses = 'badge-label translate-y-[1px]';

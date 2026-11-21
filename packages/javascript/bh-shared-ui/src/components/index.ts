@@ -47,6 +47,7 @@ export { default as CreateUserForm } from './CreateUserForm';
 export * from './DataTable';
 export { default as DataTable } from './DataTable';
 export * from './DateRangeInputs';
+export * from './DebouncedAnnouncement';
 export * from './DeleteConfirmationDialog';
 export { default as DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 export * from './DetailsAccordion';
