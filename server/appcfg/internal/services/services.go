@@ -19,11 +19,14 @@ import (
 	"context"
 	"errors"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
+	"github.com/specterops/bloodhound/server/audit"
 )
 
 var (
 	ErrNotFound = errors.New("not found")
+	ErrAuditLog = errors.New("audit log operation failed")
 )
 
 type Database interface {
@@ -33,10 +36,37 @@ type Database interface {
 	UpsertConfigurationParameter(ctx context.Context, parameterKey ParameterKey, value types.JSONBObject) error
 }
 
-type Service struct {
+type Auditor interface {
+	Begin(ctx context.Context, entry audit.Entry) (uuid.UUID, error)
+	Complete(ctx context.Context, commitID uuid.UUID, entry audit.Entry, operationErr error) error
+}
+
+// Reader provides application configuration read operations without requiring
+// dependencies used only by mutating operations.
+type Reader struct {
 	db Database
 }
 
-func NewService(databaseInterface Database) *Service {
-	return &Service{db: databaseInterface}
+type Service struct {
+	*Reader
+	auditor Auditor
+}
+
+func NewReader(databaseInterface Database) *Reader {
+	if databaseInterface == nil {
+		panic("appcfg: reader requires a non-nil Database")
+	}
+
+	return &Reader{db: databaseInterface}
+}
+
+func NewService(databaseInterface Database, auditor Auditor) *Service {
+	if databaseInterface == nil {
+		panic("appcfg: service requires a non-nil Database")
+	}
+	if auditor == nil {
+		panic("appcfg: service requires a non-nil Auditor")
+	}
+
+	return &Service{Reader: &Reader{db: databaseInterface}, auditor: auditor}
 }

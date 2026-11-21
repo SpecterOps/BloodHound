@@ -23,57 +23,56 @@ export const buttonBaseClasses = [
     'has-[svg]:gap-2 [&>svg]:shrink-0',
 ];
 
-const containedButtonGeometryClasses = 'rounded p-2 text-sm/none';
+export const buttonBorderRadiusClasses = 'rounded';
 
-const containedButtonStateClasses = [
+const containedButtonGeometryClasses = cn(
+    buttonBorderRadiusClasses,
+    // Optically align icons with the text glyphs rather than just the line box.
+    'p-2 text-sm/5 [&>svg]:size-4 [&>svg]:-translate-y-px'
+);
+
+const containedButtonStateClasses = cn(
     'hover:bg-secondary hover:text-inverse',
     'focus-visible:bg-secondary focus-visible:text-inverse',
-    'active:bg-primary-variant active:text-inverse',
-];
+    'active:bg-primary-variant active:text-inverse'
+);
 
-const containedPrimaryClasses = [
+const containedPrimaryClasses = cn(
     'border border-transparent bg-primary text-inverse',
-    ...containedButtonStateClasses,
-    'disabled:bg-[color:var(--button-disabled-fill)]',
-];
+    containedButtonStateClasses,
+    'disabled:bg-[color:var(--button-disabled-fill)]'
+);
 
-const containedSecondaryClasses = [
+const containedSecondaryClasses = cn(
     'border border-[color:var(--button-secondary-border)] bg-elevation-1 text-main',
-    ...containedButtonStateClasses,
-    'disabled:bg-[color:var(--button-disabled-fill)]',
-];
-
-const containedTertiaryClasses = [
-    'border border-brand-orange bg-elevation-1 text-main',
-    ...containedButtonStateClasses,
-    'disabled:border-[color:var(--button-disabled-fill)] disabled:bg-[color:var(--button-disabled-fill)]',
-];
+    containedButtonStateClasses,
+    'disabled:bg-[color:var(--button-disabled-fill)]'
+);
 
 export const ButtonVariants = cva(buttonBaseClasses, {
     variants: {
         variant: {
             primary: containedPrimaryClasses,
             secondary: containedSecondaryClasses,
-            tertiary: containedTertiaryClasses,
             // TODO - remove in BED-7642
             // used in DropdownTriggerContents & EnvironmentSelectorTrigger
             /**
              * @deprecated Use TextButton instead.
              */
-            transparent: [
+            transparent: cn(
                 'rounded-3xl border border-[color:var(--button-transparent-border)] bg-transparent text-main',
                 'hover:border-secondary hover:bg-secondary hover:text-[color:var(--button-highlight-text)] hover:no-underline',
-                'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]',
-            ],
+                'focus-visible:border-primary focus-visible:bg-secondary focus-visible:text-[color:var(--button-highlight-text)]'
+            ),
             // TODO - legacy, remove in BED-7635
             /**
              * @deprecated Use IconButton instead.
              */
-            icon: [
+            icon: cn(
                 'rounded-full bg-[color:var(--button-icon-fill)] text-common-dark shadow-outer-1 has-[svg]:p-2',
                 'hover:border-2 hover:border-primary',
-                'active:border-none',
-            ],
+                'active:border-none'
+            ),
         },
         // TODO - remove as the only usage of this is with variant="text"
         /**
@@ -100,7 +99,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
     },
     compoundVariants: [
         {
-            variant: ['primary', 'secondary', 'tertiary'],
+            variant: ['primary', 'secondary'],
             size: ['small', 'medium', 'large'],
             className: containedButtonGeometryClasses,
         },
@@ -123,7 +122,7 @@ export const ButtonVariants = cva(buttonBaseClasses, {
 });
 
 export const TextButtonBaseClasses = cn(
-    ...buttonBaseClasses,
+    buttonBaseClasses,
     'rounded-3xl px-2 py-1 has-[svg]:px-1',
     'active:text-[color:var(--button-text-active)]',
     'hover:text-secondary',

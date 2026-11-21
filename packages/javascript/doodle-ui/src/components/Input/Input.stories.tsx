@@ -48,6 +48,13 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {};
 
+export const Underlined: Story = {
+    args: {
+        label: 'Email address',
+        variant: 'underlined',
+    },
+};
+
 export const Required: Story = {
     args: {
         label: 'Email address',

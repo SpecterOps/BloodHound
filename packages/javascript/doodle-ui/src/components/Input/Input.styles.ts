@@ -14,36 +14,42 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { cva } from 'class-variance-authority';
+import { invalidControlClasses } from '../formControl.styles';
+import { cn } from '../utils';
 
-const inputBaseClasses = [
+const inputBaseClasses = cn(
     'flex h-10 w-full',
     'text-base text-main placeholder:text-[color:var(--input-placeholder-text)]',
     'disabled:cursor-not-allowed disabled:opacity-50',
-    'file:cursor-pointer file:border-0 file:bg-transparent file:pr-3 file:text-sm file:font-medium file:text-main',
-];
+    'file:cursor-pointer file:border-0 file:bg-transparent file:pr-3 file:text-sm file:font-medium file:text-main'
+);
 
 export const InputVariants = cva(inputBaseClasses, {
     variants: {
         variant: {
-            outlined: [
+            outlined: cn(
                 'rounded-md border border-[color:var(--input-outlined-border-default)] bg-[color:var(--input-fill)] px-3 py-2 text-sm',
                 'enabled:hover:border-[color:var(--input-outlined-border-hover)]',
                 'focus:outline-none focus:focus-ring focus:border-[color:var(--input-outlined-border-default)] enabled:hover:focus:border-[color:var(--input-outlined-hover-focus-border)]',
                 'disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
-                'enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:hover:border-status-error-main enabled:aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main disabled:aria-[invalid=true]:border-[color:var(--input-disabled-invalid-border)]',
-            ],
-            underlined: [
-                'rounded-sm border-b border-b-[color:var(--input-border-default)] bg-transparent',
+                invalidControlClasses,
+                'enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:hover:border-status-error-main enabled:aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main disabled:aria-[invalid=true]:border-[color:var(--input-disabled-invalid-border)]'
+            ),
+            underlined: cn(
+                'rounded-sm border-b border-b-[color:var(--input-border-default)] bg-transparent px-1',
                 'hover:border-b-2',
                 'focus:border-b-2 focus:border-[color:var(--input-border-focus)] focus:outline-none focus:focus-ring',
-            ],
+                // Border images ignore border-radius, keeping the underline flat without changing the focus outline.
+                '[border-image:linear-gradient(var(--input-border-default),var(--input-border-default))_1]',
+                'focus:[border-image:linear-gradient(var(--input-border-focus),var(--input-border-focus))_1]'
+            ),
         },
         intent: {
-            time: [
+            time: cn(
                 'appearance-none',
                 '[&::-webkit-calendar-picker-indicator]:hidden',
-                '[&::-webkit-calendar-picker-indicator]:appearance-none',
-            ],
+                '[&::-webkit-calendar-picker-indicator]:appearance-none'
+            ),
         },
     },
     defaultVariants: {

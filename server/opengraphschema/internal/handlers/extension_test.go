@@ -35,6 +35,7 @@ import (
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,10 +56,10 @@ func TestHandlers_ListExtensions(t *testing.T) {
 				name:        "extensions preserve response shape and display names",
 				permissions: readPermissions,
 				setupMock: func(ctx context.Context, serviceMock *mocks.MockOpenGraphSchema) {
-					serviceMock.EXPECT().ListExtensions(ctx).Return([]services.Extension{
+					serviceMock.EXPECT().ListExtensions(ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]services.Extension{
 						{ID: 1, Name: "InternalAD", DisplayName: "Active Directory", Namespace: "AD", Version: "v1", IsBuiltin: true, CreatedAt: time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC), UpdatedAt: time.Date(2026, time.January, 2, 0, 0, 0, 0, time.UTC)},
 						{ID: 2, Name: "InternalCustom", DisplayName: "Custom", Namespace: "CUSTOM", Version: "v2", CreatedAt: time.Date(2026, time.January, 3, 0, 0, 0, 0, time.UTC), UpdatedAt: time.Date(2026, time.January, 4, 0, 0, 0, 0, time.UTC)},
-					}, nil).Once()
+					}, 2, nil).Once()
 				},
 				wantStatus: http.StatusOK,
 				wantBody:   `{"data":{"extensions":[{"id":1,"name":"Active Directory","namespace":"AD","version":"v1","is_builtin":true,"created_at":"2026-01-01T00:00:00Z","updated_at":"2026-01-02T00:00:00Z"},{"id":2,"name":"Custom","namespace":"CUSTOM","version":"v2","is_builtin":false,"created_at":"2026-01-03T00:00:00Z","updated_at":"2026-01-04T00:00:00Z"}]}}`,
@@ -67,7 +68,7 @@ func TestHandlers_ListExtensions(t *testing.T) {
 				name:        "OpenGraph read permission allows empty results",
 				permissions: readPermissions,
 				setupMock: func(ctx context.Context, serviceMock *mocks.MockOpenGraphSchema) {
-					serviceMock.EXPECT().ListExtensions(ctx).Return([]services.Extension{}, nil).Once()
+					serviceMock.EXPECT().ListExtensions(ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]services.Extension{}, 0, nil).Once()
 				},
 				wantStatus: http.StatusOK,
 				wantBody:   `{"data":{"extensions":[]}}`,
@@ -76,7 +77,7 @@ func TestHandlers_ListExtensions(t *testing.T) {
 				name:        "nil results encode empty array",
 				permissions: readPermissions,
 				setupMock: func(ctx context.Context, serviceMock *mocks.MockOpenGraphSchema) {
-					serviceMock.EXPECT().ListExtensions(ctx).Return(nil, nil).Once()
+					serviceMock.EXPECT().ListExtensions(ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, nil).Once()
 				},
 				wantStatus: http.StatusOK,
 				wantBody:   `{"data":{"extensions":[]}}`,
@@ -85,7 +86,7 @@ func TestHandlers_ListExtensions(t *testing.T) {
 				name:        "service error",
 				permissions: readPermissions,
 				setupMock: func(ctx context.Context, serviceMock *mocks.MockOpenGraphSchema) {
-					serviceMock.EXPECT().ListExtensions(ctx).Return(nil, errors.New("private database detail")).Once()
+					serviceMock.EXPECT().ListExtensions(ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, errors.New("private database detail")).Once()
 				},
 				wantStatus:       http.StatusInternalServerError,
 				wantErrorMessage: "an internal error has occurred that is preventing the service from servicing this request",

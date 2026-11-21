@@ -49,6 +49,8 @@ const meta = {
             page: ButtonDocsPage,
             description: {
                 component: `
+### **[View the Button design in Figma](https://www.figma.com/design/pqlfSCxXVB5MjX5Gq50rW8/Alpha-%F0%9F%90%95?node-id=83-610&m=dev)**
+
 ### Use a Button to perform an action
 
 Use a [Link](http://localhost:6006/?path=/docs/components-link--docs) to navigate to another location.
@@ -66,7 +68,6 @@ Use a Button when a user remains in the current context and triggers an action, 
 
 - Use primary for the main action in a section or workflow.
 - Use secondary for supporting actions such as Cancel or Back.
-- Use tertiary only when product guidance calls for the orange outlined treatment.
 - Use TextButton for lower-emphasis text actions.
 - Use IconButton for icon-only actions.
 
@@ -119,7 +120,7 @@ Using the correct element provides expected keyboard behavior and helps assistiv
         },
         variant: {
             // TODO - remove transparent option
-            options: ['primary', 'secondary', 'tertiary'],
+            options: ['primary', 'secondary'],
             control: 'select',
         },
         // TODO - remove fontColor
@@ -275,31 +276,6 @@ export const Secondary: ButtonStory = {
                 </Button>
             </div>
         </>
-    ),
-};
-
-export const Tertiary: ButtonStory = {
-    args: {
-        variant: 'tertiary',
-        children: 'Tertiary',
-        disabled: false,
-    },
-    parameters: {
-        docs: {
-            description: {
-                story: `The tertiary variant provides the orange outlined treatment. Use it only when product guidance calls for this visual hierarchy.`,
-            },
-        },
-    },
-    render: ({ variant, children, ...buttonProps }) => (
-        <div className='flex items-center gap-4'>
-            <Button variant={variant} {...buttonProps}>
-                {children}
-            </Button>
-            <Button variant='tertiary' disabled>
-                Disabled
-            </Button>
-        </div>
     ),
 };
 

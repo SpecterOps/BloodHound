@@ -21,6 +21,7 @@ package ad_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
@@ -1857,9 +1858,11 @@ func TestFetchLocalGroupCompleteness(t *testing.T) {
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		// why does this function ask for a transaction type?
-		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, "DOMAIN123")
+		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, time.Time{}, "DOMAIN123")
 		require.NoError(t, err)
-		assert.Equal(t, .5, completeness)
+		assert.Equal(t, float64(1), completeness.ActiveComputerCountWithAdmins)
+		assert.Equal(t, float64(2), completeness.ActiveComputerCount)
+		assert.Equal(t, .5, completeness.ActiveComputerCountWithAdmins/completeness.ActiveComputerCount)
 		return nil
 	})
 	assert.NoError(t, err)
@@ -1879,9 +1882,11 @@ func TestFetchUserSessionCompleteness(t *testing.T) {
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		// why does this function ask for a transaction type?
-		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, "DOMAIN123")
+		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, time.Time{}, "DOMAIN123")
 		require.NoError(t, err)
-		assert.Equal(t, .5, completeness)
+		assert.Equal(t, float64(2), completeness.ActiveUserCountWithSessions)
+		assert.Equal(t, float64(4), completeness.ActiveUserCount)
+		assert.Equal(t, .5, completeness.ActiveUserCountWithSessions/completeness.ActiveUserCount)
 		return nil
 	})
 	assert.NoError(t, err)
