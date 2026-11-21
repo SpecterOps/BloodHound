@@ -20,12 +20,16 @@ package handlers
 
 import (
 	"context"
+
+	"github.com/specterops/bloodhound/packages/go/params"
+	"github.com/specterops/bloodhound/server/auth/internal/services"
 )
 
 const UserInterfacePath = "/ui"
 
 // Auth defines the service boundary for the auth handlers package.
 type Auth interface {
+	ListAuthProviders(ctx context.Context, filters params.Filters, sortItems params.SortItems) ([]services.SSOProvider, error)
 	Logout(ctx context.Context, sessionID int64) error
 }
 
