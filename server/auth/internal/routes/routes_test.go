@@ -91,7 +91,7 @@ func TestRegister_LogoutDoesNotRequireAuthentication(t *testing.T) {
 		"unauthenticated POST /api/v2/logout must not be rejected by route-level middleware")
 }
 
-func TestListAuthProvidersQueryValidation(t *testing.T) {
+func TestListAuthProviders_QueryValidation(t *testing.T) {
 	for _, query := range []string{"?sort_by=details", "?sort_by=-", "?name=gt:value", "?name=bad:value", "?details=eq:value"} {
 		t.Run(query, func(t *testing.T) {
 			var (
@@ -109,7 +109,7 @@ func TestListAuthProvidersQueryValidation(t *testing.T) {
 }
 
 // The listing is needed by the login screen before the user authenticates.
-func TestListAuthProvidersPublicQuery(t *testing.T) {
+func TestListAuthProviders_PublicQuery(t *testing.T) {
 	var (
 		routerInstance = router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
 		serviceMock    = mocks.NewMockAuth(t)

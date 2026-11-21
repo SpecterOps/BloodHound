@@ -18,6 +18,7 @@ package appdb_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
@@ -42,8 +43,9 @@ func providerColumns() []string {
 
 func TestStore_ListAuthProviders_SQL(t *testing.T) {
 	var (
-		ctx      = context.Background()
-		queryErr = errors.New("query failed")
+		ctx       = context.Background()
+		queryErr  = errors.New("query failed")
+		deletedAt = time.Date(2026, time.November, 20, 12, 30, 0, 123456000, time.UTC)
 	)
 
 	testCases := []struct {
@@ -74,6 +76,40 @@ func TestStore_ListAuthProviders_SQL(t *testing.T) {
 				assert.Equal(t, int32(10), providers[0].OIDCProvider.ID)
 				assert.Equal(t, []string{"email"}, providers[1].SAMLProvider.PrincipalAttributeMappings)
 				assert.Equal(t, "issuer", providers[1].SAMLProvider.IssuerURI)
+			},
+		},
+		{
+			name: "Preserves deleted_at timestamps for both provider kinds",
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				rows := pool.NewRows(providerColumns()).
+					AddRow(int32(1), "OIDC", 2, "oidc", nil, []byte(`{"id":10,"deleted_at":"2026-11-20T12:30:00.123456Z"}`), nil).
+					AddRow(int32(2), "SAML", 1, "saml", nil, nil, []byte(`{"id":20,"deleted_at":"2026-11-20T12:30:00.123456Z"}`))
+				pool.ExpectQuery(providerQuery + " ORDER BY sso.created_at").WithArgs().WillReturnRows(rows)
+			},
+			expectedCount: 2,
+			assertResult: func(t *testing.T, providers []services.SSOProvider) {
+				require.Len(t, providers, 2)
+				require.NotNil(t, providers[0].OIDCProvider)
+				require.NotNil(t, providers[1].SAMLProvider)
+				assert.Equal(t, sql.NullTime{Time: deletedAt, Valid: true}, providers[0].OIDCProvider.DeletedAt)
+				assert.Equal(t, sql.NullTime{Time: deletedAt, Valid: true}, providers[1].SAMLProvider.DeletedAt)
+			},
+		},
+		{
+			name: "Preserves null deleted_at values for both provider kinds",
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				rows := pool.NewRows(providerColumns()).
+					AddRow(int32(1), "OIDC", 2, "oidc", nil, []byte(`{"id":10,"deleted_at":null}`), nil).
+					AddRow(int32(2), "SAML", 1, "saml", nil, nil, []byte(`{"id":20,"deleted_at":null}`))
+				pool.ExpectQuery(providerQuery + " ORDER BY sso.created_at").WithArgs().WillReturnRows(rows)
+			},
+			expectedCount: 2,
+			assertResult: func(t *testing.T, providers []services.SSOProvider) {
+				require.Len(t, providers, 2)
+				require.NotNil(t, providers[0].OIDCProvider)
+				require.NotNil(t, providers[1].SAMLProvider)
+				assert.Equal(t, sql.NullTime{}, providers[0].OIDCProvider.DeletedAt)
+				assert.Equal(t, sql.NullTime{}, providers[1].SAMLProvider.DeletedAt)
 			},
 		},
 		{
