@@ -20,12 +20,13 @@ package handlers
 import (
 	"context"
 
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 )
 
 // OpenGraphSchema defines the schema service boundary for the OpenGraph schema handlers package.
 type OpenGraphSchema interface {
-	ListExtensions(ctx context.Context) ([]services.Extension, error)
+	ListExtensions(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]services.Extension, int, error)
 	GetNodeKind(ctx context.Context, id int32) (services.NodeKind, error)
 	GetRelationshipKind(ctx context.Context, id int32) (services.RelationshipKind, error)
 }

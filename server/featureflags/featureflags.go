@@ -40,26 +40,21 @@ const (
 	FeatureOpenGraphExtensionManagement = services.FeatureOpenGraphExtensionManagement
 )
 
+type Auditor = services.Auditor
+
 type FeatureFlagRequestAdapter interface {
 	IsEnabled(ctx context.Context, key string) (bool, error)
 }
 
 func NewFeatureFlagRequestAdapter(pool *pgxpool.Pool) FeatureFlagRequestAdapter {
-	var (
-		store             = appdb.NewStore(pool)
-		analysisRequester = analysis.NewAnalysisRequestSubmitter(pool)
-		svc               = services.NewService(store, analysisRequester)
-		handlerSet        = handlers.NewHandlersContainer(svc)
-	)
-
-	return handlerSet
+	return services.NewReader(appdb.NewStore(pool))
 }
 
-func Register(routerInst *router.Router, pool *pgxpool.Pool) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, auditor Auditor) {
 	var (
 		store             = appdb.NewStore(pool)
 		analysisRequester = analysis.NewAnalysisRequestSubmitter(pool)
-		svc               = services.NewService(store, analysisRequester)
+		svc               = services.NewService(store, analysisRequester, auditor)
 		handlerSet        = handlers.NewHandlersContainer(svc)
 	)
 

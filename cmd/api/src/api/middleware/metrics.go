@@ -17,9 +17,21 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 )
+
+// metricsHandler marks a route for per-handler API request metrics.
+type metricsHandler struct {
+	http.Handler
+}
+
+// TrackMetrics marks a route for per-handler API request metrics.
+func TrackMetrics(handler http.Handler) http.Handler {
+	return metricsHandler{Handler: handler}
+}
 
 // Label cardinality guidance for the Prometheus metrics below.
 //
@@ -42,9 +54,8 @@ var (
 		Help:      "A gauge of requests currently being served by the wrapped handler.",
 	})
 
-	// ApiTotalRequests is partitioned by response code and HTTP method (both
-	// bounded). Do not add a path/URI label; use a templated "handler" label
-	// as described above if a per-endpoint breakdown is required.
+	// ApiTotalRequests is partitioned by response code, HTTP method, and the
+	// bounded matched route template in the "handler" label.
 	ApiTotalRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: model.Namespace,
@@ -52,7 +63,7 @@ var (
 			Name:      "requests_total",
 			Help:      "A counter for requests to the wrapped handler.",
 		},
-		[]string{"code", "method"},
+		[]string{"code", "method", "handler"},
 	)
 
 	// ApiRequestDuration is partitioned by response code, HTTP method, and a
