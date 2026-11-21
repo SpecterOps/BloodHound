@@ -18,6 +18,8 @@ package oidc
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 )
@@ -26,6 +28,27 @@ import (
 
 // Serves as a lightweight wrapper around the oidc package which allows for
 // OpenID Connect client logic to be abstracted.
+
+var oidcHTTPClient = &http.Client{
+	CheckRedirect: func(request *http.Request, via []*http.Request) error {
+		if request.URL.Scheme != "https" {
+			return errors.New("OIDC redirect must use HTTPS")
+		}
+
+		// Preserve Go's default redirect limit when using a custom CheckRedirect
+		if len(via) >= 10 {
+			return errors.New("OIDC request reached the redirect limit of 10 requests")
+		}
+
+		return nil
+	},
+}
+
+// DoRequest sends an OIDC request and rejects redirects to non-HTTPS URLs
+func DoRequest(request *http.Request) (*http.Response, error) {
+	return oidcHTTPClient.Do(request)
+}
+
 type Service interface {
 	NewProvider(ctx context.Context, issuer string) (*oidc.Provider, error)
 }
@@ -33,5 +56,7 @@ type Service interface {
 type Client struct{}
 
 func (c *Client) NewProvider(ctx context.Context, issuer string) (*oidc.Provider, error) {
-	return oidc.NewProvider(ctx, issuer)
+	discoveryContext := oidc.ClientContext(ctx, oidcHTTPClient)
+
+	return oidc.NewProvider(discoveryContext, issuer)
 }
