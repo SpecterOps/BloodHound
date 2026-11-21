@@ -332,8 +332,12 @@ func GetOrderForNeo4jQuery(params url.Values) string {
 		order         []string
 	)
 	for _, column := range sortByColumns {
+		if column == "" || column == "-" {
+			continue
+		}
+
 		var descending bool
-		if string(column[0]) == "-" {
+		if strings.HasPrefix(column, "-") {
 			descending = true
 			column = column[1:]
 		}
