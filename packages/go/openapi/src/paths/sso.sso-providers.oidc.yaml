@@ -42,7 +42,7 @@ post:
             issuer:
               type: string
               format: url
-              description: URL of the OIDC issuer
+              description: URL of the OIDC issuer. The URL must use HTTPS.
             client_id:
               type: string
               description: Client ID for the OIDC provider
