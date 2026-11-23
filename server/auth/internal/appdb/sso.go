@@ -129,8 +129,12 @@ func buildSSOProviderFilter(queryFilters params.Filters, columns map[string]stri
 					value = int32(parsed)
 				}
 			case "created_at", "updated_at":
-				if parsed, err := time.Parse(time.RFC3339Nano, filter.Value); err != nil {
-					return nil, fmt.Errorf("%w: %s filter value %q is not an RFC3339 timestamp", services.ErrInvalidProviderQuery, filter.Field, filter.Value)
+				if filter.Value == "null" && (filter.Operator == params.Equals || filter.Operator == params.NotEquals) {
+					value = nil
+				} else if parsed, err := time.Parse(time.RFC3339Nano, filter.Value); err == nil {
+					value = parsed
+				} else if parsed, err := time.Parse(time.DateOnly, filter.Value); err != nil {
+					return nil, fmt.Errorf("%w: %s filter value %q is not an RFC3339 timestamp or YYYY-MM-DD date", services.ErrInvalidProviderQuery, filter.Field, filter.Value)
 				} else {
 					value = parsed
 				}
@@ -138,9 +142,17 @@ func buildSSOProviderFilter(queryFilters params.Filters, columns map[string]stri
 
 			switch filter.Operator {
 			case params.Equals:
-				clause = condition.Equal(column, value)
+				if value == nil {
+					clause = condition.IsNull(column)
+				} else {
+					clause = condition.Equal(column, value)
+				}
 			case params.NotEquals:
-				clause = condition.NotEqual(column, value)
+				if value == nil {
+					clause = condition.IsNotNull(column)
+				} else {
+					clause = condition.NotEqual(column, value)
+				}
 			case params.GreaterThan:
 				clause = condition.GreaterThan(column, value)
 			case params.GreaterThanOrEquals:

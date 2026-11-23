@@ -95,6 +95,38 @@ func seedAuthProvider(t *testing.T, ctx context.Context, pool *pgxpool.Pool, nam
 	return provider
 }
 
+// providersWithUTCTimestamps copies providers so equality checks compare instants
+// consistently across PostgreSQL JSON offsets and Go time-zone representations.
+func providersWithUTCTimestamps(providers []services.SSOProvider) []services.SSOProvider {
+	if providers == nil {
+		return nil
+	}
+
+	var normalizedProviders = make([]services.SSOProvider, 0, len(providers))
+
+	for _, provider := range providers {
+		if provider.OIDCProvider != nil {
+			details := *provider.OIDCProvider
+			details.CreatedAt = details.CreatedAt.UTC()
+			details.UpdatedAt = details.UpdatedAt.UTC()
+			details.DeletedAt.Time = details.DeletedAt.Time.UTC()
+			provider.OIDCProvider = &details
+		}
+
+		if provider.SAMLProvider != nil {
+			details := *provider.SAMLProvider
+			details.CreatedAt = details.CreatedAt.UTC()
+			details.UpdatedAt = details.UpdatedAt.UTC()
+			details.DeletedAt.Time = details.DeletedAt.Time.UTC()
+			provider.SAMLProvider = &details
+		}
+
+		normalizedProviders = append(normalizedProviders, provider)
+	}
+
+	return normalizedProviders
+}
+
 func TestStore_ListAuthProviders_Integration(t *testing.T) {
 	var (
 		ctx         = context.Background()
@@ -194,7 +226,7 @@ func TestStore_ListAuthProviders_Integration(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			providers, err := store.ListAuthProviders(ctx, testCase.filters, testCase.sortItems)
 			require.NoError(t, err)
-			assert.Equal(t, testCase.expected, providers)
+			assert.Equal(t, providersWithUTCTimestamps(testCase.expected), providersWithUTCTimestamps(providers))
 		})
 	}
 
@@ -206,7 +238,7 @@ func TestStore_ListAuthProviders_Integration(t *testing.T) {
 		require.NoError(t, err)
 
 		missingDetails.Config = services.ProviderConfig{}
-		assert.Equal(t, []services.SSOProvider{missingDetails}, providers)
+		assert.Equal(t, providersWithUTCTimestamps([]services.SSOProvider{missingDetails}), providersWithUTCTimestamps(providers))
 	})
 
 	t.Run("OIDC feature flag disabled returns only SAML", func(t *testing.T) {
@@ -215,6 +247,6 @@ func TestStore_ListAuthProviders_Integration(t *testing.T) {
 
 		providers, err := store.ListAuthProviders(ctx, nil, nil)
 		require.NoError(t, err)
-		assert.Equal(t, []services.SSOProvider{saml}, providers)
+		assert.Equal(t, providersWithUTCTimestamps([]services.SSOProvider{saml}), providersWithUTCTimestamps(providers))
 	})
 }

@@ -200,6 +200,78 @@ func TestStore_ListAuthProviders_SQL(t *testing.T) {
 			},
 		},
 		{
+			name:    "Supports created_at null equality without timestamp parsing",
+			filters: params.Filters{"created_at": {{Field: "created_at", Operator: params.Equals, Value: "null"}}},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " AND sso.created_at IS NULL ORDER BY sso.created_at").WithArgs().
+					WillReturnRows(pool.NewRows(providerColumns()))
+			},
+		},
+		{
+			name:    "Supports created_at null inequality without timestamp parsing",
+			filters: params.Filters{"created_at": {{Field: "created_at", Operator: params.NotEquals, Value: "null"}}},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " AND sso.created_at IS NOT NULL ORDER BY sso.created_at").WithArgs().
+					WillReturnRows(pool.NewRows(providerColumns()))
+			},
+		},
+		{
+			name:    "Accepts date-only created_at operands",
+			filters: params.Filters{"created_at": {{Field: "created_at", Operator: params.GreaterThanOrEquals, Value: "2026-01-01"}}},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " AND sso.created_at >= $1 ORDER BY sso.created_at").
+					WithArgs(time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)).
+					WillReturnRows(pool.NewRows(providerColumns()))
+			},
+		},
+		{
+			name:    "Supports updated_at null equality without timestamp parsing",
+			filters: params.Filters{"updated_at": {{Field: "updated_at", Operator: params.Equals, Value: "null"}}},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " AND sso.updated_at IS NULL ORDER BY sso.created_at").WithArgs().
+					WillReturnRows(pool.NewRows(providerColumns()))
+			},
+		},
+		{
+			name:    "Supports updated_at null inequality without timestamp parsing",
+			filters: params.Filters{"updated_at": {{Field: "updated_at", Operator: params.NotEquals, Value: "null"}}},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " AND sso.updated_at IS NOT NULL ORDER BY sso.created_at").WithArgs().
+					WillReturnRows(pool.NewRows(providerColumns()))
+			},
+		},
+		{
+			name:    "Accepts date-only updated_at operands",
+			filters: params.Filters{"updated_at": {{Field: "updated_at", Operator: params.GreaterThanOrEquals, Value: "2026-01-01"}}},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " AND sso.updated_at >= $1 ORDER BY sso.created_at").
+					WithArgs(time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)).
+					WillReturnRows(pool.NewRows(providerColumns()))
+			},
+		},
+		{
+			name: "Combines null timestamps with parameterized filters",
+			filters: params.Filters{
+				"created_at": {{Field: "created_at", Operator: params.Equals, Value: "null"}},
+				"name":       {{Field: "name", Operator: params.Equals, Value: "Example"}},
+				"updated_at": {{Field: "updated_at", Operator: params.NotEquals, Value: "null"}},
+			},
+			setupMock: func(pool pgxmock.PgxPoolIface) {
+				pool.ExpectQuery(providerQuery + " AND sso.created_at IS NULL AND sso.name = $1 AND sso.updated_at IS NOT NULL ORDER BY sso.created_at").
+					WithArgs("Example").WillReturnRows(pool.NewRows(providerColumns()))
+			},
+		},
+		{
+			name:        "Rejects null timestamp operands for ordering comparisons",
+			filters:     params.Filters{"created_at": {{Field: "created_at", Operator: params.GreaterThan, Value: "null"}}},
+			expectedErr: services.ErrInvalidProviderQuery,
+		},
+		{
+			name:        "Rejects invalid calendar dates before querying",
+			filters:     params.Filters{"updated_at": {{Field: "updated_at", Operator: params.Equals, Value: "2026-02-30"}}},
+			expectedErr: services.ErrInvalidProviderQuery,
+		},
+		{
 			name:        "Rejects unsupported filter operators before querying",
 			filters:     params.Filters{"name": {{Field: "name", Operator: "invalid", Value: "Alpha"}}},
 			expectedErr: services.ErrInvalidProviderQuery,
@@ -225,7 +297,7 @@ func TestStore_ListAuthProviders_SQL(t *testing.T) {
 			expectedErr: services.ErrInvalidProviderQuery,
 		},
 		{
-			name:        "Rejects non-RFC3339 timestamp filters before querying",
+			name:        "Rejects malformed timestamp filters before querying",
 			filters:     params.Filters{"created_at": {{Field: "created_at", Operator: params.Equals, Value: "invalid"}}},
 			expectedErr: services.ErrInvalidProviderQuery,
 		},

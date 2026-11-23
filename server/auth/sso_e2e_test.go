@@ -119,6 +119,30 @@ func TestE2E_ListAuthProviders(t *testing.T) {
 			},
 		},
 		{
+			name:       "Date-only timestamp filter preserves legacy behavior",
+			query:      "created_at=gte:2026-01-01&sort_by=name",
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, response *http.Response) {
+				assertSSOProviderNames(t, response, []string{"Alpha SAML", "Zulu OIDC"})
+			},
+		},
+		{
+			name:       "Null creation timestamp filter is accepted",
+			query:      "created_at=eq:null",
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, response *http.Response) {
+				assertSSOProviderNames(t, response, nil)
+			},
+		},
+		{
+			name:       "Non-null update timestamp filter is accepted",
+			query:      "updated_at=neq:null&sort_by=name",
+			wantStatus: http.StatusOK,
+			assertBody: func(t *testing.T, response *http.Response) {
+				assertSSOProviderNames(t, response, []string{"Alpha SAML", "Zulu OIDC"})
+			},
+		},
+		{
 			name:       "Non-sortable column returns 400",
 			query:      "sort_by=details",
 			wantStatus: http.StatusBadRequest,
