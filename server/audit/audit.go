@@ -33,6 +33,9 @@ type Action = services.Action
 const (
 	ActionUpdateParameter              Action = "UpdateParameter"
 	ActionToggleEarlyAccessFeatureFlag Action = "ToggleEarlyAccessFeatureFlag"
+
+	ActionUpdateGraphRetentionPolicy Action = "UpdateGraphRetentionPolicy"
+	ActionDeleteGraphRetentionPolicy Action = "DeleteGraphRetentionPolicy"
 )
 
 var ErrAuditLog = services.ErrAuditLog
