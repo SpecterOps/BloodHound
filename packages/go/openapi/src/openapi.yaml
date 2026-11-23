@@ -201,6 +201,7 @@ x-tagGroups:
       - Meta Entities
       - Alerts
       - Graph Retention Policies
+      - Marketplace
 paths:
   ##
   # Community + Enterprise Endpoints
@@ -901,6 +902,15 @@ paths:
     $ref: './paths/alerts.alert-attempts.yaml'
   /api/v2/alert-attempts/retry:
     $ref: './paths/alerts.alert-attempts.retry.yaml'
+  
+  
+  # marketplace 
+  # /api/v2/marketplace/platforms:
+  #   $ref: './paths/marketplace.platforms.yaml'
+  # /api/v2/marketplace/items: 
+  #   $ref: paths/marketplace.marketplace-items.yaml
+  # /api/v2/marketplace/install:
+  #   $ref: paths/marketplace.install-extension.yaml
 
   # graph schema findings
   #/api/v2/extensions-findings:
