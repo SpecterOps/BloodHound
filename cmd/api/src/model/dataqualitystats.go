@@ -21,8 +21,10 @@ import "github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 type DataQualityMetricType string
 
 const (
-	DataQualityMetricTypeNode         DataQualityMetricType = "node"
-	DataQualityMetricTypeRelationship DataQualityMetricType = "relationship"
+	DataQualityMetricTypeNode                   DataQualityMetricType = "node"
+	DataQualityMetricTypeRelationship           DataQualityMetricType = "relationship"
+	DataQualityMetricTypeSessionCompleteness    DataQualityMetricType = "session_completeness"
+	DataQualityMetricTypeLocalGroupCompleteness DataQualityMetricType = "local_group_completeness"
 )
 
 type DataQualityStat struct {
