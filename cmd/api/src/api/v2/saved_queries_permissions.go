@@ -77,10 +77,8 @@ func CanUpdateSavedQueriesPermission(user model.User, createRequest SavedQueryPe
 		}
 	} else if dbSavedQueryScope.Owned && !dbSavedQueryScope.Public {
 		if len(createRequest.UserIDs) > 0 && !createRequest.Public {
-			for _, sharedUserID := range createRequest.UserIDs {
-				if sharedUserID == user.ID {
-					return ErrInvalidSelfShare
-				}
+			if slices.Contains(createRequest.UserIDs, user.ID) {
+				return ErrInvalidSelfShare
 			}
 		}
 		return nil
