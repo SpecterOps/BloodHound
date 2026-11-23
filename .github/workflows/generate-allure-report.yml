@@ -19,6 +19,7 @@ on:
   push:
     branches:
       - main
+      - BED-10680
 jobs:
   call-run-go-unit-tests:
     uses: ./.github/workflows/run-go-unit-tests.yml
@@ -31,6 +32,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Allure 3
+        run: npm install -g allure
+
       - name: Get Allure history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7
         continue-on-error: true
@@ -56,12 +65,13 @@ jobs:
           run-id: ${{ needs.call-run-ui-unit-tests.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build test report
-        uses: simple-elf/allure-report-action@385367cde61ac68c2568a117f7579f7f148dc459 # ratchet:simple-elf/allure-report-action@v1.15
-        with:
-          gh_pages: gh-pages
-          allure_history: allure-history
-          allure_results: allure-results
+      - name: Generate new report
+        run: allure generate --config allurerc.json
+
+      - name: Attach updated history to report output
+        run: |
+          mkdir -p allure-report/.allure-history
+          cp .allure-history/allure-history.jsonl allure-report/.allure-history/
 
       - name: Deploy report to Github Pages
         if: always()
