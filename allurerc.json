@@ -1,7 +1,0 @@
-{
-  "name":"BHCE Allure Report",
-  "output":"./allure-report",
-  "resultsDir":["./allure-results/"],
-  "historyPath":"./.allure-history/allure-history.jsonl",
-  "historyLimit": 20
-}
