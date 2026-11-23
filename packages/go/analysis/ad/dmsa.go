@@ -18,6 +18,7 @@ package ad
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -84,7 +85,7 @@ func PostBadSuccessor(ctx context.Context, db graph.Database) (*post.AtomicPostP
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostBadSuccessor", db, badSuccessorTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	for _, domain := range domainNodes {
 		if domainSID, err := domain.Properties.Get(ad.DomainSID.String()).String(); err != nil {
@@ -98,11 +99,11 @@ func PostBadSuccessor(ctx context.Context, db graph.Database) (*post.AtomicPostP
 		} else if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 			return postBadSuccessorForDomain(ctx, tx, sink, domain, domainSID)
 		}); err != nil {
-			return sink.Stats(), fmt.Errorf("error creating BadSuccessor edges: %w", err)
+			return sink.Stats(), errors.Join(fmt.Errorf("error creating BadSuccessor edges: %w", err), sink.Abort())
 		}
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
 
 // postBadSuccessorForDomain applies the patch-aware edge model to one domain.
@@ -313,7 +314,7 @@ func PostOuroborosSelfEnroll(ctx context.Context, db graph.Database) (*post.Atom
 	}
 
 	sink := post.NewFilteredRelationshipSink(ctx, "PostOuroborosSelfEnroll", db, ouroborosTracker)
-	defer sink.Done()
+	defer sink.Abort()
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		if rels, err := ops.FetchRelationships(tx.Relationships().Filterf(func() graph.Criteria {
@@ -342,8 +343,8 @@ func PostOuroborosSelfEnroll(ctx context.Context, db graph.Database) (*post.Atom
 			return nil
 		}
 	}); err != nil {
-		return sink.Stats(), fmt.Errorf("error creating OuroborosSelfEnroll edges: %w", err)
+		return sink.Stats(), errors.Join(fmt.Errorf("error creating OuroborosSelfEnroll edges: %w", err), sink.Abort())
 	}
 
-	return sink.Stats(), nil
+	return sink.Stats(), sink.Done()
 }
