@@ -19,7 +19,7 @@ name: Continuous Deployment (CD)
 on:
   push:
     branches:
-      - main
+      - lfalslev/bed-7545
     tags:
       - v[0-9]+.[0-9]+.[0-9]+
       - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
@@ -28,8 +28,68 @@ permissions:
   contents: read
 
 jobs:
+  validate-bloodhound-container-image:
+    name: Validate BloodHound Container Image
+    if: github.ref == 'refs/heads/lfalslev/bed-7545'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # ratchet:docker/setup-qemu-action@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # ratchet:docker/setup-buildx-action@v4
+
+      - name: Build Image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # ratchet:docker/build-push-action@v7
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: "false"
+        with:
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            checkout_hash=${{ github.sha }}
+            version=${{ github.ref_name }}
+          context: .
+          file: dockerfiles/bloodhound.Dockerfile
+          labels: |
+            org.opencontainers.image.authors=https://github.com/orgs/SpecterOps/teams/bloodhound-engineering
+            org.opencontainers.image.licenses=Apache License, Version 2.0
+            org.opencontainers.image.vendor=SpecterOps
+          provenance: mode=max
+          sbom: true
+          push: false
+          target: bloodhound
+          outputs: |
+            type=oci,dest=${{ runner.temp }}/bloodhound-image.tar
+            type=local,dest=${{ runner.temp }}/bloodhound-image,platform-split=true
+
+      - name: Verify Bundled Collectors
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for architecture in amd64 arm64; do
+            for collector in sharphound azurehound; do
+              (
+                cd "$RUNNER_TEMP/bloodhound-image/linux_${architecture}/etc/bloodhound/collectors/$collector"
+                archives=("$collector"-*.zip)
+                if [[ ${#archives[@]} -ne 1 ]]; then
+                  echo "::error::Expected one $collector archive for linux/$architecture"
+                  exit 1
+                fi
+                echo "Verifying ${archives[0]} for linux/$architecture"
+                sha256sum -c -- "${archives[0]}.sha256"
+              )
+            done
+          done
+
   run-slow-go-tests:
     name: Run Slow Go Tests
+    if: github.ref == 'refs/heads/main' || github.ref_type == 'tag'
     uses: ./.github/workflows/run-slow-go-tests.yml
 
   bloodhound-container-image:
