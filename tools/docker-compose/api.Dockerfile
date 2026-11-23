@@ -20,28 +20,29 @@
 # Optional collector versions; empty values use the latest stable GitHub release.
 ARG SHARPHOUND_VERSION=""
 ARG AZUREHOUND_VERSION=""
-# Create an empty metadata stage for explicit versions
 ARG SHARPHOUND_RELEASE_SOURCE=${SHARPHOUND_VERSION:+explicit-release}
 ARG AZUREHOUND_RELEASE_SOURCE=${AZUREHOUND_VERSION:+explicit-release}
 
+########
+# Resolve collector versions
+################
 FROM docker.io/library/alpine:3.21 AS explicit-release
 RUN touch /tmp/version
 
-# Download the version marker attached to each latest stable release.
 FROM docker.io/library/alpine:3.21 AS sharphound-latest-release
 ADD https://github.com/SpecterOps/SharpHound/releases/latest/download/version.txt /tmp/version
 
 FROM docker.io/library/alpine:3.21 AS azurehound-latest-release
 ADD https://github.com/SpecterOps/AzureHound/releases/latest/download/version.txt /tmp/version
 
-# BuildKit prunes the unused version stage
+# BuildKit will prune the unused version stage
 FROM ${SHARPHOUND_RELEASE_SOURCE:-sharphound-latest-release} AS sharphound-release
 FROM ${AZUREHOUND_RELEASE_SOURCE:-azurehound-latest-release} AS azurehound-release
 
 ########
-# Resolve and validate collector versions
+# Validate collector versions
 ################
-FROM docker.io/library/alpine:3.21 AS collector-version-resolver
+FROM docker.io/library/alpine:3.21 AS collector-version-validator
 ARG SHARPHOUND_VERSION
 ARG AZUREHOUND_VERSION
 
@@ -71,7 +72,7 @@ RUN set -eu; \
 FROM docker.io/library/alpine:3.21 AS hound-builder
 RUN apk --no-cache add p7zip
 
-COPY --from=collector-version-resolver /collector-versions /collector-versions
+COPY --from=collector-version-validator /collector-versions /collector-versions
 
 # Make some additional directories for minimal container to copy
 RUN mkdir -p /opt/bloodhound /etc/bloodhound /var/log
