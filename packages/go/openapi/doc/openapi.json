@@ -7935,9 +7935,21 @@
                         }
                       }
                     ],
+                    "pz_rules": [
+                      {
+                        "key": "OGE_environment-nodes",
+                        "name": "Environment Nodes",
+                        "seeds": [
+                          {
+                            "type": 2,
+                            "value": "MATCH (n:OGE_Environment_Kind) RETURN n"
+                          }
+                        ]
+                      }
+                    ],
                     "queries": [
                       {
-                        "query_key": "all-node-kind-1",
+                        "query_key": "OGE_all-node-kind-1",
                         "name": "All Node Kind 1",
                         "query": "MATCH (n:OGE_Node_Kind_1) RETURN n",
                         "description": "Lists all OGE_Node_Kind_1 nodes.",
@@ -28835,7 +28847,8 @@
               "properties": {
                 "key": {
                   "type": "string",
-                  "description": "A stable identifier for reconciling rules between extension upserts."
+                  "description": "A stable identifier for reconciling rules between extension upserts.\nIt must start with the extension namespace followed by an underscore\nand a suffix that contains at least one non-whitespace character.\n",
+                  "example": "OGE_environment-nodes"
                 },
                 "name": {
                   "type": "string"
@@ -28892,8 +28905,8 @@
               "properties": {
                 "query_key": {
                   "type": "string",
-                  "description": "A stable identifier for reconciling the saved query.",
-                  "example": "critical-assets"
+                  "description": "A stable identifier for reconciling the saved query.\nIt must start with the extension namespace followed by an underscore\nand a suffix that contains at least one non-whitespace character.\n",
+                  "example": "OGE_all-node-kind-1"
                 },
                 "name": {
                   "type": "string",

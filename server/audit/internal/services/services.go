@@ -32,12 +32,6 @@ var ErrAuditLog = errors.New("audit log operation failed")
 const auditLogOutcomeTimeout = 30 * time.Second
 
 type Action string
-
-const (
-	ActionUpdateParameter              Action = "UpdateParameter"
-	ActionToggleEarlyAccessFeatureFlag Action = "ToggleEarlyAccessFeatureFlag"
-)
-
 type Status string
 
 const (
