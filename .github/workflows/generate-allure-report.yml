@@ -65,13 +65,18 @@ jobs:
           run-id: ${{ needs.call-run-ui-unit-tests.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Checkout source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7
+
       - name: Generate new report
         run: allure generate --config allurerc.json
 
       - name: Attach updated history to report output
         run: |
           mkdir -p allure-report/.allure-history
-          cp .allure-history/allure-history.jsonl allure-report/.allure-history/
+          if [ -f gh-pages/.allure-history/allure-histoy.jsonl]; then
+            cp .allure-history/allure-history.jsonl allure-report/.allure-history/
+          fi
 
       - name: Deploy report to Github Pages
         if: always()
@@ -79,4 +84,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: allure-report
