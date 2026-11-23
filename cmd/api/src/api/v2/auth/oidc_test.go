@@ -170,7 +170,7 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			ResponseStatusCode(http.StatusBadRequest).
 			ResponseJSONBody(api.ErrorWrapper{
 				HTTPStatus: http.StatusBadRequest,
-				Errors:     []api.ErrorDetails{{Message: "OIDC issuer: URL must use HTTPS"}},
+				Errors:     []api.ErrorDetails{{Message: "Issuer: URL must use HTTPS"}},
 			})
 	})
 

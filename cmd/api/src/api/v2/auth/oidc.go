@@ -56,6 +56,8 @@ const (
 )
 
 var (
+	oidcURLValidator = validation.NewUrlValidator(map[string]string{"httpsOnly": "true", "hostnameRequired": "true"})
+
 	ErrOIDCProviderMissing  = errors.New("oidc provider missing")
 	ErrOIDCIssuerURLInvalid = errors.New("oidc provider issuer url invalid")
 	ErrRoleIDInvalid        = errors.New("role id invalid")
@@ -131,7 +133,7 @@ func (s *oidcClaims) UnmarshalJSON(data []byte) error {
 // UpsertOIDCProviderRequest represents the body of create & update provider endpoints
 type UpsertOIDCProviderRequest struct {
 	Name     string                   `json:"name" validate:"required"`
-	Issuer   string                   `json:"issuer"  validate:"url"`
+	Issuer   string                   `json:"issuer"  validate:"url,httpsOnly=true,hostnameRequired=true"`
 	ClientID string                   `json:"client_id" validate:"required"`
 	Config   *model.SSOProviderConfig `json:"config,omitempty"`
 }
@@ -173,7 +175,7 @@ func updateOIDCProvider(ctx context.Context, ssoProvider model.SSOProvider, upse
 	}
 
 	if upsertReq.Issuer != "" {
-		if err := validateOIDCHTTPSURL(upsertReq.Issuer); err != nil {
+		if err := oidcURLValidator.Validate(upsertReq.Issuer); err != nil {
 			return ssoProvider, fmt.Errorf("%w: %s", ErrOIDCIssuerURLInvalid, err)
 		}
 
@@ -204,8 +206,6 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, validated.Error(), request), response)
 	} else if upsertReq.Config == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "config is required", request), response)
-	} else if err := validateOIDCHTTPSURL(upsertReq.Issuer); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "OIDC issuer: "+err.Error(), request), response)
 	} else if _, err := s.db.GetRole(request.Context(), upsertReq.Config.AutoProvision.DefaultRoleId); err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrRoleIDInvalid.Error(), request), response)
 	} else if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID, *upsertReq.Config); errors.Is(err, database.ErrDuplicateSSOProviderName) {
@@ -215,18 +215,6 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 	} else {
 		api.WriteBasicResponse(request.Context(), oidcProvider, http.StatusCreated, response)
 	}
-}
-
-func validateOIDCHTTPSURL(rawURL string) error {
-	if parsedURL, err := url.Parse(rawURL); err != nil {
-		return errors.New("URL is malformed")
-	} else if parsedURL.Scheme != "https" {
-		return errors.New("URL must use HTTPS")
-	} else if parsedURL.Hostname() == "" {
-		return errors.New("URL must include a hostname")
-	}
-
-	return nil
 }
 
 func getRedirectURL(hostUrl url.URL, provider model.SSOProvider) string {
@@ -243,7 +231,7 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		slog.ErrorContext(request.Context(), "[OIDC] Failed to generate state", attr.Error(err))
 		// Technical issues scenario
 		api.RedirectToLoginURL(response, request, "We're having trouble connecting. Please check your internet and try again.")
-	} else if err := validateOIDCHTTPSURL(ssoProvider.OIDCProvider.Issuer); err != nil {
+	} else if err := oidcURLValidator.Validate(ssoProvider.OIDCProvider.Issuer); err != nil {
 		slog.ErrorContext(request.Context(), oidcInvalidIssuerLogMessage, attr.Error(err))
 		api.RedirectToLoginURL(response, request, oidcInvalidIssuerMessage)
 	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
@@ -252,9 +240,9 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 		// Treat this as a misconfiguration scenario
 		api.RedirectToLoginURL(response, request, ssoMisconfigurationMessage)
 	} else {
-		// validateOIDCHTTPSURL is called again here because the discovery document can advertise an HTTP authorization endpoint even when the issuer uses HTTPS.
-		// We must validate the endpoint separately so BloodHound only redirects the browser to an HTTPS URL
-		if err := validateOIDCHTTPSURL(provider.Endpoint().AuthURL); err != nil {
+		// Discovery can advertise an HTTP authorization endpoint even when the issuer uses HTTPS.
+		// Validate the endpoint before redirecting the browser
+		if err := oidcURLValidator.Validate(provider.Endpoint().AuthURL); err != nil {
 			slog.ErrorContext(request.Context(), "[OIDC] Invalid authorization endpoint URL", attr.Error(err))
 			api.RedirectToLoginURL(response, request, "Your SSO provider's authorization endpoint must be a valid HTTPS URL. Ask your administrator to update the provider configuration.")
 			return
@@ -317,7 +305,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		// State mismatch
 		slog.ErrorContext(request.Context(), "[OIDC] state does not match")
 		api.RedirectToLoginURL(response, request, "Invalid: `state` do not match")
-	} else if err := validateOIDCHTTPSURL(ssoProvider.OIDCProvider.Issuer); err != nil {
+	} else if err := oidcURLValidator.Validate(ssoProvider.OIDCProvider.Issuer); err != nil {
 		slog.ErrorContext(request.Context(), oidcInvalidIssuerLogMessage, attr.Error(err))
 		api.RedirectToLoginURL(response, request, oidcInvalidIssuerMessage)
 	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
@@ -355,9 +343,9 @@ func exchangeCodeForToken(reqCtx context.Context, ssoProvider model.SSOProvider,
 		}
 	)
 
-	// validateOIDCHTTPSURL is called here too because the discovery document can advertise an HTTP token endpoint even when the issuer uses HTTPS.
-	// We must validate the endpoint before sending the authorization code and PKCE verifier. The HTTP client must also reject redirects to HTTP
-	if err := validateOIDCHTTPSURL(tokenUrl); err != nil {
+	// Discovery can advertise an HTTP token endpoint even when the issuer uses HTTPS.
+	// Validate the endpoint before sending the authorization code and PKCE verifier
+	if err := oidcURLValidator.Validate(tokenUrl); err != nil {
 		return nil, fmt.Errorf("invalid OIDC token endpoint: %w", err)
 	} else if req, err := http.NewRequest("POST", tokenUrl, strings.NewReader(payload.Encode())); err != nil {
 		return nil, fmt.Errorf("failed to init exchange request %v", err)
@@ -429,7 +417,7 @@ func getOIDCClaims(reqCtx context.Context, provider *oidc.Provider, ssoProvider 
 	// Reject it before exchanging the authorization code for tokens
 	if err := provider.Claims(&discoveryMetadata); err != nil {
 		return claims, errors.New("invalid OIDC discovery metadata")
-	} else if err := validateOIDCHTTPSURL(discoveryMetadata.JWKSURL); err != nil {
+	} else if err := oidcURLValidator.Validate(discoveryMetadata.JWKSURL); err != nil {
 		return claims, fmt.Errorf("invalid OIDC signing-key URL: %w", err)
 	} else if token, err := exchangeCodeForToken(reqCtx, ssoProvider, provider.Endpoint().TokenURL, pkceVerifier, code); err != nil {
 		return claims, fmt.Errorf("token exchange: %v", err)

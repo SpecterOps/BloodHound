@@ -28,22 +28,41 @@ import (
 )
 
 const (
-	ErrorUrlHttpsInvalid = "invalid https url format"
-	ErrorUrlInvalid      = "invalid url format"
+	ErrorUrlHttpsInvalid     = "invalid https url format"
+	ErrorUrlInvalid          = "invalid url format"
+	ErrorURLHTTPSRequired    = "URL must use HTTPS"
+	ErrorURLHostnameRequired = "URL must include a hostname"
 )
 
-// UrlValidator implements the Validator interface which allows the usage of the `url` struct tag
-// to ensure a string is in a valid url format by calling `Validate`
+// UrlValidator validates URLs through the `url` struct tag or directly.
+// The optional hostnameRequired setting requires a URL with a hostname
 type UrlValidator struct {
-	httpsOnly bool
+	httpsOnly          bool
+	hostnameRequired   bool
+	configurationError error
 }
 
-// NewUrlValidator returns a new Validator
+// NewUrlValidator returns a validator that rejects invalid option settings
 func NewUrlValidator(params map[string]string) Validator {
-	validator := UrlValidator{}
+	var validator UrlValidator
 
-	if val, ok := params["httpsOnly"]; ok {
-		validator.httpsOnly, _ = strconv.ParseBool(val)
+	for optionName, optionValue := range params {
+		var setting *bool
+
+		switch optionName {
+		case "httpsOnly":
+			setting = &validator.httpsOnly
+		case "hostnameRequired":
+			setting = &validator.hostnameRequired
+		default:
+			return UrlValidator{configurationError: fmt.Errorf("unknown URL validator option %q", optionName)}
+		}
+
+		if enabled, err := strconv.ParseBool(optionValue); err != nil {
+			return UrlValidator{configurationError: fmt.Errorf("URL validator option %q must be a boolean", optionName)}
+		} else {
+			*setting = enabled
+		}
 	}
 
 	return validator
@@ -52,29 +71,39 @@ func NewUrlValidator(params map[string]string) Validator {
 // Validate validates that the associated struct fields are in the proper formatting
 func (s UrlValidator) Validate(value any) utils.Errors {
 	var (
-		errs         = utils.Errors{}
+		errs         utils.Errors
 		inputUrl, ok = value.(string)
 	)
+
+	if s.configurationError != nil {
+		return utils.Errors{s.configurationError}
+	}
 
 	if !ok {
 		errs = append(errs, fmt.Errorf("expected a string value, got %s", reflect.TypeOf(value)))
 	}
 
-	if s.httpsOnly {
-		if !strings.HasPrefix(inputUrl, "https://") {
-			errs = append(errs, errors.New(ErrorUrlHttpsInvalid))
+	if s.hostnameRequired {
+		if parsedURL, err := url.Parse(inputUrl); err != nil {
+			errs = append(errs, errors.New(ErrorUrlInvalid))
+		} else if s.httpsOnly && parsedURL.Scheme != "https" {
+			errs = append(errs, errors.New(ErrorURLHTTPSRequired))
+		} else if parsedURL.Hostname() == "" {
+			errs = append(errs, errors.New(ErrorURLHostnameRequired))
 		}
+		return errs
+	}
+
+	// Preserve the request URI and HTTPS prefix checks for existing callers
+	if s.httpsOnly && !strings.HasPrefix(inputUrl, "https://") {
+		errs = append(errs, errors.New(ErrorUrlHttpsInvalid))
 	}
 
 	if err := ValidUrl(inputUrl); err != nil {
 		errs = append(errs, errors.New(ErrorUrlInvalid))
 	}
 
-	if len(errs) > 0 {
-		return errs
-	}
-
-	return nil
+	return errs
 }
 
 func ValidUrl(inputUrl string) error {
