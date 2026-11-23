@@ -662,9 +662,9 @@ func (s PZRulesInput) Validate(extensionNamespace string) error {
 		if strings.TrimSpace(rule.ExtensionRuleId) == "" {
 			return fmt.Errorf("privilege zone rule requires a 'key' value")
 		} else if ruleKey, found := strings.CutPrefix(rule.ExtensionRuleId, fmt.Sprintf("%s_", extensionNamespace)); !found {
-			return fmt.Errorf("privelage zone rule key %s is missing extension namespace prefix", rule.ExtensionRuleId)
+			return fmt.Errorf("privilege zone rule key %s is missing extension namespace prefix", rule.ExtensionRuleId)
 		} else if strings.TrimSpace(ruleKey) == "" {
-			return errors.New("privelage zone rule key cannot be empty after namespace")
+			return errors.New("privilege zone rule key cannot be empty after namespace")
 		} else if strings.TrimSpace(rule.Name) == "" {
 			return fmt.Errorf("privilege zone rule name is required")
 		} else if _, ok := ruleNames[rule.Name]; ok {
@@ -701,7 +701,7 @@ func (s SavedQueriesInput) Validate(extensionNamespace string) error {
 		} else if savedQueryKey, found := strings.CutPrefix(savedQueryInput.QueryKey, fmt.Sprintf("%s_", extensionNamespace)); !found {
 			return fmt.Errorf("graph schema saved query key %s is missing extension namespace prefix", savedQueryInput.QueryKey)
 		} else if strings.TrimSpace(savedQueryKey) == "" {
-			return errors.New("graph schema saved query cannot be empty after namespace")
+			return errors.New("graph schema saved query key cannot be empty after namespace")
 		} else if strings.TrimSpace(savedQueryInput.Name) == "" {
 			return errors.New("graph schema saved query name is required")
 		} else if strings.TrimSpace(savedQueryInput.Query) == "" {

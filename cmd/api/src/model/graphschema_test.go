@@ -863,7 +863,7 @@ func Test_validateGraphExtension(t *testing.T) {
 		{name: "fail - saved query empty key", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{Name: "Query", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query key is required")},
 		{name: "fail - saved query whitespace key", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: " ", Name: "Query", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query key is required")},
 		{name: "fail - saved query key missing namespace prefix", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "AD-query", Name: "Query", Query: "RETURN 1"}}}}, wantErr: fmt.Errorf("graph schema saved query key AD-query is missing extension namespace prefix")},
-		{name: "fail - saved query key has blank suffix", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "AD_ ", Name: "Query", Query: "RETURN 1"}}}}, wantErr: fmt.Errorf("graph schema saved query cannot be empty after namespace")},
+		{name: "fail - saved query key has blank suffix", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "AD_ ", Name: "Query", Query: "RETURN 1"}}}}, wantErr: fmt.Errorf("graph schema saved query key cannot be empty after namespace")},
 		{name: "fail - saved query empty name", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "AD_query-key", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query name is required")},
 		{name: "fail - saved query whitespace name", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "AD_query-key", Name: " ", Query: "MATCH (n) RETURN n"}}}}, wantErr: fmt.Errorf("graph schema saved query name is required")},
 		{name: "fail - saved query empty query", args: args{graphExtension: GraphExtensionInput{ExtensionInput: baseExtensionInput(), NodeKindsInput: NodesInput{{Name: "AD_node_kind"}}, SavedQueriesInput: SavedQueriesInput{{QueryKey: "AD_query-key", Name: "Query"}}}}, wantErr: fmt.Errorf("graph schema saved query text is required")},
@@ -1547,12 +1547,12 @@ func TestPZRulesInputValidate(t *testing.T) {
 		{
 			name:    "error_-_wrong_namespace_prefix",
 			rules:   PZRulesInput{{ExtensionRuleId: "OTHER_rule", Name: validRule.Name, Seeds: validRule.Seeds}},
-			wantErr: "key OTHER_rule is missing extension namespace prefix",
+			wantErr: "privilege zone rule key OTHER_rule is missing extension namespace prefix",
 		},
 		{
 			name:    "error_-_blank_key_suffix",
 			rules:   PZRulesInput{{ExtensionRuleId: "TEST_ ", Name: validRule.Name, Seeds: validRule.Seeds}},
-			wantErr: "key cannot be empty after namespace",
+			wantErr: "privilege zone rule key cannot be empty after namespace",
 		},
 		{
 			name: "error_-_multiple_seeds",

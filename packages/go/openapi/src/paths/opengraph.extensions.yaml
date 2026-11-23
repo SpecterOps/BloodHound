@@ -100,8 +100,14 @@ put:
                     long_description: a remediation to fix Finding 1
                     short_remediation: Do X
                     long_remediation: Do X to fix Finding 1
+              pz_rules:
+                - key: OGE_environment-nodes
+                  name: Environment Nodes
+                  seeds:
+                    - type: 2
+                      value: MATCH (n:OGE_Environment_Kind) RETURN n
               queries:
-                - query_key: all-node-kind-1
+                - query_key: OGE_all-node-kind-1
                   name: All Node Kind 1
                   query: MATCH (n:OGE_Node_Kind_1) RETURN n
                   description: Lists all OGE_Node_Kind_1 nodes.
