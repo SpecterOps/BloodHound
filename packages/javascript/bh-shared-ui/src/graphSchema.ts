@@ -33,6 +33,7 @@ export enum ActiveDirectoryNodeKind {
     Site = 'Site',
     SiteServer = 'SiteServer',
     SiteSubnet = 'SiteSubnet',
+    DMSA = 'DMSA',
 }
 export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind): string | undefined {
     switch (value) {
@@ -74,6 +75,8 @@ export function ActiveDirectoryNodeKindToDisplay(value: ActiveDirectoryNodeKind)
             return 'SiteServer';
         case ActiveDirectoryNodeKind.SiteSubnet:
             return 'SiteSubnet';
+        case ActiveDirectoryNodeKind.DMSA:
+            return 'DMSA';
         default:
             return undefined;
     }
@@ -165,7 +168,13 @@ export enum ActiveDirectoryRelationshipKind {
     HasTrustKeys = 'HasTrustKeys',
     WriteAltSecurityIdentities = 'WriteAltSecurityIdentities',
     WritePublicInformation = 'WritePublicInformation',
+    WriteSupersededManagedAccountLink = 'WriteSupersededManagedAccountLink',
+    WriteSupersededServiceAccountState = 'WriteSupersededServiceAccountState',
     ProtectAdminGroups = 'ProtectAdminGroups',
+    DMSAPrecededBy = 'DMSAPrecededBy',
+    CreateDMSA = 'CreateDMSA',
+    BadSuccessor = 'BadSuccessor',
+    OuroborosSelfEnroll = 'OuroborosSelfEnroll',
 }
 export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryRelationshipKind): string | undefined {
     switch (value) {
@@ -341,8 +350,20 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'WriteAltSecurityIdentities';
         case ActiveDirectoryRelationshipKind.WritePublicInformation:
             return 'WritePublicInformation';
+        case ActiveDirectoryRelationshipKind.WriteSupersededManagedAccountLink:
+            return 'WriteSupersededManagedAccountLink';
+        case ActiveDirectoryRelationshipKind.WriteSupersededServiceAccountState:
+            return 'WriteSupersededServiceAccountState';
         case ActiveDirectoryRelationshipKind.ProtectAdminGroups:
             return 'ProtectAdminGroups';
+        case ActiveDirectoryRelationshipKind.DMSAPrecededBy:
+            return 'DMSAPrecededBy';
+        case ActiveDirectoryRelationshipKind.CreateDMSA:
+            return 'CreateDMSA';
+        case ActiveDirectoryRelationshipKind.BadSuccessor:
+            return 'BadSuccessor';
+        case ActiveDirectoryRelationshipKind.OuroborosSelfEnroll:
+            return 'OuroborosSelfEnroll';
         default:
             return undefined;
     }
@@ -421,6 +442,9 @@ export enum ActiveDirectoryKindProperties {
     StrongCertificateBindingEnforcement = 'strongcertificatebindingenforcement',
     VulnerableNetlogonSecurityDescriptor = 'vulnerablenetlogonsecuritydescriptor',
     VulnerableNetlogonSecurityDescriptorCollected = 'vulnerablenetlogonsecuritydescriptorcollected',
+    WindowsBuildNumber = 'windowsbuildnumber',
+    WindowsBuildCollected = 'windowsbuildcollected',
+    WindowsBuildRevision = 'windowsbuildrevision',
     EKUs = 'ekus',
     SubjectAltRequireUPN = 'subjectaltrequireupn',
     SubjectAltRequireDNS = 'subjectaltrequiredns',
@@ -626,6 +650,12 @@ export function ActiveDirectoryKindPropertiesToDisplay(value: ActiveDirectoryKin
             return 'Vulnerable Netlogon Security Descriptor';
         case ActiveDirectoryKindProperties.VulnerableNetlogonSecurityDescriptorCollected:
             return 'Vulnerable Netlogon Security Descriptor Collected';
+        case ActiveDirectoryKindProperties.WindowsBuildNumber:
+            return 'Windows Build Number';
+        case ActiveDirectoryKindProperties.WindowsBuildCollected:
+            return 'Windows Build Collected';
+        case ActiveDirectoryKindProperties.WindowsBuildRevision:
+            return 'Windows Build Revision';
         case ActiveDirectoryKindProperties.EKUs:
             return 'Enhanced Key Usage';
         case ActiveDirectoryKindProperties.SubjectAltRequireUPN:
@@ -876,17 +906,95 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
         ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
+        ActiveDirectoryRelationshipKind.ContainsIdentity,
+        ActiveDirectoryRelationshipKind.PropagatesACEsTo,
+        ActiveDirectoryRelationshipKind.GPOAppliesTo,
+        ActiveDirectoryRelationshipKind.CanApplyGPO,
         ActiveDirectoryRelationshipKind.HasTrustKeys,
         ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
         ActiveDirectoryRelationshipKind.WritePublicInformation,
         ActiveDirectoryRelationshipKind.ManageCA,
         ActiveDirectoryRelationshipKind.ManageCertificates,
         ActiveDirectoryRelationshipKind.ServerIs,
+        ActiveDirectoryRelationshipKind.DMSAPrecededBy,
+        ActiveDirectoryRelationshipKind.CreateDMSA,
+        ActiveDirectoryRelationshipKind.BadSuccessor,
+        ActiveDirectoryRelationshipKind.OuroborosSelfEnroll,
         ActiveDirectoryRelationshipKind.Contains,
         ActiveDirectoryRelationshipKind.DCFor,
         ActiveDirectoryRelationshipKind.SameForestTrust,
         ActiveDirectoryRelationshipKind.SpoofSIDHistory,
         ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
+    ];
+}
+export function ActiveDirectoryPathfindingEdgesMatchFrontend(): ActiveDirectoryRelationshipKind[] {
+    return [
+        ActiveDirectoryRelationshipKind.Owns,
+        ActiveDirectoryRelationshipKind.GenericAll,
+        ActiveDirectoryRelationshipKind.GenericWrite,
+        ActiveDirectoryRelationshipKind.WriteOwner,
+        ActiveDirectoryRelationshipKind.WriteDACL,
+        ActiveDirectoryRelationshipKind.MemberOf,
+        ActiveDirectoryRelationshipKind.ForceChangePassword,
+        ActiveDirectoryRelationshipKind.AllExtendedRights,
+        ActiveDirectoryRelationshipKind.AddMember,
+        ActiveDirectoryRelationshipKind.HasSession,
+        ActiveDirectoryRelationshipKind.GPLink,
+        ActiveDirectoryRelationshipKind.AllowedToDelegate,
+        ActiveDirectoryRelationshipKind.CoerceToTGT,
+        ActiveDirectoryRelationshipKind.AllowedToAct,
+        ActiveDirectoryRelationshipKind.AdminTo,
+        ActiveDirectoryRelationshipKind.CanPSRemote,
+        ActiveDirectoryRelationshipKind.CanRDP,
+        ActiveDirectoryRelationshipKind.ExecuteDCOM,
+        ActiveDirectoryRelationshipKind.HasSIDHistory,
+        ActiveDirectoryRelationshipKind.AddSelf,
+        ActiveDirectoryRelationshipKind.DCSync,
+        ActiveDirectoryRelationshipKind.ReadLAPSPassword,
+        ActiveDirectoryRelationshipKind.ReadGMSAPassword,
+        ActiveDirectoryRelationshipKind.DumpSMSAPassword,
+        ActiveDirectoryRelationshipKind.SQLAdmin,
+        ActiveDirectoryRelationshipKind.AddAllowedToAct,
+        ActiveDirectoryRelationshipKind.WriteSPN,
+        ActiveDirectoryRelationshipKind.AddKeyCredentialLink,
+        ActiveDirectoryRelationshipKind.SyncLAPSPassword,
+        ActiveDirectoryRelationshipKind.WriteAccountRestrictions,
+        ActiveDirectoryRelationshipKind.WriteGPLink,
+        ActiveDirectoryRelationshipKind.GoldenCert,
+        ActiveDirectoryRelationshipKind.ADCSESC1,
+        ActiveDirectoryRelationshipKind.ADCSESC3,
+        ActiveDirectoryRelationshipKind.ADCSESC4,
+        ActiveDirectoryRelationshipKind.ADCSESC6a,
+        ActiveDirectoryRelationshipKind.ADCSESC6b,
+        ActiveDirectoryRelationshipKind.ADCSESC9a,
+        ActiveDirectoryRelationshipKind.ADCSESC9b,
+        ActiveDirectoryRelationshipKind.ADCSESC10a,
+        ActiveDirectoryRelationshipKind.ADCSESC10b,
+        ActiveDirectoryRelationshipKind.ADCSESC13,
+        ActiveDirectoryRelationshipKind.SyncedToADUser,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToSMB,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToADCS,
+        ActiveDirectoryRelationshipKind.WriteOwnerLimitedRights,
+        ActiveDirectoryRelationshipKind.OwnsLimitedRights,
+        ActiveDirectoryRelationshipKind.ClaimSpecialIdentity,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAP,
+        ActiveDirectoryRelationshipKind.CoerceAndRelayNTLMToLDAPS,
+        ActiveDirectoryRelationshipKind.HasTrustKeys,
+        ActiveDirectoryRelationshipKind.WriteAltSecurityIdentities,
+        ActiveDirectoryRelationshipKind.WritePublicInformation,
+        ActiveDirectoryRelationshipKind.ManageCA,
+        ActiveDirectoryRelationshipKind.ManageCertificates,
+        ActiveDirectoryRelationshipKind.ServerIs,
+        ActiveDirectoryRelationshipKind.DMSAPrecededBy,
+        ActiveDirectoryRelationshipKind.CreateDMSA,
+        ActiveDirectoryRelationshipKind.BadSuccessor,
+        ActiveDirectoryRelationshipKind.OuroborosSelfEnroll,
+        ActiveDirectoryRelationshipKind.Contains,
+        ActiveDirectoryRelationshipKind.DCFor,
+        ActiveDirectoryRelationshipKind.SameForestTrust,
+        ActiveDirectoryRelationshipKind.SpoofSIDHistory,
+        ActiveDirectoryRelationshipKind.AbuseTGTDelegation,
+        ActiveDirectoryRelationshipKind.ProtectAdminGroups,
     ];
 }
 export enum AzureNodeKind {
