@@ -32,7 +32,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -125,11 +126,11 @@ func TestResources_GetPathfindingResult(t *testing.T) {
 
 func TestResources_GetShortestPath(t *testing.T) {
 	var (
-		mockCtrl       = gomock.NewController(t)
-		mockGraph      = mocks_graph.NewMockGraph(mockCtrl)
-		mockDB         = mocks.NewMockDatabase(mockCtrl)
-		dogTagsService = dogtags.NewTestService(dogtags.TestOverrides{})
-		resources      = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogTagsService}
+		mockCtrl      = gomock.NewController(t)
+		mockGraph     = mocks_graph.NewMockGraph(mockCtrl)
+		mockDB        = mocks.NewMockDatabase(mockCtrl)
+		featureClient = featuretest.NewClient(t, featuretest.Overrides{})
+		resources     = v2.Resources{GraphQuery: mockGraph, DB: mockDB, FeatureFlags: featureClient}
 
 		user    = setupUser()
 		userCtx = setupUserCtx(user)
@@ -180,8 +181,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{}, errors.New("database error"))
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -196,7 +197,7 @@ func TestResources_GetShortestPath(t *testing.T) {
 					apitest.AddQueryParam(input, "relationship_kinds", "wrx")
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).Return(appcfg.FeatureFlag{}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
@@ -213,8 +214,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
@@ -232,8 +233,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
@@ -251,8 +252,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
@@ -269,8 +270,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
@@ -288,8 +289,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
@@ -305,8 +306,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -329,8 +330,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -354,8 +355,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -377,8 +378,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -400,8 +401,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -445,8 +446,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -490,8 +491,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -513,8 +514,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), "someID", "someOtherID", allKindsFilter).
@@ -538,8 +539,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), "someID", "someOtherID", traversableKindsFilter).
@@ -564,8 +565,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						GetAllShortestPaths(gomock.Any(), "someID", "someOtherID", query.KindIn(query.Relationship(), ad.Contains)).
@@ -586,8 +587,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(model.GraphSchemaRelationshipKinds{}, 0, errors.New("database error"))
 				},
@@ -605,8 +606,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 				},
@@ -625,8 +626,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 				},
@@ -645,8 +646,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 
@@ -665,8 +666,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 
@@ -684,8 +685,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -709,8 +710,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -735,8 +736,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -759,8 +760,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -783,8 +784,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -829,8 +830,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -875,8 +876,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -899,8 +900,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -926,8 +927,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -954,8 +955,8 @@ func TestResources_GetShortestPath(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockDB.EXPECT().GetGraphSchemaRelationshipKinds(gomock.Any(), model.Filters{"is_traversable": []model.Filter{{Operator: model.Equals, Value: "true"}}}, model.Sort{}, 0, 0).Return(openGraphEdges, 2, nil)
 					mockGraph.EXPECT().
@@ -978,14 +979,14 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 		expectedMocks      func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph)
 		expectedStatusCode int
 		assertBody         func(t *testing.T, body string)
-		dogTagsOverrides   dogtags.TestOverrides
+		featureOverrides   featuretest.Overrides
 		user               model.User
 	}{
 		{
 			name: "FilterETACGraph",
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -1004,8 +1005,8 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 			},
 			expectedMocks: func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph) {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+					Return(false, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
 					GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -1062,15 +1063,15 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 				"end_node":           "1",
 				"relationship_kinds": "in:GenericWrite",
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			expectedMocks: func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph) {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphExtensionManagement).
+					Return(false, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
 					GetAllShortestPaths(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -1118,13 +1119,13 @@ func TestResources_GetShortestPath_ETAC(t *testing.T) {
 		t.Run(tc.name, func(tt *testing.T) {
 
 			var (
-				mockCtrl       = gomock.NewController(tt)
-				mockDB         = mocks.NewMockDatabase(mockCtrl)
-				mockGraph      = mocks_graph.NewMockGraph(mockCtrl)
-				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
-				resources      = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogTagsService}
-				endpoint       = "/api/v2/resource/get-shortest-path"
-				ctx            = setupUserCtx(tc.user)
+				mockCtrl      = gomock.NewController(tt)
+				mockDB        = mocks.NewMockDatabase(mockCtrl)
+				mockGraph     = mocks_graph.NewMockGraph(mockCtrl)
+				featureClient = featuretest.NewClient(tt, tc.featureOverrides)
+				resources     = v2.Resources{GraphQuery: mockGraph, DB: mockDB, FeatureFlags: featureClient}
+				endpoint      = "/api/v2/resource/get-shortest-path"
+				ctx           = setupUserCtx(tc.user)
 			)
 			defer mockCtrl.Finish()
 
@@ -1156,7 +1157,7 @@ func TestResources_GetSearchResult(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks_graph.NewMockGraph(mockCtrl)
 		mockDB    = mocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 		user      = setupUser()
 		userCtx   = setupUserCtx(user)
 	)
@@ -1207,8 +1208,8 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{}, errors.New("database error"))
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(false, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -1223,11 +1224,11 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(true, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).
-						Return(appcfg.FeatureFlag{}, errors.New("database error"))
+						IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).
+						Return(false, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -1242,11 +1243,11 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(true, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).
+						Return(false, nil)
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), true, false, "some query", queries.SearchTypeFuzzy).
 						Return(nil, errors.New("graph error"))
@@ -1265,11 +1266,11 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(true, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 
 					nodeSet := graph.NewNodeSet()
@@ -1300,11 +1301,11 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(true, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(graphschema.PrimaryDisplayKinds{
 						graph.StringKind("Person"): graphschema.DisplayKind{Name: "Person", Icon: graphschema.DisplayNodeIcon{Type: graphschema.DisplayNodeTypeFontAwesome, Name: "person-half-dress", Color: "#ff91af"}}}, nil)
 
@@ -1337,11 +1338,11 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(false, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).
+						Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), false, false, "some query", queries.SearchTypeFuzzy).
@@ -1360,11 +1361,11 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(true, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).
+						Return(false, nil)
 					nodeSet := graph.NewNodeSet()
 					personNode := &graph.Node{
 						ID:    1,
@@ -1395,11 +1396,11 @@ func TestResources_GetSearchResult(t *testing.T) {
 				},
 				Setup: func() {
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-						Return(appcfg.FeatureFlag{Enabled: false}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+						Return(false, nil)
 					mockDB.EXPECT().
-						GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).
-						Return(appcfg.FeatureFlag{Enabled: true}, nil)
+						IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).
+						Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchByNameOrObjectID(gomock.Any(), false, true, "some query", queries.SearchTypeFuzzy).
@@ -1419,7 +1420,7 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 		expectedMocks      func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph)
 		expectedStatusCode int
 		assertBody         func(t *testing.T, body string)
-		dogTagsOverrides   dogtags.TestOverrides
+		featureOverrides   featuretest.Overrides
 		user               model.User
 	}{
 		{
@@ -1433,11 +1434,11 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 			},
 			expectedMocks: func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph) {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+					Return(true, nil)
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).
+					Return(false, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
 					SearchByNameOrObjectID(gomock.Any(), true, false, "some query", queries.SearchTypeFuzzy).
@@ -1447,9 +1448,9 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 			assertBody: func(t *testing.T, body string) {
 
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 		},
@@ -1467,11 +1468,11 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 			},
 			expectedMocks: func(mockDB *mocks.MockDatabase, mockGraph *mocks_graph.MockGraph) {
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).
+					Return(true, nil)
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).
-					Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).
+					Return(false, nil)
 
 				nodeSet := graph.NewNodeSet()
 
@@ -1505,9 +1506,9 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 				assert.Contains(t, body, "** Hidden Computer Object **")
 				assert.NotContains(t, body, "restricted")
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 		},
@@ -1518,13 +1519,13 @@ func TestResources_GetSearchResult_ETAC(t *testing.T) {
 		t.Run(tc.name, func(tt *testing.T) {
 
 			var (
-				mockCtrl       = gomock.NewController(tt)
-				mockDB         = mocks.NewMockDatabase(mockCtrl)
-				mockGraph      = mocks_graph.NewMockGraph(mockCtrl)
-				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
-				resources      = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogTagsService}
-				endpoint       = "/api/v2/graph-search"
-				ctx            = setupUserCtx(tc.user)
+				mockCtrl      = gomock.NewController(tt)
+				mockDB        = mocks.NewMockDatabase(mockCtrl)
+				mockGraph     = mocks_graph.NewMockGraph(mockCtrl)
+				featureClient = featuretest.NewClient(tt, tc.featureOverrides)
+				resources     = v2.Resources{GraphQuery: mockGraph, DB: mockDB, FeatureFlags: featureClient}
+				endpoint      = "/api/v2/graph-search"
+				ctx           = setupUserCtx(tc.user)
 			)
 			defer mockCtrl.Finish()
 

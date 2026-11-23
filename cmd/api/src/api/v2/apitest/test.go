@@ -17,9 +17,11 @@
 package apitest
 
 import (
+	"context"
 	"log/slog"
 	"os"
 
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
@@ -27,11 +29,16 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	mocks_graph "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/server/alerts"
 	"go.uber.org/mock/gomock"
 )
+
+type defaultFeatureFlags struct{}
+
+func (s defaultFeatureFlags) Boolean(_ context.Context, _ string, defaultValue bool, _ openfeature.EvaluationContext, _ ...openfeature.Option) bool {
+	return defaultValue
+}
 
 func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementResource, *mocks.MockDatabase, *mocks_graph.MockGraph) {
 	cfg, err := config.NewDefaultConfiguration()
@@ -45,9 +52,8 @@ func NewAuthManagementResource(mockCtrl *gomock.Controller) (auth.ManagementReso
 
 	mockDB := mocks.NewMockDatabase(mockCtrl)
 	mockGraphDB := mocks_graph.NewMockGraph(mockCtrl)
-	mockDogTagsService := dogtags.NewTestService(dogtags.TestOverrides{})
 	mockAlertPublisher := alerts.NewAlertEventPublisher()
-	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, apimocks.NewMockAuthExtensions(mockCtrl)), mockGraphDB, mockDogTagsService, mockAlertPublisher)
+	resources := auth.NewManagementResource(cfg, mockDB, authPkg.NewAuthorizer(mockDB), api.NewAuthenticator(cfg, mockDB, apimocks.NewMockAuthExtensions(mockCtrl)), mockGraphDB, defaultFeatureFlags{}, mockAlertPublisher)
 
 	return resources, mockDB, mockGraphDB
 }

@@ -319,7 +319,7 @@ func (s *BHCEPipeline) analyze(ctx context.Context, analysisSteps model.Analysis
 		s.jobService.CompleteAnalyzedIngestJobs()
 
 		// This is cacheclearing. The analysis is still successful here
-		if _, err := s.db.GetFlagByKey(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
+		if _, err := s.db.IsEnabled(ctx, appcfg.FeatureEntityPanelCaching); err != nil {
 			slog.ErrorContext(
 				ctx,
 				"Error retrieving entity panel caching flag",

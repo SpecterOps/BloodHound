@@ -95,6 +95,7 @@ type FeatureFlagSet map[string]FeatureFlag
 // FeatureFlagService defines a contract for fetching and setting feature flags.
 type FeatureFlagService interface {
 	GetFlagByKeyer
+	FlagEvaluator
 
 	// GetAllFlags gets all available runtime feature flags as a FeatureFlagSet for the application.
 	GetAllFlags(ctx context.Context) ([]FeatureFlag, error)
@@ -104,9 +105,6 @@ type FeatureFlagService interface {
 
 	// SetFlag attempts to store or update the given FeatureFlag by its feature Key.
 	SetFlag(ctx context.Context, value FeatureFlag) error
-
-	// Implements the new feature flag shared slice method
-	IsEnabled(ctx context.Context, key string) (bool, error)
 }
 
 type GetFlagByKeyer interface {
@@ -114,34 +112,36 @@ type GetFlagByKeyer interface {
 	GetFlagByKey(context.Context, string) (FeatureFlag, error)
 }
 
-func GetFlagEnabled(ctx context.Context, service GetFlagByKeyer, key string) bool {
-	if flag, err := service.GetFlagByKey(ctx, key); err != nil {
+// FlagEvaluator evaluates a runtime feature flag by key.
+type FlagEvaluator interface {
+	IsEnabled(ctx context.Context, key string) (bool, error)
+}
+
+func GetFlagEnabled(ctx context.Context, service FlagEvaluator, key string) bool {
+	if enabled, err := service.IsEnabled(ctx, key); err != nil {
 		slog.WarnContext(ctx, "Failed to fetch feature flag; returning false", slog.String("key", key))
 		return false
 	} else {
-		return flag.Enabled
+		return enabled
 	}
 }
 
 // TODO Cleanup after Tiering GA
-func GetTieringEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+func GetTieringEnabled(ctx context.Context, service FlagEvaluator) bool {
 	return GetFlagEnabled(ctx, service, FeatureTierManagement)
 }
 
 // GetOpenHoundEnabled returns true if the OpenHound Support feature flag is enabled.
-func GetOpenHoundEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+func GetOpenHoundEnabled(ctx context.Context, service FlagEvaluator) bool {
 	return GetFlagEnabled(ctx, service, FeatureOpenHoundSupport)
 }
 
 // GetUseRawObjectIDsEnabled returns true if the use raw object id feature flag is enabled.
-func GetUseRawObjectIDsEnabled(ctx context.Context, service GetFlagByKeyer) bool {
+func GetUseRawObjectIDsEnabled(ctx context.Context, service FlagEvaluator) bool {
 	return GetFlagEnabled(ctx, service, FeatureUseRawObjectID)
 }
 
-func GetVariableAnalysisModeEnabled(ctx context.Context, service GetFlagByKeyer) bool {
-	if variableAnalysisModeFlag, err := service.GetFlagByKey(ctx, FeatureVariableAnalysisMode); err != nil {
-		return false
-	} else {
-		return variableAnalysisModeFlag.Enabled
-	}
+func GetVariableAnalysisModeEnabled(ctx context.Context, service FlagEvaluator) bool {
+	enabled, err := service.IsEnabled(ctx, FeatureVariableAnalysisMode)
+	return err == nil && enabled
 }

@@ -35,12 +35,12 @@ func (s *BloodhoundDB) GetFlagByKey(ctx context.Context, key string) (appcfg.Fea
 }
 
 func (s *BloodhoundDB) IsEnabled(ctx context.Context, key string) (bool, error) {
-	var flag appcfg.FeatureFlag
-	if err := s.db.WithContext(ctx).Where("key = ?", key).First(&flag); err.Error != nil {
-		return false, CheckError(err)
-	} else {
-		return flag.Enabled, nil
-	}
+	return s.featureFlags.IsEnabled(ctx, key)
+}
+
+func (s *BloodhoundDB) lookupFlagEnabled(ctx context.Context, key string) (bool, error) {
+	flag, err := s.GetFlagByKey(ctx, key)
+	return flag.Enabled, err
 }
 
 func (s *BloodhoundDB) GetAllFlags(ctx context.Context) ([]appcfg.FeatureFlag, error) {

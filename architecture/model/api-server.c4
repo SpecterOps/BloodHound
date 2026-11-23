@@ -115,7 +115,7 @@ model {
 
     featureFlagClient = component 'Feature Flag Client' {
       #go #featureFlags
-      description 'OpenFeature SDK client used by application code to evaluate feature flags. The active provider is selected at build time, decoupling flag evaluation call sites from the backend. In BHCE the from-env provider reads flag defaults from environment variables; BHE swaps in LaunchDarkly (Fleet) or a Replicated-license-backed InMemoryProvider (On-Prem).'
+      description 'OpenFeature SDK clients evaluate product entitlements and deployment-local feature flags. BHCE uses the SDK NoopProvider for product entitlement defaults. BHE uses LaunchDarkly (Fleet) or a Replicated-license-backed InMemoryProvider (On-Prem). An isolated client reads deployment-local feature flags from PostgreSQL on each evaluation.'
       technology 'Go / OpenFeature SDK'
     }
 

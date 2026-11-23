@@ -512,9 +512,9 @@ func SaveDataQuality(ctx context.Context, db database.Database, graphDB graph.Da
 	}
 
 	// OpenGraph node and relationship counts
-	if openGraphDataQualityFlag, err := db.GetFlagByKey(ctx, appcfg.FeatureOpenGraphDataQuality); err != nil {
+	if openGraphDataQualityEnabled, err := db.IsEnabled(ctx, appcfg.FeatureOpenGraphDataQuality); err != nil {
 		return fmt.Errorf("could not get open graph data quality feature flag: %w", err)
-	} else if openGraphDataQualityFlag.Enabled {
+	} else if openGraphDataQualityEnabled {
 		if stats, aggregations, err := dataQualityGraphStats(ctx, db, graphDB); err != nil {
 			return fmt.Errorf("could not get open graph stats: %w", err)
 		} else {

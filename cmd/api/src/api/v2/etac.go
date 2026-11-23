@@ -22,11 +22,12 @@ import (
 	"slices"
 	"time"
 
+	"github.com/open-feature/go-sdk/openfeature"
 	"github.com/specterops/bloodhound/cmd/api/src/api/bloodhoundgraph"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -96,8 +97,8 @@ func getEnvironmentIdFromNode(node *graph.Node) (string, error) {
 }
 
 // CheckUserHasAccessToNodeById returns whether a user has access to view this node based on their ETAC list
-func CheckUserHasAccessToNodeById(ctx context.Context, graphQuery queries.Graph, dogTagsService dogtags.Service, user model.User, objectId string, kind graph.Kind) (bool, error) {
-	if ShouldFilterForETAC(dogTagsService, user) {
+func CheckUserHasAccessToNodeById(ctx context.Context, graphQuery queries.Graph, featureClient *openfeature.Client, user model.User, objectId string, kind graph.Kind) (bool, error) {
+	if ShouldFilterForETAC(featureClient, user) {
 		if node, err := graphQuery.GetEntityByObjectId(ctx, objectId, kind); err != nil {
 			return false, err
 		} else if node == nil {
@@ -124,8 +125,8 @@ func ExtractEnvironmentIDsFromUser(user *model.User) []string {
 
 // ShouldFilterForETAC determines whether ETAC filtering should be applied
 // based on the feature flag and user's environment access.
-func ShouldFilterForETAC(dogTagsService dogtags.Service, user model.User) bool {
-	if etacEnabled := dogTagsService.GetFlagAsBool(dogtags.ETAC_ENABLED); !etacEnabled {
+func ShouldFilterForETAC(featureClient *openfeature.Client, user model.User) bool {
+	if etacEnabled := featureClient.Boolean(context.Background(), productfeatures.ETAC_ENABLED, false, openfeature.EvaluationContext{}); !etacEnabled {
 		return false
 	} else if user.AllEnvironments {
 		// no filtering required if user has all environments

@@ -32,10 +32,10 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	dbMocks "github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
-	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
 	"github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/dawgs/graph"
@@ -49,7 +49,7 @@ func setup(t *testing.T) (*gomock.Controller, *mocks.MockGraph, *dbMocks.MockDat
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = mocks.NewMockGraph(mockCtrl)
 		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 	)
 	return mockCtrl, mockGraph, mockDB, resources
 }
@@ -85,8 +85,8 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, 0, queries.ErrGraphUnsupported)
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), "entity_panel_cache").
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					IsEnabled(gomock.Any(), "entity_panel_cache").
+					Return(true, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
@@ -105,8 +105,8 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, 0, queries.ErrUnsupportedDataType)
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), "entity_panel_cache").
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					IsEnabled(gomock.Any(), "entity_panel_cache").
+					Return(true, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
@@ -125,8 +125,8 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, 0, ops.ErrGraphQueryMemoryLimit)
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), "entity_panel_cache").
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					IsEnabled(gomock.Any(), "entity_panel_cache").
+					Return(true, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
@@ -145,8 +145,8 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, 0, errors.New("any other error"))
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), "entity_panel_cache").
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					IsEnabled(gomock.Any(), "entity_panel_cache").
+					Return(true, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
@@ -166,8 +166,8 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, 0, nil)
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), "entity_panel_cache").
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					IsEnabled(gomock.Any(), "entity_panel_cache").
+					Return(true, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
@@ -193,8 +193,8 @@ func setupCases(mockGraph *mocks.MockGraph, mockDB *dbMocks.MockDatabase) []apit
 					GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil, 0, nil)
 				mockDB.EXPECT().
-					GetFlagByKey(gomock.Any(), "entity_panel_cache").
-					Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					IsEnabled(gomock.Any(), "entity_panel_cache").
+					Return(true, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 			},
 			Test: func(output apitest.Output) {
@@ -594,7 +594,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 		buildRequest     func() *http.Request
 		setupMocks       func(t *testing.T, mock *mock)
 		user             model.User
-		dogTagsOverrides dogtags.TestOverrides
+		featureOverrides featuretest.Overrides
 		expected         expected
 	}
 
@@ -613,7 +613,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{}, errors.New("error"))
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), "entity_panel_cache").Return(false, errors.New("error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -635,7 +635,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), "entity_panel_cache").Return(true, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("", 0, queries.ErrGraphUnsupported)
 			},
 			expected: expected{
@@ -658,7 +658,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), "entity_panel_cache").Return(true, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("", 0, ops.ErrGraphQueryMemoryLimit)
 			},
 			expected: expected{
@@ -681,7 +681,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), "entity_panel_cache").Return(true, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("", 0, errors.New("error"))
 			},
 			expected: expected{
@@ -704,7 +704,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), "entity_panel_cache").Return(true, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
 			},
 			expected: expected{
@@ -726,7 +726,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), "entity_panel_cache").Return(true, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("", 1, nil)
 			},
 			expected: expected{
@@ -748,7 +748,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			setupMocks: func(t *testing.T, mock *mock) {
 				t.Helper()
 				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), "entity_panel_cache").Return(true, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
 			},
 			expected: expected{
@@ -756,9 +756,9 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 				responseBody:   `{"count":1,"limit":10,"skip":0,"data":"results"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -785,7 +785,7 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 					}),
 				}, nil)
 				mock.mockDatabase.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), "entity_panel_cache").Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), "entity_panel_cache").Return(true, nil)
 				mock.mockGraphQuery.EXPECT().GetADEntityQueryResult(gomock.Any(), gomock.Any(), gomock.Any(), true).Return("results", 1, nil)
 			},
 			expected: expected{
@@ -793,9 +793,9 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 				responseBody:   `{"count":1,"limit":10,"skip":0,"data":"results"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -832,9 +832,9 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 				responseBody:   `{"errors":[{"context":"","message":"Forbidden"}],"http_status":403,"request_id":"","timestamp":"0001-01-01T00:00:00Z"}`,
 				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 			user: model.User{
@@ -870,9 +870,9 @@ func TestResources_ListADIssuancePolicyLinkedCertTemplates(t *testing.T) {
 			testCase.setupMocks(t, mocks)
 
 			resources := v2.Resources{
-				DB:         mocks.mockDatabase,
-				GraphQuery: mocks.mockGraphQuery,
-				DogTags:    dogtags.NewTestService(testCase.dogTagsOverrides),
+				DB:           mocks.mockDatabase,
+				GraphQuery:   mocks.mockGraphQuery,
+				FeatureFlags: featuretest.NewClient(t, testCase.featureOverrides),
 			}
 
 			response := httptest.NewRecorder()

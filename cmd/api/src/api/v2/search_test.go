@@ -33,7 +33,8 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	graphMocks "github.com/specterops/bloodhound/cmd/api/src/queries/mocks"
-	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/productfeatures"
+	featuretest "github.com/specterops/bloodhound/cmd/api/src/services/productfeatures/testing"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/test"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
@@ -50,7 +51,7 @@ func TestResources_SearchHandler(t *testing.T) {
 		mockCtrl  = gomock.NewController(t)
 		mockGraph = graphMocks.NewMockGraph(mockCtrl)
 		mockDB    = dbMocks.NewMockDatabase(mockCtrl)
-		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogtags.NewTestService(dogtags.TestOverrides{})}
+		resources = v2.Resources{GraphQuery: mockGraph, DB: mockDB, FeatureFlags: featuretest.NewClient(t, featuretest.Overrides{})}
 		userCtx   = setupUserCtx(model.User{PrincipalName: "user"})
 	)
 
@@ -90,7 +91,7 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{}, errors.New("database error"))
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(false, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -104,8 +105,8 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{}, errors.New("database error"))
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(true, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(false, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
 					apitest.StatusCode(output, http.StatusInternalServerError)
@@ -120,8 +121,8 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(true, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				},
 				Test: func(output apitest.Output) {
@@ -136,8 +137,8 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(true, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(false, nil)
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10, false, nil).
 						Return([]*graph.Node{
@@ -165,8 +166,8 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(true, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -184,8 +185,8 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(true, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any()).Return(nil, errors.New("database error"))
 				},
 				Test: func(output apitest.Output) {
@@ -200,8 +201,8 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: true}, nil)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(true, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), gomock.Any(), "search value", 0, 10, false, nil).
@@ -219,8 +220,8 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(false, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(false, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false, nil).
@@ -237,8 +238,8 @@ func TestResources_SearchHandler(t *testing.T) {
 					apitest.SetContext(input, userCtx)
 				},
 				Setup: func() {
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-					mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(false, nil)
+					mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(true, nil)
 					mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 					mockGraph.EXPECT().
 						SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, true, nil).
@@ -258,7 +259,7 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 		expectedMocks      func(mockDB *dbMocks.MockDatabase, mockGraph *graphMocks.MockGraph)
 		expectedStatusCode int
 		assertBody         func(t *testing.T, body string)
-		dogTagsOverrides   dogtags.TestOverrides
+		featureOverrides   featuretest.Overrides
 		user               model.User
 	}{
 		{
@@ -274,8 +275,8 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 				"q": "search value",
 			},
 			expectedMocks: func(mockDB *dbMocks.MockDatabase, mockGraph *graphMocks.MockGraph) {
-				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(false, nil)
+				mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(false, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
 					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false, []string{"12345", "54321"}).
@@ -285,9 +286,9 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			assertBody: func(t *testing.T, body string) {
 
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 		},
@@ -301,8 +302,8 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 				"q": "search value",
 			},
 			expectedMocks: func(mockDB *dbMocks.MockDatabase, mockGraph *graphMocks.MockGraph) {
-				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(appcfg.FeatureFlag{Enabled: false}, nil)
-				mockDB.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphSearch).Return(false, nil)
+				mockDB.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureUseRawObjectID).Return(false, nil)
 				mockDB.EXPECT().GetPrimaryDisplayKinds(gomock.Any())
 				mockGraph.EXPECT().
 					SearchNodesByNameOrObjectId(gomock.Any(), graph.Kinds{ad.Entity, azure.Entity}, "search value", 0, 10, false, nil).
@@ -312,9 +313,9 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			assertBody: func(t *testing.T, body string) {
 
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 		},
@@ -330,9 +331,9 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 			assertBody: func(t *testing.T, body string) {
 				assert.Contains(t, body, "no associated user found with request")
 			},
-			dogTagsOverrides: dogtags.TestOverrides{
-				Bools: map[dogtags.BoolDogTag]bool{
-					dogtags.ETAC_ENABLED: true,
+			featureOverrides: featuretest.Overrides{
+				Bools: map[string]bool{
+					productfeatures.ETAC_ENABLED: true,
 				},
 			},
 		},
@@ -342,12 +343,12 @@ func TestResources_SearchHandler_ETAC(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(tt *testing.T) {
 			var (
-				mockCtrl       = gomock.NewController(tt)
-				mockDB         = dbMocks.NewMockDatabase(mockCtrl)
-				mockGraph      = graphMocks.NewMockGraph(mockCtrl)
-				dogTagsService = dogtags.NewTestService(tc.dogTagsOverrides)
-				resources      = v2.Resources{GraphQuery: mockGraph, DB: mockDB, DogTags: dogTagsService}
-				endpoint       = "/api/v2/search"
+				mockCtrl      = gomock.NewController(tt)
+				mockDB        = dbMocks.NewMockDatabase(mockCtrl)
+				mockGraph     = graphMocks.NewMockGraph(mockCtrl)
+				featureClient = featuretest.NewClient(tt, tc.featureOverrides)
+				resources     = v2.Resources{GraphQuery: mockGraph, DB: mockDB, FeatureFlags: featureClient}
+				endpoint      = "/api/v2/search"
 			)
 			defer mockCtrl.Finish()
 
@@ -429,7 +430,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{}, fmt.Errorf("Some error"))
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(false, fmt.Errorf("Some error"))
 			},
 			expected: expected{
 				responseCode:   http.StatusInternalServerError,
@@ -448,7 +449,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(false, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), true).Return(graph.Kinds{}, model.EnvironmentKindsToEnvironment{}, fmt.Errorf("Some error"))
 			},
 			expected: expected{
@@ -468,7 +469,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(false, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), true).Return(graph.Kinds{
 					ad.Domain, azure.Tenant,
 				}, model.EnvironmentKindsToEnvironment{
@@ -500,7 +501,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(false, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), true).Return(graph.Kinds{}, model.EnvironmentKindsToEnvironment{}, nil)
 				mock.mockGraphQuery.EXPECT().GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).Return([]*graph.Node{}, nil)
 			},
@@ -521,7 +522,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(false, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), true).Return(graph.Kinds{ad.Domain}, model.EnvironmentKindsToEnvironment{
 					ad.Domain.String(): model.SchemaEnvironment{
 						SchemaExtensionId:          1,
@@ -555,7 +556,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: true}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(true, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), false).Return(graph.Kinds{graph.StringKind("HeeHaw Kind")}, model.EnvironmentKindsToEnvironment{graph.StringKind("HeeHaw Kind").String(): model.SchemaEnvironment{SchemaExtensionDisplayName: "HeeHaw", SchemaExtensionId: 10, EnvironmentKindId: 101, EnvironmentKindName: "heehaw_Kind", EnvironmentKindDisplayName: "HeeHaw Kind"}}, nil)
 				mock.mockGraphQuery.EXPECT().
 					GetFilteredAndSortedNodes(gomock.Any(), gomock.Any()).
@@ -588,7 +589,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(false, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), true).
 					Return(graph.Kinds{ad.Domain}, model.EnvironmentKindsToEnvironment{
 						ad.Domain.String(): model.SchemaEnvironment{
@@ -623,7 +624,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(false, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), true).
 					Return(graph.Kinds{ad.Domain}, model.EnvironmentKindsToEnvironment{
 						ad.Domain.String(): model.SchemaEnvironment{
@@ -658,7 +659,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(false, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), true).
 					Return(graph.Kinds{ad.Domain}, model.EnvironmentKindsToEnvironment{
 						ad.Domain.String(): model.SchemaEnvironment{
@@ -693,7 +694,7 @@ func TestResources_ListAvailableEnvironments(t *testing.T) {
 				}
 			},
 			setupMocks: func(t *testing.T, mock *mock) {
-				mock.mockDatabase.EXPECT().GetFlagByKey(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(appcfg.FeatureFlag{Enabled: false}, nil)
+				mock.mockDatabase.EXPECT().IsEnabled(gomock.Any(), appcfg.FeatureOpenGraphFindings).Return(false, nil)
 				mock.mockOpenGraphSchemaService.EXPECT().GetEnvironmentKindsAndSchemaEnvironmentData(gomock.Any(), true).
 					Return(graph.Kinds{ad.Domain}, model.EnvironmentKindsToEnvironment{
 						ad.Domain.String(): model.SchemaEnvironment{
