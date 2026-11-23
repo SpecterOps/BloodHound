@@ -28,7 +28,7 @@ import (
 )
 
 func TestIngestRuntimeParameterValidation(t *testing.T) {
-	var service = services.NewService(mocks.NewMockDatabase(t))
+	var service = services.NewService(mocks.NewMockDatabase(t), mocks.NewMockAuditor(t))
 	require.True(t, service.IsAPIAllowedKey(services.IngestRuntimeKey))
 	require.Equal(t, string(legacyappcfg.IngestRuntimeKey), string(services.IngestRuntimeKey))
 	for _, test := range []struct {
