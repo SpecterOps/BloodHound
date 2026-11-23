@@ -60,7 +60,7 @@ const SelectedCaretRight = () => {
 export const RulesAccordion: React.FC = () => {
     const [openAccordion, setOpenAccordion] = useState<RuleSection | ''>(CustomRulesKey);
     const selectedTag = useSelectedTagPathParams();
-    const { ruleId, tagDetailsLink, tagId, isZonePage } = usePZPathParams();
+    const { ruleId, tagDetailsLink, tagId } = usePZPathParams();
 
     const navigate = useAppNavigate();
     const { setSelectedDetailsTab } = useSelectedDetailsTabsContext();
@@ -115,7 +115,7 @@ export const RulesAccordion: React.FC = () => {
                     isOpen={openAccordion === CustomRulesKey}
                     onOpen={setOpenAccordion}
                 />
-                {isZonePage && (
+                {selectedTag.counts[DefaultRulesKey] > 0 && (
                     <RuleAccordionItem
                         section={DefaultRulesKey}
                         count={selectedTag.counts[DefaultRulesKey]}
