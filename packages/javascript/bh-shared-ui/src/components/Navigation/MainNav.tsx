@@ -92,11 +92,13 @@ const MainNavListItem: FC<{
 
     const labelElement = (
         <span className='min-w-0 flex flex-1 items-center gap-2 overflow-hidden whitespace-nowrap'>
-            <span className='flex size-6 shrink-0 items-center justify-center' data-testid='global_nav-item-label-icon'>
+            <span
+                aria-hidden='true'
+                className='flex size-6 shrink-0 items-center justify-center'
+                data-testid='global_nav-item-label-icon'>
                 {icon}
             </span>
             <Typography
-                aria-label={label}
                 className='block min-w-0 truncate !text-inherit'
                 component='span'
                 data-testid='global_nav-item-label-text'
@@ -129,7 +131,9 @@ const MainNavListItem: FC<{
             to={route}>
             {labelElement}
             {target === '_blank' && isExpanded && (
-                <FontAwesomeIcon className='shrink-0' icon={faExternalLink} size='sm' />
+                <span aria-hidden='true' className='shrink-0'>
+                    <FontAwesomeIcon icon={faExternalLink} size='sm' />
+                </span>
             )}
         </AppLink>
     ) : (
@@ -241,7 +245,7 @@ const MainNav: FC<{ mainNavData: MainNavData }> = ({ mainNavData }) => {
                 aria-expanded={isExpanded}
                 aria-label='Toggle Navigation'
                 className={cn(
-                    'h-8 w-8',
+                    'h-6 w-6 rounded-full p-1',
                     'text-common-white bg-primary dark:text-main dark:bg-neutral-5',
                     'hover:text-common-white hover:bg-secondary dark:hover:text-main dark:hover:bg-neutral-3',
                     'active:text-common-white active:bg-primary-variant dark:active:text-main dark:active:bg-neutral-2',

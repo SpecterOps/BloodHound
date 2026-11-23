@@ -14847,7 +14847,7 @@
       "get": {
         "operationId": "GetDataQualityStats",
         "summary": "Get environment-specific data quality stats",
-        "description": "Time series list of data quality stats for a given environment",
+        "description": "Time series list of data quality stats, optionally scoped to an environment",
         "tags": [
           "Data Quality",
           "Community",
@@ -14856,8 +14856,7 @@
         "parameters": [
           {
             "name": "environment_id",
-            "description": "Required. Filters results to the given environment.",
-            "required": true,
+            "description": "Optional. Filters results to the given environment.",
             "in": "query",
             "schema": {
               "type": "string"
@@ -14865,7 +14864,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are created_at, updated_at.",
+            "description": "Sortable columns are created_at, updated_at, metric_value.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -14955,7 +14954,7 @@
       "get": {
         "operationId": "GetDataQualityAggregations",
         "summary": "Get data quality aggregations by environment kind",
-        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
+        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension or environment, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
         "tags": [
           "Data Quality",
           "Community",
@@ -14963,10 +14962,17 @@
         ],
         "parameters": [
           {
-            "name": "schema_environment_kind_id",
-            "description": "Required. Scopes the aggregation to a single environment kind id.\n",
+            "name": "environment_id",
+            "description": "Optional. Scopes the aggregation to a single environment.",
             "in": "query",
-            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "schema_environment_kind_id",
+            "description": "Optional. Scopes the aggregation to a single environment kind id.\n",
+            "in": "query",
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -14983,7 +14989,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are created_at, updated_at.\n",
+            "description": "Sortable columns are created_at, updated_at, metric_value.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -25754,7 +25760,7 @@
         }
       },
       "query.jobs.hydrate-last-job": {
-        "name": "hydrateLastJob",
+        "name": "hydrate_last_job",
         "in": "query",
         "required": false,
         "description": "When true, includes a last_job field containing the most recent job record for each returned client or collector job profile. When false or not supplied, last_job is omitted entirely.",
@@ -29527,20 +29533,19 @@
               },
               "metric_type": {
                 "type": "string",
-                "enum": [
-                  "node",
-                  "relationship"
-                ]
+                "description": "Metric category. Built-in categories include node and relationship.\nExtension-defined categories use <namespace>_<metric-type>.\nAdditional categories may be introduced by installed extensions.\n",
+                "example": "AD_session_completeness"
               },
               "metric_name": {
-                "type": "string"
+                "type": "string",
+                "description": "Graph kind name or extension-defined metric component name."
               },
               "metric_value": {
                 "type": "number",
                 "format": "double"
               },
               "kind_id": {
-                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "description": "The graph kind ID when the metric name resolves to a known kind; otherwise null.",
                 "type": "integer",
                 "format": "int32",
                 "nullable": true
@@ -29577,20 +29582,19 @@
               },
               "metric_type": {
                 "type": "string",
-                "enum": [
-                  "node",
-                  "relationship"
-                ]
+                "description": "Metric category. Built-in categories include node and relationship.\nExtension-defined categories use <namespace>_<metric-type>.\nAdditional categories may be introduced by installed extensions.\n",
+                "example": "AD_session_completeness"
               },
               "metric_name": {
-                "type": "string"
+                "type": "string",
+                "description": "Graph kind name or extension-defined metric component name."
               },
               "metric_value": {
                 "type": "number",
                 "format": "double"
               },
               "kind_id": {
-                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "description": "The graph kind ID when the metric name resolves to a known kind; otherwise null.",
                 "type": "integer",
                 "format": "int32",
                 "nullable": true

@@ -148,6 +148,8 @@ func ConnectGraph(ctx context.Context, cfg config.Configuration) (*graph.Databas
 		GraphQueryMemoryLimit: size.Size(cfg.GraphQueryMemoryLimit) * size.Gibibyte,
 		ConnectionString:      connectionString,
 		Pool:                  pool,
+		TraversalStateLimit:   cfg.Database.TraversalStateLimit,
+		TraversalByteLimit:    cfg.Database.TraversalByteLimit,
 	}); err != nil {
 		return nil, err
 	} else {

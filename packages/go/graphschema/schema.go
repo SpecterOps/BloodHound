@@ -37,8 +37,6 @@ var (
 	Meta             = graph.StringKind("Meta")
 	MetaDetail       = graph.StringKind("MetaDetail")
 	MetaIncludes     = graph.StringKind("MetaIncludes")
-	Zone             = graph.StringKind("Zone")
-	MemberOfZone     = graph.StringKind("MemberOfZone")
 	IgnoreMetaFilter = query.Not(query.KindIn(query.Node(), Meta, MetaDetail))
 )
 
@@ -53,8 +51,8 @@ func AzureGraphName(suffix string) string {
 func CombinedGraphSchema(name string) graph.Graph {
 	return graph.Graph{
 		Name:  name,
-		Nodes: slicesext.Concat(common.NodeKinds(), azure.NodeKinds(), ad.NodeKinds(), []graph.Kind{Zone}),
-		Edges: slicesext.Concat(common.Relationships(), azure.Relationships(), ad.Relationships(), []graph.Kind{MemberOfZone}),
+		Nodes: slicesext.Concat(common.NodeKinds(), azure.NodeKinds(), ad.NodeKinds()),
+		Edges: slicesext.Concat(common.Relationships(), azure.Relationships(), ad.Relationships()),
 		NodeConstraints: []graph.Constraint{{
 			Field: common.ObjectID.String(),
 			Type:  graph.BTreeIndex,

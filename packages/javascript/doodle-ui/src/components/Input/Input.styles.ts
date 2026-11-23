@@ -32,12 +32,16 @@ export const InputVariants = cva(inputBaseClasses, {
                 'enabled:hover:border-[color:var(--input-outlined-border-hover)]',
                 'focus:outline-none focus:focus-ring focus:border-[color:var(--input-outlined-border-default)] enabled:hover:focus:border-[color:var(--input-outlined-hover-focus-border)]',
                 'disabled:border-[color:var(--input-border-disabled)] disabled:bg-[color:var(--input-disabled-fill)] disabled:text-disabled disabled:placeholder:text-disabled disabled:opacity-100',
-                invalidControlClasses
+                invalidControlClasses,
+                'enabled:aria-[invalid=true]:border-status-error-main enabled:aria-[invalid=true]:hover:border-status-error-main enabled:aria-[invalid=true]:focus:border-status-error-main aria-[invalid=true]:enabled:hover:focus:border-status-error-main disabled:aria-[invalid=true]:border-[color:var(--input-disabled-invalid-border)]'
             ),
             underlined: cn(
-                'rounded-sm border-b border-b-[color:var(--input-border-default)] bg-transparent',
+                'rounded-sm border-b border-b-[color:var(--input-border-default)] bg-transparent px-1',
                 'hover:border-b-2',
-                'focus:border-b-2 focus:border-[color:var(--input-border-focus)] focus:outline-none focus:focus-ring'
+                'focus:border-b-2 focus:border-[color:var(--input-border-focus)] focus:outline-none focus:focus-ring',
+                // Border images ignore border-radius, keeping the underline flat without changing the focus outline.
+                '[border-image:linear-gradient(var(--input-border-default),var(--input-border-default))_1]',
+                'focus:[border-image:linear-gradient(var(--input-border-focus),var(--input-border-focus))_1]'
             ),
         },
         intent: {

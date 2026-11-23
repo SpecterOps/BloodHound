@@ -138,6 +138,12 @@ func (s *Route) Use(middleware ...mux.MiddlewareFunc) {
 	s.handler.Use(middleware...)
 }
 
+// TrackMetrics marks the route for per-handler API request metrics.
+func (s *Route) TrackMetrics() *Route {
+	s.mux.Handler(middleware.TrackMetrics(s.mux.GetHandler()))
+	return s
+}
+
 func (s *Route) RequireAuth() *Route {
 	return s.RequirePermissions()
 }

@@ -27,10 +27,12 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/server/audit"
 )
 
 type ParameterKey string
@@ -87,16 +89,46 @@ func (s Service) IsAPIAllowedKey(key ParameterKey) bool {
 // Parameters is a collection of Parameter structs.
 type Parameters []Parameter
 
-func (s Service) GetApplicationConfiguration(ctx context.Context, parameterKey ParameterKey) (Parameter, error) {
+func (s Reader) GetApplicationConfiguration(ctx context.Context, parameterKey ParameterKey) (Parameter, error) {
 	return s.db.GetConfigurationParameter(ctx, parameterKey)
 }
 
-func (s Service) GetAllApplicationConfigurations(ctx context.Context) (Parameters, error) {
+func (s Reader) GetAllApplicationConfigurations(ctx context.Context) (Parameters, error) {
 	return s.db.GetAllConfigurationParameters(ctx)
 }
 
 func (s Service) UpsertApplicationConfiguration(ctx context.Context, parameterKey ParameterKey, value types.JSONBObject) error {
-	return s.db.UpsertConfigurationParameter(ctx, parameterKey, value)
+	var (
+		entry = audit.Entry{
+			Action: audit.ActionUpdateParameter,
+			Fields: map[string]any{
+				"key":   parameterKey,
+				"value": value,
+			},
+		}
+		commitID           uuid.UUID
+		operationErr       error
+		auditCompletionErr error
+		err                error
+	)
+
+	if commitID, err = s.auditor.Begin(ctx, entry); err != nil {
+		return fmt.Errorf("%w: writing update parameter audit intent: %s", ErrAuditLog, err)
+	}
+
+	func() {
+		defer func() {
+			auditCompletionErr = s.auditor.Complete(ctx, commitID, entry, operationErr)
+		}()
+
+		operationErr = s.db.UpsertConfigurationParameter(ctx, parameterKey, value)
+	}()
+
+	if auditCompletionErr != nil {
+		return fmt.Errorf("%w: writing update parameter audit outcome: %s", ErrAuditLog, auditCompletionErr)
+	}
+
+	return operationErr
 }
 
 type GetConfigError struct {
@@ -124,7 +156,7 @@ func (s GetConfigError) slogWarn(ctx context.Context) {
 // or of the wrong type.
 // If any other fetch problem happens, GetConfig logs a warning and returns the
 // parameter's default value and a GetConfigError.
-func (s *Service) GetConfig[ParamType any](ctx context.Context, key ParameterKey) (ParamType, error) {
+func (s *Reader) GetConfig[ParamType any](ctx context.Context, key ParameterKey) (ParamType, error) {
 	var result ParamType
 
 	paramDefinition, ok := getParamTypeHydrationRules[ParamType](key)

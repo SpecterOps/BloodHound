@@ -28,8 +28,7 @@ import (
 	Properties: [...types.#StringEnum]
 	NodeKinds: [...types.#Kind]
 	RelationshipKinds: [...types.#Kind]
-	InboundRelationshipKinds: [...types.#Kind]
-	OutboundRelationshipKinds: [...types.#Kind]
+	PathfindingRelationships: [...types.#Kind]
 }
 
 #Azure: {
@@ -41,7 +40,6 @@ import (
 	ControlRelationshipKinds: [...types.#Kind]
 	ExecutionPrivilegeKinds: [...types.#Kind]
 	PathfindingRelationships: [...types.#Kind]
-	InboundOutboundRelationshipKinds: [...types.#Kind]
 }
 
 #ActiveDirectory: {
@@ -51,9 +49,6 @@ import (
 	ACLRelationships: [...types.#Kind]
 	IngestACLRelationships: [...types.#Kind]
 	PathfindingRelationships: [...types.#Kind]
-	PathfindingRelationshipsMatchFrontend: [...types.#Kind]
-	InboundRelationshipKinds: [...types.#Kind]
-	OutboundRelationshipKinds: [...types.#Kind]
 	EdgeCompositionRelationships: [...types.#Kind]
 }
 
@@ -62,8 +57,7 @@ Common: #Common & {
 	Properties:        common.Properties
 	NodeKinds:         common.NodeKinds
 	RelationshipKinds: common.RelationshipKinds
-	InboundRelationshipKinds: common.InboundRelationshipKinds
-	OutboundRelationshipKinds: common.OutboundRelationshipKinds
+	PathfindingRelationships: common.PathfindingRelationships
 }
 
 Azure: #Azure & {
@@ -75,7 +69,6 @@ Azure: #Azure & {
 	ControlRelationshipKinds:         azure.ControlRelationshipKinds
 	ExecutionPrivilegeKinds:          azure.ExecutionPrivilegeKinds
 	PathfindingRelationships:         azure.PathfindingRelationships
-	InboundOutboundRelationshipKinds: azure.InboundOutboundRelationshipKinds
 }
 
 ActiveDirectory: #ActiveDirectory & {
@@ -85,8 +78,5 @@ ActiveDirectory: #ActiveDirectory & {
 	ACLRelationships:             ad.ACLRelationships
 	IngestACLRelationships:       ad.IngestACLRelationships
 	PathfindingRelationships:     ad.PathfindingRelationships
-	PathfindingRelationshipsMatchFrontend: ad.PathfindingRelationshipsMatchFrontend
-	InboundRelationshipKinds:     ad.InboundRelationshipKinds
-	OutboundRelationshipKinds:    ad.OutboundRelationshipKinds
 	EdgeCompositionRelationships: ad.EdgeCompositionRelationships
 }

@@ -34,20 +34,21 @@ import (
 )
 
 type ScheduledAnalysisParameter = services.ScheduledAnalysisParameter
+type Auditor = services.Auditor
 
-// ConfigurationAdapter supplies GetConfig<Type> methods for fetching typed parameter values.
+// ConfigurationReadAdapter supplies GetConfig<Type> methods for fetching typed parameter values.
 // If any problem is encountered, these methods log a warning and return both the parameter default value and an error.
-type ConfigurationAdapter interface {
+type ConfigurationReadAdapter interface {
 	GetConfigScheduledAnalysis(ctx context.Context) (ScheduledAnalysisParameter, error)
 }
 
-func NewConfigurationAdapter(pool *pgxpool.Pool) ConfigurationAdapter {
+func NewConfigurationReadAdapter(pool *pgxpool.Pool) ConfigurationReadAdapter {
 	var (
-		store   = appdb.NewStore(pool)
-		service = services.NewService(store)
+		store  = appdb.NewStore(pool)
+		reader = services.NewReader(store)
 	)
 
-	return adapter.NewConfigurationAdapter(store, service)
+	return adapter.NewConfigurationAdapter(reader)
 }
 
 // ConfigUpdateSideEffecter provides legacy database methods called as a side effects
@@ -60,11 +61,11 @@ type ConfigUpdateSideEffecter interface {
 // Register builds the appcfg store -> service -> handler chain and attaches
 // the appcfg routes to the provided router. It is called from the modules
 // registry and receives only the infrastructure it directly needs.
-func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter, graphRetentionManager handlers.GraphRetentionBaseTTLManager) {
+func Register(routerInst *router.Router, pool *pgxpool.Pool, configUpdateSideEffecter ConfigUpdateSideEffecter, graphRetentionManager handlers.GraphRetentionBaseTTLManager, auditor Auditor) {
 	var (
 		ffReader   = featureflags.NewFeatureFlagRequestAdapter(pool)
 		store      = appdb.NewStore(pool)
-		service    = services.NewService(store)
+		service    = services.NewService(store, auditor)
 		handlerSet = handlers.NewHandlers(service, ffReader, configUpdateSideEffecter, configUpdateSideEffecter, graphRetentionManager)
 	)
 
