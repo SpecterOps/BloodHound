@@ -42,7 +42,7 @@ func TestStore_CreateAuditLog(t *testing.T) {
 			ActorID:         "actor-id",
 			ActorName:       "actor",
 			ActorEmail:      "actor@example.com",
-			Action:          services.ActionUpdateParameter,
+			Action:          "UpdateParameter",
 			Fields:          map[string]any{"key": "value"},
 			RequestID:       "request-id",
 			SourceIPAddress: "127.0.0.1",
@@ -66,7 +66,7 @@ func TestStore_CreateAuditLog(t *testing.T) {
 				pool.ExpectExec(expectedInsertSQL).
 					WithArgs(
 						"actor-id", "actor", "actor@example.com",
-						string(services.ActionUpdateParameter), `{"key":"value"}`,
+						"UpdateParameter", `{"key":"value"}`,
 						"request-id", "127.0.0.1", string(services.StatusIntent), commitID.String(),
 					).
 					WillReturnResult(pgxmock.NewResult("INSERT", 1))
@@ -78,7 +78,7 @@ func TestStore_CreateAuditLog(t *testing.T) {
 				pool.ExpectExec(expectedInsertSQL).
 					WithArgs(
 						"actor-id", "actor", "actor@example.com",
-						string(services.ActionUpdateParameter), `{"key":"value"}`,
+						"UpdateParameter", `{"key":"value"}`,
 						"request-id", "127.0.0.1", string(services.StatusIntent), commitID.String(),
 					).
 					WillReturnError(databaseErr)

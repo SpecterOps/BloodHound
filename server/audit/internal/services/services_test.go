@@ -117,7 +117,7 @@ func TestService_Begin(t *testing.T) {
 			RequestIP: "127.0.0.1",
 		})
 		entry = services.AuditLogEntry{
-			Action: services.ActionUpdateParameter,
+			Action: "UpdateParameter",
 			Fields: map[string]any{"key": "value"},
 		}
 	)
@@ -292,7 +292,7 @@ func TestService_Complete(t *testing.T) {
 				ctx              = context.Background()
 				database         = &mockDatabase{err: testCase.writeErr}
 				identityResolver = mockIdentityResolver{err: errors.New("identity unavailable")}
-				entry            = services.AuditLogEntry{Action: services.ActionUpdateParameter, Fields: map[string]any{"key": "value"}}
+				entry            = services.AuditLogEntry{Action: "UpdateParameter", Fields: map[string]any{"key": "value"}}
 			)
 			if testCase.nilFields {
 				entry.Fields = nil
