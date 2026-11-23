@@ -20,9 +20,12 @@ package services
 
 import (
 	"context"
+
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
 type Database interface {
+	ListAuthProviders(ctx context.Context, filters params.Filters, sortItems params.SortItems) ([]SSOProvider, error)
 	Logout(ctx context.Context, sessionID int64) error
 }
 
