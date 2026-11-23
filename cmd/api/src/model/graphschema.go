@@ -646,7 +646,7 @@ func (s GraphExtensionInput) Validate() error {
 	// PZ Rules and Saved Query Validation
 	if err := s.PZRulesInput.Validate(s.ExtensionInput.Namespace); err != nil {
 		return err
-	} else if err := s.SavedQueriesInput.Validate(); err != nil {
+	} else if err := s.SavedQueriesInput.Validate(s.ExtensionInput.Namespace); err != nil {
 		return err
 	}
 
@@ -661,6 +661,10 @@ func (s PZRulesInput) Validate(extensionNamespace string) error {
 	for _, rule := range s {
 		if strings.TrimSpace(rule.ExtensionRuleId) == "" {
 			return fmt.Errorf("privilege zone rule requires a 'key' value")
+		} else if ruleKey, found := strings.CutPrefix(rule.ExtensionRuleId, fmt.Sprintf("%s_", extensionNamespace)); !found {
+			return fmt.Errorf("privelage zone rule key %s is missing extension namespace prefix", rule.ExtensionRuleId)
+		} else if strings.TrimSpace(ruleKey) == "" {
+			return errors.New("privelage zone rule key cannot be empty after namespace")
 		} else if strings.TrimSpace(rule.Name) == "" {
 			return fmt.Errorf("privilege zone rule name is required")
 		} else if _, ok := ruleNames[rule.Name]; ok {
@@ -685,7 +689,7 @@ func (s PZRulesInput) Validate(extensionNamespace string) error {
 	return nil
 }
 
-func (s SavedQueriesInput) Validate() error {
+func (s SavedQueriesInput) Validate(extensionNamespace string) error {
 	var (
 		savedQueryKeys  = make(map[string]any, len(s))
 		savedQueryNames = make(map[string]any, len(s))
@@ -694,6 +698,10 @@ func (s SavedQueriesInput) Validate() error {
 	for _, savedQueryInput := range s {
 		if strings.TrimSpace(savedQueryInput.QueryKey) == "" {
 			return errors.New("graph schema saved query key is required")
+		} else if savedQueryKey, found := strings.CutPrefix(savedQueryInput.QueryKey, fmt.Sprintf("%s_", extensionNamespace)); !found {
+			return fmt.Errorf("graph schema saved query key %s is missing extension namespace prefix", savedQueryInput.QueryKey)
+		} else if strings.TrimSpace(savedQueryKey) == "" {
+			return errors.New("graph schema saved query cannot be empty after namespace")
 		} else if strings.TrimSpace(savedQueryInput.Name) == "" {
 			return errors.New("graph schema saved query name is required")
 		} else if strings.TrimSpace(savedQueryInput.Query) == "" {
