@@ -7834,6 +7834,7 @@
       ],
       "get": {
         "operationId": "GetBaseRetentionPolicy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions.",
         "summary": "Get Base Retention Policy",
         "tags": [
           "Graph Retention Policies",
@@ -7878,7 +7879,7 @@
       "put": {
         "operationId": "UpdateBaseRetentionPolicy",
         "summary": "Update Base Retention Policy",
-        "description": "Creates the base policy if it is missing; otherwise updates it, and returns the saved policy with 200 OK.",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions. Creates the base policy if it is missing; otherwise updates it, and returns the saved policy with 200 OK.",
         "tags": [
           "Graph Retention Policies",
           "Enterprise"
@@ -7941,7 +7942,7 @@
       "patch": {
         "operationId": "PatchBaseRetentionPolicy",
         "summary": "Enable/Disable Base Retention Policy",
-        "description": "Disabling the base retention policy stops graph data pruning and causes more-specific retention policies to be ignored. The TTL remains unchanged. Requires admin permissions and the retention_policies feature flag. Returns 404 if the feature flag is disabled or the base policy does not exist.",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions. Disabling the base retention policy stops graph data pruning and causes more-specific retention policies to be ignored. The TTL remains unchanged. Returns 404 if the base policy does not exist.\n",
         "tags": [
           "Graph Retention Policies",
           "Enterprise"
@@ -8021,18 +8022,20 @@
         },
         {
           "name": "extension_id",
-          "description": "Extension ID",
+          "description": "Required positive identifier of the extension whose policy is being interacted with.",
           "in": "path",
           "required": true,
           "schema": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "minimum": 1
           }
         }
       ],
       "get": {
         "operationId": "GetExtensionRetentionPolicy",
         "summary": "Get Extension Retention Policy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions.",
         "tags": [
           "Graph Retention Policies",
           "Enterprise"
@@ -8076,7 +8079,7 @@
       "put": {
         "operationId": "UpdateExtensionRetentionPolicy",
         "summary": "Update Extension Retention Policy",
-        "description": "Creates or updates the given extension policy and returns the saved policy with 200 OK.",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions. Creates or updates the given extension policy and returns the saved policy with 200 OK.",
         "tags": [
           "Graph Retention Policies",
           "Enterprise"
@@ -8115,6 +8118,129 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "PatchExtensionRetentionPolicy",
+        "summary": "Enable/Disable Extension Retention Policy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions. Changes only the enabled state of an existing extension retention policy, its TTL remains unchanged. Returns 404 if the extension is unknown or its policy does not exist.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Both data and data.enabled are required, enabled must be a boolean.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "enabled"
+                    ],
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "enabled": false
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated extension policy, including the required extension_id, enabled, and the unchanged ttl field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/model.graph-extension-retention-policy"
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "extension_id"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteExtensionRetentionPolicy",
+        "summary": "Delete Extension Retention Policy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "description": "Extension retention policy deleted."
           },
           "400": {
             "$ref": "#/components/responses/bad-request"
