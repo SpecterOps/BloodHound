@@ -1,0 +1,1 @@
+{"id":"1184932153f820473a0b179b32cf1cc9.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useMediaQuery/useMediaQuery.test.tsx#useMediaQuery removes its change listener when unmounted","name":"removes its change listener when unmounted","status":"passed","testResultsByEnv":{"default":"12833831c3d6059bdc16917ad5fc0626"}}

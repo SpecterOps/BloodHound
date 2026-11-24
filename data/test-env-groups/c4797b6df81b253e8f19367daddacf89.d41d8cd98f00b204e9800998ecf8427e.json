@@ -1,0 +1,1 @@
+{"id":"c4797b6df81b253e8f19367daddacf89.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/PrivilegeZones/History/utils.test.ts#createHistoryParams adds email filter if madeBy contains \"@\"","name":"adds email filter if madeBy contains \"@\"","status":"passed","testResultsByEnv":{"default":"b16cb78e76389180250328f7c454fe25"}}

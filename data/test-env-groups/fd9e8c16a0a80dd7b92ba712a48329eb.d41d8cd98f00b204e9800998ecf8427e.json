@@ -1,0 +1,1 @@
+{"id":"fd9e8c16a0a80dd7b92ba712a48329eb.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe/cleanup_internal_test.go:TestOrphanFileSweeper_AddExpectedStoragePath","name":"TestOrphanFileSweeper_AddExpectedStoragePath","status":"passed","testResultsByEnv":{"default":"980dcf3bf816176dcbd94ddbefc6d32f"}}

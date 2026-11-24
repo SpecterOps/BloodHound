@@ -1,0 +1,1 @@
+{"id":"fa95a1a714ff5e463f48aa68b0ebb1ce.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/environments.test.ts#filterAndSearchEnvironments with empty environments returns empty array when environments is empty","name":"returns empty array when environments is empty","status":"passed","testResultsByEnv":{"default":"bbdaa1a9ee2c12632e7730bd1e8833b2"}}

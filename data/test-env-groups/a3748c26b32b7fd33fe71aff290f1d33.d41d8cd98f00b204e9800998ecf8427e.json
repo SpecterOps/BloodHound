@@ -1,0 +1,1 @@
+{"id":"a3748c26b32b7fd33fe71aff290f1d33.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/SigmaChart/utils.test.tsx#SigmaChart Utils getIsHighlightedItemInGraph returns undefined when highlightedItem is null","name":"returns undefined when highlightedItem is null","status":"passed","testResultsByEnv":{"default":"1c7fbaf21832ce090840f18e34f2b03b"}}

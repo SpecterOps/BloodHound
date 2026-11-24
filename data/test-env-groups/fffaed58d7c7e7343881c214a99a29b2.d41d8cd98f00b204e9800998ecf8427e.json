@@ -1,0 +1,1 @@
+{"id":"fffaed58d7c7e7343881c214a99a29b2.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useFinishedJobs/useFinishedJobs.test.ts#useFinishedJobs does not request finished jobs if lacking permission","name":"does not request finished jobs if lacking permission","status":"passed","testResultsByEnv":{"default":"ef860adfa803c21e2de6c507c9cb1c42"}}

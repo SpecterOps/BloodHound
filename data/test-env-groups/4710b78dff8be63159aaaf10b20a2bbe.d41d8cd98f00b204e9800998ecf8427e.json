@@ -1,0 +1,1 @@
+{"id":"4710b78dff8be63159aaaf10b20a2bbe.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/rendering/utils/utils.test.ts#getNodeRadius If for some reason the node size is not defined return 1 as a default","name":"If for some reason the node size is not defined return 1 as a default","status":"passed","testResultsByEnv":{"default":"07b91254a1c18dec3c024a985b9e62e1"}}

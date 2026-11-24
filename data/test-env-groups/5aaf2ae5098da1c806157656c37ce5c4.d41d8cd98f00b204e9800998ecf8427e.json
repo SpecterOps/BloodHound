@@ -1,0 +1,1 @@
+{"id":"5aaf2ae5098da1c806157656c37ce5c4.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/Navigation/utils.test.ts#isRouteActive returns false when route is \"\" (pathname /)","name":"returns false when route is \"\" (pathname /)","status":"passed","testResultsByEnv":{"default":"a6d83b1a710e19428b02b89a6e81c44b"}}

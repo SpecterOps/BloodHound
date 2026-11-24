@@ -1,0 +1,1 @@
+{"id":"0143f935ba358ec4e45a7f25d28f11a0.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/SigmaChart/utils.test.tsx#SigmaChart Utils getFullPathHighlightedEntities returns empty sets when highlightedItem is null","name":"returns empty sets when highlightedItem is null","status":"passed","testResultsByEnv":{"default":"2030377c8a5f5e78809734d1874b40fb"}}

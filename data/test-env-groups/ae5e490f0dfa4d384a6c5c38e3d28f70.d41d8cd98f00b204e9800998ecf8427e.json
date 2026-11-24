@@ -1,0 +1,1 @@
+{"id":"ae5e490f0dfa4d384a6c5c38e3d28f70.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/ExploreTable/explore-table-utils.test.ts#getExploreTableData returns undefined if graphData is null or not a GraphResponse","name":"returns undefined if graphData is null or not a GraphResponse","status":"passed","testResultsByEnv":{"default":"a280f7c5073007c388d6ab4faa1297a8"}}

@@ -1,0 +1,1 @@
+{"id":"09811bae58042caa979d47cb2ca4dc97.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/environments.test.ts#getOpenGraphEnvironmentInfoMap returns only the known types when environments is null","name":"returns only the known types when environments is null","status":"passed","testResultsByEnv":{"default":"05b34f406f502d87a6029ff388b534b4"}}

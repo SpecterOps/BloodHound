@@ -1,0 +1,1 @@
+{"id":"7de4f33d34cf03b87c56eca9ab78e0c9.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/DataQuality/OpenGraphInfo.test.tsx#getLatestStatsByMetricKind keeps only the latest stat per kind_id by created_at","name":"keeps only the latest stat per kind_id by created_at","status":"passed","testResultsByEnv":{"default":"837483014c387713c8a7c9e739a8da74"}}

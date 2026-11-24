@@ -1,0 +1,1 @@
+{"id":"5564b7988fddc716fa9050d8e3a85ac1.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useEnvironmentParams/useEnvironmentParams.test.tsx#useEnvironmentParams parseEnvironmentAggregation returns null if paramValue is +0","name":"returns null if paramValue is +0","status":"passed","testResultsByEnv":{"default":"49711a3543b2e8c75836f1fe5eb8f03b"}}
