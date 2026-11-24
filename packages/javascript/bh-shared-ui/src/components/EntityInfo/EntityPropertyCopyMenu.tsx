@@ -31,11 +31,14 @@ export const serializeRawPropertyValue = (value: EntityField['value']): string =
 
 export const serializeISO8601PropertyValue = (property: string, value: EntityField['value']): string | null => {
     if (typeof value === 'string') {
+        // An explicit date, time, and offset identify an instant without guessing from IDs or the browser timezone.
+        if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/i.test(value)) return null;
         const date = DateTime.fromISO(value, { setZone: true });
         return date.isValid ? date.toUTC().toISO() : null;
     }
 
-    if (typeof value !== 'number' || !DATE_FIELDS.includes(property) || value <= 0) return null;
+    if (typeof value !== 'number' || !Number.isFinite(value) || !DATE_FIELDS.includes(property) || value <= 0)
+        return null;
 
     return DateTime.fromSeconds(value).toUTC().toISO();
 };

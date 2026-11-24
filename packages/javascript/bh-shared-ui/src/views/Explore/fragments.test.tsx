@@ -179,6 +179,13 @@ describe('serializeISO8601PropertyValue', () => {
         expect(serializeISO8601PropertyValue('name', 'not-a-date')).toBeNull();
         expect(serializeISO8601PropertyValue('lastlogon', 0)).toBeNull();
     });
+
+    it.each(['2024', '1234', '2024-01-01', '2024-01-01T12:00:00', '2024-02-30T12:00:00Z'])(
+        'does not invent an instant for %s',
+        (value) => {
+            expect(serializeISO8601PropertyValue('customDate', value)).toBeNull();
+        }
+    );
 });
 
 describe('ObjectInfoFields', () => {
