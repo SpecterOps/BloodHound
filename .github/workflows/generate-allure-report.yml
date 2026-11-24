@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - main
-      - BED-10680
 jobs:
   call-run-go-unit-tests:
     uses: ./.github/workflows/run-go-unit-tests.yml
