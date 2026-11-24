@@ -78,7 +78,7 @@ export const EntityPropertyCopyMenu = ({
                     aria-label={`Copy ${property}`}
                     hideTooltip
                     className={cn(
-                        'ml-1 size-6 p-1 opacity-0 transition-opacity group-hover/property-row:opacity-100 group-focus-within/property-row:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100',
+                        'ml-1 size-6 p-1 opacity-0 transition-opacity group-hover/property-row:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100',
                         isRowHovered && 'opacity-100'
                     )}>
                     <FontAwesomeIcon icon={faCopy} />

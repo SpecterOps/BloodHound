@@ -153,6 +153,16 @@ test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () =>
         await page.keyboard.press('Escape');
         await expect(page.getByRole('menu')).toBeHidden();
         await expect(trigger).toBeFocused();
+        await expect(trigger).toHaveCSS('opacity', '1');
+
+        const outsideLabel = page.getByText('Node Type', { exact: true });
+        await outsideLabel.click();
+        await trigger.hover();
+        await trigger.click();
+        await expect(page.getByRole('menu')).toBeVisible();
+        await outsideLabel.click({ force: true });
+        await expect(page.getByRole('menu')).toBeHidden();
+        await expect(trigger).toHaveCSS('opacity', '0');
     });
 
     test('With a relationship section expanded', async ({ page, checkA11y }) => {
