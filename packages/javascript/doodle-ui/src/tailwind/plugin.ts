@@ -299,6 +299,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-wrapper-border': 'var(--neutral-light-4)',
             '--data-table-resize-fill': 'var(--neutral-5)',
             '--data-table-resize-active-fill': 'var(--primary)',
+            '--data-table-header-border': palette.neutral.light[400],
 
             // Components/Switch
             '--switch-fill': palette.neutral.dark[700],
@@ -658,6 +659,7 @@ const plugin: PluginCreator = ({ addBase, addUtilities }) => {
             '--data-table-wrapper-border': 'var(--neutral-900)',
             '--data-table-resize-fill': 'var(--neutral-light-5)',
             '--data-table-resize-active-fill': 'var(--secondary)',
+            '--data-table-header-border': palette.neutral.dark[700],
 
             // Components/Switch
             '--switch-fill': common.white,
