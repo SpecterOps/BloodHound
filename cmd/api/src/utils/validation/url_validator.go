@@ -41,6 +41,15 @@ type UrlValidator struct {
 	hostnameRequired bool
 }
 
+// NewUrlValidator adapts URL validator construction to the validator registry.
+func NewUrlValidator(options map[string]string) Validator {
+	if validator, err := UrlValidatorWithOptions(options); err != nil {
+		return invalidValidator{err: err}
+	} else {
+		return validator
+	}
+}
+
 // UrlValidatorWithOptions constructs a URL validator and reports invalid options.
 func UrlValidatorWithOptions(options map[string]string) (Validator, error) {
 	var validator UrlValidator
@@ -65,23 +74,6 @@ func UrlValidatorWithOptions(options map[string]string) (Validator, error) {
 	}
 
 	return validator, nil
-}
-
-type invalidValidator struct {
-	err error
-}
-
-func (s invalidValidator) Validate(_ any) utils.Errors {
-	return utils.Errors{s.err}
-}
-
-// NewUrlValidator adapts URL validator construction to the validator registry.
-func NewUrlValidator(options map[string]string) Validator {
-	if validator, err := UrlValidatorWithOptions(options); err != nil {
-		return invalidValidator{err: err}
-	} else {
-		return validator
-	}
 }
 
 // Validate validates that the associated struct fields are in the proper formatting
@@ -124,4 +116,12 @@ func ValidUrl(inputUrl string) error {
 	}
 
 	return nil
+}
+
+type invalidValidator struct {
+	err error
+}
+
+func (s invalidValidator) Validate(_ any) utils.Errors {
+	return utils.Errors{s.err}
 }
