@@ -67,7 +67,6 @@ export const BUILTIN_EDGE_CATEGORIES: Category[] = [
                     ActiveDirectoryRelationshipKind.CanPSRemote,
                     ActiveDirectoryRelationshipKind.CanRDP,
                     ActiveDirectoryRelationshipKind.ExecuteDCOM,
-                    ActiveDirectoryRelationshipKind.SQLAdmin,
                 ],
             },
             {
