@@ -17,7 +17,7 @@
 get:
   operationId: GetRetentionPolicies
   summary: Get configured graph retention policies
-  description: Requires admin permissions and the retention_policies feature flag. Returns 404 while the flag is disabled. Includes the base policy and persisted extension overrides only; no filtering is supported.
+  description: Requires enabled `retention_policies` feature flag. Requires admin permissions. Includes the base policy and persisted extension overrides only; no filtering is supported.
   tags: [Graph Retention Policies, Enterprise]
   responses:
     200:

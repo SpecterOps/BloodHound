@@ -120,7 +120,7 @@ func TestStore_CreateAuditLog_Integration(t *testing.T) {
 			ActorID:         "actor-id",
 			ActorName:       "Integration Test Actor",
 			ActorEmail:      "actor@example.com",
-			Action:          services.ActionUpdateParameter,
+			Action:          "UpdateParameter",
 			Fields:          map[string]any{"key": "feature.enabled", "value": true},
 			RequestID:       "request-id",
 			SourceIPAddress: "127.0.0.1",

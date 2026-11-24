@@ -31,8 +31,11 @@ type Entry = services.AuditLogEntry
 type Action = services.Action
 
 const (
-	ActionUpdateParameter              = services.ActionUpdateParameter
-	ActionToggleEarlyAccessFeatureFlag = services.ActionToggleEarlyAccessFeatureFlag
+	ActionUpdateParameter              Action = "UpdateParameter"
+	ActionToggleEarlyAccessFeatureFlag Action = "ToggleEarlyAccessFeatureFlag"
+
+	ActionUpdateGraphRetentionPolicy Action = "UpdateGraphRetentionPolicy"
+	ActionDeleteGraphRetentionPolicy Action = "DeleteGraphRetentionPolicy"
 )
 
 var ErrAuditLog = services.ErrAuditLog

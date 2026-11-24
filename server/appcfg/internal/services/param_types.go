@@ -19,7 +19,10 @@
 package services
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 
 	"github.com/specterops/bloodhound/packages/go/duration"
 
@@ -37,6 +40,7 @@ const (
 	ReconciliationKey                   ParameterKey = "analysis.reconciliation"
 	ScheduledAnalysis                   ParameterKey = "analysis.scheduled"
 	ClientMetricsKey                    ParameterKey = "pipeline.client_metrics"
+	IngestRuntimeKey                    ParameterKey = "pipeline.ingest_runtime"
 	APITokenExpiration                  ParameterKey = "auth.api_token_expiration"
 	TrustedProxiesConfig                ParameterKey = "http.trusted_proxies"
 	FedEULACustomTextKey                ParameterKey = "eula.custom_text"
@@ -137,6 +141,26 @@ type SupportAccountProvisioningParameter struct {
 	// Setting disabled as false means that you are explicitly opting into the feature
 	Enabled    bool                 `json:"enabled,omitempty"`
 	SessionTTL duration.ISODuration `json:"session_ttl,omitempty"`
+}
+
+// IngestRuntimeParameter controls BHE ingest sessions.
+type IngestRuntimeParameter struct {
+	DownloadWorkers     int `json:"download_workers" validate:"integer,min=1,max=16"`
+	DownloadWindow      int `json:"download_window" validate:"integer,min=1,max=64"`
+	ArchiveReadyEntries int `json:"archive_ready_entries" validate:"integer,min=1,max=16"`
+	CleanupWorkers      int `json:"cleanup_workers" validate:"integer,min=1,max=16"`
+	CleanupQueueSize    int `json:"cleanup_queue_size" validate:"integer,min=1,max=4096"`
+}
+
+// Validate checks the complete value, including the relationship between fields.
+func (s IngestRuntimeParameter) Validate() error {
+	if errs := validation.Validate(s); errs != nil {
+		return errs
+	}
+	if s.DownloadWindow < s.DownloadWorkers {
+		return fmt.Errorf("download_window must be at least download_workers")
+	}
+	return nil
 }
 
 type ClientMetricsParameter struct {
@@ -276,6 +300,10 @@ var (
 			HydrationRules: ParamTypeHydrationRules[ScheduledAnalysisParameter]{
 				Default: ScheduledAnalysisParameter{Enabled: false, RRule: ""},
 			},
+		},
+		IngestRuntimeKey: {
+			AllowAPIAccess: true,
+			GetType:        func() any { return IngestRuntimeParameter{} },
 		},
 		ClientMetricsKey: {
 			AllowAPIAccess: true,
