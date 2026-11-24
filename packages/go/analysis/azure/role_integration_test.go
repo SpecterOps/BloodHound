@@ -117,3 +117,81 @@ func TestRoleTraversalRoleAssignableGroupPropertyTypes(t *testing.T) {
 		})
 	}
 }
+
+func TestFetchTenantRoleAssignmentsRoleMembers(t *testing.T) {
+	var (
+		suite               = setupIntegrationTestSuite(t)
+		tenantID            = randomObjectID(t)
+		otherTenantID       = randomObjectID(t)
+		tenant              = NewAzureTenant(t, &suite, tenantID)
+		otherTenant         = NewAzureTenant(t, &suite, otherTenantID)
+		globalAdministrator = NewAzureRole(t, &suite, "Global Administrator", randomObjectID(t), graphazure.CompanyAdministratorRole, tenantID)
+		userAdministrator   = NewAzureRole(t, &suite, "User Administrator", randomObjectID(t), graphazure.UserAccountAdministratorRole, tenantID)
+		otherTenantRole     = NewAzureRole(t, &suite, "Global Administrator", randomObjectID(t), graphazure.CompanyAdministratorRole, otherTenantID)
+		newTenantEntity     = func(name string, tenantObjectID string, properties graph.PropertyMap, kinds ...graph.Kind) *graph.Node {
+			nodeProperties := graph.PropertyMap{
+				common.Name:         name,
+				common.ObjectID:     randomObjectID(t),
+				graphazure.TenantID: tenantObjectID,
+			}
+			for key, value := range properties {
+				nodeProperties[key] = value
+			}
+
+			return NewNode(t, &suite, graph.AsProperties(nodeProperties), append(graph.Kinds{graphazure.Entity}, kinds...)...)
+		}
+		directUser          = newTenantEntity("Direct user", tenantID, nil, graphazure.User)
+		servicePrincipal    = newTenantEntity("Service principal", tenantID, nil, graphazure.ServicePrincipal)
+		roleAssignableGroup = newTenantEntity("Role assignable group", tenantID, graph.PropertyMap{graphazure.IsAssignableToRole: true}, graphazure.Group)
+		groupMemberUser     = newTenantEntity("Group member user", tenantID, nil, graphazure.User)
+		userWithoutRoles    = newTenantEntity("User without roles", tenantID, nil, graphazure.User)
+		otherTenantUser     = newTenantEntity("Other tenant user", otherTenantID, nil, graphazure.User)
+	)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	for _, containedNode := range []*graph.Node{globalAdministrator, userAdministrator, directUser, servicePrincipal, roleAssignableGroup, groupMemberUser, userWithoutRoles} {
+		NewRelationship(t, &suite, tenant, containedNode, graphazure.Contains)
+	}
+
+	NewRelationship(t, &suite, otherTenant, otherTenantRole, graphazure.Contains)
+	NewRelationship(t, &suite, otherTenant, otherTenantUser, graphazure.Contains)
+
+	NewRelationship(t, &suite, directUser, globalAdministrator, graphazure.HasRole)
+	NewRelationship(t, &suite, servicePrincipal, globalAdministrator, graphazure.HasRole)
+	NewRelationship(t, &suite, roleAssignableGroup, userAdministrator, graphazure.HasRole)
+	NewRelationship(t, &suite, groupMemberUser, roleAssignableGroup, graphazure.MemberOf)
+	NewRelationship(t, &suite, otherTenantUser, otherTenantRole, graphazure.HasRole)
+
+	roleAssignments, err := azure.FetchTenantRoleAssignments(suite.Context, suite.GraphDB, tenant)
+	require.NoError(t, err)
+
+	globalAdministratorMembers := roleAssignments.RoleMap[graphazure.CompanyAdministratorRole]
+	require.NotNil(t, globalAdministratorMembers)
+	assert.True(t, globalAdministratorMembers.Contains(directUser.ID.Uint64()), "direct role assignment")
+	assert.True(t, globalAdministratorMembers.Contains(servicePrincipal.ID.Uint64()), "service principal role assignment")
+	assert.False(t, globalAdministratorMembers.Contains(globalAdministrator.ID.Uint64()), "role node must not be its own member")
+	assert.False(t, globalAdministratorMembers.Contains(otherTenantUser.ID.Uint64()), "members of the same role template in another tenant")
+
+	userAdministratorMembers := roleAssignments.RoleMap[graphazure.UserAccountAdministratorRole]
+	require.NotNil(t, userAdministratorMembers)
+	assert.True(t, userAdministratorMembers.Contains(roleAssignableGroup.ID.Uint64()), "group role assignment")
+	assert.True(t, userAdministratorMembers.Contains(groupMemberUser.ID.Uint64()), "role inherited through role assignable group")
+	assert.False(t, userAdministratorMembers.Contains(userAdministrator.ID.Uint64()), "role node must not be its own member")
+
+	assert.False(t, roleAssignments.UsersWithAnyRole().Contains(userWithoutRoles.ID.Uint64()), "user without roles")
+	assert.True(t, roleAssignments.UsersWithoutRoles().Contains(userWithoutRoles.ID.Uint64()), "user without roles")
+
+	// The role map must match the per-template RoleMembers lookup that it replaces.
+	require.NoError(t, suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		for _, roleTemplateID := range []string{graphazure.CompanyAdministratorRole, graphazure.UserAccountAdministratorRole} {
+			expectedMembers, err := azure.RoleMembers(tx, tenant, roleTemplateID)
+			if err != nil {
+				return err
+			}
+
+			assert.ElementsMatch(t, expectedMembers.IDBitmap().Slice(), roleAssignments.RoleMap[roleTemplateID].Slice(), roleTemplateID)
+		}
+
+		return nil
+	}))
+}

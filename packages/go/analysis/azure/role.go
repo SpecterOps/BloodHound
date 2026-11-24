@@ -313,31 +313,47 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 				slog.Int("num_roles", roles.Len()),
 			)
 
+			// Group the tenant roles fetched above by role template ID. Resolving members from these nodes avoids
+			// re-querying the tenant's roles once per role template ID, which is expensive for large tenants.
+			rolesByTemplateID := map[string]graph.NodeSet{}
+
 			for _, node := range roles {
 				if roleTemplateID, err := node.Properties.Get(azure.RoleTemplateID.String()).String(); err != nil {
 					if !graph.IsErrPropertyNotFound(err) {
 						roleMembersMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 						return err
 					}
+				} else if templateRoles, hasTemplateRoles := rolesByTemplateID[roleTemplateID]; hasTemplateRoles {
+					templateRoles.Add(node)
 				} else {
-					roleMeasureDone := measure.ContextMeasureWithThresholdAndResults(ctx, slog.LevelInfo, "Fetched tenant role members",
-						attr.Namespace("analysis"), attr.Function("RoleMembers"), attr.Scope("routine"), tenantIDAttr,
-						slog.Int64("role_id", node.ID.Int64()),
-						slog.String("role_template_id", roleTemplateID),
-					)
+					rolesByTemplateID[roleTemplateID] = graph.NewNodeSet(node)
+				}
+			}
 
-					if members, err := RoleMembers(tx, tenant, roleTemplateID); err != nil {
-						if !graph.IsErrNotFound(err) {
-							roleMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
-							roleMembersMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
-							return err
-						}
+			for roleTemplateID, templateRoles := range rolesByTemplateID {
+				roleMeasureDone := measure.ContextMeasureWithThresholdAndResults(ctx, slog.LevelInfo, "Fetched tenant role members",
+					attr.Namespace("analysis"), attr.Function("RoleMembers"), attr.Scope("routine"), tenantIDAttr,
+					slog.String("role_template_id", roleTemplateID),
+					slog.Int("num_template_roles", templateRoles.Len()),
+				)
 
-						roleMeasureDone(slog.Int("num_members", 0))
-					} else {
-						roleMap[roleTemplateID] = members.IDBitmap()
-						roleMeasureDone(slog.Int("num_members", members.Len()))
+				if members, err := roleMembers(tx, templateRoles); err != nil {
+					if !graph.IsErrNotFound(err) {
+						roleMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
+						roleMembersMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
+						return err
 					}
+
+					roleMeasureDone(slog.Int("num_members", 0))
+				} else {
+					// Traversal results include the role nodes at the root of each path. Remove them so that roles are
+					// not treated as their own members.
+					for _, templateRole := range templateRoles {
+						members.Remove(templateRole.ID)
+					}
+
+					roleMap[roleTemplateID] = members.IDBitmap()
+					roleMeasureDone(slog.Int("num_members", members.Len()))
 				}
 			}
 
