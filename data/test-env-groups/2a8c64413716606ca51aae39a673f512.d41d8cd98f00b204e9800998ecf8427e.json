@@ -1,1 +1,1 @@
-{"id":"2a8c64413716606ca51aae39a673f512.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/daemons/gc/data_pruning_test.go:TestGC_Start","name":"TestGC_Start","status":"passed","testResultsByEnv":{"default":"cfdeb4a77dbae0b87508bfa2e321b887"}}
+{"id":"2a8c64413716606ca51aae39a673f512.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/daemons/gc/data_pruning_test.go:TestGC_Start","name":"TestGC_Start","status":"passed","testResultsByEnv":{"default":"90c1ad6e3c695f437210fe53aecc653a"}}

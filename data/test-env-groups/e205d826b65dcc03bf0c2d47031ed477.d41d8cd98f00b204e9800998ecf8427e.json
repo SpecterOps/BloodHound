@@ -1,1 +1,1 @@
-{"id":"e205d826b65dcc03bf0c2d47031ed477.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/url_test.go:TestURLJoinPathNoPrefix","name":"TestURLJoinPathNoPrefix","status":"passed","testResultsByEnv":{"default":"d336da81a9c147ee963ca8f229eabaa2"}}
+{"id":"e205d826b65dcc03bf0c2d47031ed477.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/url_test.go:TestURLJoinPathNoPrefix","name":"TestURLJoinPathNoPrefix","status":"passed","testResultsByEnv":{"default":"856d771479a1fd218562b880213f6fe3"}}

@@ -1,1 +1,1 @@
-{"id":"f4143267ba528c0f75d801741cbee43f.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/database/types/null/int64_test.go:TestInt64Scan","name":"TestInt64Scan","status":"passed","testResultsByEnv":{"default":"ff98dad48ae2380f3b5f8070d0144c77"}}
+{"id":"f4143267ba528c0f75d801741cbee43f.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/database/types/null/int64_test.go:TestInt64Scan","name":"TestInt64Scan","status":"passed","testResultsByEnv":{"default":"c10be9d06b626534ac10e91e919bec25"}}
