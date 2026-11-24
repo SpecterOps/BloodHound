@@ -111,7 +111,7 @@ properties:
       - type: object
         required: 
           - documentation_url
-        additional_properties: false 
+        additionalProperties: false
         properties:
           documentation_url:
             type: string 
@@ -132,15 +132,16 @@ properties:
   installed_version: 
     type: string
     description: Omitted if the extension is not installed, or is an instruction-only / Community listing.
-allOf:
-  - if:
-      not:
-        required:
-          - lifecycle
-        properties:
-          lifecycle:
-            contains:
-              const: coming-soon
-    then:
-      required:
-        - installation
+anyOf:
+  # this rule enforces that installation is NOT required if the lifecycle is `coming-soon`
+  - required:
+      - installation
+  - required:
+      - lifecycle
+    properties:
+      lifecycle:
+        not:
+          type: array
+          items:
+            not:
+              enum: [coming-soon]
