@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { List, ListItem, Skeleton, Tooltip } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import React, { memo, useMemo, useState } from 'react';
 import { FixedSizeList, ListChildComponentProps, areEqual } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
@@ -23,21 +22,6 @@ import { SelectedNode } from '../../types';
 import NodeIcon from '../NodeIcon';
 
 const ITEM_SIZE = 32;
-
-const useStyles = makeStyles((theme) => ({
-    evenItem: {
-        backgroundColor: theme.palette.neutral.secondary,
-        '&:hover': {
-            backgroundColor: theme.palette.neutral.quaternary,
-        },
-    },
-    oddItem: {
-        backgroundColor: theme.palette.neutral.tertiary,
-        '&:hover': {
-            backgroundColor: theme.palette.neutral.quaternary,
-        },
-    },
-}));
 
 const InnerElement = ({ style, ...rest }: any) => (
     <List
@@ -68,16 +52,13 @@ const Row = memo(function Row({
     index,
     style,
 }: ListChildComponentProps<{ items: Record<number, any>; onClick?: EntityPanelNodeClick }>) {
-    const tableStyle = useStyles();
-
     const { items, onClick } = data;
     const item = items[index];
-    const itemClass = index % 2 ? tableStyle.oddItem : tableStyle.evenItem;
 
     if (item === undefined) {
         return (
             <ListItem
-                className={itemClass}
+                className='hover:bg-neutral-2'
                 style={{ ...style, whiteSpace: 'nowrap', padding: '0 8px' }}
                 data-testid='entity-row'>
                 <Skeleton variant='text' width='100%' />
@@ -95,7 +76,7 @@ const Row = memo(function Row({
 
     return (
         <ListItem
-            className={itemClass}
+            className='hover:bg-neutral-2'
             onClick={handleClick}
             style={{
                 ...style,
