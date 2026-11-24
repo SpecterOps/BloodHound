@@ -1,0 +1,1 @@
+{"id":"e7d4a9944291c6322cca76901299a7ed.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/signature_internal_test.go:TestSignRequestValuesUnsupportedHMACMethod","name":"TestSignRequestValuesUnsupportedHMACMethod","status":"passed","testResultsByEnv":{"default":"a3ed429ac1ed7b2d31a6a305059b3bae"}}

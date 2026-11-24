@@ -1,1 +1,0 @@
-{"id":"5bc8593b95caaa3722fb919c455291e5.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/packages/go/analysis/post/tracker_test.go:TestTracker_HasEdge_PropertyChangeDetectedAsDeletion","name":"TestTracker_HasEdge_PropertyChangeDetectedAsDeletion","status":"passed","testResultsByEnv":{"default":"c4bc9064f694e266c9f440f1efad9ad4"}}

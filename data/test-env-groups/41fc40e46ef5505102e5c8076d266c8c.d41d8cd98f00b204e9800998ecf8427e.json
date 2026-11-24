@@ -1,1 +1,0 @@
-{"id":"41fc40e46ef5505102e5c8076d266c8c.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useMultiValueFilterParams/utils.test.ts#getValuesFromSelection returns an empty array for a some selection with no values","name":"returns an empty array for a some selection with no values","status":"passed","testResultsByEnv":{"default":"a512510fdc7f0172afa9e5ef3654da6c"}}

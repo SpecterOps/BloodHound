@@ -1,0 +1,1 @@
+{"id":"cfd7fa7f8fe6c92653d76bb81670c287.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useInfiniteScroll.test.tsx#useInfiniteScroll does not fetch more data while a page is already fetching","name":"does not fetch more data while a page is already fetching","status":"passed","testResultsByEnv":{"default":"5c3029138dc74b6fc7a4421809a30d83"}}

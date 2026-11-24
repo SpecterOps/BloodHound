@@ -1,1 +1,0 @@
-{"id":"ad359aa916ca2b11fffc9130b7416461.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/ApiExplorer/swagger/OperationsFilterPlugin.test.ts#opsFilter should be case-insensitive when matching by path","name":"should be case-insensitive when matching by path","status":"passed","testResultsByEnv":{"default":"b60744e4d69d837a1f0812861446f31a"}}

@@ -1,1 +1,0 @@
-{"id":"aab6a18f2fe08c0d2677ca74265204ea.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/saved_queries_test.go:TestResources_UpdateSavedQuery_ErrorFetchingPublicStatus","name":"TestResources_UpdateSavedQuery_ErrorFetchingPublicStatus","status":"passed","testResultsByEnv":{"default":"10d24914b7d0eaad60919cacb46d91cb"}}

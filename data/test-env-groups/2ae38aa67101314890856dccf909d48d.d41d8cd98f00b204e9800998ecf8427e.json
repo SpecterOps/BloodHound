@@ -1,1 +1,0 @@
-{"id":"2ae38aa67101314890856dccf909d48d.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/saved_queries_test.go:TestResources_DeleteSavedQuery_IsPublicSavedQueryDBError","name":"TestResources_DeleteSavedQuery_IsPublicSavedQueryDBError","status":"passed","testResultsByEnv":{"default":"4227cc47b43e67bf76b2d2101cd21089"}}

@@ -1,1 +1,0 @@
-{"id":"323bd9f8db217aa1325ece336c771d80.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/model/search_test.go:TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn","name":"TestDomainSelectors_GetFilterCriteria_InvalidFilterColumn","status":"passed","testResultsByEnv":{"default":"6fb63b0bb12feb3ba03debc01c01db1e"}}

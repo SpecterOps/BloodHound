@@ -1,0 +1,1 @@
+{"id":"616ba2f50363d336c927a8972407a777.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/InfiniteScrollingTable/InfiniteScrollingTable.test.tsx#InfiniteScrollingTable does not call onClick when no handler is provided","name":"does not call onClick when no handler is provided","status":"passed","testResultsByEnv":{"default":"4c83517c8e1b9b907999cd4e4401d80e"}}

@@ -1,0 +1,1 @@
+{"id":"822d563faf93701cc996505f9c36d065.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useLocalStorage.test.ts#useLocalStorage storage event synchronisation dispatches a storage event when a value is set","name":"dispatches a storage event when a value is set","status":"passed","testResultsByEnv":{"default":"e390e87974b675d86af5048e67bdde9d"}}

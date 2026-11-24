@@ -1,1 +1,0 @@
-{"id":"7523aac916cee170fb1a73049a0a3c8f.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useExploreParams/useExploreParams.test.tsx#useExploreParams parseSearchType returns paramValue if it is one of the expected values","name":"returns paramValue if it is one of the expected values","status":"passed","testResultsByEnv":{"default":"c0e03db4df6767e17c98838d3f284643"}}

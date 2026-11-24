@@ -1,0 +1,1 @@
+{"id":"5f72ca636ba58d1bd7775b440b42885e.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/queries/rewriter_test.go:TestRewriter_Enter_CombinedAzureAndADShortcut_ConcatenatesKinds","name":"TestRewriter_Enter_CombinedAzureAndADShortcut_ConcatenatesKinds","status":"passed","testResultsByEnv":{"default":"3618670b767d4e05720566131150522e"}}

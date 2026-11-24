@@ -1,0 +1,1 @@
+{"id":"73afb0ee217b95c9b5c6493e0c35f3a1.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/providers/NotificationProvider/NotificationsProvider.test.tsx#NotificationSnackbar forwards the variant to the underlying Alert styling","name":"forwards the variant to the underlying Alert styling","status":"passed","testResultsByEnv":{"default":"ab631648024a130b632a7f5a208a43cf"}}

@@ -1,0 +1,1 @@
+{"id":"7902da9d3a4cc59f6224991b095ab59b.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/saved_queries_test.go:TestResources_DeleteSavedQuery_NotPublicQueryAndUserIsAdmin","name":"TestResources_DeleteSavedQuery_NotPublicQueryAndUserIsAdmin","status":"passed","testResultsByEnv":{"default":"20b13699d9197de8e1dbc0a90921b8b1"}}

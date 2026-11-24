@@ -1,1 +1,0 @@
-{"id":"1928e9b7301093f35affe068f821891a.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/saved_queries_test.go:TestResources_UpdateSavedQuery_AdminCantModifyExtensionQuery","name":"TestResources_UpdateSavedQuery_AdminCantModifyExtensionQuery","status":"passed","testResultsByEnv":{"default":"1477d9629f90fcd4036344e01236563b"}}

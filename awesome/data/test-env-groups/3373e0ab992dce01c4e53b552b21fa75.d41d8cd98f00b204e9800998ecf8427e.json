@@ -1,0 +1,1 @@
+{"id":"3373e0ab992dce01c4e53b552b21fa75.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/daemons/datapipe/cleanup_internal_test.go:TestOrphanFileSweeper_IsExcludedStoragePath","name":"TestOrphanFileSweeper_IsExcludedStoragePath","status":"passed","testResultsByEnv":{"default":"c0526999cb9fbf13780dc76f6c208a4b"}}

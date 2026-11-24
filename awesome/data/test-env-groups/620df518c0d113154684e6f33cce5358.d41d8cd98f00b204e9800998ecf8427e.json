@@ -1,0 +1,1 @@
+{"id":"620df518c0d113154684e6f33cce5358.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/middleware/compression_test.go:TestCompressionMiddleware_SkipsCompressionForNamedRoute","name":"TestCompressionMiddleware_SkipsCompressionForNamedRoute","status":"passed","testResultsByEnv":{"default":"3d046bc8cc110a5abd6a748e0e7c612f"}}

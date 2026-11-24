@@ -1,0 +1,1 @@
+{"id":"dae222b4733134b571396964a90a0dfd.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/AuthenticatedRoute/AuthenticatedRoute.test.tsx#AuthenticatedRoute when session token or user are null, redirects to /login","name":"when session token or user are null, redirects to /login","status":"passed","testResultsByEnv":{"default":"88397d9a4e4084a84b8e0a471a1ffc9e"}}

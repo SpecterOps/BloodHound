@@ -1,0 +1,1 @@
+{"id":"e442ccc70374565a5cfad01dc10f786b.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/store.test.ts#redux store should clear state when logout action is dispatched","name":"should clear state when logout action is dispatched","status":"passed","testResultsByEnv":{"default":"b942364f621ed1b552ed7bc8fb38a143"}}

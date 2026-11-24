@@ -1,0 +1,1 @@
+{"id":"e00809e00a25f85951b5339e7ba76393.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/LoginForm/LoginForm.test.tsx#LoginForm should call onLoginViaSAML when login via sso button clicked","name":"should call onLoginViaSAML when login via sso button clicked","status":"passed","testResultsByEnv":{"default":"d5643be1e90617f6d873340b7ba7d69c"}}

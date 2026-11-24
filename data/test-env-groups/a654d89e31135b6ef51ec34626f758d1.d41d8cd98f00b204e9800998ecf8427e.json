@@ -1,1 +1,0 @@
-{"id":"a654d89e31135b6ef51ec34626f758d1.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/modules/modules_test.go:TestRegister_PanicsOnNilRouter","name":"TestRegister_PanicsOnNilRouter","status":"passed","testResultsByEnv":{"default":"df572cea8bb77717d4797f958cea23a9"}}

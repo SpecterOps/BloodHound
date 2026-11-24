@@ -1,0 +1,1 @@
+{"id":"36551d28ef65a1f4b581b77aec5e21e6.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/formValidationRules.test.ts#nameRules honors a zero minimum instead of using the default","name":"honors a zero minimum instead of using the default","status":"passed","testResultsByEnv":{"default":"a4aabbd9f079bdc3bd9dc40dee3ef902"}}

@@ -1,1 +1,0 @@
-{"id":"693a5ccbde590bac2814dc546a86e375.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/saved_queries_test.go:TestResources_CreateSavedQuery_IgnoresExtraFields","name":"TestResources_CreateSavedQuery_IgnoresExtraFields","status":"passed","testResultsByEnv":{"default":"96ccffc3e672dc92d1a543d0304195ee"}}

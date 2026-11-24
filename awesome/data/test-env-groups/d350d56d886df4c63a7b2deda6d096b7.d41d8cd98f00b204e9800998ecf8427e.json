@@ -1,0 +1,1 @@
+{"id":"d350d56d886df4c63a7b2deda6d096b7.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/GraphControls/GraphControls.test.tsx#GraphControls Exporting json disables the JSON button if the JSON is empty","name":"disables the JSON button if the JSON is empty","status":"passed","testResultsByEnv":{"default":"69d1ba35a09960f9f8f47def8dea00b4"}}

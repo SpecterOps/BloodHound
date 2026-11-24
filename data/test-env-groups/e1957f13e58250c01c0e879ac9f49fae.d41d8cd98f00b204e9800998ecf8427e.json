@@ -1,1 +1,0 @@
-{"id":"e1957f13e58250c01c0e879ac9f49fae.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/services/saml/saml_test.go:TestParseResponse_RejectsArtifactBinding","name":"TestParseResponse_RejectsArtifactBinding","status":"passed","testResultsByEnv":{"default":"13d81bbdf5d0ca1dc603a642e2ecd011"}}
