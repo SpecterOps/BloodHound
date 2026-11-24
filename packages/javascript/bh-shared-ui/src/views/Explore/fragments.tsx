@@ -156,8 +156,8 @@ export const Field: React.FC<EntityField> = (entityField) => {
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
         content = (
-            <div className='flex flex-wrap items-baseline justify-between p-2 text-left'>
-                <span className='group inline-flex items-center'>
+            <div className='group/property-row flex flex-wrap items-baseline justify-between p-2 text-left'>
+                <span className='inline-flex items-center'>
                     <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
                         {formattedLabel}
                     </Typography>
@@ -188,11 +188,11 @@ export const Field: React.FC<EntityField> = (entityField) => {
 
             return (
                 <div
-                    className='flex flex-wrap items-baseline justify-between p-2 text-left'
+                    className='group/property-row flex flex-wrap items-baseline justify-between p-2 text-left'
                     key={`${keyprop}-${index}`}>
                     {/* Only render the label for the first item, since it kicks the list */}
                     {index === 0 ? (
-                        <span className='group inline-flex items-center'>
+                        <span className='inline-flex items-center'>
                             <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
                                 {formattedLabel}
                             </Typography>
