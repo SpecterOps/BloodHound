@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { test } from 'bh-playwright-testing';
 
 const SEARCH_TERM = 'test';
@@ -139,6 +139,22 @@ const selectMockedGPO = async (page: Page) => {
 };
 
 test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () => {
+    test('Copy menu supports keyboard navigation and returns focus on Escape', async ({ page }) => {
+        await mockCommonRoutes(page);
+        await selectMockedGPO(page);
+
+        const trigger = page.getByRole('button', { name: 'Copy objectid', exact: true });
+        await expect(trigger).toBeVisible();
+        await trigger.focus();
+        await trigger.press('Enter');
+        await expect(page.getByRole('menuitem', { name: 'Copy field name', exact: true })).toBeFocused();
+        await page.keyboard.press('ArrowDown');
+        await expect(page.getByRole('menuitem', { name: 'Copy raw value', exact: true })).toBeFocused();
+        await page.keyboard.press('Escape');
+        await expect(page.getByRole('menu')).toBeHidden();
+        await expect(trigger).toBeFocused();
+    });
+
     test('With a relationship section expanded', async ({ page, checkA11y }) => {
         await mockCommonRoutes(page);
 
