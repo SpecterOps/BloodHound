@@ -19,6 +19,7 @@ on:
   push:
     branches:
       - main
+      - BED-10680
 jobs:
   call-run-go-unit-tests:
     uses: ./.github/workflows/run-go-unit-tests.yml
@@ -67,15 +68,15 @@ jobs:
           run-id: ${{ needs.call-run-ui-unit-tests.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate new report
-        run: allure generate --config allurerc.json
-
       - name: Attach updated history to report output
         run: |
           mkdir -p allure-report/.allure-history
           if [ -f gh-pages/.allure-history/allure-histoy.jsonl ]; then
-            cp .allure-history/allure-history.jsonl allure-report/.allure-history/
+            cp gh-pages/.allure-history/allure-history.jsonl .allure-history/
           fi
+
+      - name: Generate new report
+        run: allure generate --config allurerc.json
 
       - name: Deploy report to Github Pages
         if: always()
