@@ -1,1 +1,0 @@
-{"id":"1825cf0e1c72e02a67c72abba3303813.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/queries/rewriter_test.go:TestRewriter_Enter_NoShortcut_PreservesKinds","name":"TestRewriter_Enter_NoShortcut_PreservesKinds","status":"passed","testResultsByEnv":{"default":"3c8cdd7e063d24a6c6e9c1a74619e1d8"}}

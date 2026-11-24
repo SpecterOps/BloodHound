@@ -1,1 +1,0 @@
-{"id":"051da35c8dfd7565f3449bad23931c9f.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/database/audit_internal_test.go:TestNewAuditLog_BadAuthContext","name":"TestNewAuditLog_BadAuthContext","status":"passed","testResultsByEnv":{"default":"af12a1c444cff4e3ebe4c32b602a3d05"}}

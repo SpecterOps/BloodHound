@@ -1,1 +1,0 @@
-{"id":"e1ceeff9bb5f539e3bfb2a8ee4d7772d.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/auth/internal/handlers/authusersessions_test.go:TestHandlers_GetSelf_WithoutRequestContext","name":"TestHandlers_GetSelf_WithoutRequestContext","status":"passed","testResultsByEnv":{"default":"32997075cac333cb64c3a66cb1c032b2"}}

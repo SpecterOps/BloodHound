@@ -1,1 +1,0 @@
-{"id":"ebb4e7dd3400f5e6994f8c83eea39b29.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/rendering/utils/utils.test.ts#getLabelBoundsFromContext returns bounds for text rendered to canvas","name":"returns bounds for text rendered to canvas","status":"passed","testResultsByEnv":{"default":"900bd13f145281d8d907d767c969deaa"}}

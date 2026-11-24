@@ -1,1 +1,0 @@
-{"id":"a0ec9b6e670f3461280cc45b9ab1b1b4.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/UpdateUserDialog/UpdateUserDialog.test.tsx#UpdateUserDialog should disable Cancel and Save buttons while isLoading is true","name":"should disable Cancel and Save buttons while isLoading is true","status":"passed","testResultsByEnv":{"default":"26db6c6af71018abb27d7f43f208f88d"}}

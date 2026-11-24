@@ -1,1 +1,0 @@
-{"id":"99467c715a10fde597367be9f720b865.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/Login.test.tsx#Login redirects an authenticated user home when no saved destination exists","name":"redirects an authenticated user home when no saved destination exists","status":"passed","testResultsByEnv":{"default":"a93bf104affd060e69a516f7b1ff553a"}}

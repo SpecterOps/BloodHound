@@ -1,1 +1,0 @@
-{"id":"5be6ced392fb977a102299690baa414f.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/auth_test.go:TestManagementResource_UpdateUser_GetRolesError","name":"TestManagementResource_UpdateUser_GetRolesError","status":"passed","testResultsByEnv":{"default":"b488ca01962ab1d29792e11de2edc041"}}

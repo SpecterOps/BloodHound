@@ -1,1 +1,0 @@
-{"id":"93d39b032f696d9d22b8607989c513b4.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/auth/internal/routes/routes_test.go:TestRegister_LogoutDoesNotRequireAuthentication","name":"TestRegister_LogoutDoesNotRequireAuthentication","status":"passed","testResultsByEnv":{"default":"37c1e0d904a72447d7bf00de496c581e"}}

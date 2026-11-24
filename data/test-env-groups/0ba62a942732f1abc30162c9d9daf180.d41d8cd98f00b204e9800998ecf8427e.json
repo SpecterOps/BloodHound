@@ -1,1 +1,0 @@
-{"id":"0ba62a942732f1abc30162c9d9daf180.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/environments.test.ts#filterAndSearchEnvironments with no filters applied returns all environments when no filters are active","name":"returns all environments when no filters are active","status":"passed","testResultsByEnv":{"default":"dc55eedabfd7016dc6e6fe70bb43ac26"}}

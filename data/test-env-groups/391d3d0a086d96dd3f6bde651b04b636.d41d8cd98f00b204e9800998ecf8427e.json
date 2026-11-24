@@ -1,1 +1,0 @@
-{"id":"391d3d0a086d96dd3f6bde651b04b636.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/formValidationRules.test.ts#requiredRule preserves existing behavior when rejectSpaces is omitted or disabled","name":"preserves existing behavior when rejectSpaces is omitted or disabled","status":"passed","testResultsByEnv":{"default":"bbde5a5c58e7ae09d6ab993c537d2a91"}}

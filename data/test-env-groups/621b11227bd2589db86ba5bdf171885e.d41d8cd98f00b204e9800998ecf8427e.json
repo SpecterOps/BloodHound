@@ -1,1 +1,0 @@
-{"id":"621b11227bd2589db86ba5bdf171885e.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/modules/modules_test.go:TestRegister_PanicsOnNilDogTags","name":"TestRegister_PanicsOnNilDogTags","status":"passed","testResultsByEnv":{"default":"1a5951f2b6c3cac21e5bcff0d6897b78"}}

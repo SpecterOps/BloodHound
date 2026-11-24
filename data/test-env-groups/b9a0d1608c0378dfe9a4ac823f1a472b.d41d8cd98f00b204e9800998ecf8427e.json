@@ -1,1 +1,0 @@
-{"id":"b9a0d1608c0378dfe9a4ac823f1a472b.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/numberFormatting.test.ts#numberFormatting abbreviates thousands, millions, billions, trillions as expected","name":"abbreviates thousands, millions, billions, trillions as expected","status":"passed","testResultsByEnv":{"default":"5e9b57854d6ebabb31b2ce4c29b576ac"}}

@@ -1,1 +1,0 @@
-{"id":"c172710feca8133b07685fd5ae00e145.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/saved_queries_test.go:TestResources_UpdateSavedQuery_InvalidBody","name":"TestResources_UpdateSavedQuery_InvalidBody","status":"passed","testResultsByEnv":{"default":"c82780f811f45ab8a67916681e0d043e"}}

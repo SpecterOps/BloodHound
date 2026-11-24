@@ -1,1 +1,0 @@
-{"id":"67b1993f4c2003bd321c58012d147e2b.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/auth_test.go:TestManagementResource_DeleteUser_UserCannotSelfDelete","name":"TestManagementResource_DeleteUser_UserCannotSelfDelete","status":"passed","testResultsByEnv":{"default":"adaf0d0566135d15cd7b1dbababc2a25"}}

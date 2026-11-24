@@ -1,1 +1,0 @@
-{"id":"609244105e40f9b3ce91b122e7608072.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/audit/internal/services/services_test.go:TestNewService_NilDependenciesPanic","name":"TestNewService_NilDependenciesPanic","status":"passed","testResultsByEnv":{"default":"9eed2337f41fd6219bb4ddaf5acb1f91"}}

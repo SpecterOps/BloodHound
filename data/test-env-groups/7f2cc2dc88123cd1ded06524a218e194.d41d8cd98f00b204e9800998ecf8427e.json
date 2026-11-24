@@ -1,1 +1,0 @@
-{"id":"7f2cc2dc88123cd1ded06524a218e194.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/dataquality/internal/handlers/aggregations_test.go:TestBuildAggregationsViewOmitsZeroTimeBounds","name":"TestBuildAggregationsViewOmitsZeroTimeBounds","status":"passed","testResultsByEnv":{"default":"cac3f70c5bba83c6cbad3577d8ced279"}}

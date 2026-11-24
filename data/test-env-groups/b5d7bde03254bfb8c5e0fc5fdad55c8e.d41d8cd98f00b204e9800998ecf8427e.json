@@ -1,1 +1,0 @@
-{"id":"b5d7bde03254bfb8c5e0fc5fdad55c8e.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/modules/modules_test.go:TestRegister_PanicsOnNilRateLimitMiddleware","name":"TestRegister_PanicsOnNilRateLimitMiddleware","status":"passed","testResultsByEnv":{"default":"a466ca1552dc8813340c40eeb833e35a"}}

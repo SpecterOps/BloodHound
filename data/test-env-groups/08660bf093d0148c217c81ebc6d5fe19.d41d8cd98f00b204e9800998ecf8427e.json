@@ -1,1 +1,0 @@
-{"id":"08660bf093d0148c217c81ebc6d5fe19.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/ColumnHeaders/ColumnHeaders.test.tsx#ColumnHeaders SortableHeader does not call onSort when disable=true","name":"does not call onSort when disable=true","status":"passed","testResultsByEnv":{"default":"a5a200b2efa67129af0a5ca9667ea0f7"}}

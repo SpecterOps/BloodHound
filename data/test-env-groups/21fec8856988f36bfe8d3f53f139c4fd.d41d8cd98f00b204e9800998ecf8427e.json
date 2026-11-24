@@ -1,1 +1,0 @@
-{"id":"21fec8856988f36bfe8d3f53f139c4fd.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/queries/rewriter_test.go:TestRewriter_Enter_ADAttackPathsShortcut_ReplacesKinds","name":"TestRewriter_Enter_ADAttackPathsShortcut_ReplacesKinds","status":"passed","testResultsByEnv":{"default":"1333f98a19cafe66276d8535c022fb56"}}
