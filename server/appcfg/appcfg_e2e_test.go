@@ -39,6 +39,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphretention"
 	"github.com/specterops/bloodhound/server/internal/servertest"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
@@ -275,6 +276,7 @@ func TestGetAppConfigs(t *testing.T) {
 				DogTags:                 testDogTags(),
 				IdentityResolver:        auth.NewIdentityResolver(),
 				ConfigUpdateSideEffects: db,
+				GraphRetentionManager:   graphretention.GraphRetentionAdapter{},
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
 				},

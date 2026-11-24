@@ -18,6 +18,7 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
 get:
   operationId: GetBaseRetentionPolicy
+  description: Requires enabled `retention_policies` feature flag. Requires admin permissions.
   summary: Get Base Retention Policy
   tags:
     - Graph Retention Policies
@@ -48,7 +49,9 @@ get:
 put:
   operationId: UpdateBaseRetentionPolicy
   summary: Update Base Retention Policy
-  description: Creates the base policy if it is missing; otherwise updates it, and returns the saved policy with 200 OK.
+  description: >-
+    Requires enabled `retention_policies` feature flag. Requires admin permissions.
+    Creates the base policy if it is missing; otherwise updates it, and returns the saved policy with 200 OK.
   tags:
     - Graph Retention Policies
     - Enterprise
@@ -90,7 +93,11 @@ put:
 patch:
   operationId: PatchBaseRetentionPolicy
   summary: Enable/Disable Base Retention Policy
-  description: Disabling the base retention policy stops graph data pruning and causes more-specific retention policies to be ignored. The TTL remains unchanged. Requires admin permissions and the retention_policies feature flag. Returns 404 if the feature flag is disabled or the base policy does not exist.
+  description: >
+    Requires enabled `retention_policies` feature flag. Requires admin permissions.
+    Disabling the base retention policy stops graph data pruning and causes
+    more-specific retention policies to be ignored. The TTL remains unchanged.
+    Returns 404 if the base policy does not exist.
   tags:
     - Graph Retention Policies
     - Enterprise
