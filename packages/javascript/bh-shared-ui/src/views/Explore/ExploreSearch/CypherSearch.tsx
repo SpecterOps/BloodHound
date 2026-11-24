@@ -291,7 +291,7 @@ const CypherSearchInner = ({
         <>
             <div className='flex flex-col h-full' data-testid='cypher-search-section'>
                 {/* PRE BUILT SEARCHES SECTION */}
-                <div className={cn('grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] shadow-outer-1 py-0 rounded-lg mb-4')}>
+                <div className='grow min-h-0 bg-neutral-2 py-0 border-b border-neutral-light-4 dark:border-neutral-900'>
                     <CommonSearches
                         onSetCypherQuery={setCypherQuery}
                         onPerformCypherSearch={handleSavedSearch}
@@ -300,7 +300,7 @@ const CypherSearchInner = ({
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}
-                <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg shadow-outer-1'>
+                <div className='bg-neutral-2 p-4 rounded-b-lg'>
                     <div className='flex items-center justify-between mb-2'>
                         <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
                         <div className='flex items-center whitespace-nowrap gap-2 pr-2'>

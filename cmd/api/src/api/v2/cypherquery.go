@@ -33,7 +33,6 @@ import (
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/ops"
-	"github.com/specterops/dawgs/util"
 )
 
 const auditLogOutcomeTimeout = time.Second * 30
@@ -45,7 +44,7 @@ type CypherQueryPayload struct {
 	IncludeProperties bool   `json:"include_properties,omitempty"`
 }
 
-// Helper function to handle error conditions in CypherQuery.
+// handleCypherDBErrors maps query failures to API responses and error metrics.
 func handleCypherDBErrors(response http.ResponseWriter, request *http.Request, err error) {
 	var (
 		errorResp          *api.ErrorWrapper
@@ -55,9 +54,12 @@ func handleCypherDBErrors(response http.ResponseWriter, request *http.Request, e
 	if errors.Is(err, errUnauthorizedGraphMutation) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response)
 		return
-	} else if util.IsNeoTimeoutError(err) || util.IsPostgresTimeoutError(err) {
+	} else if queries.IsCypherQueryTimeout(err) {
 		errorCategoryLabel = cypherQueryErrorTypeTimeout
 		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request)
+	} else if errors.Is(err, context.Canceled) {
+		errorCategoryLabel = cypherQueryErrorTypeCanceled
+		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
 	} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
 		errorCategoryLabel = cypherQueryErrorTypeMemory
 		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)

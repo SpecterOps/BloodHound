@@ -207,6 +207,31 @@ export const communityExtensions = generallyAvailable([
         href: 'https://github.com/martinsohn/ADAttributeHound',
     },
     {
+        name: 'WinSSHound',
+        author: 'Robin Unglaub',
+        publisher: 'community',
+        logoPath: '/img/product-logos/community-active-directory.png',
+        description:
+            'Maps potential lateral movement through SSH server configurations in Active Directory environments.',
+        href: 'https://github.com/1r0BIT/WinSSHound',
+    },
+    {
+        name: 'Agent-Hound',
+        author: 'Akiha Kusumoto and Shunri Kudo',
+        publisher: 'community',
+        logoPath: '/img/product-logos/community-user-group.png',
+        description: 'Maps potential indirect prompt injection paths in AI agent environments for OpenGraph analysis.',
+        href: 'https://github.com/akhkusu/Agent-Hound',
+    },
+    {
+        name: 'IAMhounddog',
+        author: 'Virtue Security',
+        publisher: 'community',
+        logoPath: '/img/product-logos/aws.svg',
+        description: 'Exports AWS IAM principals and permission relationships as OpenGraph data for access reviews.',
+        href: 'https://github.com/VirtueSecurity/IAMhounddog',
+    },
+    {
         name: 'Atlassian',
         author: 'werdhaihai',
         publisher: 'community',
@@ -269,6 +294,15 @@ export const communityExtensions = generallyAvailable([
         href: 'https://github.com/lvruibr/idmhound',
     },
     {
+        name: 'GitHoundPy',
+        author: 'Derrick Polakoff',
+        publisher: 'community',
+        logoPath: '/img/product-logos/github.svg',
+        description:
+            'A Python implementation of GitHound that exports GitHub organizations and permissions as OpenGraph data.',
+        href: 'https://github.com/CorvraLabs/GitHoundPy',
+    },
+    {
         name: 'GitLab',
         author: 'Compass Security',
         publisher: 'community',
@@ -295,6 +329,23 @@ export const communityExtensions = generallyAvailable([
         href: 'https://github.com/dovesec/ClusterHound',
     },
     {
+        name: 'Bloodhound-Kube',
+        author: 'Don Cowan',
+        publisher: 'community',
+        logoPath: '/img/product-logos/community-kubernetes.png',
+        description: 'Collects Kubernetes and OpenShift resources, including custom resources, for OpenGraph analysis.',
+        href: 'https://github.com/HackinAhab/bloodhound-kube',
+    },
+    {
+        name: 'GoLinHound',
+        author: 'Lukas Klein',
+        publisher: 'community',
+        logoPath: '/img/product-logos/community-network.png',
+        description:
+            'Maps Linux permissions, SSH authentication, and relationships between Linux hosts and directory identities.',
+        href: 'https://github.com/RantaSec/golinhound',
+    },
+    {
         name: 'Microsoft Exchange',
         author: 'FilipPwn',
         publisher: 'community',
@@ -319,6 +370,14 @@ export const communityExtensions = generallyAvailable([
         description:
             'NetworkHound discovers domain hosts, resolves addresses, and scans network services to model additional infrastructure.',
         href: 'https://github.com/mordavid/NetworkHound',
+    },
+    {
+        name: 'npmHound',
+        author: 'Rahil Hassan',
+        publisher: 'community',
+        logoPath: '/img/product-logos/community-user-group.png',
+        description: 'Models package dependencies and maintainer publishing permissions from the public npm registry.',
+        href: 'https://github.com/Dracaryzs/npmhound',
     },
     {
         name: 'Oracle Cloud Infrastructure',
@@ -404,6 +463,14 @@ export const communityExtensions = generallyAvailable([
         description:
             'A growing library of Microsoft Windows extensions, including PrivHound, ShareHound, and TaskHound.',
         href: 'https://github.com/dazzyddos/PrivHound',
+    },
+    {
+        name: 'BloodSOCer',
+        author: 'Mat Saulnier',
+        publisher: 'specterops',
+        logoPath: '/img/product-logos/community-specterops.png',
+        description: 'Converts threat intelligence from MITRE ATT&CK, Sigma, and Atomic Red Team into OpenGraph data.',
+        href: 'https://github.com/Scoubi/BloodSOCer',
     },
 ] satisfies readonly GenerallyAvailableCatalogItem[]);
 

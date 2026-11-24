@@ -186,7 +186,7 @@ export const useNodeByObjectId = (objectId?: string) => {
         queryFn: async () => {
             const safeObjectId = objectId ? escapeCypherString(objectId) : '';
             return apiClient
-                .cypherSearch(`MATCH (n) WHERE n.objectid = "${safeObjectId}" RETURN n LIMIT 1`, undefined, true)
+                .cypherSearch(`MATCH (n) WHERE n.objectid = ${safeObjectId} RETURN n LIMIT 1`, undefined, true)
                 .then((res) => {
                     if (!objectId) {
                         return undefined;

@@ -21,13 +21,14 @@ import (
 )
 
 const (
-	cypherQueryErrorTypeTimeout = "timeout"
-	cypherQueryErrorTypeMemory  = "memory"
-	cypherQueryErrorTypeDecode  = "decode"
-	cypherQueryErrorTypeFitness = "fitness"
-	cypherQueryErrorTypeParse   = "parse"
-	cypherQueryErrorTypeExecute = "execute"
-	cypherQueryErrorTypeUnknown = "unknown"
+	cypherQueryErrorTypeTimeout  = "timeout"
+	cypherQueryErrorTypeCanceled = "canceled"
+	cypherQueryErrorTypeMemory   = "memory"
+	cypherQueryErrorTypeDecode   = "decode"
+	cypherQueryErrorTypeFitness  = "fitness"
+	cypherQueryErrorTypeParse    = "parse"
+	cypherQueryErrorTypeExecute  = "execute"
+	cypherQueryErrorTypeUnknown  = "unknown"
 )
 
 var cypherQueryErrors = prometheus.NewCounterVec(

@@ -99,6 +99,7 @@ const ExploreSearchCombobox: React.FC<{
     return (
         <div style={{ position: 'relative' }}>
             <TextField
+                className='rounded bg-neutral-1'
                 ref={inputContainerRef}
                 placeholder={labelText}
                 variant={variant}

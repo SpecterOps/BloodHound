@@ -35,7 +35,7 @@ describe('Marketplace', () => {
         expect(enterpriseExtensionsRegion).toHaveTextContent(
             'SpecterOps-authored OpenGraph extensions for additional identity and infrastructure platforms.'
         );
-        expect(extensionsRegion).toHaveTextContent('· 26 items');
+        expect(extensionsRegion).toHaveTextContent('· 34 items');
         expect(enterpriseIntegrationsRegion).toHaveTextContent('· 11 items');
         expect(communityIntegrationsRegion).toHaveTextContent('· 3 items');
         expect(developmentExtensionsRegion).toHaveTextContent('· 8 items');
@@ -48,9 +48,9 @@ describe('Marketplace', () => {
             'OpenGraph Enterprise Extensions in Development',
             'Enterprise Integrations',
         ]);
-        expect(screen.getAllByRole('article')).toHaveLength(53);
+        expect(screen.getAllByRole('article')).toHaveLength(61);
         expect(screen.getAllByText('Enterprise Extension')).toHaveLength(13);
-        expect(screen.getAllByText('Community Extension')).toHaveLength(26);
+        expect(screen.getAllByText('Community Extension')).toHaveLength(34);
         expect(screen.getAllByText('Enterprise Integration')).toHaveLength(11);
         expect(screen.getAllByText('Community Integration')).toHaveLength(3);
         expect(within(developmentExtensionsRegion).getAllByText('Under development')).toHaveLength(8);
@@ -149,7 +149,7 @@ describe('Marketplace', () => {
 
         await user.click(publisherFilter);
         await user.click(screen.getByRole('option', { name: 'SpecterOps' }));
-        expect(screen.getAllByRole('article')).toHaveLength(16);
+        expect(screen.getAllByRole('article')).toHaveLength(17);
         expect(screen.getByRole('article', { name: 'MSSQL' })).toBeInTheDocument();
 
         await user.click(availabilityFilter);
