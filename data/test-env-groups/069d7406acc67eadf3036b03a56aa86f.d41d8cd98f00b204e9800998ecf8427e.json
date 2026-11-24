@@ -1,0 +1,1 @@
+{"id":"069d7406acc67eadf3036b03a56aa86f.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/GraphControls/GraphControls.test.tsx#GraphControls Toggling labels calls onToggleNodeLabels when click show all node labels","name":"calls onToggleNodeLabels when click show all node labels","status":"passed","testResultsByEnv":{"default":"9134169fa0c4532fcf4c51353e9eee2e"}}

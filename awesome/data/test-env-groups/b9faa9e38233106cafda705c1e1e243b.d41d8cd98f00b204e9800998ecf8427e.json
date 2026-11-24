@@ -1,1 +1,0 @@
-{"id":"b9faa9e38233106cafda705c1e1e243b.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/model/saved_queries_test.go:TestSavedQueries_GetValidFilterPredicatesAsStrings","name":"TestSavedQueries_GetValidFilterPredicatesAsStrings","status":"passed","testResultsByEnv":{"default":"e5bd13e84e2a750b9d58ae8fedfff85c"}}

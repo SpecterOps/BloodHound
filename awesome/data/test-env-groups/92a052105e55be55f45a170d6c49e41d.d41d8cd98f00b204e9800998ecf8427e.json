@@ -1,1 +1,0 @@
-{"id":"92a052105e55be55f45a170d6c49e41d.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/DataQuality/utils/getStatsComponent.test.tsx#getStatsComponent returns null for active-directory without an id","name":"returns null for active-directory without an id","status":"passed","testResultsByEnv":{"default":"cfcdacd44e54df8b52cfe2707e697b7c"}}

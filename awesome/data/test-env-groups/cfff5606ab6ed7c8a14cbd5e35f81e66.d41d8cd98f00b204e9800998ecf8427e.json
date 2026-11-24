@@ -1,1 +1,0 @@
-{"id":"cfff5606ab6ed7c8a14cbd5e35f81e66.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/searchParams/searchParams.test.ts#searchParams isEmptyParam returns false if value is 'array'","name":"returns false if value is 'array'","status":"passed","testResultsByEnv":{"default":"cef9dcdc198e564321090e22b9f012dd"}}

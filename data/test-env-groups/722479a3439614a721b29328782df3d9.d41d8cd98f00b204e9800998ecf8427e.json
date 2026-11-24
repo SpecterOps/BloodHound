@@ -1,0 +1,1 @@
+{"id":"722479a3439614a721b29328782df3d9.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/packages/go/storage/localstore_test.go:TestStorageFileService_DeleteFile_PreservesEmptyParent","name":"TestStorageFileService_DeleteFile_PreservesEmptyParent","status":"passed","testResultsByEnv":{"default":"136a57371bea286017a2f31092302a69"}}

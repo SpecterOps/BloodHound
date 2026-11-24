@@ -1,0 +1,1 @@
+{"id":"d44f5db4fedc4b5f4a3d211c65aca5f1.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useLocalStorage.test.ts#useLocalStorage initial value reads and parses an existing value from localStorage","name":"reads and parses an existing value from localStorage","status":"passed","testResultsByEnv":{"default":"9c5bff2da529d3d6c6486983782e51e7"}}

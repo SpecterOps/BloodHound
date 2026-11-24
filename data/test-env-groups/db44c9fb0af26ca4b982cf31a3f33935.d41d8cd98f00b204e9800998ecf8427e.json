@@ -1,0 +1,1 @@
+{"id":"db44c9fb0af26ca4b982cf31a3f33935.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/providers/NotificationProvider/NotificationsProvider.test.tsx#NotificationSnackbar renders gracefully when variant is nullish","name":"renders gracefully when variant is nullish","status":"passed","testResultsByEnv":{"default":"15368deaaf4c5b5ec9019f1b0c4f8ca4"}}

@@ -1,1 +1,0 @@
-{"id":"da3a5b7c7006793a075b2ff8fa98c59e.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/auth_test.go:TestExpireUserAuthSecret_Failure","name":"TestExpireUserAuthSecret_Failure","status":"passed","testResultsByEnv":{"default":"f1e5c1d626c0e3481af6905c0ed83c2c"}}

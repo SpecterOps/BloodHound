@@ -1,0 +1,1 @@
+{"id":"72c2312900a696dc7e39d0eff141a160.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useMultiValueFilterParams/utils.test.ts#getNextSelection returns a none selection when no options are selected","name":"returns a none selection when no options are selected","status":"passed","testResultsByEnv":{"default":"9f7103f108b3b3718c773f2df1551b99"}}

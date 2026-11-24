@@ -1,0 +1,1 @@
+{"id":"df4011fed6a437f25a0ed511a9310de1.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/environments.test.ts#filterAndSearchEnvironments combined filters returns empty array when combined filters match nothing","name":"returns empty array when combined filters match nothing","status":"passed","testResultsByEnv":{"default":"d9016a393324c423aa5d1e1c3dc1922c"}}

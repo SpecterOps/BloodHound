@@ -1,1 +1,0 @@
-{"id":"448a76c0ad9656ad1a459ce23d8e50cb.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/services/storage/fileserviceresolver_test.go:TestNewDefaultFileServices_RejectsInvalidConfiguration","name":"TestNewDefaultFileServices_RejectsInvalidConfiguration","status":"passed","testResultsByEnv":{"default":"962f3f833279402f242d329d0c13b353"}}

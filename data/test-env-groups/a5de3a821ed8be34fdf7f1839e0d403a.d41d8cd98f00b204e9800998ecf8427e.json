@@ -1,0 +1,1 @@
+{"id":"a5de3a821ed8be34fdf7f1839e0d403a.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useMultiValueFilterParams/utils.test.ts#getValuesFromSelection returns an empty array for a none selection","name":"returns an empty array for a none selection","status":"passed","testResultsByEnv":{"default":"32b6ddc7d95655115364f78364370e9f"}}

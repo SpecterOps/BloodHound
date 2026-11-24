@@ -1,1 +1,0 @@
-{"id":"db1658dda110b7f970af23361979d62f.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/formValidationRules.test.ts#nameRules still accepts spaces and digits when underscores and hyphens are disabled","name":"still accepts spaces and digits when underscores and hyphens are disabled","status":"passed","testResultsByEnv":{"default":"c02ee9f77151216df48898f9bee5173e"}}

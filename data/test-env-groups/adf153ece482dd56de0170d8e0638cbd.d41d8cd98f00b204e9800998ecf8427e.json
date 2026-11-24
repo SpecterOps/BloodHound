@@ -1,0 +1,1 @@
+{"id":"adf153ece482dd56de0170d8e0638cbd.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/DataQuality/OpenGraphInfo.test.tsx#OpenGraphInfo renders the empty-state message when the response contains no stats","name":"renders the empty-state message when the response contains no stats","status":"passed","testResultsByEnv":{"default":"c8c35de4a13c635fe49e1765516a53f7"}}

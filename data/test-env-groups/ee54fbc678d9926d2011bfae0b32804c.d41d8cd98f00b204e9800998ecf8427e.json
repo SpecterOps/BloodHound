@@ -1,0 +1,1 @@
+{"id":"ee54fbc678d9926d2011bfae0b32804c.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/saml_test.go:TestManagementResource_CreateSAMLProviderMultipart","name":"TestManagementResource_CreateSAMLProviderMultipart","status":"passed","testResultsByEnv":{"default":"e49430cc9a173458a8dd7d642fa1a5a8"}}

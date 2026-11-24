@@ -1,1 +1,0 @@
-{"id":"5dee3613b590f49d83790dd98d92bd38.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/auth_test.go:TestCreateUser_FailureDuplicateEmail","name":"TestCreateUser_FailureDuplicateEmail","status":"passed","testResultsByEnv":{"default":"bedec11375a1c6a6f80e6b6b7fbb898e"}}

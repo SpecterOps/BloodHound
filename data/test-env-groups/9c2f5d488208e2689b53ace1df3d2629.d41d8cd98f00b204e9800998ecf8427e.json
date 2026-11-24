@@ -1,0 +1,1 @@
+{"id":"9c2f5d488208e2689b53ace1df3d2629.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/PrivilegeZones/Save/RuleForm/DeleteRuleButton/DeleteRuleButton.test.tsx#Delete Selector Button rendering does not render when selector is default","name":"does not render when selector is default","status":"passed","testResultsByEnv":{"default":"fb083ebd93772125003a32a63323bdcf"}}

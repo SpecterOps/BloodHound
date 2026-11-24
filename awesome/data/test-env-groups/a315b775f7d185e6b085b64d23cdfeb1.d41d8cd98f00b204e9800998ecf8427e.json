@@ -1,1 +1,0 @@
-{"id":"a315b775f7d185e6b085b64d23cdfeb1.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/GraphControls/GraphControls.test.tsx#GraphControls Resetting graph calls the onReset prop when the crop button is clicked","name":"calls the onReset prop when the crop button is clicked","status":"passed","testResultsByEnv":{"default":"326e2236b7c9a323fee5d1d188e19736"}}

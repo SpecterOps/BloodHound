@@ -1,0 +1,1 @@
+{"id":"495d6f1363e1a0b40d1d1ff47bbc7ebd.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/queries/rewriter_test.go:TestRewriter_Enter_AzureAttackPathsShortcut_ReplacesKinds","name":"TestRewriter_Enter_AzureAttackPathsShortcut_ReplacesKinds","status":"passed","testResultsByEnv":{"default":"fca48d3b4e86a39efe37c07c76b43cd0"}}

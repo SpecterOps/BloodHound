@@ -1,1 +1,0 @@
-{"id":"90aecf357fa63a555a37a28c9bce35b1.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/utils/compatibility.test.ts#WebGL compatibility check returns true when WebGL is available in the current browser context","name":"returns true when WebGL is available in the current browser context","status":"passed","testResultsByEnv":{"default":"4b6f55c7ea300d17bbd3a1347180b2a8"}}

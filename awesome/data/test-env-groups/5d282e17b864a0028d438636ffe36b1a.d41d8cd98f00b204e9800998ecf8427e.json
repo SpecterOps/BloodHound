@@ -1,1 +1,0 @@
-{"id":"5d282e17b864a0028d438636ffe36b1a.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/DetailsAccordion/DetailsAccordion.test.tsx#<DetailsAccordion /> clicking a disabled header does not toggle content","name":"clicking a disabled header does not toggle content","status":"passed","testResultsByEnv":{"default":"936d40037edc1a6ff555b524db419d2b"}}

@@ -1,0 +1,1 @@
+{"id":"64acac41d9a4ca2f23dc54db6bbc0469.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/auth_test.go:TestManagementResource_DeleteUser_UserNotFound","name":"TestManagementResource_DeleteUser_UserNotFound","status":"passed","testResultsByEnv":{"default":"f8e74aa3c41e4c4e005a1ea48649450d"}}

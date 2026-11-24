@@ -1,0 +1,1 @@
+{"id":"3d4fff6b2f983dbcf79e95e42e063ddd.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useInitialEnvironment/useInitialEnvironment.test.tsx#useInitialEnvironment returns early if there are no 'collected' environments","name":"returns early if there are no 'collected' environments","status":"passed","testResultsByEnv":{"default":"0238b077827f5a99d3efe33e5745d471"}}

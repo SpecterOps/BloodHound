@@ -1,1 +1,0 @@
-{"id":"cecf57ef092e07bd2da90f22bd414601.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/services/upload/upload_test.go:TestSaveIngestFileRejectsUnsupportedContentTypeWithoutWriting","name":"TestSaveIngestFileRejectsUnsupportedContentTypeWithoutWriting","status":"passed","testResultsByEnv":{"default":"23c2e96b15c6cee3cb2ebf27b0619b85"}}

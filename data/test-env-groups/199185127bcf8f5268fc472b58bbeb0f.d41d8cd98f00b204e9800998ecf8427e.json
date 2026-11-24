@@ -1,0 +1,1 @@
+{"id":"199185127bcf8f5268fc472b58bbeb0f.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/sso_test.go:TestManagementResource_SanitizeAndGetRoles","name":"TestManagementResource_SanitizeAndGetRoles","status":"passed","testResultsByEnv":{"default":"945913410115489da7710a2a8075a19f"}}
