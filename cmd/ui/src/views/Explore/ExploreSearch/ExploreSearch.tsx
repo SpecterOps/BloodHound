@@ -196,7 +196,7 @@ const ExploreSearch: React.FC = () => {
                 <div
                     className={cn(
                         'h-10 shrink-0 w-full flex gap-1 items-center rounded-t-lg pointer-events-auto text-main bg-neutral-2',
-                        { 'rounded-b-lg': !showSearchWidget }
+                        { 'rounded-b-lg overflow-y-hidden': !showSearchWidget }
                     )}
                     data-testid='explore_search-container_header'>
                     <IconButton
