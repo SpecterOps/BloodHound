@@ -53,16 +53,22 @@ func (s Resources) GetDatabaseCompleteness(response http.ResponseWriter, request
 	result := make(map[string]float64)
 
 	if err := s.Graph.ReadTransaction(request.Context(), func(tx graph.Transaction) error {
-		if userSessionCompleteness, err := ad.FetchUserSessionCompleteness(tx); err != nil {
+		if userSessionCompleteness, err := ad.FetchUserSessionCompleteness(tx, time.Time{}); err != nil {
 			return err
 		} else {
-			result["SessionCompleteness"] = userSessionCompleteness
+			result["SessionCompleteness"] = 0
+			if userSessionCompleteness.ActiveUserCount > 0 {
+				result["SessionCompleteness"] = userSessionCompleteness.ActiveUserCountWithSessions / userSessionCompleteness.ActiveUserCount
+			}
 		}
 
-		if localGroupCompleteness, err := ad.FetchLocalGroupCompleteness(tx); err != nil {
+		if localGroupCompleteness, err := ad.FetchLocalGroupCompleteness(tx, time.Time{}); err != nil {
 			return err
 		} else {
-			result["LocalGroupCompleteness"] = localGroupCompleteness
+			result["LocalGroupCompleteness"] = 0
+			if localGroupCompleteness.ActiveComputerCount > 0 {
+				result["LocalGroupCompleteness"] = localGroupCompleteness.ActiveComputerCountWithAdmins / localGroupCompleteness.ActiveComputerCount
+			}
 		}
 
 		return nil

@@ -7935,9 +7935,21 @@
                         }
                       }
                     ],
+                    "pz_rules": [
+                      {
+                        "key": "OGE_environment-nodes",
+                        "name": "Environment Nodes",
+                        "seeds": [
+                          {
+                            "type": 2,
+                            "value": "MATCH (n:OGE_Environment_Kind) RETURN n"
+                          }
+                        ]
+                      }
+                    ],
                     "queries": [
                       {
-                        "query_key": "all-node-kind-1",
+                        "query_key": "OGE_all-node-kind-1",
                         "name": "All Node Kind 1",
                         "query": "MATCH (n:OGE_Node_Kind_1) RETURN n",
                         "description": "Lists all OGE_Node_Kind_1 nodes.",
@@ -14847,7 +14859,7 @@
       "get": {
         "operationId": "GetDataQualityStats",
         "summary": "Get environment-specific data quality stats",
-        "description": "Time series list of data quality stats for a given environment",
+        "description": "Time series list of data quality stats, optionally scoped to an environment",
         "tags": [
           "Data Quality",
           "Community",
@@ -14856,8 +14868,7 @@
         "parameters": [
           {
             "name": "environment_id",
-            "description": "Required. Filters results to the given environment.",
-            "required": true,
+            "description": "Optional. Filters results to the given environment.",
             "in": "query",
             "schema": {
               "type": "string"
@@ -14865,7 +14876,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are created_at, updated_at.",
+            "description": "Sortable columns are created_at, updated_at, metric_value.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -14955,7 +14966,7 @@
       "get": {
         "operationId": "GetDataQualityAggregations",
         "summary": "Get data quality aggregations by environment kind",
-        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
+        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension or environment, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
         "tags": [
           "Data Quality",
           "Community",
@@ -14963,10 +14974,17 @@
         ],
         "parameters": [
           {
-            "name": "schema_environment_kind_id",
-            "description": "Required. Scopes the aggregation to a single environment kind id.\n",
+            "name": "environment_id",
+            "description": "Optional. Scopes the aggregation to a single environment.",
             "in": "query",
-            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "schema_environment_kind_id",
+            "description": "Optional. Scopes the aggregation to a single environment kind id.\n",
+            "in": "query",
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -14983,7 +15001,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are created_at, updated_at.\n",
+            "description": "Sortable columns are created_at, updated_at, metric_value.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -28829,7 +28847,8 @@
               "properties": {
                 "key": {
                   "type": "string",
-                  "description": "A stable identifier for reconciling rules between extension upserts."
+                  "description": "A stable identifier for reconciling rules between extension upserts.\nIt must start with the extension namespace followed by an underscore\nand a suffix that contains at least one non-whitespace character.\n",
+                  "example": "OGE_environment-nodes"
                 },
                 "name": {
                   "type": "string"
@@ -28886,8 +28905,8 @@
               "properties": {
                 "query_key": {
                   "type": "string",
-                  "description": "A stable identifier for reconciling the saved query.",
-                  "example": "critical-assets"
+                  "description": "A stable identifier for reconciling the saved query.\nIt must start with the extension namespace followed by an underscore\nand a suffix that contains at least one non-whitespace character.\n",
+                  "example": "OGE_all-node-kind-1"
                 },
                 "name": {
                   "type": "string",
@@ -29527,20 +29546,19 @@
               },
               "metric_type": {
                 "type": "string",
-                "enum": [
-                  "node",
-                  "relationship"
-                ]
+                "description": "Metric category. Built-in categories include node and relationship.\nExtension-defined categories use <namespace>_<metric-type>.\nAdditional categories may be introduced by installed extensions.\n",
+                "example": "AD_session_completeness"
               },
               "metric_name": {
-                "type": "string"
+                "type": "string",
+                "description": "Graph kind name or extension-defined metric component name."
               },
               "metric_value": {
                 "type": "number",
                 "format": "double"
               },
               "kind_id": {
-                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "description": "The graph kind ID when the metric name resolves to a known kind; otherwise null.",
                 "type": "integer",
                 "format": "int32",
                 "nullable": true
@@ -29577,20 +29595,19 @@
               },
               "metric_type": {
                 "type": "string",
-                "enum": [
-                  "node",
-                  "relationship"
-                ]
+                "description": "Metric category. Built-in categories include node and relationship.\nExtension-defined categories use <namespace>_<metric-type>.\nAdditional categories may be introduced by installed extensions.\n",
+                "example": "AD_session_completeness"
               },
               "metric_name": {
-                "type": "string"
+                "type": "string",
+                "description": "Graph kind name or extension-defined metric component name."
               },
               "metric_value": {
                 "type": "number",
                 "format": "double"
               },
               "kind_id": {
-                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "description": "The graph kind ID when the metric name resolves to a known kind; otherwise null.",
                 "type": "integer",
                 "format": "int32",
                 "nullable": true

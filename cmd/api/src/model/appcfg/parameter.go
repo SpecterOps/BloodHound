@@ -45,6 +45,7 @@ const (
 	ReconciliationKey        ParameterKey = "analysis.reconciliation"
 	ScheduledAnalysis        ParameterKey = "analysis.scheduled"
 	ClientMetricsKey         ParameterKey = "pipeline.client_metrics"
+	IngestRuntimeKey         ParameterKey = "pipeline.ingest_runtime"
 	APITokenExpiration       ParameterKey = "auth.api_token_expiration"
 
 	// The below keys are not intended to be user updatable
@@ -142,6 +143,8 @@ func (s *Parameter) Validate() utils.Errors {
 		v = &SupportAccountProvisioningParameters{}
 	case ClientMetricsKey:
 		v = &ClientMetricsParameter{}
+	case IngestRuntimeKey:
+		v = &IngestRuntimeParameter{}
 	case APITokenExpiration:
 		v = &APITokenExpirationParameter{}
 	case GraphStorageOptimizationKey:
@@ -159,6 +162,10 @@ func (s *Parameter) Validate() utils.Errors {
 		return utils.Errors{err}
 	} else if errs := validation.Validate(v); errs != nil {
 		return errs
+	} else if parameterValidator, ok := v.(interface{ Validate() error }); ok {
+		if err := parameterValidator.Validate(); err != nil {
+			return utils.Errors{err}
+		}
 	}
 
 	return nil
@@ -615,6 +622,26 @@ func GetSupportAccountProvisioningParameters(ctx context.Context, service Parame
 	}
 
 	return result
+}
+
+// IngestRuntimeParameter controls BHE ingest sessions, not storage byte budgets.
+type IngestRuntimeParameter struct {
+	DownloadWorkers     int `json:"download_workers" validate:"integer,min=1,max=16"`
+	DownloadWindow      int `json:"download_window" validate:"integer,min=1,max=64"`
+	ArchiveReadyEntries int `json:"archive_ready_entries" validate:"integer,min=1,max=16"`
+	CleanupWorkers      int `json:"cleanup_workers" validate:"integer,min=1,max=16"`
+	CleanupQueueSize    int `json:"cleanup_queue_size" validate:"integer,min=1,max=4096"`
+}
+
+// Validate checks the complete value, including the relationship between fields.
+func (s IngestRuntimeParameter) Validate() error {
+	if errs := validation.Validate(s); errs != nil {
+		return errs
+	}
+	if s.DownloadWindow < s.DownloadWorkers {
+		return fmt.Errorf("download_window must be at least download_workers")
+	}
+	return nil
 }
 
 type ClientMetricsParameter struct {

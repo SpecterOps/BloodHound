@@ -1559,6 +1559,38 @@ func TestResources_GetDatabaseCompleteness(t *testing.T) {
 
 	tt := []testData{
 		{
+			name: "Success - no eligible nodes",
+			buildRequest: func() *http.Request {
+				return &http.Request{URL: &url.URL{Path: "/api/v2/completeness"}, Method: http.MethodGet}
+			},
+			setupMocks: func(t *testing.T, mock *mock) {
+				t.Helper()
+				var (
+					controller  = gomock.NewController(t)
+					transaction = graphmocks.NewMockTransaction(controller)
+					nodeQuery   = graphmocks.NewMockNodeQuery(controller)
+					cursor      = graphmocks.NewMockCursor[*graph.Node](controller)
+					nodes       = make(chan *graph.Node)
+				)
+				close(nodes)
+				mock.mockGraph.EXPECT().ReadTransaction(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, delegate graph.TransactionDelegate, _ ...graph.TransactionOption) error {
+					return delegate(transaction)
+				})
+				transaction.EXPECT().Nodes().Return(nodeQuery).Times(2)
+				nodeQuery.EXPECT().Filterf(gomock.Any()).Return(nodeQuery).Times(2)
+				nodeQuery.EXPECT().Fetch(gomock.Any()).DoAndReturn(func(delegate func(graph.Cursor[*graph.Node]) error, _ ...graph.Criteria) error {
+					return delegate(cursor)
+				}).Times(2)
+				cursor.EXPECT().Chan().Return(nodes).Times(2)
+				cursor.EXPECT().Error().Return(nil).Times(2)
+			},
+			expected: expected{
+				responseCode:   http.StatusOK,
+				responseBody:   `{"data":{"SessionCompleteness":0,"LocalGroupCompleteness":0}}`,
+				responseHeader: http.Header{"Content-Type": []string{"application/json"}},
+			},
+		},
+		{
 			name: "Error: database error - Internal Server Error",
 			buildRequest: func() *http.Request {
 				return &http.Request{

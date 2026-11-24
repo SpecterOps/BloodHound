@@ -17,9 +17,16 @@ import { EdgeType } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { renderHook, waitFor } from '../../../../test-utils';
-import { BUILTIN_EDGE_CATEGORIES } from './edgeCategories';
+import { BUILTIN_EDGE_CATEGORIES, COMMON_EDGE_CATEGORY } from './edgeCategories';
 import { useEdgeCategories } from './useEdgeCategories';
 import { getEdgeListFromCategory } from './utils';
+
+const mockEdition = vi.hoisted(() => ({ isEnterprise: false }));
+
+vi.mock('../../../../providers/AppNameProvider', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../../../../providers/AppNameProvider')>()),
+    useIsEnterprise: () => mockEdition.isEnterprise,
+}));
 
 const server = setupServer(
     rest.get('/api/v2/extensions-edges', async (req, res, ctx) => {
@@ -33,13 +40,29 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+    server.resetHandlers();
+    mockEdition.isEnterprise = false;
+});
 afterAll(() => server.close());
 
 describe('useEdgeCategories', async () => {
     it('initializes the categories with just the built-in defaults when edge endpoint returns nothing', async () => {
         const hook = renderHook(() => useEdgeCategories());
         expect(hook.result.current.edgeCategories).toEqual(BUILTIN_EDGE_CATEGORIES);
+    });
+
+    it('includes the common category in BloodHound Enterprise', async () => {
+        mockEdition.isEnterprise = true;
+
+        const hook = renderHook(() => useEdgeCategories());
+        expect(hook.result.current.edgeCategories).toEqual([...BUILTIN_EDGE_CATEGORIES, COMMON_EDGE_CATEGORY]);
+        expect(getEdgeListFromCategory('Common', hook.result.current.edgeCategories)).toEqual(['MemberOfZone']);
+    });
+
+    it('excludes the common category in BloodHound Community Edition', async () => {
+        const hook = renderHook(() => useEdgeCategories());
+        expect(getEdgeListFromCategory('Common', hook.result.current.edgeCategories)).toBeUndefined();
     });
 
     it('includes all traversable OpenGraph edges in their own category when they are available via the API', async () => {

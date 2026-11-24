@@ -21,35 +21,43 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
+	adAnalysis "github.com/specterops/bloodhound/packages/go/analysis/ad"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
+	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
+	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
+	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/ops"
 	"github.com/specterops/dawgs/query"
 )
 
-type kindCountsByEnvironment map[string]map[string]int
+type metricCounts map[string]int
 
-type openGraphCountResults struct {
-	nodeKindCountsByEnvironmentID         kindCountsByEnvironment
-	relationshipKindCountsByEnvironmentID kindCountsByEnvironment
-	countedKindNames                      []string
+type envPropertyKeys struct {
+	environmentNodeID       string
+	memberNodeEnvironmentID string
 }
 
-func openGraphStats(ctx context.Context, db database.Database, graphDB graph.Database) (model.DataQualityStats, model.DataQualityAggregations, error) {
-	var (
-		aggregations = make(model.DataQualityAggregations, 0)
-		runID        string
-		stats        = make(model.DataQualityStats, 0)
+type countResults struct {
+	environmentID      string
+	countsByMetricName metricCounts
+	metricType         string
+}
 
-		// We only are concerned with non-builtin types since AD and AZ have their own stat collection
-		// When we move AD and AZ stat collection to this common table, this will need to be changed
-		builtInFilter = model.Filters{"is_builtin": []model.Filter{{Operator: model.Equals, Value: "false"}}}
+func dataQualityGraphStats(ctx context.Context, db database.Database, graphDB graph.Database) (model.DataQualityStats, model.DataQualityAggregations, error) {
+	var (
+		runID string
+
+		stats        = make(model.DataQualityStats, 0)
+		aggregations = make(model.DataQualityAggregations, 0)
+		now          = time.Now().UTC()
 	)
 
 	if newUUID, err := uuid.NewV4(); err != nil {
@@ -58,7 +66,7 @@ func openGraphStats(ctx context.Context, db database.Database, graphDB graph.Dat
 		runID = newUUID.String()
 	}
 
-	extensions, _, err := db.GetGraphSchemaExtensions(ctx, builtInFilter, model.Sort{}, 0, 0)
+	extensions, _, err := db.GetGraphSchemaExtensions(ctx, model.Filters{}, model.Sort{}, 0, 0)
 	if err != nil {
 		return stats, aggregations, fmt.Errorf("could not get graph schema extensions: %w", err)
 	}
@@ -73,53 +81,39 @@ func openGraphStats(ctx context.Context, db database.Database, graphDB graph.Dat
 			continue
 		}
 
-		relationshipKinds, err := getOpenGraphRelationshipKinds(ctx, db, extension)
+		relationshipKinds, err := getRelationshipKinds(ctx, db, extension)
 		if err != nil {
 			return stats, aggregations, err
 		}
 
 		// Each extension may define multiple environments with their own environment kind, principal kinds, and source kind.
 		for _, environment := range environments {
-			environmentSourceKind, err := getOpenGraphEnvironmentSourceKind(ctx, db, environment)
+			environmentSourceKind, err := getEnvironmentSourceKind(ctx, db, environment)
 			if err != nil {
 				return stats, aggregations, err
 			}
 
-			countResults, err := countOpenGraphMetricsByEnvironment(ctx, graphDB, graph.StringKind(environment.EnvironmentKindName), environmentSourceKind.ToKind(), relationshipKinds)
+			countMetrics, seenKinds, err := countMetricsPerEnvironment(ctx, graphDB, extension, graph.StringKind(environment.EnvironmentKindName), environmentSourceKind.ToKind(), relationshipKinds, now)
 			if err != nil {
-				return stats, aggregations, fmt.Errorf("could not count open graph nodes and relationships for environment kind %s: %w", environment.EnvironmentKindName, err)
+				return stats, aggregations, fmt.Errorf("could not count metrics for environment kind %s: %w", environment.EnvironmentKindName, err)
 			}
 
-			kindIDs, err := getOpenGraphCountKindIDs(ctx, db, countResults.countedKindNames)
+			kindIDs, err := getCountKindIDs(ctx, db, seenKinds)
 			if err != nil {
 				return stats, aggregations, err
 			}
 
-			for _, metricCountGroup := range []struct {
-				metricType            model.DataQualityMetricType
-				countsByEnvironmentID kindCountsByEnvironment
-			}{
-				{
-					metricType:            model.DataQualityMetricTypeNode,
-					countsByEnvironmentID: countResults.nodeKindCountsByEnvironmentID,
-				},
-				{
-					metricType:            model.DataQualityMetricTypeRelationship,
-					countsByEnvironmentID: countResults.relationshipKindCountsByEnvironmentID,
-				},
-			} {
-				metricStats, metricAggregations := buildOpenGraphCountStats(runID, extension, environment, metricCountGroup.metricType, metricCountGroup.countsByEnvironmentID, kindIDs)
+			metricStats, metricAggregations := buildDataQualityStats(runID, extension, environment, countMetrics, kindIDs)
 
-				stats = append(stats, metricStats...)
-				aggregations = append(aggregations, metricAggregations...)
-			}
+			stats = append(stats, metricStats...)
+			aggregations = append(aggregations, metricAggregations...)
 		}
 	}
 
 	return stats, aggregations, nil
 }
 
-func getOpenGraphRelationshipKinds(ctx context.Context, db database.Database, extension model.GraphSchemaExtension) (graph.Kinds, error) {
+func getRelationshipKinds(ctx context.Context, db database.Database, extension model.GraphSchemaExtension) (graph.Kinds, error) {
 	relationshipKindFilters := model.Filters{"schema_extension_id": []model.Filter{{
 		Operator:    model.Equals,
 		Value:       fmt.Sprintf("%d", extension.ID),
@@ -139,7 +133,7 @@ func getOpenGraphRelationshipKinds(ctx context.Context, db database.Database, ex
 	return relationshipKinds, nil
 }
 
-func getOpenGraphEnvironmentSourceKind(ctx context.Context, db database.Database, environment model.SchemaEnvironment) (model.Kind, error) {
+func getEnvironmentSourceKind(ctx context.Context, db database.Database, environment model.SchemaEnvironment) (model.Kind, error) {
 	kinds, err := db.GetKindsByIDs(ctx, environment.SourceKindId)
 	if err != nil {
 		return model.Kind{}, fmt.Errorf("could not get source kind for schema environment %d: %w", environment.ID, err)
@@ -152,117 +146,158 @@ func getOpenGraphEnvironmentSourceKind(ctx context.Context, db database.Database
 	return kinds[0], nil
 }
 
-func countOpenGraphMetricsByEnvironment(ctx context.Context, graphDB graph.Database, environmentKind graph.Kind, sourceKind graph.Kind, relationshipKinds graph.Kinds) (openGraphCountResults, error) {
+func countMetricsPerEnvironment(ctx context.Context, graphDB graph.Database, extension model.GraphSchemaExtension, environmentKind graph.Kind, sourceKind graph.Kind, relationshipKinds graph.Kinds, now time.Time) ([]countResults, map[string]struct{}, error) {
 	var (
-		countResults = openGraphCountResults{
-			nodeKindCountsByEnvironmentID:         kindCountsByEnvironment{},
-			relationshipKindCountsByEnvironmentID: kindCountsByEnvironment{},
-			countedKindNames:                      make([]string, 0),
-		}
+		results              []countResults
 		seenCountedKindNames = map[string]struct{}{}
+		propertyKeys         = dataQualityEnvProperties(environmentKind)
 	)
 
 	err := graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		environmentIDs, err := getOpenGraphEnvironmentIDs(ctx, tx, environmentKind)
+		environmentIDs, err := getEnvironmentIDs(ctx, tx, environmentKind, propertyKeys.environmentNodeID)
 		if err != nil {
 			return err
 		}
 
 		for _, environmentID := range environmentIDs {
-			if err := countOpenGraphNodeMetricsForEnvironment(tx, &countResults, sourceKind, environmentID, seenCountedKindNames); err != nil {
+			// Node metrics
+			if nodeMetrics, err := countNodeMetricsForEnvironment(tx, sourceKind, environmentID, propertyKeys.memberNodeEnvironmentID, seenCountedKindNames); err != nil {
 				return err
+			} else {
+				results = append(results, nodeMetrics)
 			}
 
-			if err := countOpenGraphRelationshipMetricsForEnvironment(tx, &countResults, sourceKind, relationshipKinds, environmentID, seenCountedKindNames); err != nil {
+			// Relationship Metrics
+			if relationshipMetrics, err := countRelationshipMetricsForEnvironment(tx, sourceKind, relationshipKinds, environmentID, propertyKeys.memberNodeEnvironmentID, seenCountedKindNames); err != nil {
 				return err
+			} else {
+				results = append(results, relationshipMetrics)
+			}
+
+			// Custom metrics for extensions (Hardcoded for now but can be dynamic later)
+			switch extension.Name {
+			case "AD":
+				if customMetrics, err := countADCustomMetricsForEnvironment(tx, extension, environmentID, now); err != nil {
+					return err
+				} else {
+					results = append(results, customMetrics...)
+				}
 			}
 		}
 
 		return nil
 	})
 
-	return countResults, err
+	return results, seenCountedKindNames, err
 }
 
-func countOpenGraphNodeMetricsForEnvironment(tx graph.Transaction, countResults *openGraphCountResults, sourceKind graph.Kind, environmentID string, seenCountedKindNames map[string]struct{}) error {
-	nodeKindCounts := map[string]int{}
+func countADCustomMetricsForEnvironment(tx graph.Transaction, extension model.GraphSchemaExtension, environmentID string, now time.Time) ([]countResults, error) {
+	userSessionCompleteness, err := adAnalysis.FetchUserSessionCompleteness(tx, now, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get user session completeness for environment %s: %w", environmentID, err)
+	}
+	localGroupCompleteness, err := adAnalysis.FetchLocalGroupCompleteness(tx, now, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("could not get local group completeness for environment %s: %w", environmentID, err)
+	}
 
-	if err := tx.Nodes().Filterf(func() graph.Criteria {
+	return []countResults{
+		{
+			environmentID: environmentID,
+			metricType:    fmt.Sprintf("%s_%s", extension.Namespace, model.DataQualityMetricTypeSessionCompleteness),
+			countsByMetricName: metricCounts{
+				"active_user_count_with_sessions": int(userSessionCompleteness.ActiveUserCountWithSessions),
+				"active_user_count":               int(userSessionCompleteness.ActiveUserCount),
+			},
+		},
+		{
+			environmentID: environmentID,
+			metricType:    fmt.Sprintf("%s_%s", extension.Namespace, model.DataQualityMetricTypeLocalGroupCompleteness),
+			countsByMetricName: metricCounts{
+				"active_computer_count_with_admins": int(localGroupCompleteness.ActiveComputerCountWithAdmins),
+				"active_computer_count":             int(localGroupCompleteness.ActiveComputerCount),
+			},
+		},
+	}, nil
+}
+
+func countNodeMetricsForEnvironment(tx graph.Transaction, sourceKind graph.Kind, environmentID string, membershipProperty string, seenCountedKindNames map[string]struct{}) (countResults, error) {
+	var (
+		results = countResults{
+			environmentID:      environmentID,
+			metricType:         string(model.DataQualityMetricTypeNode),
+			countsByMetricName: make(metricCounts),
+		}
+	)
+
+	err := tx.Nodes().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Node(), sourceKind),
-			query.Equals(query.NodeProperty(graphschema.EnvironmentIDKey), environmentID),
+			query.Equals(query.NodeProperty(membershipProperty), environmentID),
 		)
 	}).FetchKinds(func(cursor graph.Cursor[graph.KindsResult]) error {
 		for result := range cursor.Chan() {
-			countResults.countedKindNames = countOpenGraphNodeKinds(result.Kinds, sourceKind, nodeKindCounts, countResults.countedKindNames, seenCountedKindNames)
+			for _, kind := range result.Kinds {
+				if kind.Is(sourceKind) || model.IsExtendedNodeKind(kind) {
+					continue
+				}
+
+				results.countsByMetricName[kind.String()]++
+				seenCountedKindNames[kind.String()] = struct{}{}
+			}
 		}
 
 		return cursor.Error()
-	}); err != nil {
-		return err
-	}
+	})
 
-	if len(nodeKindCounts) > 0 {
-		countResults.nodeKindCountsByEnvironmentID[environmentID] = nodeKindCounts
-	}
-
-	return nil
+	return results, err
 }
 
-func countOpenGraphRelationshipMetricsForEnvironment(tx graph.Transaction, countResults *openGraphCountResults, sourceKind graph.Kind, relationshipKinds graph.Kinds, environmentID string, seenCountedKindNames map[string]struct{}) error {
+func countRelationshipMetricsForEnvironment(tx graph.Transaction, sourceKind graph.Kind, relationshipKinds graph.Kinds, environmentID string, membershipProperty string, seenCountedKindNames map[string]struct{}) (countResults, error) {
+	var (
+		results = countResults{
+			environmentID:      environmentID,
+			metricType:         string(model.DataQualityMetricTypeRelationship),
+			countsByMetricName: make(metricCounts),
+		}
+	)
+
 	if len(relationshipKinds) == 0 {
-		return nil
+		return results, nil
 	}
 
-	relationshipKindCounts := map[string]int{}
-
-	if err := tx.Relationships().Filterf(func() graph.Criteria {
+	err := tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Start(), sourceKind),
-			query.Equals(query.StartProperty(graphschema.EnvironmentIDKey), environmentID),
+			query.Equals(query.StartProperty(membershipProperty), environmentID),
 			query.KindIn(query.Relationship(), relationshipKinds...),
 		)
 	}).FetchKinds(func(cursor graph.Cursor[graph.RelationshipKindsResult]) error {
 		for result := range cursor.Chan() {
-			countResults.countedKindNames = countOpenGraphKind(result.Kind.String(), relationshipKindCounts, countResults.countedKindNames, seenCountedKindNames)
+			results.countsByMetricName[result.Kind.String()]++
+			seenCountedKindNames[result.Kind.String()] = struct{}{}
 		}
 
 		return cursor.Error()
-	}); err != nil {
-		return err
-	}
+	})
 
-	if len(relationshipKindCounts) > 0 {
-		countResults.relationshipKindCountsByEnvironmentID[environmentID] = relationshipKindCounts
-	}
-
-	return nil
+	return results, err
 }
 
-func countOpenGraphNodeKinds(kinds graph.Kinds, sourceKind graph.Kind, nodeKindCounts map[string]int, countedKindNames []string, seenCountedKindNames map[string]struct{}) []string {
-	for _, kind := range kinds {
-		if kind.Is(sourceKind) || model.IsExtendedNodeKind(kind) {
-			continue
-		}
-
-		countedKindNames = countOpenGraphKind(kind.String(), nodeKindCounts, countedKindNames, seenCountedKindNames)
+// AD and Azure identify environment nodes by objectid, but group their members
+// by domainsid and tenantid. Custom environments use environmentid for both.
+func dataQualityEnvProperties(environmentKind graph.Kind) envPropertyKeys {
+	switch environmentKind {
+	case ad.Domain:
+		return envPropertyKeys{environmentNodeID: common.ObjectID.String(), memberNodeEnvironmentID: ad.DomainSID.String()}
+	case azure.Tenant:
+		return envPropertyKeys{environmentNodeID: common.ObjectID.String(), memberNodeEnvironmentID: azure.TenantID.String()}
+	default:
+		return envPropertyKeys{environmentNodeID: graphschema.EnvironmentIDKey, memberNodeEnvironmentID: graphschema.EnvironmentIDKey}
 	}
-
-	return countedKindNames
 }
 
-func countOpenGraphKind(kindName string, kindCounts map[string]int, countedKindNames []string, seenCountedKindNames map[string]struct{}) []string {
-	kindCounts[kindName]++
-
-	if _, seen := seenCountedKindNames[kindName]; !seen {
-		countedKindNames = append(countedKindNames, kindName)
-		seenCountedKindNames[kindName] = struct{}{}
-	}
-
-	return countedKindNames
-}
-
-func getOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, environmentKind graph.Kind) ([]string, error) {
+func getEnvironmentIDs(ctx context.Context, tx graph.Transaction, environmentKind graph.Kind, environmentIDProperty string) ([]string, error) {
 	var environmentIDs []string
 
 	environments, err := ops.FetchNodes(tx.Nodes().Filterf(func() graph.Criteria {
@@ -273,13 +308,12 @@ func getOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, envir
 	}
 
 	for _, environment := range environments {
-		environmentID, err := environment.Properties.Get(graphschema.EnvironmentIDKey).String()
+		environmentID, err := environment.Properties.Get(environmentIDProperty).String()
 		if err != nil {
-			slog.WarnContext(
-				ctx,
-				"OpenGraph environment node does not have a valid environment ID property",
+			slog.WarnContext(ctx, "Environment node does not have a valid ID property",
 				slog.Uint64("node_id", uint64(environment.ID)),
 				slog.String("environment_kind", environmentKind.String()),
+				slog.String("id_property", environmentIDProperty),
 				attr.Error(err),
 			)
 			continue
@@ -291,9 +325,14 @@ func getOpenGraphEnvironmentIDs(ctx context.Context, tx graph.Transaction, envir
 	return environmentIDs, nil
 }
 
-func getOpenGraphCountKindIDs(ctx context.Context, db database.Database, kindNames []string) (map[string]null.Int32, error) {
-	if len(kindNames) == 0 {
+func getCountKindIDs(ctx context.Context, db database.Database, seenKinds map[string]struct{}) (map[string]null.Int32, error) {
+	if len(seenKinds) == 0 {
 		return map[string]null.Int32{}, nil
+	}
+
+	var kindNames []string
+	for kind := range seenKinds {
+		kindNames = append(kindNames, kind)
 	}
 
 	kinds, err := db.GetKindsByNames(ctx, kindNames...)
@@ -309,39 +348,45 @@ func getOpenGraphCountKindIDs(ctx context.Context, db database.Database, kindNam
 	return kindIDsByName, nil
 }
 
-func buildOpenGraphCountStats(runID string, extension model.GraphSchemaExtension, environment model.SchemaEnvironment, metricType model.DataQualityMetricType, countsByEnvironmentID kindCountsByEnvironment, kindIDsByName map[string]null.Int32) (model.DataQualityStats, model.DataQualityAggregations) {
+func buildDataQualityStats(runID string, extension model.GraphSchemaExtension, environment model.SchemaEnvironment, countMetrics []countResults, kindIDsByName map[string]null.Int32) (model.DataQualityStats, model.DataQualityAggregations) {
+	type metricKey struct {
+		metricType model.DataQualityMetricType
+		metricName string
+	}
+
 	var (
-		aggregatedCounts = map[string]int{}
+		aggregatedCounts = map[metricKey]int{}
 		stats            = make(model.DataQualityStats, 0)
 		aggregations     = make(model.DataQualityAggregations, 0)
 	)
 
-	for environmentID, kindCounts := range countsByEnvironmentID {
-		for kindName, count := range kindCounts {
-			stats = append(stats, model.DataQualityStat{
+	for _, counts := range countMetrics {
+		for metricName, count := range counts.countsByMetricName {
+			stat := model.DataQualityStat{
 				RunID:                   runID,
 				SchemaExtensionID:       extension.ID,
 				SchemaEnvironmentKindID: environment.EnvironmentKindId,
-				EnvironmentID:           environmentID,
-				MetricType:              metricType,
-				MetricName:              kindName,
+				EnvironmentID:           counts.environmentID,
+				MetricType:              model.DataQualityMetricType(counts.metricType),
+				MetricName:              metricName,
 				MetricValue:             float64(count),
-				KindID:                  kindIDsByName[kindName],
-			})
+				KindID:                  kindIDsByName[metricName],
+			}
+			stats = append(stats, stat)
 
-			aggregatedCounts[kindName] += count
+			aggregatedCounts[metricKey{metricType: stat.MetricType, metricName: stat.MetricName}] += count
 		}
 	}
 
-	for kindName, count := range aggregatedCounts {
+	for metric, count := range aggregatedCounts {
 		aggregations = append(aggregations, model.DataQualityAggregation{
 			RunID:                   runID,
 			SchemaExtensionID:       extension.ID,
 			SchemaEnvironmentKindID: environment.EnvironmentKindId,
-			MetricType:              metricType,
-			MetricName:              kindName,
+			MetricType:              metric.metricType,
+			MetricName:              metric.metricName,
 			MetricValue:             float64(count),
-			KindID:                  kindIDsByName[kindName],
+			KindID:                  kindIDsByName[metric.metricName],
 		})
 	}
 
