@@ -104,24 +104,6 @@ func TestURLValidatorHostnameOption(t *testing.T) {
 			url:     "http://test.com",
 			wantErr: validation.ErrorURLHTTPSRequired,
 		},
-		{
-			name:    "invalid hostname setting fails validation",
-			options: map[string]string{"httpsOnly": "true", "hostnameRequired": "typo"},
-			url:     "https://test.com",
-			wantErr: `URL validator option "hostnameRequired" must be a boolean`,
-		},
-		{
-			name:    "an explicitly empty setting fails validation",
-			options: map[string]string{"hostnameRequired": ""},
-			url:     "https://test.com",
-			wantErr: `URL validator option "hostnameRequired" must be a boolean`,
-		},
-		{
-			name:    "unknown option fails validation",
-			options: map[string]string{"hostnameRequire": "true"},
-			url:     "https://test.com",
-			wantErr: `unknown URL validator option "hostnameRequire"`,
-		},
 	} {
 		t.Run(testCase.name, func(t *testing.T) {
 			errs := validation.NewUrlValidator(testCase.options).Validate(testCase.url)
@@ -131,6 +113,46 @@ func TestURLValidatorHostnameOption(t *testing.T) {
 			} else {
 				require.Len(t, errs, 1)
 				assert.EqualError(t, errs[0], testCase.wantErr)
+			}
+		})
+	}
+}
+
+func TestUrlValidatorWithOptions(t *testing.T) {
+	for _, testCase := range []struct {
+		name    string
+		options map[string]string
+		wantErr string
+	}{
+		{
+			name:    "valid options construct a validator",
+			options: map[string]string{"httpsOnly": "true", "hostnameRequired": "true"},
+		},
+		{
+			name:    "invalid boolean returns an error",
+			options: map[string]string{"httpsOnly": "true", "hostnameRequired": "typo"},
+			wantErr: `URL validator option "hostnameRequired" must be a boolean`,
+		},
+		{
+			name:    "explicitly empty option returns an error",
+			options: map[string]string{"hostnameRequired": ""},
+			wantErr: `URL validator option "hostnameRequired" must be a boolean`,
+		},
+		{
+			name:    "unknown option returns an error",
+			options: map[string]string{"hostnameRequire": "true"},
+			wantErr: `unknown URL validator option "hostnameRequire"`,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			validator, err := validation.UrlValidatorWithOptions(testCase.options)
+			if testCase.wantErr == "" {
+				require.NoError(t, err)
+				require.NotNil(t, validator)
+				assert.Empty(t, validator.Validate("https://test.com"))
+			} else {
+				require.EqualError(t, err, testCase.wantErr)
+				assert.Nil(t, validator)
 			}
 		})
 	}

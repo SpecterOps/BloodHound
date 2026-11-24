@@ -37,16 +37,15 @@ const (
 // UrlValidator validates URLs through the `url` struct tag or directly.
 // The optional hostnameRequired setting requires a URL with a hostname
 type UrlValidator struct {
-	httpsOnly          bool
-	hostnameRequired   bool
-	configurationError error
+	httpsOnly        bool
+	hostnameRequired bool
 }
 
-// NewUrlValidator returns a validator that rejects invalid option settings
-func NewUrlValidator(params map[string]string) Validator {
+// UrlValidatorWithOptions constructs a URL validator and reports invalid options.
+func UrlValidatorWithOptions(options map[string]string) (Validator, error) {
 	var validator UrlValidator
 
-	for optionName, optionValue := range params {
+	for optionName, optionValue := range options {
 		var setting *bool
 
 		switch optionName {
@@ -55,17 +54,34 @@ func NewUrlValidator(params map[string]string) Validator {
 		case "hostnameRequired":
 			setting = &validator.hostnameRequired
 		default:
-			return UrlValidator{configurationError: fmt.Errorf("unknown URL validator option %q", optionName)}
+			return nil, fmt.Errorf("unknown URL validator option %q", optionName)
 		}
 
 		if enabled, err := strconv.ParseBool(optionValue); err != nil {
-			return UrlValidator{configurationError: fmt.Errorf("URL validator option %q must be a boolean", optionName)}
+			return nil, fmt.Errorf("URL validator option %q must be a boolean", optionName)
 		} else {
 			*setting = enabled
 		}
 	}
 
-	return validator
+	return validator, nil
+}
+
+type invalidValidator struct {
+	err error
+}
+
+func (s invalidValidator) Validate(_ any) utils.Errors {
+	return utils.Errors{s.err}
+}
+
+// NewUrlValidator adapts URL validator construction to the validator registry.
+func NewUrlValidator(options map[string]string) Validator {
+	if validator, err := UrlValidatorWithOptions(options); err != nil {
+		return invalidValidator{err: err}
+	} else {
+		return validator
+	}
 }
 
 // Validate validates that the associated struct fields are in the proper formatting
@@ -74,10 +90,6 @@ func (s UrlValidator) Validate(value any) utils.Errors {
 		errs         utils.Errors
 		inputUrl, ok = value.(string)
 	)
-
-	if s.configurationError != nil {
-		return utils.Errors{s.configurationError}
-	}
 
 	if !ok {
 		errs = append(errs, fmt.Errorf("expected a string value, got %s", reflect.TypeOf(value)))
