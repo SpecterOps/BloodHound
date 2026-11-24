@@ -189,70 +189,75 @@ const ExploreSearch: React.FC = () => {
     };
 
     return (
-        <div data-testid='explore_search-container' className='h-full min-h-0 w-[600px] flex gap-4 flex-col rounded'>
+        <div data-testid='explore_search-container' className='h-full min-h-0 w-[600px] flex flex-col'>
             {/* Added for Screen Reader */}
             <h2 className='sr-only'>{`${activeTabLabel} tab`}</h2>
-            <div
-                className='h-10 pl-1 w-full flex gap-1 items-center rounded-lg shadow-outer-1 pointer-events-auto bg-[#f4f4f4] dark:bg-[#222222]'
-                data-testid='explore_search-container_header'>
-                <IconButton
-                    aria-label='Toggle search widget'
-                    data-testid='explore_search-container_header_expand-collapse-button'
-                    className='rounded-sm'
-                    onClick={() => {
-                        setShowSearchWidget((v) => !v);
-                    }}>
-                    <FontAwesomeIcon icon={showSearchWidget ? faChevronUp : faChevronDown} />
-                </IconButton>
-                <Tabs
-                    variant='fullWidth'
-                    value={activeTabValue}
-                    onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
-                    onClick={() => setShowSearchWidget(true)}
-                    className='h-10 min-h-10 w-full'
-                    TabIndicatorProps={{
-                        className: 'h-[3px]',
-                    }}>
-                    {tabs.map(({ label, icon }) => (
-                        <Tab
-                            data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
-                            label={label}
-                            key={label}
-                            icon={<FontAwesomeIcon icon={icon} />}
-                            iconPosition='start'
-                            title={label}
-                            className='h-10 min-h-10'
-                        />
-                    ))}
-                </Tabs>
-            </div>
+            <div className='flex min-h-0 flex-col rounded-lg bg-neutral-2 border border-solid border-neutral-light-4 dark:border-neutral-900'>
+                <div
+                    className={cn(
+                        'h-10 shrink-0 w-full flex gap-1 items-center rounded-t-lg pointer-events-auto text-main bg-neutral-2',
+                        { 'rounded-b-lg overflow-y-hidden': !showSearchWidget }
+                    )}
+                    data-testid='explore_search-container_header'>
+                    <IconButton
+                        data-testid='explore_search-container_header_expand-collapse-button'
+                        aria-label={`${showSearchWidget ? 'Hide' : 'Show'} search widget`}
+                        className='mx-2 rounded-sm'
+                        onClick={() => {
+                            setShowSearchWidget((v) => !v);
+                        }}>
+                        <FontAwesomeIcon icon={showSearchWidget ? faChevronUp : faChevronDown} size='sm' />
+                    </IconButton>
+                    <Tabs
+                        variant='fullWidth'
+                        value={activeTabValue}
+                        onChange={(e, newTabIdx) => handleTabChange(newTabIdx)}
+                        onClick={() => setShowSearchWidget(true)}
+                        className='h-10 min-h-10 w-full'
+                        TabIndicatorProps={{
+                            className: 'h-[3px]',
+                        }}>
+                        {tabs.map(({ label, icon }) => (
+                            <Tab
+                                data-testid={`explore_search-container_header_${label.toLowerCase()}-tab`}
+                                label={label}
+                                key={label}
+                                icon={<FontAwesomeIcon icon={icon} />}
+                                iconPosition='start'
+                                title={label}
+                                className='h-10 min-h-10'
+                            />
+                        ))}
+                    </Tabs>
+                </div>
 
-            <div
-                className={cn('hidden min-h-0 rounded pointer-events-auto', {
-                    block: showSearchWidget,
-                    'p-2 bg-[#f4f4f4] dark:bg-[#222222]': activeTab !== 'cypher',
-                })}>
-                <TabPanels
-                    tabs={[
-                        // This linting rule is disabled because the elements in this array do not require a key prop.
-                        /* oxlint-disable react-compat/jsx-key */
-                        <NodeSearch nodeSearchState={nodeSearchState} />,
-                        <PathfindingSearch
-                            pathfindingSearchState={pathfindingSearchState}
-                            pathfindingFilterState={pathfindingFilterState}
-                        />,
-                        <CypherSearch
-                            cypherSearchState={cypherSearchState}
-                            autoRun={autoRun}
-                            setAutoRun={handleAutoRunChange}
-                            disableQueryLimit={disableTimeout}
-                            setDisableQueryLimit={handleDisableTimeoutChange}
-                            onQuerySuccess={handleQuerySuccess}
-                        />,
-                        /* oxlint-enable react-compat/jsx-key */
-                    ]}
-                    activeTab={tabMap[activeTab]}
-                />
+                <div
+                    className={cn('hidden min-h-0 rounded-b-lg pointer-events-auto', {
+                        block: showSearchWidget,
+                        'p-2': activeTab !== 'cypher',
+                    })}>
+                    <TabPanels
+                        tabs={[
+                            // This linting rule is disabled because the elements in this array do not require a key prop.
+                            /* oxlint-disable react-compat/jsx-key */
+                            <NodeSearch nodeSearchState={nodeSearchState} />,
+                            <PathfindingSearch
+                                pathfindingSearchState={pathfindingSearchState}
+                                pathfindingFilterState={pathfindingFilterState}
+                            />,
+                            <CypherSearch
+                                cypherSearchState={cypherSearchState}
+                                autoRun={autoRun}
+                                setAutoRun={handleAutoRunChange}
+                                disableQueryLimit={disableTimeout}
+                                setDisableQueryLimit={handleDisableTimeoutChange}
+                                onQuerySuccess={handleQuerySuccess}
+                            />,
+                            /* oxlint-enable react-compat/jsx-key */
+                        ]}
+                        activeTab={tabMap[activeTab]}
+                    />
+                </div>
             </div>
         </div>
     );

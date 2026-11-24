@@ -579,6 +579,22 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 	return graphQuery, nil
 }
 
+// IsCypherQueryTimeout identifies recorded deadline and database timeouts without treating plain cancellations as timeouts.
+func IsCypherQueryTimeout(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, context.DeadlineExceeded) ||
+		util.IsNeoTimeoutError(err) || util.IsPostgresTimeoutError(err) {
+		return true
+	} else if errors.Is(err, context.Canceled) {
+		return false
+	}
+
+	return errors.Is(err, graph.ErrContextTimedOut)
+}
+
 // RawCypherQuery executes the given PreparedQuery and returns a model.UnifiedGraph or any error encountered during
 // query execution.
 func (s *GraphQuery) RawCypherQuery(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
@@ -615,6 +631,12 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, primaryDisplayKinds gra
 		err = s.Graph.ReadTransaction(ctx, txDelegate)
 	}
 
+	// Capture the context error at query completion. A deadline reached during the
+	// subsequent audit write must not turn an earlier query failure into a timeout.
+	if queryContextErr := ctx.Err(); err != nil && queryContextErr != nil && !errors.Is(err, queryContextErr) {
+		err = errors.Join(err, queryContextErr)
+	}
+
 	slog.InfoContext(
 		ctx,
 		"Executed user cypher query",
@@ -624,13 +646,13 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, primaryDisplayKinds gra
 	)
 
 	if err != nil {
-		// Log query details if neo4j times out
-		if util.IsNeoTimeoutError(err) {
+		if IsCypherQueryTimeout(err) {
 			slog.ErrorContext(
 				ctx,
-				"Neo4j timed out while executing cypher query",
-				slog.String("query", pQuery.StrippedQuery),
+				"Timed out while executing cypher query",
 				slog.Int64("fitness", pQuery.complexity.RelativeFitness),
+				attr.Error(err),
+				slog.Duration("elapsed", time.Since(start)),
 			)
 		} else {
 			slog.WarnContext(
