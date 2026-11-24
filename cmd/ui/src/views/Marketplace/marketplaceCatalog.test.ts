@@ -33,7 +33,7 @@ describe('Marketplace catalog', () => {
 
     it('contains complete, uniquely identified CE records', () => {
         expect(enterpriseExtensions).toHaveLength(5);
-        expect(communityExtensions).toHaveLength(26);
+        expect(communityExtensions).toHaveLength(34);
         expect(enterpriseIntegrations).toHaveLength(11);
         expect(communityIntegrations).toHaveLength(3);
         expect(developmentExtensions).toHaveLength(8);
