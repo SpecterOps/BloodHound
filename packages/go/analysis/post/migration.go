@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
@@ -30,6 +31,23 @@ import (
 )
 
 func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, migratedRelationships graph.Kinds) error {
+	var (
+		numDeletedRelationships = 0
+		measureDone             = measure.ContextMeasureWithThresholdAndResults(
+			ctx,
+			slog.LevelInfo,
+			"Checked for DCA post-processed edges requiring migration",
+			attr.Namespace("analysis"),
+			attr.Function("MigrationForDCAPostProcessedEdges"),
+			attr.Scope("routine"),
+			slog.String("edge_kinds", strings.Join(migratedRelationships.Strings(), ",")),
+		)
+	)
+
+	defer func() {
+		measureDone(slog.Int("num_deleted_relationships", numDeletedRelationships))
+	}()
+
 	for _, kind := range migratedRelationships {
 		var relationshipIDs []graph.ID
 
@@ -74,6 +92,7 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 			}
 
 			// Output the measurement if there is no deletion error
+			numDeletedRelationships += len(relationshipIDs)
 			measuref()
 		}
 	}

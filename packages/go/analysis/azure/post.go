@@ -184,6 +184,16 @@ func fetchReadWriteServicePrincipals(tx graph.Transaction, relationship graph.Ki
 }
 
 func aggregateSourceReadWriteServicePrincipals(tx graph.Transaction, tenantContainsServicePrincipalRelationships []*graph.Relationship, relationship graph.Kind) (graph.NodeSet, error) {
+	defer measure.LogAndMeasure(
+		slog.LevelInfo,
+		"Fetching source service principals for MS Graph permission",
+		attr.Namespace("analysis"),
+		attr.Function("aggregateSourceReadWriteServicePrincipals"),
+		attr.Scope("routine"),
+		slog.String("permission", relationship.String()),
+		slog.Int("num_queries", len(tenantContainsServicePrincipalRelationships)),
+	)()
+
 	sourceNodes := graph.NewNodeSet()
 	for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
 		if sourceServicePrincipals, err := fetchReadWriteServicePrincipals(tx, relationship, tenantContainsServicePrincipalRelationship.EndID); err != nil {
@@ -228,6 +238,15 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPos
 		sink := post.NewFilteredRelationshipSink(ctx, "Azure App Role Assignments Post Processing", db, appRoleAssignmentTracker)
 		defer sink.Abort()
 
+		slog.InfoContext(
+			ctx,
+			"Post-processing App Role Assignments for tenants",
+			attr.Namespace("analysis"),
+			attr.Function("AppRoleAssignments"),
+			attr.Scope("process"),
+			slog.Int("num_tenants", tenants.Len()),
+		)
+
 		for _, tenant := range tenants {
 			if err := postAppRoleAssignmentsForTenant(ctx, db, sink, tenant); err != nil {
 				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
@@ -239,25 +258,78 @@ func AppRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPos
 }
 
 func postAppRoleAssignmentsForTenant(ctx context.Context, db graph.Database, sink *post.FilteredRelationshipSink, tenant *graph.Node) error {
+	var (
+		numTenantServicePrincipals = 0
+		measureDone                = measure.ContextLogAndMeasureWithResults(
+			ctx,
+			slog.LevelInfo,
+			"Post-processing App Role Assignments for tenant",
+			attr.Namespace("analysis"),
+			attr.Function("postAppRoleAssignmentsForTenant"),
+			attr.Scope("routine"),
+			slog.Int64("tenant_id", tenant.ID.Int64()),
+		)
+	)
+
+	defer func() {
+		measureDone(slog.Int("num_service_principals", numTenantServicePrincipals))
+	}()
+
 	return db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if tenantContainsServicePrincipalRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.ServicePrincipal); err != nil {
+		tenantContainsServicePrincipalRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.ServicePrincipal)
+		if err != nil {
 			return err
-		} else if err := postAZMGApplicationReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGAppRoleAssignmentReadWriteAllEdges(ctx, db, sink, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGDirectoryReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGGroupReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGGroupMemberReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGRoleManagementReadWriteDirectoryEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAZMGServicePrincipalEndpointReadWriteAllEdges(ctx, db, sink, tenantContainsServicePrincipalRelationships); err != nil {
-			return err
-		} else if err := postAddSecret(ctx, db, sink, tenant); err != nil {
-			return err
+		}
+
+		numTenantServicePrincipals = len(tenantContainsServicePrincipalRelationships)
+
+		steps := []struct {
+			name string
+			run  func() error
+		}{
+			{"postAZMGApplicationReadWriteAllEdges", func() error {
+				return postAZMGApplicationReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships)
+			}},
+			{"postAZMGAppRoleAssignmentReadWriteAllEdges", func() error {
+				return postAZMGAppRoleAssignmentReadWriteAllEdges(ctx, db, sink, tenantContainsServicePrincipalRelationships)
+			}},
+			{"postAZMGDirectoryReadWriteAllEdges", func() error {
+				return postAZMGDirectoryReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships)
+			}},
+			{"postAZMGGroupReadWriteAllEdges", func() error {
+				return postAZMGGroupReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships)
+			}},
+			{"postAZMGGroupMemberReadWriteAllEdges", func() error {
+				return postAZMGGroupMemberReadWriteAllEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships)
+			}},
+			{"postAZMGRoleManagementReadWriteDirectoryEdges", func() error {
+				return postAZMGRoleManagementReadWriteDirectoryEdges(ctx, db, sink, tenant, tenantContainsServicePrincipalRelationships)
+			}},
+			{"postAZMGServicePrincipalEndpointReadWriteAllEdges", func() error {
+				return postAZMGServicePrincipalEndpointReadWriteAllEdges(ctx, db, sink, tenantContainsServicePrincipalRelationships)
+			}},
+			{"postAddSecret", func() error {
+				return postAddSecret(ctx, db, sink, tenant)
+			}},
+		}
+
+		for _, step := range steps {
+			stepMeasureDone := measure.ContextLogAndMeasure(
+				ctx,
+				slog.LevelInfo,
+				"Post-processing App Role Assignments step",
+				attr.Namespace("analysis"),
+				attr.Function(step.name),
+				attr.Scope("routine"),
+				slog.Int64("tenant_id", tenant.ID.Int64()),
+			)
+
+			err := step.run()
+			stepMeasureDone()
+
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -271,6 +343,17 @@ func postAZMGApplicationReadWriteAllEdges(ctx context.Context, db graph.Database
 		} else if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.ApplicationReadWriteAll); err != nil {
 			return err
 		} else {
+			slog.InfoContext(
+				ctx,
+				"App Role Assignments step inputs",
+				attr.Namespace("analysis"),
+				attr.Function("postAZMGApplicationReadWriteAllEdges"),
+				attr.Scope("routine"),
+				slog.String("permission", azure.ApplicationReadWriteAll.String()),
+				slog.Int("num_sources", sourceNodes.Len()),
+				slog.Int("num_targets", len(tenantContainsServicePrincipalRelationships)+len(tenantContainsAppRelationships)),
+			)
+
 			for _, targetRelationship := range append(tenantContainsServicePrincipalRelationships, tenantContainsAppRelationships...) {
 				for _, sourceNode := range sourceNodes {
 					sink.Submit(ctx, post.EnsureRelationshipJob{
@@ -297,6 +380,17 @@ func postAZMGAppRoleAssignmentReadWriteAllEdges(ctx context.Context, db graph.Da
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.AppRoleAssignmentReadWriteAll); err != nil {
 			return err
 		} else {
+			slog.InfoContext(
+				ctx,
+				"App Role Assignments step inputs",
+				attr.Namespace("analysis"),
+				attr.Function("postAZMGAppRoleAssignmentReadWriteAllEdges"),
+				attr.Scope("routine"),
+				slog.String("permission", azure.AppRoleAssignmentReadWriteAll.String()),
+				slog.Int("num_sources", sourceNodes.Len()),
+				slog.Int("num_targets", len(tenantContainsServicePrincipalRelationships)),
+			)
+
 			for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
 				for _, sourceNode := range sourceNodes {
 					sink.Submit(ctx, post.EnsureRelationshipJob{
@@ -319,6 +413,17 @@ func postAZMGDirectoryReadWriteAllEdges(ctx context.Context, db graph.Database, 
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
 		} else {
+			slog.InfoContext(
+				ctx,
+				"App Role Assignments step inputs",
+				attr.Namespace("analysis"),
+				attr.Function("postAZMGDirectoryReadWriteAllEdges"),
+				attr.Scope("routine"),
+				slog.String("permission", azure.DirectoryReadWriteAll.String()),
+				slog.Int("num_sources", sourceNodes.Len()),
+				slog.Int("num_targets", len(tenantContainsGroupRelationships)),
+			)
+
 			for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
 				for _, sourceNode := range sourceNodes {
 					sink.Submit(ctx, post.EnsureRelationshipJob{
@@ -347,6 +452,17 @@ func postAZMGGroupReadWriteAllEdges(ctx context.Context, db graph.Database, sink
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
 		} else {
+			slog.InfoContext(
+				ctx,
+				"App Role Assignments step inputs",
+				attr.Namespace("analysis"),
+				attr.Function("postAZMGGroupReadWriteAllEdges"),
+				attr.Scope("routine"),
+				slog.String("permission", azure.GroupReadWriteAll.String()),
+				slog.Int("num_sources", sourceNodes.Len()),
+				slog.Int("num_targets", len(tenantContainsGroupRelationships)),
+			)
+
 			for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
 				for _, sourceNode := range sourceNodes {
 					sink.Submit(ctx, post.EnsureRelationshipJob{
@@ -375,6 +491,17 @@ func postAZMGGroupMemberReadWriteAllEdges(ctx context.Context, db graph.Database
 		} else if tenantContainsGroupRelationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, tenant); err != nil {
 			return err
 		} else {
+			slog.InfoContext(
+				ctx,
+				"App Role Assignments step inputs",
+				attr.Namespace("analysis"),
+				attr.Function("postAZMGGroupMemberReadWriteAllEdges"),
+				attr.Scope("routine"),
+				slog.String("permission", azure.GroupMemberReadWriteAll.String()),
+				slog.Int("num_sources", sourceNodes.Len()),
+				slog.Int("num_targets", len(tenantContainsGroupRelationships)),
+			)
+
 			for _, tenantContainsGroupRelationship := range tenantContainsGroupRelationships {
 				for _, sourceNode := range sourceNodes {
 					sink.Submit(ctx, post.EnsureRelationshipJob{
@@ -422,7 +549,19 @@ func postAZMGRoleManagementReadWriteDirectoryEdges(ctx context.Context, db graph
 			return cursor.Error()
 		}); err != nil {
 			return err
-		} else if roleManagementSources.Cardinality() == 0 {
+		}
+
+		slog.InfoContext(
+			ctx,
+			"App Role Assignments step inputs",
+			attr.Namespace("analysis"),
+			attr.Function("postAZMGRoleManagementReadWriteDirectoryEdges"),
+			attr.Scope("routine"),
+			slog.String("permission", azure.RoleManagementReadWriteDirectory.String()),
+			slog.Uint64("num_sources", roleManagementSources.Cardinality()),
+		)
+
+		if roleManagementSources.Cardinality() == 0 {
 			return ctx.Err()
 		}
 
@@ -453,6 +592,17 @@ func postAZMGServicePrincipalEndpointReadWriteAllEdges(ctx context.Context, db g
 		if sourceNodes, err := aggregateSourceReadWriteServicePrincipals(tx, tenantContainsServicePrincipalRelationships, azure.ServicePrincipalEndpointReadWriteAll); err != nil {
 			return err
 		} else {
+			slog.InfoContext(
+				ctx,
+				"App Role Assignments step inputs",
+				attr.Namespace("analysis"),
+				attr.Function("postAZMGServicePrincipalEndpointReadWriteAllEdges"),
+				attr.Scope("routine"),
+				slog.String("permission", azure.ServicePrincipalEndpointReadWriteAll.String()),
+				slog.Int("num_sources", sourceNodes.Len()),
+				slog.Int("num_targets", len(tenantContainsServicePrincipalRelationships)),
+			)
+
 			for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
 				for _, sourceNode := range sourceNodes {
 					sink.Submit(ctx, post.EnsureRelationshipJob{
@@ -475,16 +625,18 @@ func postAddSecret(ctx context.Context, db graph.Database, sink *post.FilteredRe
 		} else if tenantAppsAndSPs, err := TenantApplicationsAndServicePrincipals(tx, tenant); err != nil {
 			return err
 		} else {
+			slog.InfoContext(
+				ctx,
+				"App Role Assignments step inputs",
+				attr.Namespace("analysis"),
+				attr.Function("postAddSecret"),
+				attr.Scope("routine"),
+				slog.Int("num_sources", addSecretRoles.Len()),
+				slog.Int("num_targets", tenantAppsAndSPs.Len()),
+			)
+
 			for _, role := range addSecretRoles {
 				for _, target := range tenantAppsAndSPs {
-					slog.DebugContext(
-						ctx,
-						"Adding AZAddSecret edge from role to target",
-						slog.String("role_id", role.ID.String()),
-						slog.String("target_kinds", strings.Join(target.Kinds.Strings(), ",")),
-						slog.Uint64("target_id", target.ID.Uint64()),
-					)
-
 					sink.Submit(ctx, post.EnsureRelationshipJob{
 						FromID: role.ID,
 						ToID:   target.ID,
@@ -641,9 +793,24 @@ func postAzureResetPassword(ctx context.Context, db graph.Database, sink *post.F
 			return err
 		} else if pwResetRoles.Len() == 0 {
 			return nil
-		} else if targetRoleAssignments, err := resetPasswordTargetRoleAssignments(tx, tenant, roleAssignments); err != nil {
-			return err
 		} else {
+			targetsMeasureDone := measure.ContextLogAndMeasure(
+				ctx,
+				slog.LevelInfo,
+				"Fetching active and eligible role members for AZResetPassword targets",
+				attr.Namespace("analysis"),
+				attr.Function("resetPasswordTargetRoleAssignments"),
+				attr.Scope("routine"),
+				slog.Int64("tenant_id", tenant.ID.Int64()),
+			)
+
+			targetRoleAssignments, err := resetPasswordTargetRoleAssignments(tx, tenant, roleAssignments)
+			targetsMeasureDone()
+
+			if err != nil {
+				return err
+			}
+
 			// Use the combined active-and-eligible view to check for resettable targets,
 			// but do not modify the original roleAssignments. This ensures that
 			// the original roleAssignments is passed to other post-processing functions without mutations specific to this operation.
@@ -921,23 +1088,55 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPo
 		sink := post.NewFilteredRelationshipSink(ctx, "Azure User Role Assignments Post Processing", db, userRoleAssignmentTracker)
 		defer sink.Abort()
 
-		for _, tenant := range tenantNodes {
-			if roleAssignments, err := FetchTenantRoleAssignments(ctx, db, tenant); err != nil {
-				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
-			} else {
-				if err := postAzureResetPassword(ctx, db, sink, tenant, roleAssignments); err != nil {
-					return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
-				} else {
-					postAzureGlobalAdmins(ctx, sink, roleAssignments, tenant)
-					postAzurePrivilegedRoleAdmins(ctx, sink, roleAssignments, tenant)
-					postAzurePrivilegedAuthAdmins(ctx, sink, roleAssignments, tenant)
+		slog.InfoContext(
+			ctx,
+			"Post-processing User Role Assignments for tenants",
+			attr.Namespace("analysis"),
+			attr.Function("UserRoleAssignments"),
+			attr.Scope("process"),
+			slog.Int("num_tenants", tenantNodes.Len()),
+		)
 
-					if err := postAzureAddMembers(ctx, sink, roleAssignments); err != nil {
-						slog.Error("Azure AddMember Post-Processing Failure", attr.Error(err))
-						return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
-					}
-				}
+		for _, tenant := range tenantNodes {
+			var (
+				tenantIDAttr         = slog.Int64("tenant_id", tenant.ID.Int64())
+				tenantMeasureDone    = measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Post-processing User Role Assignments for tenant", attr.Namespace("analysis"), attr.Function("UserRoleAssignments"), attr.Scope("routine"), tenantIDAttr)
+				fetchMeasureDone     = measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Fetching tenant role assignments", attr.Namespace("analysis"), attr.Function("FetchTenantRoleAssignments"), attr.Scope("routine"), tenantIDAttr)
+				roleAssignments, err = FetchTenantRoleAssignments(ctx, db, tenant)
+			)
+
+			fetchMeasureDone()
+
+			if err != nil {
+				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
 			}
+
+			resetPasswordMeasureDone := measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Post-processing AZResetPassword edges", attr.Namespace("analysis"), attr.Function("postAzureResetPassword"), attr.Scope("routine"), tenantIDAttr)
+			err = postAzureResetPassword(ctx, db, sink, tenant, roleAssignments)
+			resetPasswordMeasureDone()
+
+			if err != nil {
+				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
+			}
+
+			adminRolesMeasureDone := measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Post-processing AZGlobalAdmin, AZPrivilegedRoleAdmin and AZPrivilegedAuthAdmin edges", attr.Namespace("analysis"), attr.Function("postAzureGlobalAdmins"), attr.Scope("routine"), tenantIDAttr)
+			postAzureGlobalAdmins(ctx, sink, roleAssignments, tenant)
+			postAzurePrivilegedRoleAdmins(ctx, sink, roleAssignments, tenant)
+			postAzurePrivilegedAuthAdmins(ctx, sink, roleAssignments, tenant)
+			adminRolesMeasureDone()
+
+			addMembersMeasureDone := measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Post-processing AZAddMembers edges", attr.Namespace("analysis"), attr.Function("postAzureAddMembers"), attr.Scope("routine"), tenantIDAttr,
+				slog.Int("num_groups", roleAssignments.TenantPrincipals.Get(azure.Group).Len()),
+			)
+			err = postAzureAddMembers(ctx, sink, roleAssignments)
+			addMembersMeasureDone()
+
+			if err != nil {
+				slog.ErrorContext(ctx, "Azure AddMember Post-Processing Failure", attr.Error(err))
+				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
+			}
+
+			tenantMeasureDone()
 		}
 
 		return sink.Stats(), sink.Done()

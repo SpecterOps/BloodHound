@@ -22,6 +22,7 @@ import (
 	"log/slog"
 	"slices"
 
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
 	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/azure"
@@ -228,8 +229,13 @@ func NewTenantRoleAssignments(tenant *graph.Node, tenantPrincipals graph.NodeKin
 	usersWithoutRoles.AndNot(usersWithAnyRole)
 
 	slog.Info("Tenant Role Assignment Details",
+		slog.Int64("tenant_id", tenant.ID.Int64()),
 		slog.Uint64("num_users", users.Cardinality()),
+		slog.Uint64("num_users_with_roles", usersWithAnyRole.Cardinality()),
 		slog.Uint64("num_service_principals", servicePrincipals.Cardinality()),
+		slog.Int("num_groups", tenantPrincipals.Get(azure.Group).Len()),
+		slog.Int("num_roles_with_members", len(roleMap)),
+		slog.Uint64("num_role_assignable_group_member_users", roleAssignableGroupMembership.Cardinality()),
 	)
 
 	return RoleAssignments{
@@ -251,19 +257,44 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 	}
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
-		if tenantPrincipalsNodeSet, err := TenantPrincipals(tx, tenant); err != nil && !graph.IsErrNotFound(err) {
+		var (
+			tenantIDAttr                 = slog.Int64("tenant_id", tenant.ID.Int64())
+			principalsMeasureDone        = measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Fetching tenant principals", attr.Namespace("analysis"), attr.Function("TenantPrincipals"), attr.Scope("routine"), tenantIDAttr)
+			tenantPrincipalsNodeSet, err = TenantPrincipals(tx, tenant)
+		)
+
+		if err != nil && !graph.IsErrNotFound(err) {
 			return err
-		} else if roles, err := TenantRoles(tx, tenant); err != nil {
+		}
+
+		tenantPrincipalsNodeKindSet := tenantPrincipalsNodeSet.KindSet()
+
+		principalsMeasureDone(
+			slog.Int("num_users", tenantPrincipalsNodeKindSet.Get(azure.User).Len()),
+			slog.Int("num_groups", tenantPrincipalsNodeKindSet.Get(azure.Group).Len()),
+			slog.Int("num_service_principals", tenantPrincipalsNodeKindSet.Get(azure.ServicePrincipal).Len()),
+		)
+
+		rolesMeasureDone := measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Fetching tenant roles", attr.Namespace("analysis"), attr.Function("TenantRoles"), attr.Scope("routine"), tenantIDAttr)
+
+		if roles, err := TenantRoles(tx, tenant); err != nil {
 			return err
 		} else {
 			var (
-				tenantPrincipalsNodeKindSet   = tenantPrincipalsNodeSet.KindSet()
 				roleAssignableGroupMembership = cardinality.NewBitmap64()
 				roleMap                       = map[string]cardinality.Duplex[uint64]{}
+				tenantGroups                  = tenantPrincipalsNodeKindSet.Get(azure.Group)
 			)
 
+			rolesMeasureDone(slog.Int("num_roles", roles.Len()))
+
 			// for each of the role assignable groups returned, fetch the users who are members
-			for _, group := range tenantPrincipalsNodeKindSet.Get(azure.Group) {
+			groupsMeasureDone := measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Fetching role assignable group member users",
+				attr.Namespace("analysis"), attr.Function("FetchRoleAssignableGroupMembersUsers"), attr.Scope("routine"), tenantIDAttr,
+				slog.Int("num_traversals", tenantGroups.Len()),
+			)
+
+			for _, group := range tenantGroups {
 				if members, err := FetchRoleAssignableGroupMembersUsers(tx, group, 0, 0); err != nil {
 					return err
 				} else {
@@ -272,19 +303,37 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 				}
 			}
 
+			groupsMeasureDone(slog.Uint64("num_users", roleAssignableGroupMembership.Cardinality()))
+
+			roleMembersMeasureDone := measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Fetching tenant role members",
+				attr.Namespace("analysis"), attr.Function("RoleMembers"), attr.Scope("routine"), tenantIDAttr,
+				slog.Int("num_roles", roles.Len()),
+			)
+
 			for _, node := range roles {
 				if roleTemplateID, err := node.Properties.Get(azure.RoleTemplateID.String()).String(); err != nil {
 					if !graph.IsErrPropertyNotFound(err) {
 						return err
 					}
-				} else if members, err := RoleMembers(tx, tenant, roleTemplateID); err != nil {
-					if !graph.IsErrNotFound(err) {
-						return err
-					}
 				} else {
-					roleMap[roleTemplateID] = members.IDBitmap()
+					roleMeasureDone := measure.ContextMeasureWithThresholdAndResults(ctx, slog.LevelInfo, "Fetched tenant role members",
+						attr.Namespace("analysis"), attr.Function("RoleMembers"), attr.Scope("routine"), tenantIDAttr,
+						slog.Int64("role_id", node.ID.Int64()),
+						slog.String("role_template_id", roleTemplateID),
+					)
+
+					if members, err := RoleMembers(tx, tenant, roleTemplateID); err != nil {
+						if !graph.IsErrNotFound(err) {
+							return err
+						}
+					} else {
+						roleMap[roleTemplateID] = members.IDBitmap()
+						roleMeasureDone(slog.Int("num_members", members.Len()))
+					}
 				}
 			}
+
+			roleMembersMeasureDone(slog.Int("num_roles_with_members", len(roleMap)))
 
 			roleAssignments = NewTenantRoleAssignments(tenant, tenantPrincipalsNodeKindSet, roleAssignableGroupMembership, roleMap)
 			return nil
