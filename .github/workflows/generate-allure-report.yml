@@ -32,6 +32,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout source code for this repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # ratchet:actions/checkout@v7
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
