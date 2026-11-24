@@ -127,7 +127,6 @@ import PublishedTo from './PublishedTo/PublishedTo';
 import ReadGMSAPassword from './ReadGMSAPassword/ReadGMSAPassword';
 import ReadLAPSPassword from './ReadLAPSPassword/ReadLAPSPassword';
 import RootCAFor from './RootCAFor/RootCAFor';
-import SQLAdmin from './SQLAdmin/SQLAdmin';
 import SameForestTrust from './SameForestTrust/SameForestTrust';
 import ServerIs from './ServerIs/ServerIs';
 import SpoofSIDHistory from './SpoofSIDHistory/SpoofSIDHistory';
@@ -186,7 +185,6 @@ const EdgeInfoComponents = {
     GPLink: GPLink,
     AddAllowedToAct: AddAllowedToAct,
     AllowedToAct: AllowedToAct,
-    SQLAdmin: SQLAdmin,
     ReadGMSAPassword: ReadGMSAPassword,
     HasSIDHistory: HasSIDHistory,
     CrossForestTrust: CrossForestTrust,

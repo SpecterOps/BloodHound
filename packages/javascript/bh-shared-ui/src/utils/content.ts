@@ -789,11 +789,6 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                 },
                 {
                     id,
-                    label: 'SQL Admin Users',
-                    queryType: 'computer-sql_admin_users',
-                },
-                {
-                    id,
                     label: 'Constrained Delegation Users',
                     queryType: 'computer-constrained_delegation_users',
                 },
@@ -1111,11 +1106,6 @@ export const allSections: Partial<Record<EntityKinds, (id: string) => EntityInfo
                     id,
                     label: 'DCOM Privileges',
                     queryType: 'user-dcom_privileges',
-                },
-                {
-                    id,
-                    label: 'SQL Admin Rights',
-                    queryType: 'user-sql_admin_rights',
                 },
                 {
                     id,
@@ -1738,8 +1728,6 @@ export const entityRelationshipEndpoints = {
             .then((res) => res.data),
     'computer-dcom_users': ({ id, skip, limit, type }) =>
         apiClient.getComputerDCOMUsersV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'computer-sql_admin_users': ({ id, skip, limit, type }) =>
-        apiClient.getComputerSQLAdminsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'computer-constrained_delegation_users': ({ id, skip, limit, type }) =>
         apiClient
             .getComputerConstrainedDelegationRightsV2(id, skip, limit, type, { signal: controller.signal })
@@ -1888,8 +1876,6 @@ export const entityRelationshipEndpoints = {
         apiClient.getUserPSRemoteRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-dcom_privileges': ({ id, skip, limit, type }) =>
         apiClient.getUserDCOMRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
-    'user-sql_admin_rights': ({ id, skip, limit, type }) =>
-        apiClient.getUserSQLAdminRightsV2(id, skip, limit, type, { signal: controller.signal }).then((res) => res.data),
     'user-constrained_delegation_privileges': ({ id, skip, limit, type }) =>
         apiClient
             .getUserConstrainedDelegationRightsV2(id, skip, limit, type, { signal: controller.signal })

@@ -53,6 +53,27 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 	}
 }
 
+func Version_9110_Migration(ctx context.Context, db graph.Database) error {
+	defer measure.LogAndMeasureWithThreshold(slog.LevelInfo, "Migration to remove SQLAdmin relationships")()
+
+	return db.BatchOperation(ctx, func(batch graph.Batch) error {
+		relationships, err := ops.FetchRelationships(batch.Relationships().Filter(
+			query.Kind(query.Relationship(), graph.StringKind("SQLAdmin")),
+		))
+		if err != nil {
+			return err
+		}
+
+		for _, relationship := range relationships {
+			if err := batch.DeleteRelationship(relationship.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
 // Version_930_Migration returns a migration that backfills custom_node_kinds rows for any node kind
 // that exists in the graph but has no corresponding entry in either custom_node_kinds or schema_node_kinds.
 // This covers node kinds that entered the graph through schemaless Open Graph ingest, which were never written
@@ -744,6 +765,10 @@ func GetManifest(nodeKindData schemalessNodeKindBackfillData) []Migration {
 		{
 			Version: version.Version{Major: 9, Minor: 3, Patch: 0},
 			Execute: Version_930_Migration(nodeKindData),
+		},
+		{
+			Version: version.Version{Major: 9, Minor: 11, Patch: 0},
+			Execute: Version_9110_Migration,
 		},
 	}
 }

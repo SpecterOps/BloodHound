@@ -1256,32 +1256,6 @@ func CreateOutboundLocalGroupPathDelegate(edge graph.Kind) PathDelegate {
 	}
 }
 
-func CreateSQLAdminPathDelegate(direction graph.Direction) PathDelegate {
-	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
-		return ops.TraversePaths(tx, ops.TraversalPlan{
-			Root:      node,
-			Direction: direction,
-			BranchQuery: func() graph.Criteria {
-				return query.Kind(query.Relationship(), ad.SQLAdmin)
-			},
-		})
-	}
-}
-
-func CreateSQLAdminListDelegate(direction graph.Direction) ListDelegate {
-	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
-		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
-			Root:      node,
-			Direction: direction,
-			BranchQuery: func() graph.Criteria {
-				return query.Kind(query.Relationship(), ad.SQLAdmin)
-			},
-			Skip:  skip,
-			Limit: limit,
-		})
-	}
-}
-
 func CreateConstrainedDelegationPathDelegate(direction graph.Direction) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
