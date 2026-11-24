@@ -159,18 +159,19 @@ func (s *FilteredRelationshipSink) deltaFilterWorker(ctx context.Context, filter
 // deleteMissingEdges removes any lingering edges that were not part of the current operation. This ensures
 // that only valid relationships remain after the sink completes its work.
 func (s *FilteredRelationshipSink) deleteMissingEdges(ctx context.Context) error {
-	deletedEdges := s.edgeTracker.Deleted()
-
-	defer measure.ContextMeasureWithThreshold(
-		ctx,
-		slog.LevelInfo,
-		"Deleted stale post-processed relationships",
-		attr.Namespace("analysis"),
-		attr.Function("FilteredRelationshipSink.deleteMissingEdges"),
-		attr.Scope("routine"),
-		slog.String("operation", s.operationName),
-		slog.Int("num_deleted_relationships", len(deletedEdges)),
-	)()
+	var (
+		deletedEdges = s.edgeTracker.Deleted()
+		measureDone  = measure.ContextMeasureWithThresholdAndResults(
+			ctx,
+			slog.LevelInfo,
+			"Deleting stale post-processed relationships",
+			attr.Namespace("analysis"),
+			attr.Function("FilteredRelationshipSink.deleteMissingEdges"),
+			attr.Scope("routine"),
+			slog.String("operation", s.operationName),
+			slog.Int("num_candidate_relationships", len(deletedEdges)),
+		)
+	)
 
 	if err := s.db.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, deletedEdge := range deletedEdges {
@@ -181,8 +182,12 @@ func (s *FilteredRelationshipSink) deleteMissingEdges(ctx context.Context) error
 
 		return nil
 	}); err != nil {
+		// Report the outcome explicitly so candidates are not presented as completed deletions.
+		measureDone(slog.String("outcome", "failed"))
 		return err
 	}
+
+	measureDone(slog.String("outcome", "succeeded"), slog.Int("num_deleted_relationships", len(deletedEdges)))
 
 	postOperationsVec.With(map[string]string{
 		"kind":      "all",
