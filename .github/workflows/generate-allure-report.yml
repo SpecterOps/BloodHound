@@ -76,7 +76,7 @@ jobs:
           fi
 
       - name: Generate new report
-        run: allure generate --config allurerc.json
+        run: allure generate --clean --config allurerc.json
 
       - name: Deploy report to Github Pages
         if: always()
