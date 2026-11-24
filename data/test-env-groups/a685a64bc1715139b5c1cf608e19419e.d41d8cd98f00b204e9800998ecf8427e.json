@@ -1,0 +1,1 @@
+{"id":"a685a64bc1715139b5c1cf608e19419e.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/DebouncedAnnouncement.test.tsx#DebouncedAnnouncement cancels pending announcements when unmounted","name":"cancels pending announcements when unmounted","status":"passed","testResultsByEnv":{"default":"a18138dccbfe8ef80f425c1f4f745f1a"}}

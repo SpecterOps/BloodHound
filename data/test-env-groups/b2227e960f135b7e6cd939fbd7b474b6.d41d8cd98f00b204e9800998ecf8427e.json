@@ -1,0 +1,1 @@
+{"id":"b2227e960f135b7e6cd939fbd7b474b6.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/DataQuality/utils/getStatsComponent.test.tsx#getStatsComponent returns null for azure without an id","name":"returns null for azure without an id","status":"passed","testResultsByEnv":{"default":"550f530ddc061a195f2cf51b5516368b"}}

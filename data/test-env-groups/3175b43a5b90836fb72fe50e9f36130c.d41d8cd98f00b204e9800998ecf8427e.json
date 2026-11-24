@@ -1,0 +1,1 @@
+{"id":"3175b43a5b90836fb72fe50e9f36130c.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useLocalStorage.test.ts#useLocalStorage initial value writes initialValue to localStorage when the key is absent","name":"writes initialValue to localStorage when the key is absent","status":"passed","testResultsByEnv":{"default":"769d5b7c53b4e42f7eac42e107870c89"}}

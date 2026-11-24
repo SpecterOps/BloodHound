@@ -1,0 +1,1 @@
+{"id":"e793ad21cf77cadbac0af55fbe655a62.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/Disable2FADialog/Disable2FADialog.test.tsx#Enable2FADialog user clicks \"Cancel\" button should call \"onCancel one time\"","name":"should call \"onCancel one time\"","status":"passed","testResultsByEnv":{"default":"66a09efbc88735e168dca31567860b37"}}

@@ -1,0 +1,1 @@
+{"id":"d276dd30d8a067b8a21c65d7a67a92ee.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/saml_test.go:TestManagementResource_ServeSigningCertificate","name":"TestManagementResource_ServeSigningCertificate","status":"passed","testResultsByEnv":{"default":"c3e6884b30c357e7ef660c1fb400edba"}}

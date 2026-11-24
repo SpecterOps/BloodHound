@@ -1,0 +1,1 @@
+{"id":"4717707e3fafecba5c345ff2b7bcdb7b.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/routes/loginRedirect.test.ts#login destinations falls back when the saved destination is unsafe or would loop: /login","name":"falls back when the saved destination is unsafe or would loop: /login","status":"passed","testResultsByEnv":{"default":"9e86319df6e68ca80669c4cc25c3a242"}}

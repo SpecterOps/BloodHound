@@ -1,0 +1,1 @@
+{"id":"1e3548d762202fa5f6c820721c187550.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/OneTimePasscodeForm/OneTimePasscodeForm.test.tsx#OneTimePasscodeForm should call onCancel when return to login button clicked","name":"should call onCancel when return to login button clicked","status":"passed","testResultsByEnv":{"default":"45faf61e287b3ee4a4cf442f60984c72"}}

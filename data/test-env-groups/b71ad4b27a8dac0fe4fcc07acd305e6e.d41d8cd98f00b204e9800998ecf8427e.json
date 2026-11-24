@@ -1,0 +1,1 @@
+{"id":"b71ad4b27a8dac0fe4fcc07acd305e6e.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/graphdb/internal/services/node_test.go:TestService_GetNode_PreservesTemplateErrorsPerKindInfo","name":"TestService_GetNode_PreservesTemplateErrorsPerKindInfo","status":"passed","testResultsByEnv":{"default":"c5a5e756bda8297ee5d9ad31027e1d11"}}

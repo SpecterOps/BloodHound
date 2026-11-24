@@ -1,0 +1,1 @@
+{"id":"b87f79ec35a93e6178b6ebda2acb05db.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/AuthenticationRedirect.test.tsx#authentication deeplink redirects ignores unsafe or looping stored destinations: /login","name":"ignores unsafe or looping stored destinations: /login","status":"passed","testResultsByEnv":{"default":"41d8b875e668a1446bf0b396923aea7e"}}

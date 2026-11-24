@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_allurereport_web_awesome=self.webpackChunk_allurereport_web_awesome||[]).push([[8389],{8389:function(e,r,a){a.d(r,{createTreemapServices:function(){return u.d}});var u=a(1327);a(1471)}}]);

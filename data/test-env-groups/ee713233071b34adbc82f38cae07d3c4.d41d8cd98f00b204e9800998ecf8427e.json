@@ -1,0 +1,1 @@
+{"id":"ee713233071b34adbc82f38cae07d3c4.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/App.test.tsx#app <Inner /> will request feature-flags when the user is fully authenticated","name":"will request feature-flags when the user is fully authenticated","status":"passed","testResultsByEnv":{"default":"2f1ef07ec7c5e354a1636ac48d030af2"}}

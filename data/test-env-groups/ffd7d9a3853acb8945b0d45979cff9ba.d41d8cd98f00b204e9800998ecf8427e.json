@@ -1,0 +1,1 @@
+{"id":"ffd7d9a3853acb8945b0d45979cff9ba.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useSortParams/useSortParams.test.ts#useSortParams clears an ascending sort when sorting the same column","name":"clears an ascending sort when sorting the same column","status":"passed","testResultsByEnv":{"default":"ef6794e9885716114ee8351a4597fcd3"}}

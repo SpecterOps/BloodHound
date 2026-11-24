@@ -1,0 +1,1 @@
+{"id":"af35e542f69fb89e62938a35151a9c82.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useSubNavRoutes.test.tsx#useSubNavRoutes adminOnly gate hides items when the user lacks admin permissions","name":"hides items when the user lacks admin permissions","status":"passed","testResultsByEnv":{"default":"249f441059eaa805c8fff76cb11e766f"}}

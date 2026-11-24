@@ -1,0 +1,1 @@
+{"id":"299d8d8f83ecaac4b85af985867254f3.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/usePrimaryKind.test.ts#usePrimaryKind filters out source and tag kinds before selecting a fallback primary kind","name":"filters out source and tag kinds before selecting a fallback primary kind","status":"passed","testResultsByEnv":{"default":"2680a6929e62e5b9801c53d474a23538"}}

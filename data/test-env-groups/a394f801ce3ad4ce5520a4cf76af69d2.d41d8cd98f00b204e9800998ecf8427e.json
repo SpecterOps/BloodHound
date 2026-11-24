@@ -1,0 +1,1 @@
+{"id":"a394f801ce3ad4ce5520a4cf76af69d2.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/ConfirmationDialog.test.tsx#ConfirmationDialog cancels the confirm reset timer on unmount","name":"cancels the confirm reset timer on unmount","status":"passed","testResultsByEnv":{"default":"def6ae053c63bcffef43010e3f5abcda"}}

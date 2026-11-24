@@ -1,0 +1,1 @@
+{"id":"3d957a1d64ef4f09c793842e0cb5256f.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/auth/internal/handlers/authusersessions_test.go:TestHandlers_GetSelf_PreservesLegacyResponse","name":"TestHandlers_GetSelf_PreservesLegacyResponse","status":"passed","testResultsByEnv":{"default":"6d8d540aae0b2ff345afddcac1c7c23a"}}

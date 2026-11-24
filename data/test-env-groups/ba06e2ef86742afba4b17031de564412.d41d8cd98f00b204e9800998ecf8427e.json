@@ -1,0 +1,1 @@
+{"id":"ba06e2ef86742afba4b17031de564412.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/SearchResultItem/SearchResultItem.test.tsx#SearchResultItem falls back to objectId when the label is empty","name":"falls back to objectId when the label is empty","status":"passed","testResultsByEnv":{"default":"94975eb6876b690ed30ff8778faa88d7"}}

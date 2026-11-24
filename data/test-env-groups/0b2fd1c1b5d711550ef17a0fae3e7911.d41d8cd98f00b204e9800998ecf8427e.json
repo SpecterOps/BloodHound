@@ -1,0 +1,1 @@
+{"id":"0b2fd1c1b5d711550ef17a0fae3e7911.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/packages/go/analysis/ad/adcscache_test.go:TestGetChainedDomains_IgnoresForestHosting","name":"TestGetChainedDomains_IgnoresForestHosting","status":"passed","testResultsByEnv":{"default":"da5db4f72ffc8c40992622a528f4e67b"}}

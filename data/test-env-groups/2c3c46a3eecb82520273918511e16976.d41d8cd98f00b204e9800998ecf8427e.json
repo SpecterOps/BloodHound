@@ -1,0 +1,1 @@
+{"id":"2c3c46a3eecb82520273918511e16976.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/packages/go/analysis/post/sink_test.go:TestFilteredRelationshipSink_DoneReturnsPruningError","name":"TestFilteredRelationshipSink_DoneReturnsPruningError","status":"passed","testResultsByEnv":{"default":"964e150b3c22fbb8c58da458ee6fd989"}}

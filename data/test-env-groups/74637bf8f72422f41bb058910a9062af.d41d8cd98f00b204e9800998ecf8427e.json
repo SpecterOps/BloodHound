@@ -1,0 +1,1 @@
+{"id":"74637bf8f72422f41bb058910a9062af.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/auth_test.go:TestManagementResource_UpdateUser_DuplicateEmailError","name":"TestManagementResource_UpdateUser_DuplicateEmailError","status":"passed","testResultsByEnv":{"default":"a28841af5c0e6a21ee3248f6ea566882"}}

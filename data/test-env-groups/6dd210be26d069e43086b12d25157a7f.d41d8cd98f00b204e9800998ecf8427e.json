@@ -1,0 +1,1 @@
+{"id":"6dd210be26d069e43086b12d25157a7f.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/packages/go/analysis/post/sink_test.go:TestFilteredRelationshipSink_DonePrunesEmptySuccessfulGeneration","name":"TestFilteredRelationshipSink_DonePrunesEmptySuccessfulGeneration","status":"passed","testResultsByEnv":{"default":"ac3626daaf067498a0a28449a3a09679"}}

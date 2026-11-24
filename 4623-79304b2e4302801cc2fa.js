@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_allurereport_web_awesome=self.webpackChunk_allurereport_web_awesome||[]).push([[4623],{4623:function(e,r,n){n.d(r,{createCynefinServices:function(){return t.t}});var t=n(4247);n(1471)}}]);

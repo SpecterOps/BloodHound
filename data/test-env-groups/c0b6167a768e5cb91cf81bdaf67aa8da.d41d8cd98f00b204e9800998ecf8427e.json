@@ -1,0 +1,1 @@
+{"id":"c0b6167a768e5cb91cf81bdaf67aa8da.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useLocalStorage.test.ts#useLocalStorage initial value returns initialValue when the key is absent from localStorage","name":"returns initialValue when the key is absent from localStorage","status":"passed","testResultsByEnv":{"default":"63dd168f282a32c1800cfa4097df2863"}}

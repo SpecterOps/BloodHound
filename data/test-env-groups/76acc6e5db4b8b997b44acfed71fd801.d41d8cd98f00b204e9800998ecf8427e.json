@@ -1,0 +1,1 @@
+{"id":"76acc6e5db4b8b997b44acfed71fd801.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/DetailsAccordion/DetailsAccordion.test.tsx#<DetailsAccordion /> calls getKey for each item (stable keys hook)","name":"calls getKey for each item (stable keys hook)","status":"passed","testResultsByEnv":{"default":"3f4cd77f34ddaf70d2cd46b5183f71d3"}}
