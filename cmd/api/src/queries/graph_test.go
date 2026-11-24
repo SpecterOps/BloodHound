@@ -18,6 +18,7 @@ package queries_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -207,7 +208,11 @@ func TestIsCypherQueryTimeout(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, testCase.expected, queries.IsCypherQueryTimeout(testCase.queryContext, testCase.err))
+			queryErr := testCase.err
+			if queryErr != nil {
+				queryErr = errors.Join(queryErr, testCase.queryContext.Err())
+			}
+			assert.Equal(t, testCase.expected, queries.IsCypherQueryTimeout(queryErr))
 		})
 	}
 }

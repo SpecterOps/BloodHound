@@ -579,16 +579,16 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 	return graphQuery, nil
 }
 
-// IsCypherQueryTimeout identifies deadline and database timeouts without treating plain cancellations as timeouts.
-func IsCypherQueryTimeout(ctx context.Context, err error) bool {
+// IsCypherQueryTimeout identifies recorded deadline and database timeouts without treating plain cancellations as timeouts.
+func IsCypherQueryTimeout(err error) bool {
 	if err == nil {
 		return false
 	}
 
-	if errors.Is(err, context.DeadlineExceeded) || errors.Is(ctx.Err(), context.DeadlineExceeded) ||
+	if errors.Is(err, context.DeadlineExceeded) ||
 		util.IsNeoTimeoutError(err) || util.IsPostgresTimeoutError(err) {
 		return true
-	} else if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
+	} else if errors.Is(err, context.Canceled) {
 		return false
 	}
 
@@ -631,6 +631,12 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, primaryDisplayKinds gra
 		err = s.Graph.ReadTransaction(ctx, txDelegate)
 	}
 
+	// Capture the context error at query completion. A deadline reached during the
+	// subsequent audit write must not turn an earlier query failure into a timeout.
+	if queryContextErr := ctx.Err(); err != nil && queryContextErr != nil && !errors.Is(err, queryContextErr) {
+		err = errors.Join(err, queryContextErr)
+	}
+
 	slog.InfoContext(
 		ctx,
 		"Executed user cypher query",
@@ -640,7 +646,7 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, primaryDisplayKinds gra
 	)
 
 	if err != nil {
-		if IsCypherQueryTimeout(ctx, err) {
+		if IsCypherQueryTimeout(err) {
 			slog.ErrorContext(
 				ctx,
 				"Timed out while executing cypher query",

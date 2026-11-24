@@ -54,10 +54,10 @@ func handleCypherDBErrors(response http.ResponseWriter, request *http.Request, e
 	if errors.Is(err, errUnauthorizedGraphMutation) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Permission denied: User may not modify the graph.", request), response)
 		return
-	} else if queries.IsCypherQueryTimeout(request.Context(), err) {
+	} else if queries.IsCypherQueryTimeout(err) {
 		errorCategoryLabel = cypherQueryErrorTypeTimeout
 		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, "transaction timed out, reduce query complexity or try again later", request)
-	} else if errors.Is(err, context.Canceled) || errors.Is(request.Context().Err(), context.Canceled) {
+	} else if errors.Is(err, context.Canceled) {
 		errorCategoryLabel = cypherQueryErrorTypeCanceled
 		errorResp = api.BuildErrorResponse(http.StatusInternalServerError, err.Error(), request)
 	} else if errors.Is(err, ops.ErrGraphQueryMemoryLimit) {
