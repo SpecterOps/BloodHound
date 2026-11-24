@@ -27,6 +27,7 @@ parameters:
 get:
   operationId: GetExtensionRetentionPolicy
   summary: Get Extension Retention Policy
+  description: Requires enabled `retention_policies` feature flag. Requires admin permissions.
   tags:
     - Graph Retention Policies
     - Enterprise
@@ -56,7 +57,9 @@ get:
 put:
   operationId: UpdateExtensionRetentionPolicy
   summary: Update Extension Retention Policy
-  description: Creates or updates the given extension policy and returns the saved policy with 200 OK.
+  description: >-
+    Requires enabled `retention_policies` feature flag. Requires admin permissions.
+    Creates or updates the given extension policy and returns the saved policy with 200 OK.
   tags:
     - Graph Retention Policies
     - Enterprise
@@ -99,10 +102,10 @@ patch:
   operationId: PatchExtensionRetentionPolicy
   summary: Enable/Disable Extension Retention Policy
   description: >-
+    Requires enabled `retention_policies` feature flag. Requires admin permissions.
     Changes only the enabled state of an existing extension retention policy,
-    its TTL remains unchanged. Requires admin permissions and the retention_policies feature flag.
-    Returns 404 if the feature flag is disabled, the extension is unknown,
-    or its policy does not exist.
+    its TTL remains unchanged.
+    Returns 404 if the extension is unknown or its policy does not exist.
   tags:
     - Graph Retention Policies
     - Enterprise
@@ -161,6 +164,7 @@ patch:
 delete:
   operationId: DeleteExtensionRetentionPolicy
   summary: Delete Extension Retention Policy
+  description: Requires enabled `retention_policies` feature flag. Requires admin permissions.
   tags:
     - Graph Retention Policies
     - Enterprise

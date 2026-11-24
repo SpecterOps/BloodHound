@@ -304,12 +304,6 @@ var (
 			query.Kind(query.End(), ad.User),
 			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-12344")),
 		query.And(
-			query.Kind(query.Start(), ad.User),
-			query.Equals(query.StartProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-1105"),
-			query.Kind(query.Relationship(), ad.SQLAdmin),
-			query.Kind(query.End(), ad.Computer),
-			query.Equals(query.EndProperty(common.ObjectID.String()), "S-1-5-21-3130019616-2776909439-2417379446-12345")),
-		query.And(
 			query.Kind(query.Start(), ad.Group),
 			query.Equals(query.StartProperty(common.ObjectID.String()), "TESTLAB.LOCAL-S-1-5-32-544"),
 			query.Kind(query.Relationship(), ad.AllExtendedRights),

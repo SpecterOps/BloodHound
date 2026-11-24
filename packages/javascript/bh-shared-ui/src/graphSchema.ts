@@ -112,7 +112,6 @@ export enum ActiveDirectoryRelationshipKind {
     ReadLAPSPassword = 'ReadLAPSPassword',
     ReadGMSAPassword = 'ReadGMSAPassword',
     DumpSMSAPassword = 'DumpSMSAPassword',
-    SQLAdmin = 'SQLAdmin',
     AddAllowedToAct = 'AddAllowedToAct',
     WriteSPN = 'WriteSPN',
     AddKeyCredentialLink = 'AddKeyCredentialLink',
@@ -235,8 +234,6 @@ export function ActiveDirectoryRelationshipKindToDisplay(value: ActiveDirectoryR
             return 'ReadGMSAPassword';
         case ActiveDirectoryRelationshipKind.DumpSMSAPassword:
             return 'DumpSMSAPassword';
-        case ActiveDirectoryRelationshipKind.SQLAdmin:
-            return 'SQLAdmin';
         case ActiveDirectoryRelationshipKind.AddAllowedToAct:
             return 'AddAllowedToAct';
         case ActiveDirectoryRelationshipKind.WriteSPN:
@@ -848,7 +845,6 @@ export function ActiveDirectoryPathfindingEdges(): ActiveDirectoryRelationshipKi
         ActiveDirectoryRelationshipKind.ReadLAPSPassword,
         ActiveDirectoryRelationshipKind.ReadGMSAPassword,
         ActiveDirectoryRelationshipKind.DumpSMSAPassword,
-        ActiveDirectoryRelationshipKind.SQLAdmin,
         ActiveDirectoryRelationshipKind.AddAllowedToAct,
         ActiveDirectoryRelationshipKind.WriteSPN,
         ActiveDirectoryRelationshipKind.AddKeyCredentialLink,

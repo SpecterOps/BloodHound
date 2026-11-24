@@ -38,6 +38,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	oidcservice "github.com/specterops/bloodhound/cmd/api/src/services/oidc"
 	"github.com/specterops/bloodhound/cmd/api/src/utils"
 	"github.com/specterops/bloodhound/cmd/api/src/utils/validation"
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
@@ -46,9 +47,17 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const oidcTokenExchangeBodyLimit = 1 << 20
+const (
+	oidcTokenExchangeBodyLimit     = 1 << 20
+	oidcInvalidIssuerMessage       = "Your SSO provider's issuer URL must be a valid HTTPS URL. Ask your administrator to update it"
+	ssoMisconfigurationMessage     = "Your SSO connection failed due to misconfiguration, please contact your Administrator"
+	oidcInvalidIssuerLogMessage    = "[OIDC] Invalid provider issuer URL"
+	oidcProviderCreationLogMessage = "[OIDC] Failed to create OIDC provider"
+)
 
 var (
+	oidcURLValidator = validation.NewUrlValidator(map[string]string{"httpsOnly": "true", "hostnameRequired": "true"})
+
 	ErrOIDCProviderMissing  = errors.New("oidc provider missing")
 	ErrOIDCIssuerURLInvalid = errors.New("oidc provider issuer url invalid")
 	ErrRoleIDInvalid        = errors.New("role id invalid")
@@ -124,7 +133,7 @@ func (s *oidcClaims) UnmarshalJSON(data []byte) error {
 // UpsertOIDCProviderRequest represents the body of create & update provider endpoints
 type UpsertOIDCProviderRequest struct {
 	Name     string                   `json:"name" validate:"required"`
-	Issuer   string                   `json:"issuer"  validate:"url"`
+	Issuer   string                   `json:"issuer"  validate:"url,httpsOnly=true,hostnameRequired=true"`
 	ClientID string                   `json:"client_id" validate:"required"`
 	Config   *model.SSOProviderConfig `json:"config,omitempty"`
 }
@@ -138,9 +147,9 @@ func (s ManagementResource) UpdateOIDCProviderRequest(response http.ResponseWrit
 	} else if ssoProvider, err := updateOIDCProvider(request.Context(), ssoProvider, upsertReq, s.db); errors.Is(err, ErrOIDCProviderMissing) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusNotFound, api.ErrorResponseDetailsResourceNotFound, request), response)
 	} else if errors.Is(err, ErrOIDCIssuerURLInvalid) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "issuer url is invalid", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, err.Error(), request), response)
 	} else if errors.Is(err, ErrRoleIDInvalid) {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrRoleIDInvalid.Error(), request), response)
 	} else if err != nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusInternalServerError, api.ErrorResponseDetailsInternalServerError, request), response)
 	} else if oidcProvider, err := s.db.UpdateOIDCProvider(request.Context(), ssoProvider); errors.Is(err, database.ErrDuplicateSSOProviderName) {
@@ -166,8 +175,8 @@ func updateOIDCProvider(ctx context.Context, ssoProvider model.SSOProvider, upse
 	}
 
 	if upsertReq.Issuer != "" {
-		if _, err := url.ParseRequestURI(upsertReq.Issuer); err != nil {
-			return ssoProvider, ErrOIDCIssuerURLInvalid
+		if err := oidcURLValidator.Validate(upsertReq.Issuer); err != nil {
+			return ssoProvider, fmt.Errorf("%w: %s", ErrOIDCIssuerURLInvalid, err)
 		}
 
 		ssoProvider.OIDCProvider.Issuer = upsertReq.Issuer
@@ -198,7 +207,7 @@ func (s ManagementResource) CreateOIDCProvider(response http.ResponseWriter, req
 	} else if upsertReq.Config == nil {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "config is required", request), response)
 	} else if _, err := s.db.GetRole(request.Context(), upsertReq.Config.AutoProvision.DefaultRoleId); err != nil {
-		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "role id is invalid", request), response)
+		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, ErrRoleIDInvalid.Error(), request), response)
 	} else if oidcProvider, err := s.db.CreateOIDCProvider(request.Context(), upsertReq.Name, upsertReq.Issuer, upsertReq.ClientID, *upsertReq.Config); errors.Is(err, database.ErrDuplicateSSOProviderName) {
 		api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusConflict, api.ErrorResponseSSOProviderDuplicateName, request), response)
 	} else if err != nil {
@@ -217,17 +226,28 @@ func (s ManagementResource) OIDCLoginHandler(response http.ResponseWriter, reque
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
-		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, ssoMisconfigurationMessage)
 	} else if state, err := config.GenerateRandomBase64String(77); err != nil {
 		slog.ErrorContext(request.Context(), "[OIDC] Failed to generate state", attr.Error(err))
 		// Technical issues scenario
 		api.RedirectToLoginURL(response, request, "We're having trouble connecting. Please check your internet and try again.")
+	} else if err := oidcURLValidator.Validate(ssoProvider.OIDCProvider.Issuer); err != nil {
+		slog.ErrorContext(request.Context(), oidcInvalidIssuerLogMessage, attr.Error(err))
+		api.RedirectToLoginURL(response, request, oidcInvalidIssuerMessage)
 	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
-		slog.ErrorContext(request.Context(), "[OIDC] Failed to create OIDC provider", attr.Error(err))
+		slog.ErrorContext(request.Context(), oidcProviderCreationLogMessage, attr.Error(err))
 		// SSO misconfiguration or technical issue
 		// Treat this as a misconfiguration scenario
-		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, ssoMisconfigurationMessage)
 	} else {
+		// Discovery can advertise an HTTP authorization endpoint even when the issuer uses HTTPS.
+		// Validate the endpoint before redirecting the browser
+		if err := oidcURLValidator.Validate(provider.Endpoint().AuthURL); err != nil {
+			slog.ErrorContext(request.Context(), "[OIDC] Invalid authorization endpoint URL", attr.Error(err))
+			api.RedirectToLoginURL(response, request, "Your SSO provider's authorization endpoint must be a valid HTTPS URL. Ask your administrator to update the provider configuration.")
+			return
+		}
+
 		conf := &oauth2.Config{
 			ClientID:    ssoProvider.OIDCProvider.ClientID,
 			Endpoint:    provider.Endpoint(),
@@ -264,7 +284,7 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 
 	if ssoProvider.OIDCProvider == nil {
 		// SSO misconfiguration scenario
-		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
+		api.RedirectToLoginURL(response, request, ssoMisconfigurationMessage)
 	} else if code == "" {
 		// Missing authorization code implies a credentials or form issue
 		slog.ErrorContext(request.Context(), "[OIDC] auth code is missing")
@@ -285,10 +305,13 @@ func (s ManagementResource) OIDCCallbackHandler(response http.ResponseWriter, re
 		// State mismatch
 		slog.ErrorContext(request.Context(), "[OIDC] state does not match")
 		api.RedirectToLoginURL(response, request, "Invalid: `state` do not match")
+	} else if err := oidcURLValidator.Validate(ssoProvider.OIDCProvider.Issuer); err != nil {
+		slog.ErrorContext(request.Context(), oidcInvalidIssuerLogMessage, attr.Error(err))
+		api.RedirectToLoginURL(response, request, oidcInvalidIssuerMessage)
 	} else if provider, err := s.OIDC.NewProvider(request.Context(), ssoProvider.OIDCProvider.Issuer); err != nil {
 		// SSO misconfiguration scenario
-		slog.ErrorContext(request.Context(), "[OIDC] Failed to create OIDC provider", attr.Error(err))
-		api.RedirectToLoginURL(response, request, "Your SSO connection failed due to misconfiguration, please contact your Administrator")
+		slog.ErrorContext(request.Context(), oidcProviderCreationLogMessage, attr.Error(err))
+		api.RedirectToLoginURL(response, request, ssoMisconfigurationMessage)
 	} else if claims, err := getOIDCClaims(request.Context(), provider, ssoProvider, pkceVerifier, code); errors.Is(err, ErrEmailMissing) {
 		slog.ErrorContext(request.Context(), "[OIDC] Claims did not contain any valid email address")
 		api.RedirectToLoginURL(response, request, "Claims invalid: no valid email address found")
@@ -320,14 +343,19 @@ func exchangeCodeForToken(reqCtx context.Context, ssoProvider model.SSOProvider,
 		}
 	)
 
-	if req, err := http.NewRequest("POST", tokenUrl, strings.NewReader(payload.Encode())); err != nil {
+	// Discovery can advertise an HTTP token endpoint even when the issuer uses HTTPS.
+	// Validate the endpoint before sending the authorization code and PKCE verifier
+	if err := oidcURLValidator.Validate(tokenUrl); err != nil {
+		return nil, fmt.Errorf("invalid OIDC token endpoint: %w", err)
+	} else if req, err := http.NewRequest("POST", tokenUrl, strings.NewReader(payload.Encode())); err != nil {
 		return nil, fmt.Errorf("failed to init exchange request %v", err)
 	} else {
 		// Set custom headers
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationXWwwFormUrlencoded.String())
 		req.Header.Set(headers.Origin.String(), hostUrl.String())
 
-		r, err := http.DefaultClient.Do(req.WithContext(reqCtx))
+		// Use the shared OIDC client to block redirects to HTTP before the authorization code or PKCE verifier can be sent over plaintext
+		r, err := oidcservice.DoRequest(req.WithContext(reqCtx))
 		if err != nil {
 			return nil, err
 		}
@@ -377,16 +405,26 @@ func exchangeCodeForToken(reqCtx context.Context, ssoProvider model.SSOProvider,
 
 func getOIDCClaims(reqCtx context.Context, provider *oidc.Provider, ssoProvider model.SSOProvider, pkceVerifier *http.Cookie, code string) (oidcClaims, error) {
 	var (
-		oidcVerifier = provider.Verifier(&oidc.Config{ClientID: ssoProvider.OIDCProvider.ClientID})
-		claims       = oidcClaims{}
+		oidcVerifier      = provider.Verifier(&oidc.Config{ClientID: ssoProvider.OIDCProvider.ClientID})
+		discoveryMetadata struct {
+			JWKSURL string `json:"jwks_uri"`
+		}
+		claims = oidcClaims{}
 	)
 
-	if token, err := exchangeCodeForToken(reqCtx, ssoProvider, provider.Endpoint().TokenURL, pkceVerifier, code); err != nil {
+	// We must first read the jwks_uri from the provider's discovery metadata.
+	// The provider can advertise an HTTP signing-key URL even when the issuer uses HTTPS.
+	// Reject it before exchanging the authorization code for tokens
+	if err := provider.Claims(&discoveryMetadata); err != nil {
+		return claims, errors.New("invalid OIDC discovery metadata")
+	} else if err := oidcURLValidator.Validate(discoveryMetadata.JWKSURL); err != nil {
+		return claims, fmt.Errorf("invalid OIDC signing-key URL: %w", err)
+	} else if token, err := exchangeCodeForToken(reqCtx, ssoProvider, provider.Endpoint().TokenURL, pkceVerifier, code); err != nil {
 		return claims, fmt.Errorf("token exchange: %v", err)
 	} else if token == nil {
 		return claims, fmt.Errorf("token is nil somehow... abort")
 	} else if rawIDToken, ok := token.Extra("id_token").(string); !ok { // Extract the ID Token from OAuth2 token
-		return claims, fmt.Errorf("token missing key id_token: %v", err)
+		return claims, errors.New("token response must include id_token as a string")
 	} else if idToken, err := oidcVerifier.Verify(reqCtx, rawIDToken); err != nil {
 		return claims, fmt.Errorf("id token verification: %v", err)
 	} else if err := idToken.Claims(&claims); errors.Is(err, ErrEmailMissing) {

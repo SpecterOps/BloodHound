@@ -265,7 +265,6 @@ func (s *LocalGroupHarness) Setup(testCtx *GraphTestContext) {
 	testCtx.NewRelationship(s.UserA, s.ComputerA, ad.AdminTo)
 	testCtx.NewRelationship(s.ComputerA, s.ComputerB, ad.AdminTo)
 	testCtx.NewRelationship(s.GroupB, s.ComputerC, ad.AdminTo)
-	testCtx.NewRelationship(s.UserC, s.ComputerA, ad.SQLAdmin)
 	testCtx.NewRelationship(s.UserD, s.ComputerA, ad.AllowedToDelegate)
 }
 

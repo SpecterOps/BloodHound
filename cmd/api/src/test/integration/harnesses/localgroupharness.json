@@ -203,14 +203,6 @@
             "style": {}
         },
         {
-            "id": "n6",
-            "fromId": "n7",
-            "toId": "n0",
-            "type": "SQLAdmin",
-            "properties": {},
-            "style": {}
-        },
-        {
             "id": "n7",
             "type": "AllowedToDelegate",
             "style": {},

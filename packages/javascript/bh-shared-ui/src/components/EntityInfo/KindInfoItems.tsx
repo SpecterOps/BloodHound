@@ -75,7 +75,7 @@ export function KindInfoItems({ items }: KindInfoItemsProps) {
             data-testid='entity-info_kind-info-items'
             type='multiple'
             value={expandedPanelSections ? expandedPanelSections : undefined}
-            className='p-0 pt-2 bg-neutral-2'
+            className='p-0 pt-2'
             onValueChange={handleChange}>
             {sortItems(items).map((item) => {
                 return <KindInfoItem key={item.name} item={item} />;

@@ -73,7 +73,6 @@
                 "OwnsLimitedRights",
                 "ReadLAPSPassword",
                 "RemoteInteractiveLogonRight",
-                "SQLAdmin",
                 "WriteAccountRestrictions",
                 "WriteDacl",
                 "WriteOwnerLimitedRights"
@@ -611,7 +610,6 @@
                 "OwnsLimitedRights",
                 "ReadLAPSPassword",
                 "RemoteInteractiveLogonRight",
-                "SQLAdmin",
                 "WriteAccountRestrictions",
                 "WriteDacl",
                 "WriteOwnerLimitedRights"
@@ -1015,7 +1013,6 @@
                 "OwnsLimitedRights",
                 "ReadLAPSPassword",
                 "RemoteInteractiveLogonRight",
-                "SQLAdmin",
                 "WriteAccountRestrictions",
                 "WriteDacl",
                 "WriteOwnerLimitedRights"
