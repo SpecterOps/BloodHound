@@ -20,9 +20,10 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { Location, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import TagForm from '.';
-import { privilegeZonesKeys } from '../../../../hooks';
+import { privilegeZonesKeys, usePatchRule } from '../../../../hooks';
+import * as notificationActions from '../../../../providers/NotificationProvider/actions';
 import { labelsPath, privilegeZonesPath, savePath, zonesPath } from '../../../../routes';
-import { act, fireEvent, render, screen, waitFor, within } from '../../../../test-utils';
+import { act, fireEvent, render, renderHook, screen, waitFor, within } from '../../../../test-utils';
 import { setUpQueryClient } from '../../../../testing';
 import { apiClient } from '../../../../utils';
 
@@ -63,6 +64,9 @@ const testOwned = {
 };
 
 const handlers = [
+    rest.get('/api/v2/asset-group-tags/:tagId/selectors', async (_, res, ctx) => {
+        return res(ctx.json({ data: { selectors: [] }, count: 0 }));
+    }),
     rest.get('/api/v2/asset-group-tags', async (_, res, ctx) => {
         return res(ctx.json({ data: { tags: [testTierZero, testOwned] } }));
     }),
@@ -161,6 +165,277 @@ describe('Tag Form', () => {
     const editOtherZonePath = `/${privilegeZonesPath}/${zonesPath}/4/${savePath}`;
     const editExistingLabelPath = `/${privilegeZonesPath}/${labelsPath}/2/${savePath}`;
     const deletionTestsPath = `/${privilegeZonesPath}/${labelsPath}/3/${savePath}`;
+
+    const renderLabelForm = (queryClient = setUpQueryClient([])) => {
+        vi.mocked(useParams).mockReturnValue({ labelId: '2' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editExistingLabelPath } as Location);
+        return render(
+            <Routes>
+                <Route path={editExistingLabelPath} element={<TagForm />} />
+            </Routes>,
+            { route: editExistingLabelPath, queryClient }
+        );
+    };
+
+    it.each(['enabled', 'disabled', 'mixed'] as const)(
+        'updates every rule across pages when toggling a label with %s rules',
+        async (initialStatus) => {
+            mockNavigate.mockClear();
+            const rules = Array.from({ length: 27 }, (_, index) => ({
+                id: index + 1,
+                allow_disable: true,
+                disabled_at:
+                    initialStatus === 'disabled' || (initialStatus === 'mixed' && index < 26)
+                        ? '2026-01-01T00:00:00Z'
+                        : null,
+            }));
+            const updatedRuleIds: number[] = [];
+            const tagUpdates = vi.fn();
+            server.use(
+                rest.get('/api/v2/asset-group-tags/2/selectors', (request, res, ctx) => {
+                    const skip = Number(request.url.searchParams.get('skip'));
+                    const limit = Number(request.url.searchParams.get('limit'));
+                    return res(ctx.json({ data: { selectors: rules.slice(skip, skip + limit) }, count: rules.length }));
+                }),
+                rest.patch('/api/v2/asset-group-tags/2/selectors/:ruleId', async (request, res, ctx) => {
+                    const { disabled } = await request.json();
+                    const rule = rules.find((rule) => rule.id === Number(request.params.ruleId))!;
+                    rule.disabled_at = disabled ? '2026-01-01T00:00:00Z' : null;
+                    updatedRuleIds.push(rule.id);
+                    return res(ctx.json({ data: { selector: rule } }));
+                }),
+                rest.patch('/api/v2/asset-group-tags/2', (_, res, ctx) => {
+                    tagUpdates();
+                    return res(ctx.json({ data: { tag: testOwned } }));
+                })
+            );
+
+            renderLabelForm();
+            const toggle = await screen.findByLabelText('Enable Rules');
+            await waitFor(() => expect(toggle).toBeEnabled());
+            expect(toggle).toHaveAttribute('aria-checked', String(initialStatus !== 'disabled'));
+
+            await user.click(toggle);
+            await user.click(screen.getByRole('button', { name: 'Save Edits' }));
+
+            await waitFor(() => expect(mockNavigate).toHaveBeenCalled());
+            expect(updatedRuleIds).toEqual(initialStatus === 'mixed' ? [27] : rules.map((rule) => rule.id));
+            expect(rules.every((rule) => (rule.disabled_at === null) === (initialStatus === 'disabled'))).toBe(true);
+            expect(tagUpdates).not.toHaveBeenCalled();
+        }
+    );
+
+    it.each([
+        { initiallyEnabled: false, disabled: false },
+        { initiallyEnabled: true, disabled: true },
+    ])(
+        'keeps the toggle on with one enabled rule after updating a rule to disabled=$disabled',
+        async ({ initiallyEnabled, disabled }) => {
+            const rules = [
+                { id: 1, allow_disable: true, disabled_at: initiallyEnabled ? null : '2026-01-01T00:00:00Z' },
+                { id: 2, allow_disable: true, disabled_at: initiallyEnabled ? null : '2026-01-01T00:00:00Z' },
+            ];
+            const updatedRuleIds: number[] = [];
+            server.use(
+                rest.get('/api/v2/asset-group-tags/2/selectors', (_, res, ctx) => {
+                    return res(ctx.json({ data: { selectors: rules }, count: rules.length }));
+                }),
+                rest.patch('/api/v2/asset-group-tags/2/selectors/:ruleId', async (request, res, ctx) => {
+                    const { disabled } = await request.json();
+                    const rule = rules.find((rule) => rule.id === Number(request.params.ruleId))!;
+                    rule.disabled_at = disabled ? '2026-01-01T00:00:00Z' : null;
+                    updatedRuleIds.push(rule.id);
+                    return res(ctx.json({ data: { selector: rule } }));
+                })
+            );
+            const queryClient = setUpQueryClient([]);
+            renderLabelForm(queryClient);
+            const toggle = await screen.findByLabelText('Enable Rules');
+            await waitFor(() => expect(toggle).toBeEnabled());
+            expect(toggle).toHaveAttribute('aria-checked', String(initiallyEnabled));
+
+            const { result } = renderHook(() => usePatchRule('2'), { queryClient });
+            await act(async () => {
+                await result.current.mutateAsync({ tagId: '2', ruleId: 1, updatedValues: { id: 1, disabled } });
+            });
+
+            await waitFor(() =>
+                expect(queryClient.getQueryData([...privilegeZonesKeys.rulesByTag('2'), 'all'])).toEqual(
+                    expect.arrayContaining([
+                        expect.objectContaining({ id: 1, disabled_at: disabled ? '2026-01-01T00:00:00Z' : null }),
+                    ])
+                )
+            );
+            await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'true'));
+            expect(updatedRuleIds).toEqual([1]);
+            expect(rules.filter((rule) => rule.disabled_at === null)).toHaveLength(1);
+            expect(rules[1].disabled_at).toBe(initiallyEnabled ? null : '2026-01-01T00:00:00Z');
+        }
+    );
+
+    it('preserves mixed rule statuses when only the label description is edited', async () => {
+        const ruleUpdates = vi.fn();
+        const tagUpdates = vi.fn();
+        server.use(
+            rest.get('/api/v2/asset-group-tags/2/selectors', (_, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            selectors: [
+                                { id: 1, disabled_at: null },
+                                { id: 2, disabled_at: '2026-01-01T00:00:00Z' },
+                            ],
+                        },
+                        count: 2,
+                    })
+                );
+            }),
+            rest.patch('/api/v2/asset-group-tags/2/selectors/:ruleId', (_, res, ctx) => {
+                ruleUpdates();
+                return res(ctx.json({ data: {} }));
+            }),
+            rest.patch('/api/v2/asset-group-tags/2', async (request, res, ctx) => {
+                tagUpdates(await request.json());
+                return res(ctx.json({ data: { tag: testOwned } }));
+            })
+        );
+
+        renderLabelForm();
+        await waitFor(() => expect(screen.getByLabelText('Enable Rules')).toBeEnabled());
+        const description = screen.getByLabelText('Description');
+        await user.clear(description);
+        await user.type(description, 'Updated description');
+        await user.click(screen.getByRole('button', { name: 'Save Edits' }));
+
+        await waitFor(() => expect(tagUpdates).toHaveBeenCalledWith({ description: 'Updated description' }));
+        expect(ruleUpdates).not.toHaveBeenCalled();
+    });
+
+    it('clears the pending bulk selection when switching labels', async () => {
+        server.use(
+            rest.get('/api/v2/asset-group-tags/:tagId/selectors', (_, res, ctx) => {
+                return res(ctx.json({ data: { selectors: [{ id: 1, disabled_at: null }] }, count: 1 }));
+            })
+        );
+        vi.mocked(useParams).mockReturnValue({ labelId: '2' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: editExistingLabelPath } as Location);
+        const { rerender } = render(<TagForm />, { route: editExistingLabelPath });
+
+        const toggle = await screen.findByLabelText('Enable Rules');
+        await waitFor(() => expect(toggle).toBeEnabled());
+        await user.click(toggle);
+        expect(toggle).toHaveAttribute('aria-checked', 'false');
+
+        vi.mocked(useParams).mockReturnValue({ labelId: '3' });
+        vi.mocked(useLocation).mockReturnValue({ pathname: deletionTestsPath } as Location);
+        rerender(<TagForm />);
+
+        await waitFor(() => expect(screen.getByPlaceholderText('Name')).toHaveValue('myTestLabel'));
+        await waitFor(() => expect(screen.getByLabelText('Enable Rules')).toBeEnabled());
+        expect(screen.getByLabelText('Enable Rules')).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it.each([
+        { enabled: true, failedCount: 1, message: 'Failed to enable 1 rule. Please try again.' },
+        { enabled: true, failedCount: 2, message: 'Failed to enable 2 rules. Please try again.' },
+        { enabled: false, failedCount: 1, message: 'Failed to disable 1 rule. Please try again.' },
+        { enabled: false, failedCount: 2, message: 'Failed to disable 2 rules. Please try again.' },
+        { enabled: false, failedCount: 3, message: 'Failed to disable 3 rules. Please try again.' },
+        {
+            enabled: true,
+            failedCount: 1,
+            message: 'Failed to enable 1 rule. Please try again.',
+            updatedDescription: 'Updated description',
+        },
+        {
+            enabled: false,
+            failedCount: 1,
+            message: 'Failed to disable 1 rule. Please try again.',
+            updatedDescription: 'Updated description',
+        },
+    ])(
+        'retries $failedCount failed rule updates with enabled=$enabled and description edit $updatedDescription',
+        async ({ enabled, failedCount, message, updatedDescription }) => {
+            mockNavigate.mockClear();
+            const addNotification = vi.spyOn(notificationActions, 'addNotification');
+            const tagUpdates = vi.fn();
+            let savedTag = { ...testOwned };
+            const rules = Array.from({ length: 3 }, (_, index) => ({
+                id: index + 1,
+                allow_disable: true,
+                disabled_at: enabled ? ('2026-01-01T00:00:00Z' as string | null) : null,
+            }));
+            const attemptedRuleIds: number[] = [];
+            let shouldFail = true;
+            server.use(
+                rest.get('/api/v2/asset-group-tags/2/selectors', (_, res, ctx) => {
+                    return res(ctx.json({ data: { selectors: rules }, count: rules.length }));
+                }),
+                rest.patch('/api/v2/asset-group-tags/2/selectors/:ruleId', async (request, res, ctx) => {
+                    const ruleId = Number(request.params.ruleId);
+                    attemptedRuleIds.push(ruleId);
+                    if (shouldFail && ruleId <= failedCount) return res(ctx.status(500));
+                    const { disabled } = await request.json();
+                    const rule = rules.find((rule) => rule.id === ruleId)!;
+                    rule.disabled_at = disabled ? '2026-01-01T00:00:00Z' : null;
+                    return res(ctx.json({ data: { selector: rule } }));
+                }),
+                rest.get('/api/v2/asset-group-tags/2', (_, res, ctx) => {
+                    return res(ctx.json({ data: { tag: savedTag } }));
+                }),
+                rest.patch('/api/v2/asset-group-tags/2', async (request, res, ctx) => {
+                    const updates = await request.json();
+                    tagUpdates(updates);
+                    savedTag = { ...savedTag, ...updates };
+                    return res(ctx.json({ data: { tag: savedTag } }));
+                })
+            );
+
+            const queryClient = setUpQueryClient([]);
+            renderLabelForm(queryClient);
+            const toggle = await screen.findByLabelText('Enable Rules');
+            await waitFor(() => expect(toggle).toBeEnabled());
+            if (updatedDescription) {
+                const description = screen.getByLabelText('Description');
+                await user.clear(description);
+                await user.type(description, updatedDescription);
+            }
+            await user.click(toggle);
+            await user.click(screen.getByRole('button', { name: 'Save Edits' }));
+
+            await waitFor(() =>
+                expect(addNotification).toHaveBeenCalledWith(
+                    message,
+                    expect.any(String),
+                    expect.objectContaining({ variant: 'error' })
+                )
+            );
+            expect(attemptedRuleIds).toEqual([1, 2, 3]);
+            expect(mockNavigate).not.toHaveBeenCalled();
+            expect(addNotification).not.toHaveBeenCalledWith(
+                'Label was updated successfully!',
+                expect.any(String),
+                expect.any(Object)
+            );
+            expect(screen.getByRole('button', { name: 'Save Edits' })).toBeEnabled();
+            if (updatedDescription) {
+                expect(queryClient.getQueryData(privilegeZonesKeys.tagDetail('2'))).toMatchObject({
+                    description: updatedDescription,
+                });
+                expect(toggle).toHaveAttribute('aria-checked', String(enabled));
+            }
+
+            shouldFail = false;
+            attemptedRuleIds.length = 0;
+            await user.click(screen.getByRole('button', { name: 'Save Edits' }));
+
+            await waitFor(() => expect(mockNavigate).toHaveBeenCalled());
+            expect(attemptedRuleIds).toEqual(Array.from({ length: failedCount }, (_, index) => index + 1));
+            expect(rules.every((rule) => (rule.disabled_at === null) === enabled)).toBe(true);
+            expect(tagUpdates.mock.calls).toEqual(updatedDescription ? [[{ description: updatedDescription }]] : []);
+            addNotification.mockRestore();
+        }
+    );
 
     it('renders the form for creating a new zone', async () => {
         // Because there is no id path parameter in the url, the form is a create form

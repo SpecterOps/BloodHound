@@ -20,7 +20,8 @@ parameters:
 get:
   operationId: GetComputerEntitySqlAdmins
   summary: Get computer entity SQL admins
-  description: Get a list, graph, or count of the principals that have SQL admin rights on this computer.
+  deprecated: true
+  description: The SQLAdmin relationship has been retired. Returns an empty list or graph.
   tags:
     - Computers
     - Community

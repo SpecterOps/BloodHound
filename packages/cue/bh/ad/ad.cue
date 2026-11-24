@@ -1532,11 +1532,6 @@ DumpSMSAPassword: types.#Kind & {
 	schema: "active_directory"
 }
 
-SQLAdmin: types.#Kind & {
-	symbol: "SQLAdmin"
-	schema: "active_directory"
-}
-
 AddAllowedToAct: types.#Kind & {
 	symbol: "AddAllowedToAct"
 	schema: "active_directory"
@@ -1838,7 +1833,6 @@ RelationshipKinds: [
 	ReadLAPSPassword,
 	ReadGMSAPassword,
 	DumpSMSAPassword,
-	SQLAdmin,
 	AddAllowedToAct,
 	WriteSPN,
 	AddKeyCredentialLink,
@@ -1964,7 +1958,6 @@ PathfindingRelationships: [
 	ReadLAPSPassword,
 	ReadGMSAPassword,
 	DumpSMSAPassword,
-	SQLAdmin,
 	AddAllowedToAct,
 	WriteSPN,
 	AddKeyCredentialLink,
