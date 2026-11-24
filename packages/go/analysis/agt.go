@@ -538,6 +538,13 @@ func fetchParentNodes(ctx context.Context, agtParameters appcfg.AGTParameters, d
 
 	// This will block and collect all parent nodes until channel is closed
 	for nodeWithSrc := range collectorCh {
+		// Cancelling the workers does not stop a send that is already in progress: a worker blocked on submitting a
+		// node may still deliver it after the limit is reached. Keep draining the channel so the workers can exit,
+		// but do not add any further nodes to the result.
+		if result.LimitReached(limit) {
+			continue
+		}
+
 		if result.AddIfNotExists(nodeWithSrc) && result.LimitReached(limit) {
 			doneFunc()
 		}
