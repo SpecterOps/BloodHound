@@ -1,1 +1,0 @@
-{"id":"a2bee68ffc4e16672b669c32fc1044d2.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/Navigation/utils.test.ts#isRouteActive returns false when route is undefined (pathname /)","name":"returns false when route is undefined (pathname /)","status":"passed","testResultsByEnv":{"default":"a532b9134f723ca7d20901f530bd5a34"}}

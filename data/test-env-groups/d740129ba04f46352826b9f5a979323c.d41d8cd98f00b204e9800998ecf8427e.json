@@ -1,1 +1,0 @@
-{"id":"d740129ba04f46352826b9f5a979323c.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/PrivilegeZones/Save/RuleForm/RuleForm.test.tsx#Rule Form calls handleError with ruleType when creating a rule fails","name":"calls handleError with ruleType when creating a rule fails","status":"passed","testResultsByEnv":{"default":"7b5e0c027215494e0d5b8543057643c6"}}

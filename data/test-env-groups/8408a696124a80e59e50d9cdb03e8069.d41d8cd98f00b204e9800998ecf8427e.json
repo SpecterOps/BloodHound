@@ -1,1 +1,0 @@
-{"id":"8408a696124a80e59e50d9cdb03e8069.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useLocalStorage.test.ts#useLocalStorage setValue stores a string value in localStorage","name":"stores a string value in localStorage","status":"passed","testResultsByEnv":{"default":"25f509cad8de1a20a7c2e9569228c028"}}

@@ -1,1 +1,0 @@
-{"id":"56f92803f665b59345a85c4da0f76822.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/saml_test.go:TestManagementResource_ListSAMLSignOnEndpoints","name":"TestManagementResource_ListSAMLSignOnEndpoints","status":"passed","testResultsByEnv":{"default":"ee74a74f138c7c00aec75085e387c16d"}}

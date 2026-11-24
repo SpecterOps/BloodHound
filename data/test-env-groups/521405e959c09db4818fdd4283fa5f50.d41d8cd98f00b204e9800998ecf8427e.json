@@ -1,1 +1,0 @@
-{"id":"521405e959c09db4818fdd4283fa5f50.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/DataQuality/utils/getStatsComponent.test.tsx#getStatsComponent returns null for an open graph environment without an id","name":"returns null for an open graph environment without an id","status":"passed","testResultsByEnv":{"default":"c80ea7d169501547ebf4150da05b5847"}}

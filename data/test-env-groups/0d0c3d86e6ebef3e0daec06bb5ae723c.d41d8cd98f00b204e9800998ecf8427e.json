@@ -1,1 +1,0 @@
-{"id":"0d0c3d86e6ebef3e0daec06bb5ae723c.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/auth/auth_test.go:TestDisenrollMFA_Admin_SuccessNoPasswordSSO","name":"TestDisenrollMFA_Admin_SuccessNoPasswordSSO","status":"passed","testResultsByEnv":{"default":"a1ea28cdc07d16ac15f00268778d916b"}}

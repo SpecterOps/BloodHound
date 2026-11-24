@@ -1,1 +1,0 @@
-{"id":"75000a0edf8c4b265c1feb4a79643ea4.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/api/v2/saved_queries_test.go:TestResources_DeleteSavedQuery_IDMalformed","name":"TestResources_DeleteSavedQuery_IDMalformed","status":"passed","testResultsByEnv":{"default":"737206f530dd0bf45bbd895c5cc14bbe"}}

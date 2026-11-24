@@ -1,1 +1,0 @@
-{"id":"bcf306221730825cf974891bec3d28ba.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/usePrimaryKind.test.ts#usePrimaryKind falls back to the first raw kind when every kind is filtered out","name":"falls back to the first raw kind when every kind is filtered out","status":"passed","testResultsByEnv":{"default":"686ba133a93c798d0cf461a95ab1af57"}}

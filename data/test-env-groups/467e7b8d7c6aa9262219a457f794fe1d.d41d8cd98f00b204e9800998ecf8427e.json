@@ -1,1 +1,0 @@
-{"id":"467e7b8d7c6aa9262219a457f794fe1d.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useSubNavRoutes.test.tsx#useSubNavRoutes permissions gate hides items when the user is missing a required permission","name":"hides items when the user is missing a required permission","status":"passed","testResultsByEnv":{"default":"e58d0eeed5e18d0c9a2d3984444af102"}}

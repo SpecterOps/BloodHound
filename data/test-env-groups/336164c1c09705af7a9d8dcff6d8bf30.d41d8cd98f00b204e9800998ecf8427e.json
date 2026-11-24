@@ -1,1 +1,0 @@
-{"id":"336164c1c09705af7a9d8dcff6d8bf30.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/cmd/api/src/daemons/gc/data_pruning_test.go:TestGC_NewDataPruningDaemon","name":"TestGC_NewDataPruningDaemon","status":"passed","testResultsByEnv":{"default":"5762fba6476b863a4302d699a77e4567"}}

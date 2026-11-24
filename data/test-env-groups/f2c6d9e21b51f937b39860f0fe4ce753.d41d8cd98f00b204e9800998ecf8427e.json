@@ -1,1 +1,0 @@
-{"id":"f2c6d9e21b51f937b39860f0fe4ce753.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/views/PrivilegeZones/Save/RuleForm/DeleteRuleButton/DeleteRuleButton.test.tsx#Delete Selector Button rendering does not render when ruleId is empty","name":"does not render when ruleId is empty","status":"passed","testResultsByEnv":{"default":"feeba80a97083a63aaea2b831b0792ae"}}

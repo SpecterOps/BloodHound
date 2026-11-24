@@ -1,1 +1,0 @@
-{"id":"ce8c29f9a0a86d6d1c995a878bf57c41.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/hooks/useObjectState/useObjectState.test.ts#useObjectState keeps callbacks stable across renders","name":"keeps callbacks stable across renders","status":"passed","testResultsByEnv":{"default":"5924b19c290644e97697c4c100ced986"}}

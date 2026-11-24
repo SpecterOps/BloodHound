@@ -1,1 +1,0 @@
-{"id":"2f3b7c585837292de241b342dc9f861f.d41d8cd98f00b204e9800998ecf8427e","fullName":"src/components/GraphControls/GraphControls.test.tsx#GraphControls Toggling labels calls onToggleEdgeLabels when click show all edge labels","name":"calls onToggleEdgeLabels when click show all edge labels","status":"passed","testResultsByEnv":{"default":"93551c1e9effb54e49c342effadc621e"}}
