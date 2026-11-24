@@ -579,6 +579,22 @@ func (s *GraphQuery) PrepareCypherQuery(rawCypher string, queryComplexityLimit i
 	return graphQuery, nil
 }
 
+// IsCypherQueryTimeout identifies deadline and database timeouts without treating plain cancellations as timeouts.
+func IsCypherQueryTimeout(ctx context.Context, err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(ctx.Err(), context.DeadlineExceeded) ||
+		util.IsNeoTimeoutError(err) || util.IsPostgresTimeoutError(err) {
+		return true
+	} else if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
+		return false
+	}
+
+	return errors.Is(err, graph.ErrContextTimedOut)
+}
+
 // RawCypherQuery executes the given PreparedQuery and returns a model.UnifiedGraph or any error encountered during
 // query execution.
 func (s *GraphQuery) RawCypherQuery(ctx context.Context, primaryDisplayKinds graphschema.PrimaryDisplayKinds, pQuery PreparedQuery, includeProperties bool) (model.UnifiedGraph, error) {
@@ -624,13 +640,13 @@ func (s *GraphQuery) RawCypherQuery(ctx context.Context, primaryDisplayKinds gra
 	)
 
 	if err != nil {
-		// Log query details if neo4j times out
-		if util.IsNeoTimeoutError(err) {
+		if IsCypherQueryTimeout(ctx, err) {
 			slog.ErrorContext(
 				ctx,
-				"Neo4j timed out while executing cypher query",
-				slog.String("query", pQuery.StrippedQuery),
+				"Timed out while executing cypher query",
 				slog.Int64("fitness", pQuery.complexity.RelativeFitness),
+				attr.Error(err),
+				slog.Duration("elapsed", time.Since(start)),
 			)
 		} else {
 			slog.WarnContext(

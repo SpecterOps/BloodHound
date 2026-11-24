@@ -22,8 +22,11 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/queries"
@@ -107,6 +110,106 @@ func TestGraphQuery_PrepareCypherQuery(t *testing.T) {
 		require.Nil(t, err)
 		assert.Equal(t, preparedQuery.HasMutation, false)
 	})
+}
+
+// TestIsCypherQueryTimeout verifies deadline and database timeout detection while preserving cancellations.
+func TestIsCypherQueryTimeout(t *testing.T) {
+	t.Parallel()
+
+	var (
+		activeContext                  = context.Background()
+		expiredContext, cancelDeadline = context.WithDeadline(activeContext, time.Now().Add(-time.Second))
+		canceledContext, cancelRequest = context.WithCancel(activeContext)
+		testCases                      = []struct {
+			name         string
+			queryContext context.Context
+			err          error
+			expected     bool
+		}{
+			{
+				name:         "nil error with expired context",
+				queryContext: expiredContext,
+				err:          nil,
+				expected:     false,
+			},
+			{
+				name:         "unrelated error",
+				queryContext: activeContext,
+				err:          fmt.Errorf("database unavailable"),
+				expected:     false,
+			},
+			{
+				name:         "wrapped deadline exceeded",
+				queryContext: activeContext,
+				err:          fmt.Errorf("query failed: %w", context.DeadlineExceeded),
+				expected:     true,
+			},
+			{
+				name:         "cancellation after deadline expiry",
+				queryContext: expiredContext,
+				err:          context.Canceled,
+				expected:     true,
+			},
+			{
+				name:         "wrapped plain cancellation",
+				queryContext: activeContext,
+				err:          fmt.Errorf("query failed: %w", context.Canceled),
+				expected:     false,
+			},
+			{
+				name:         "canceled connection slot wait",
+				queryContext: canceledContext,
+				err:          graph.ErrContextTimedOut,
+				expected:     false,
+			},
+			{
+				name:         "wrapped Neo4j timeout",
+				queryContext: activeContext,
+				err:          fmt.Errorf("query failed: %w", &neo4j.Neo4jError{Code: "Neo.ClientError.Transaction.TransactionTimedOut"}),
+				expected:     true,
+			},
+			{
+				name:         "wrapped PostgreSQL statement timeout",
+				queryContext: activeContext,
+				err:          fmt.Errorf("query failed: %w", &pgconn.PgError{Code: "57014", Message: "canceling statement due to statement timeout"}),
+				expected:     true,
+			},
+			{
+				name:         "PostgreSQL user cancellation",
+				queryContext: activeContext,
+				err:          &pgconn.PgError{Code: "57014", Message: "canceling statement due to user request"},
+				expected:     false,
+			},
+			{
+				name:         "graph timeout sentinel without expired deadline",
+				queryContext: activeContext,
+				err:          graph.ErrContextTimedOut,
+				expected:     true,
+			},
+			{
+				name:         "wrapped graph timeout",
+				queryContext: activeContext,
+				err:          fmt.Errorf("query failed: %w", graph.ErrContextTimedOut),
+				expected:     true,
+			},
+			{
+				name:         "graph timeout with explicit cancellation error",
+				queryContext: activeContext,
+				err:          fmt.Errorf("%w: %w", graph.ErrContextTimedOut, context.Canceled),
+				expected:     false,
+			},
+		}
+	)
+	t.Cleanup(cancelDeadline)
+	t.Cleanup(cancelRequest)
+	cancelRequest()
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, testCase.expected, queries.IsCypherQueryTimeout(testCase.queryContext, testCase.err))
+		})
+	}
 }
 
 func TestGraphQuery_RawCypherQuery(t *testing.T) {
