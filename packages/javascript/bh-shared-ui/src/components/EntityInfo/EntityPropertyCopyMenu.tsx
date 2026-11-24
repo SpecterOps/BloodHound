@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { DateTime } from 'luxon';
 import { useAnnounce, useNotifications } from '../../providers';
-import { copyToClipboard, DATE_FIELDS, EntityField } from '../../utils';
+import { cn, copyToClipboard, DATE_FIELDS, EntityField } from '../../utils';
 
 export const serializeRawPropertyValue = (value: EntityField['value']): string => {
     if (typeof value === 'string') return value;
@@ -43,7 +43,15 @@ export const serializeISO8601PropertyValue = (property: string, value: EntityFie
     return DateTime.fromSeconds(value).toUTC().toISO();
 };
 
-export const EntityPropertyCopyMenu = ({ property, value }: { property?: string; value: EntityField['value'] }) => {
+export const EntityPropertyCopyMenu = ({
+    property,
+    value,
+    isRowHovered = false,
+}: {
+    property?: string;
+    value: EntityField['value'];
+    isRowHovered?: boolean;
+}) => {
     const announce = useAnnounce();
     const { addNotification } = useNotifications();
 
@@ -69,7 +77,10 @@ export const EntityPropertyCopyMenu = ({ property, value }: { property?: string;
                 <IconButton
                     aria-label={`Copy ${property}`}
                     hideTooltip
-                    className='ml-1 size-6 p-1 opacity-0 transition-opacity group-hover/property-row:opacity-100 group-focus-within/property-row:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100'>
+                    className={cn(
+                        'ml-1 size-6 p-1 opacity-0 transition-opacity group-hover/property-row:opacity-100 group-focus-within/property-row:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100',
+                        isRowHovered && 'opacity-100'
+                    )}>
                     <FontAwesomeIcon icon={faCopy} />
                 </IconButton>
             </MenuTrigger>

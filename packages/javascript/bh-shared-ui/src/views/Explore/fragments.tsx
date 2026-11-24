@@ -138,6 +138,7 @@ const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | und
 
 export const Field: React.FC<EntityField> = (entityField) => {
     const { label, value, keyprop } = entityField;
+    const [isListHovered, setIsListHovered] = React.useState(false);
 
     try {
         if (
@@ -189,6 +190,8 @@ export const Field: React.FC<EntityField> = (entityField) => {
             return (
                 <div
                     className='group/property-row flex flex-wrap items-baseline justify-between p-2 text-left'
+                    onMouseEnter={() => setIsListHovered(true)}
+                    onMouseLeave={() => setIsListHovered(false)}
                     key={`${keyprop}-${index}`}>
                     {/* Only render the label for the first item, since it kicks the list */}
                     {index === 0 ? (
@@ -196,7 +199,11 @@ export const Field: React.FC<EntityField> = (entityField) => {
                             <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
                                 {formattedLabel}
                             </Typography>
-                            <EntityPropertyCopyMenu property={keyprop} value={entityField.value} />
+                            <EntityPropertyCopyMenu
+                                property={keyprop}
+                                value={entityField.value}
+                                isRowHovered={isListHovered}
+                            />
                         </span>
                     ) : (
                         <span aria-hidden='true' />
