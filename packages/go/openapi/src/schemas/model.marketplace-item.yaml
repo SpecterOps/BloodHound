@@ -26,7 +26,6 @@ required:
   - capability 
   - author 
   - type
-  - logo_url
 properties:
   manifest_version:
     type: integer
@@ -117,11 +116,18 @@ properties:
             type: string 
             format: uri
             pattern: "^https://"
-  logo_url:
+  light_mode_logo:
     type: string
     format: uri
+    pattern: "^https://"
     readOnly: true
-    description: "s3 URL or external logo URL"
+    description: Signed URL for the light-background S3 logo
+  dark_mode_logo:
+    type: string
+    format: uri
+    pattern: "^https://"
+    readOnly: true
+    description: Signed URL for the dark-background S3 logo
   installation_status: 
     type: string
     enum: [

@@ -19,7 +19,6 @@ parameters:
 get:
   operationId: listMarketplaceItems
   summary: List Marketplace items.
-  description: List available marketplace items. BHE Only. 
   tags:
     - Marketplace
     - Enterprise
