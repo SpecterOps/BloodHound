@@ -16,6 +16,7 @@
 
 type: object
 description: The core data to describe a retention policy
+additionalProperties: false
 required:
   - enabled
   - ttl

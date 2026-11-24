@@ -25,41 +25,13 @@ properties:
     anyOf:
       - required: [base_policy]
         properties:
-          base_policy:
-            type: object
-            nullable: false
+          base_policy: 
+            $ref: './model.graph-retention-policy.yaml'
       - required: [extension_policies]
         properties:
           extension_policies:
             type: array
-            items: {}
+            items:
+              $ref: './model.graph-extension-retention-policy.yaml'
             minItems: 1
             nullable: false
-    properties:
-      base_policy:
-        type: object
-        nullable: true
-        additionalProperties: false
-        required: [enabled, ttl]
-        properties:
-          enabled:
-            type: boolean
-          ttl:
-            $ref: './request.graph-retention-policy.yaml#/properties/ttl'
-      extension_policies:
-        type: array
-        nullable: true
-        description: Full replacements keyed by extension_id. Duplicate identifiers and unknown extensions return 400; no policies are saved on any error.
-        items:
-          type: object
-          additionalProperties: false
-          required: [extension_id, enabled, ttl]
-          properties:
-            extension_id:
-              type: integer
-              format: int32
-              minimum: 1
-            enabled:
-              type: boolean
-            ttl:
-              $ref: './request.graph-retention-policy.yaml#/properties/ttl'
