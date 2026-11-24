@@ -64,7 +64,7 @@ export default function EntityObjectInformation({ selectedNode }: EntityObjectIn
             isExpanded={isObjectInfoPanelOpen}
             label={sectionLabel}
             className='pt-2 [&_.MuiAccordionSummary-content]:my-2 [&_.MuiAccordionSummary-content.Mui-expanded]:my-2 [&_.MuiAccordionSummary-root]:min-h-0 [&_.MuiAccordionSummary-root.Mui-expanded]:min-h-0 [&_.typography-h6]:leading-[1.125rem] [&_.MuiAccordionDetails-root]:pt-0'>
-            <FieldsContainer className='mt-2'>
+            <FieldsContainer className='mt-2 divide-y divide-neutral-light-4 dark:divide-neutral-900 [--data-table-row-even-fill:transparent] [--data-table-row-odd-fill:transparent]'>
                 <BasicObjectInfoFields
                     properties={selectedNode.properties}
                     handleSourceNodeSelected={handleSourceNodeSelected}

@@ -57,28 +57,30 @@ const EntityInfoPanel: React.FC<EntityInfoPanelProps> = ({
             )}
             data-testid='explore_entity-information-panel'>
             <RoleBasedFilterBadge />
-            <div className={cn('pointer-events-auto rounded-lg', panelClassName ?? 'bg-neutral-2 shadow-outer-1')}>
-                <Header name={getEntityName(selectedNode)} nodeType={primaryKind} />
-            </div>
             <div
                 className={cn(
-                    'overflow-x-hidden overflow-y-auto py-1 px-4 pointer-events-auto rounded-lg',
-                    panelClassName ?? 'bg-neutral-2 shadow-outer-1'
+                    'flex min-h-0 flex-col overflow-hidden pointer-events-auto rounded-lg',
+                    panelClassName ?? 'bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'
                 )}>
-                {selectedNode ? (
-                    <EntityInfoContent
-                        DataTable={DataTable}
-                        priorityTables={priorityTables}
-                        additionalTables={additionalTables}
-                        selectedNode={selectedNode}
-                    />
-                ) : (
-                    <p className='text-sm'>
-                        {showPlaceholderMessage
-                            ? 'Select an object to view the associated information'
-                            : NoEntitySelectedMessage}
-                    </p>
-                )}
+                <div className='shrink-0 bg-neutral-2 text-main'>
+                    <Header name={getEntityName(selectedNode)} nodeType={primaryKind} />
+                </div>
+                <div className='min-h-0 overflow-x-hidden overflow-y-auto py-1 px-4'>
+                    {selectedNode ? (
+                        <EntityInfoContent
+                            DataTable={DataTable}
+                            priorityTables={priorityTables}
+                            additionalTables={additionalTables}
+                            selectedNode={selectedNode}
+                        />
+                    ) : (
+                        <p className='text-sm'>
+                            {showPlaceholderMessage
+                                ? 'Select an object to view the associated information'
+                                : NoEntitySelectedMessage}
+                        </p>
+                    )}
+                </div>
             </div>
         </div>
     );
