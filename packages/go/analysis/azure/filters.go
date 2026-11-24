@@ -80,6 +80,8 @@ func FilterGroupMembers() graph.Criteria {
 	)
 }
 
+// FilterRoleAssignableGroupMembersUsers matches user membership in role assignable groups. The property criteria must
+// stay consistent with isRoleAssignableGroup.
 func FilterRoleAssignableGroupMembersUsers() graph.Criteria {
 	return query.And(
 		query.Kind(query.Relationship(), azure.MemberOf),
@@ -95,6 +97,18 @@ func FilterRoleAssignableGroupMembersUsers() graph.Criteria {
 
 func FilterContains() graph.Criteria {
 	return query.KindIn(query.Relationship(), azure.Contains)
+}
+
+// isRoleAssignableGroup reports whether the given group node is marked as role assignable. Current ingestion stores a
+// boolean, but older data can contain the string "true"; both are accepted. False, missing, or invalid values are not.
+// This must stay consistent with the property criteria in FilterRoleAssignableGroupMembersUsers.
+func isRoleAssignableGroup(group *graph.Node) bool {
+	switch group.Properties.Get(azure.IsAssignableToRole.String()).Any() {
+	case true, "true":
+		return true
+	default:
+		return false
+	}
 }
 
 func roleDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
@@ -113,15 +127,9 @@ func roleDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bo
 				groupVisited = true
 			}
 
-			// Current ingestion stores a boolean, but older data can contain the
-			// string "true". Both permit inheritance, but false, missing, or
-			// invalid values must still stop traversal through this group.
-			var roleAssignableProperty = end.Properties.Get(azure.IsAssignableToRole.String())
-			switch roleAssignableProperty.Any() {
-			case true, "true":
-				// Exit the switch and continue traversal
-			default:
-				if roleAssignableProperty.IsNil() {
+			// False, missing, or invalid values must stop traversal through this group.
+			if !isRoleAssignableGroup(end) {
+				if end.Properties.Get(azure.IsAssignableToRole.String()).IsNil() {
 					slog.Warn(
 						"Node is missing property isassignabletorole",
 						slog.Uint64("node_id", uint64(end.ID)),

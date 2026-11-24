@@ -290,13 +290,23 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 
 			rolesMeasureDone(slog.Int("num_roles", roles.Len()))
 
-			// for each of the role assignable groups returned, fetch the users who are members
-			groupsMeasureDone := measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Fetching role assignable group member users",
-				attr.Namespace("analysis"), attr.Function("FetchRoleAssignableGroupMembersUsers"), attr.Scope("routine"), tenantIDAttr,
-				slog.Int("num_traversals", tenantGroups.Len()),
+			var (
+				numRoleAssignableGroups = 0
+				groupsMeasureDone       = measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Fetching role assignable group member users",
+					attr.Namespace("analysis"), attr.Function("FetchRoleAssignableGroupMembersUsers"), attr.Scope("routine"), tenantIDAttr,
+					slog.Int("num_groups", tenantGroups.Len()),
+				)
 			)
 
+			// For each of the role assignable groups in the tenant, fetch the users who are members. Groups that are not role
+			// assignable are skipped before querying since FetchRoleAssignableGroupMembersUsers never returns members for them.
 			for _, group := range tenantGroups {
+				if !isRoleAssignableGroup(group) {
+					continue
+				}
+
+				numRoleAssignableGroups += 1
+
 				if members, err := FetchRoleAssignableGroupMembersUsers(tx, group, 0, 0); err != nil {
 					groupsMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 					return err
@@ -306,7 +316,10 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 				}
 			}
 
-			groupsMeasureDone(slog.Uint64("num_users", roleAssignableGroupMembership.Cardinality()))
+			groupsMeasureDone(
+				slog.Int("num_traversals", numRoleAssignableGroups),
+				slog.Uint64("num_users", roleAssignableGroupMembership.Cardinality()),
+			)
 
 			roleMembersMeasureDone := measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Fetching tenant role members",
 				attr.Namespace("analysis"), attr.Function("RoleMembers"), attr.Scope("routine"), tenantIDAttr,

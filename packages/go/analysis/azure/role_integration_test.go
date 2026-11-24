@@ -195,3 +195,73 @@ func TestFetchTenantRoleAssignmentsRoleMembers(t *testing.T) {
 		return nil
 	}))
 }
+
+func TestFetchTenantRoleAssignmentsRoleAssignableGroupMembership(t *testing.T) {
+	type groupCase struct {
+		name               string
+		isAssignableToRole any
+		wantMember         bool
+		group              *graph.Node
+		member             *graph.Node
+	}
+
+	var (
+		suite    = setupIntegrationTestSuite(t)
+		tenantID = randomObjectID(t)
+		tenant   = NewAzureTenant(t, &suite, tenantID)
+		cases    = []*groupCase{
+			{name: "boolean true", isAssignableToRole: true, wantMember: true},
+			{name: "string true", isAssignableToRole: "true", wantMember: true},
+			{name: "boolean false", isAssignableToRole: false},
+			{name: "string false", isAssignableToRole: "false"},
+			{name: "missing property"},
+			{name: "numeric value", isAssignableToRole: 1},
+			{name: "uppercase string true", isAssignableToRole: "TRUE"},
+			{name: "invalid string", isAssignableToRole: "not-a-boolean"},
+		}
+	)
+	defer teardownIntegrationTestSuite(t, &suite)
+
+	for _, testCase := range cases {
+		groupProperties := graph.PropertyMap{
+			common.Name:         testCase.name,
+			common.ObjectID:     randomObjectID(t),
+			graphazure.TenantID: tenantID,
+		}
+		if testCase.isAssignableToRole != nil {
+			groupProperties[graphazure.IsAssignableToRole] = testCase.isAssignableToRole
+		}
+
+		testCase.group = NewNode(t, &suite, graph.AsProperties(groupProperties), graphazure.Entity, graphazure.Group)
+		testCase.member = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+			common.Name:         testCase.name + " member",
+			common.ObjectID:     randomObjectID(t),
+			graphazure.TenantID: tenantID,
+		}), graphazure.Entity, graphazure.User)
+
+		NewRelationship(t, &suite, tenant, testCase.group, graphazure.Contains)
+		NewRelationship(t, &suite, tenant, testCase.member, graphazure.Contains)
+		NewRelationship(t, &suite, testCase.member, testCase.group, graphazure.MemberOf)
+	}
+
+	roleAssignments, err := azure.FetchTenantRoleAssignments(suite.Context, suite.GraphDB, tenant)
+	require.NoError(t, err)
+
+	roleAssignableGroupMembers := roleAssignments.UsersWithRoleAssignableGroupMembership()
+
+	require.NoError(t, suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
+		for _, testCase := range cases {
+			// Groups that are not role assignable are skipped before querying. The result must match querying every
+			// group, which is what FetchTenantRoleAssignments previously did.
+			queriedMembers, err := azure.FetchRoleAssignableGroupMembersUsers(tx, testCase.group, 0, 0)
+			if err != nil {
+				return err
+			}
+
+			assert.Equal(t, testCase.wantMember, queriedMembers.Contains(testCase.member), "%s: queried membership", testCase.name)
+			assert.Equal(t, testCase.wantMember, roleAssignableGroupMembers.Contains(testCase.member.ID.Uint64()), "%s: tenant role assignments", testCase.name)
+		}
+
+		return nil
+	}))
+}
