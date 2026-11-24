@@ -1,1 +1,1 @@
-{"id":"86e65f7e4432690db05c6c93f1509492.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/users/users_test.go:TestIsAdministrator","name":"TestIsAdministrator","status":"passed","testResultsByEnv":{"default":"2340e4f7e8e35ea07c48d5e7c00d743e"}}
+{"id":"86e65f7e4432690db05c6c93f1509492.d41d8cd98f00b204e9800998ecf8427e","fullName":"github.com/specterops/bloodhound/server/users/users_test.go:TestIsAdministrator","name":"TestIsAdministrator","status":"passed","testResultsByEnv":{"default":"34466a3dfe28018caadaceb71bdb1166"}}
