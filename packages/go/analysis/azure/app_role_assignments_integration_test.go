@@ -34,7 +34,7 @@ import (
 // TestAppRoleAssignmentsSourceServicePrincipals verifies the MS Graph permission edges produced by App Role Assignment
 // post-processing. Source service principals are resolved for every tenant service principal at once, so this covers
 // sources that hold a permission against several tenant service principals and sources whose permission is granted
-// against a service principal in a different tenant.
+// against a service principal in a different tenant. AZAddSecret edges from tenant roles are verified as well.
 func TestAppRoleAssignmentsSourceServicePrincipals(t *testing.T) {
 	type relationshipKey struct {
 		from graph.ID
@@ -60,8 +60,14 @@ func TestAppRoleAssignmentsSourceServicePrincipals(t *testing.T) {
 				graphazure.IsAssignableToRole: isAssignableToRole,
 			}), graphazure.Entity, graphazure.Group)
 		}
-		group                     = newGroup("Group", tenantID, false)
-		roleAssignableGroup       = newGroup("Role assignable group", tenantID, true)
+		group                = newGroup("Group", tenantID, false)
+		roleAssignableGroup  = newGroup("Role assignable group", tenantID, true)
+		groupMissingProperty = NewNode(t, &suite, graph.AsProperties(graph.PropertyMap{
+			common.Name:         "Group missing isassignabletorole",
+			common.ObjectID:     randomObjectID(t),
+			graphazure.TenantID: tenantID,
+		}), graphazure.Entity, graphazure.Group)
+		applicationAdministrator  = NewAzureRole(t, &suite, "Application Administrator", randomObjectID(t), graphazure.ApplicationAdministratorRole, tenantID)
 		otherTenantGroup          = newGroup("Other tenant group", otherTenantID, false)
 		newSourceServicePrincipal = func(name string) *graph.Node {
 			// Source service principals are intentionally not contained by either tenant so that they are not also
@@ -78,7 +84,7 @@ func TestAppRoleAssignmentsSourceServicePrincipals(t *testing.T) {
 	)
 	defer teardownIntegrationTestSuite(t, &suite)
 
-	for _, containedNode := range []*graph.Node{microsoftGraph, resourceServicePrincipal, application, group, roleAssignableGroup} {
+	for _, containedNode := range []*graph.Node{microsoftGraph, resourceServicePrincipal, application, group, roleAssignableGroup, groupMissingProperty, applicationAdministrator} {
 		NewRelationship(t, &suite, tenant, containedNode, graphazure.Contains)
 	}
 
@@ -90,7 +96,10 @@ func TestAppRoleAssignmentsSourceServicePrincipals(t *testing.T) {
 	NewRelationship(t, &suite, applicationReadWriteAllSource, microsoftGraph, graphazure.ApplicationReadWriteAll)
 	NewRelationship(t, &suite, applicationReadWriteAllSource, resourceServicePrincipal, graphazure.ApplicationReadWriteAll)
 
+	// Granted against two tenant service principals; the tenant must still receive a single edge from the source.
 	NewRelationship(t, &suite, appRoleAssignmentReadWriteAllSource, microsoftGraph, graphazure.AppRoleAssignmentReadWriteAll)
+	NewRelationship(t, &suite, appRoleAssignmentReadWriteAllSource, resourceServicePrincipal, graphazure.AppRoleAssignmentReadWriteAll)
+
 	NewRelationship(t, &suite, directoryReadWriteAllSource, resourceServicePrincipal, graphazure.DirectoryReadWriteAll)
 	NewRelationship(t, &suite, groupReadWriteAllSource, microsoftGraph, graphazure.GroupReadWriteAll)
 	NewRelationship(t, &suite, groupMemberReadWriteAllSource, microsoftGraph, graphazure.GroupMemberReadWriteAll)
@@ -129,6 +138,11 @@ func TestAppRoleAssignmentsSourceServicePrincipals(t *testing.T) {
 			{from: endpointReadWriteAllSource.ID, to: microsoftGraph.ID, kind: graphazure.AZMGAddOwner},
 			{from: endpointReadWriteAllSource.ID, to: resourceServicePrincipal.ID, kind: graphazure.AZMGAddOwner},
 
+			// AZAddSecret: Application Administrator role to every tenant application and service principal
+			{from: applicationAdministrator.ID, to: microsoftGraph.ID, kind: graphazure.AddSecret},
+			{from: applicationAdministrator.ID, to: resourceServicePrincipal.ID, kind: graphazure.AddSecret},
+			{from: applicationAdministrator.ID, to: application.ID, kind: graphazure.AddSecret},
+
 			// Other tenant Directory.ReadWrite.All: only the other tenant's groups
 			{from: otherTenantSource.ID, to: otherTenantGroup.ID, kind: graphazure.AZMGAddMember},
 			{from: otherTenantSource.ID, to: otherTenantGroup.ID, kind: graphazure.AZMGAddOwner},
@@ -138,7 +152,7 @@ func TestAppRoleAssignmentsSourceServicePrincipals(t *testing.T) {
 	require.NoError(t, suite.GraphDB.ReadTransaction(suite.Context, func(tx graph.Transaction) error {
 		relationships, err := ops.FetchRelationships(tx.Relationships().Filter(query.KindIn(
 			query.Relationship(), graphazure.AZMGGrantRole, graphazure.AZMGGrantAppRoles,
-			graphazure.AZMGAddMember, graphazure.AZMGAddSecret, graphazure.AZMGAddOwner,
+			graphazure.AZMGAddMember, graphazure.AZMGAddSecret, graphazure.AZMGAddOwner, graphazure.AddSecret,
 		)))
 		if err != nil {
 			return err
