@@ -20,7 +20,7 @@ required: [data]
 properties:
   data:
     type: object
-    additionalProperties: false
+    unevaluatedProperties: false
     description: At least one policy is required. base_policy and extension_policies are optional. Omitted or null optional fields are ignored. An empty extension_policies list is allowed with a base policy; by itself it is rejected. Neither omission nor an empty list deletes or resets policies.
     anyOf:
       - required: [base_policy]

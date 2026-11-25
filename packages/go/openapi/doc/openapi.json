@@ -29131,7 +29131,7 @@
       "model.graph-retention-policy": {
         "type": "object",
         "description": "The core data to describe a retention policy",
-        "additionalProperties": false,
+        "unevaluatedProperties": false,
         "required": [
           "enabled",
           "ttl"
@@ -29150,7 +29150,7 @@
       "model.graph-extension-retention-policy": {
         "type": "object",
         "description": "The data to describe an extension retention policy",
-        "additionalProperties": false,
+        "unevaluatedProperties": false,
         "required": [
           "enabled",
           "ttl",
@@ -29208,7 +29208,7 @@
         "properties": {
           "data": {
             "type": "object",
-            "additionalProperties": false,
+            "unevaluatedProperties": false,
             "description": "At least one policy is required. base_policy and extension_policies are optional. Omitted or null optional fields are ignored. An empty extension_policies list is allowed with a base policy; by itself it is rejected. Neither omission nor an empty list deletes or resets policies.",
             "anyOf": [
               {

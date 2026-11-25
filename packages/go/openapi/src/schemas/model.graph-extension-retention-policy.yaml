@@ -16,7 +16,7 @@
 
 type: object
 description: The data to describe an extension retention policy
-additionalProperties: false
+unevaluatedProperties: false
 required:
   - enabled
   - ttl
