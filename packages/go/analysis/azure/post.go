@@ -172,17 +172,22 @@ func fetchTenantContainsRelationships(tx graph.Transaction, tenant *graph.Node, 
 	}))
 }
 
-func fetchReadWriteServicePrincipals(tx graph.Transaction, relationship graph.Kind, targetID graph.ID) (graph.NodeSet, error) {
+// fetchReadWriteServicePrincipals returns the service principals that hold the given MS Graph permission against any of
+// the given target service principals.
+func fetchReadWriteServicePrincipals(tx graph.Transaction, relationship graph.Kind, targetIDs []graph.ID) (graph.NodeSet, error) {
 	return ops.FetchStartNodes(tx.Relationships().Filterf(func() graph.Criteria {
 		return query.And(
 			query.Kind(query.Start(), azure.ServicePrincipal),
 			query.Kind(query.Relationship(), relationship),
 			query.Kind(query.End(), azure.ServicePrincipal),
-			query.Equals(query.EndID(), targetID),
+			query.InIDs(query.EndID(), targetIDs...),
 		)
 	}))
 }
 
+// aggregateSourceReadWriteServicePrincipals returns the service principals that hold the given MS Graph permission
+// against any service principal contained by the tenant. All tenant service principals are matched in a single query
+// rather than one query per service principal, which does not scale for tenants with millions of service principals.
 func aggregateSourceReadWriteServicePrincipals(tx graph.Transaction, tenantContainsServicePrincipalRelationships []*graph.Relationship, relationship graph.Kind) (graph.NodeSet, error) {
 	defer measure.LogAndMeasure(
 		slog.LevelInfo,
@@ -191,18 +196,20 @@ func aggregateSourceReadWriteServicePrincipals(tx graph.Transaction, tenantConta
 		attr.Function("aggregateSourceReadWriteServicePrincipals"),
 		attr.Scope("routine"),
 		slog.String("permission", relationship.String()),
-		slog.Int("num_queries", len(tenantContainsServicePrincipalRelationships)),
+		slog.Int("num_target_service_principals", len(tenantContainsServicePrincipalRelationships)),
 	)()
 
-	sourceNodes := graph.NewNodeSet()
-	for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
-		if sourceServicePrincipals, err := fetchReadWriteServicePrincipals(tx, relationship, tenantContainsServicePrincipalRelationship.EndID); err != nil {
-			return sourceNodes, err
-		} else {
-			sourceNodes.AddSet(sourceServicePrincipals)
-		}
+	if len(tenantContainsServicePrincipalRelationships) == 0 {
+		return graph.NewNodeSet(), nil
 	}
-	return sourceNodes, nil
+
+	targetIDs := make([]graph.ID, 0, len(tenantContainsServicePrincipalRelationships))
+
+	for _, tenantContainsServicePrincipalRelationship := range tenantContainsServicePrincipalRelationships {
+		targetIDs = append(targetIDs, tenantContainsServicePrincipalRelationship.EndID)
+	}
+
+	return fetchReadWriteServicePrincipals(tx, relationship, targetIDs)
 }
 
 var appRoleAssignmentPostProcessedEdges = graph.Kinds{
