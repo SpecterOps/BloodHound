@@ -65,7 +65,7 @@ const Table = React.forwardRef<
 
     return (
         <TableDragDeltasContext.Provider value={dragDeltas}>
-            {active && hasSortableData(active) && (
+            {hasSortableData(active) && (
                 <TableDragMonitor onMove={recordDragDelta} onReset={resetDragDeltas} />
             )}
             <div
