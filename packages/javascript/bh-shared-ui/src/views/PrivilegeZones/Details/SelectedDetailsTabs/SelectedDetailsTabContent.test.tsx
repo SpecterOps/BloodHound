@@ -16,9 +16,10 @@
 
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { useAutomaticGraphActions, useExploreGraph, useExploreSelectedItem } from '../../../../hooks';
 import { mockSourceKindsHandler, zoneHandlers } from '../../../../mocks';
 import * as zoneMocks from '../../../../mocks/factories/privilegeZones';
-import { render, screen } from '../../../../test-utils';
+import { render, renderHook, screen, waitFor } from '../../../../test-utils';
 import { ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
 import { SelectedDetailsTabContent } from './SelectedDetailsTabContent';
 
@@ -66,45 +67,75 @@ describe('Selected Details Tab Content', () => {
         expect(cypherContainer).toBeInTheDocument();
     });
     it('renders the Object Tab content when Object tab is chosen', async () => {
+        server.use(
+            rest.get('/api/v2/nodes/1', (_req, res, ctx) =>
+                res(ctx.json({ data: { node_id: 1, kinds: [{ name: 'User', node_kind_id: 1 }], properties: {} } }))
+            )
+        );
+
         render(<SelectedDetailsTabContent currentDetailsTab={ObjectTabValue} tagId='1' ruleId='2' memberId='1' />);
 
         const entityInfoPanel = await screen.findByTestId('explore_entity-information-panel');
 
         expect(entityInfoPanel).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /open in explore/i })).toBeVisible();
     });
-    it('renders object information for an OpenGraph object', async () => {
+    it.each([
+        { nodeId: 123, objectId: 'CUSTOM/OBJECT #123' },
+        { nodeId: 0, objectId: 'CUSTOM/OBJECT #0' },
+        { nodeId: 123, objectId: '' },
+    ])('opens graph node $nodeId with object ID "$objectId" in Explore', async ({ nodeId, objectId }) => {
+        const properties = { name: 'Shared name', objectid: objectId, customprop: 'OpenGraph Value' };
+        const namesakeSearch = vi.fn();
+
         server.use(
-            rest.get('/api/v2/asset-group-tags/:tagId/members/:memberId', async (_req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            member: {
-                                id: 123,
-                                asset_group_tag_id: 1,
-                                name: 'Custom Node',
-                                object_id: 'CUSTOM-OBJECT-ID',
-                            },
-                        },
-                    })
-                );
+            rest.get(`/api/v2/asset-group-tags/1/members/${nodeId}`, (_req, res, ctx) =>
+                res(ctx.json({ data: { member: { id: nodeId, object_id: objectId, name: properties.name } } }))
+            ),
+            rest.get(`/api/v2/nodes/${nodeId}`, (_req, res, ctx) =>
+                res(ctx.json({ data: { node_id: nodeId, kinds: [{ name: 'Custom', node_kind_id: 1 }], properties } }))
+            ),
+            rest.get('/api/v2/graph-search', (_req, res, ctx) => {
+                namesakeSearch();
+                return res(ctx.json({ data: { 456: { data: { name: objectId, objectid: 'DIFFERENT-ID' } } } }));
             }),
-            rest.get('/api/v2/nodes/:id', async (_req, res, ctx) => {
-                return res(
-                    ctx.json({
-                        data: {
-                            kinds: [{ name: 'Custom' }],
-                            properties: {
-                                customprop: 'OpenGraph Value',
-                            },
-                        },
-                    })
-                );
+            rest.post('/api/v2/graphs/cypher', async (req, res, ctx) => {
+                const { query } = await req.json<{ query: string }>();
+                if (query !== `MATCH (n) WHERE id(n) = ${nodeId} RETURN n`) return res(ctx.status(400));
+
+                return res(ctx.json({ data: { nodes: { [nodeId]: { kinds: ['Custom'], properties } }, edges: [] } }));
             })
         );
 
-        render(<SelectedDetailsTabContent currentDetailsTab={ObjectTabValue} tagId='1' memberId='123' />);
+        const { unmount } = render(
+            <SelectedDetailsTabContent currentDetailsTab={ObjectTabValue} tagId='1' memberId={String(nodeId)} />
+        );
 
         expect(await screen.findByText('OpenGraph Value')).toBeInTheDocument();
-        expect(screen.queryByText('Unable to load object information for this node.')).not.toBeInTheDocument();
+        const link = screen.getByRole('link', { name: /open in explore/i });
+        const url = new URL((link as HTMLAnchorElement).href);
+
+        expect(url.pathname).toBe('/explore');
+        expect(link).toHaveAttribute('target', '_blank');
+        unmount();
+
+        const { result } = renderHook(
+            () => {
+                const graphQuery = useExploreGraph();
+                useAutomaticGraphActions(graphQuery.data);
+                return { graphQuery, ...useExploreSelectedItem() };
+            },
+            { route: url.pathname + url.search }
+        );
+
+        await waitFor(() => expect(result.current.graphQuery.isSuccess).toBe(true));
+        expect(result.current.graphQuery.data).toEqual({
+            data: { nodes: { [nodeId]: { kinds: ['Custom'], properties } }, edges: [] },
+        });
+        expect(result.current.selectedItem).toBe(String(nodeId));
+        await waitFor(() =>
+            expect(result.current.selectedItemQuery.data).toMatchObject({ node_id: nodeId, properties })
+        );
+        expect(namesakeSearch).not.toHaveBeenCalled();
     });
 });
