@@ -314,7 +314,7 @@ func postAppRoleAssignmentsForTenant(ctx context.Context, db graph.Database, sin
 		}
 
 		for _, step := range steps {
-			stepMeasureDone := measure.ContextLogAndMeasure(
+			stepMeasureDone := measure.ContextLogAndMeasureWithResults(
 				ctx,
 				slog.LevelInfo,
 				"Post-processing App Role Assignments step",
@@ -324,12 +324,12 @@ func postAppRoleAssignmentsForTenant(ctx context.Context, db graph.Database, sin
 				slog.Int64("tenant_id", tenant.ID.Int64()),
 			)
 
-			err := step.run()
-			stepMeasureDone()
-
-			if err != nil {
+			if err := step.run(); err != nil {
+				stepMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 				return err
 			}
+
+			stepMeasureDone()
 		}
 
 		return nil
@@ -794,7 +794,7 @@ func postAzureResetPassword(ctx context.Context, db graph.Database, sink *post.F
 		} else if pwResetRoles.Len() == 0 {
 			return nil
 		} else {
-			targetsMeasureDone := measure.ContextLogAndMeasure(
+			targetsMeasureDone := measure.ContextLogAndMeasureWithResults(
 				ctx,
 				slog.LevelInfo,
 				"Fetching active and eligible role members for AZResetPassword targets",
@@ -805,11 +805,12 @@ func postAzureResetPassword(ctx context.Context, db graph.Database, sink *post.F
 			)
 
 			targetRoleAssignments, err := resetPasswordTargetRoleAssignments(tx, tenant, roleAssignments)
-			targetsMeasureDone()
-
 			if err != nil {
+				targetsMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 				return err
 			}
+
+			targetsMeasureDone()
 
 			// Use the combined active-and-eligible view to check for resettable targets,
 			// but do not modify the original roleAssignments. This ensures that
@@ -1097,27 +1098,36 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPo
 			slog.Int("num_tenants", tenantNodes.Len()),
 		)
 
+		// Measurements that end in an error still log their elapsed time, marked as failed
+		failureAttrs := func(err error) []slog.Attr {
+			return []slog.Attr{slog.String("outcome", "failed"), attr.Error(err)}
+		}
+
 		for _, tenant := range tenantNodes {
 			var (
 				tenantIDAttr         = slog.Int64("tenant_id", tenant.ID.Int64())
-				tenantMeasureDone    = measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Post-processing User Role Assignments for tenant", attr.Namespace("analysis"), attr.Function("UserRoleAssignments"), attr.Scope("routine"), tenantIDAttr)
-				fetchMeasureDone     = measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Fetching tenant role assignments", attr.Namespace("analysis"), attr.Function("FetchTenantRoleAssignments"), attr.Scope("routine"), tenantIDAttr)
+				tenantMeasureDone    = measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Post-processing User Role Assignments for tenant", attr.Namespace("analysis"), attr.Function("UserRoleAssignments"), attr.Scope("routine"), tenantIDAttr)
+				fetchMeasureDone     = measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Fetching tenant role assignments", attr.Namespace("analysis"), attr.Function("FetchTenantRoleAssignments"), attr.Scope("routine"), tenantIDAttr)
 				roleAssignments, err = FetchTenantRoleAssignments(ctx, db, tenant)
 			)
 
+			if err != nil {
+				fetchMeasureDone(failureAttrs(err)...)
+				tenantMeasureDone(failureAttrs(err)...)
+				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
+			}
+
 			fetchMeasureDone()
 
-			if err != nil {
+			resetPasswordMeasureDone := measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Post-processing AZResetPassword edges", attr.Namespace("analysis"), attr.Function("postAzureResetPassword"), attr.Scope("routine"), tenantIDAttr)
+
+			if err := postAzureResetPassword(ctx, db, sink, tenant, roleAssignments); err != nil {
+				resetPasswordMeasureDone(failureAttrs(err)...)
+				tenantMeasureDone(failureAttrs(err)...)
 				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
 			}
 
-			resetPasswordMeasureDone := measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Post-processing AZResetPassword edges", attr.Namespace("analysis"), attr.Function("postAzureResetPassword"), attr.Scope("routine"), tenantIDAttr)
-			err = postAzureResetPassword(ctx, db, sink, tenant, roleAssignments)
 			resetPasswordMeasureDone()
-
-			if err != nil {
-				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
-			}
 
 			adminRolesMeasureDone := measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Post-processing AZGlobalAdmin, AZPrivilegedRoleAdmin and AZPrivilegedAuthAdmin edges", attr.Namespace("analysis"), attr.Function("postAzureGlobalAdmins"), attr.Scope("routine"), tenantIDAttr)
 			postAzureGlobalAdmins(ctx, sink, roleAssignments, tenant)
@@ -1125,17 +1135,18 @@ func UserRoleAssignments(ctx context.Context, db graph.Database) (*post.AtomicPo
 			postAzurePrivilegedAuthAdmins(ctx, sink, roleAssignments, tenant)
 			adminRolesMeasureDone()
 
-			addMembersMeasureDone := measure.ContextLogAndMeasure(ctx, slog.LevelInfo, "Post-processing AZAddMembers edges", attr.Namespace("analysis"), attr.Function("postAzureAddMembers"), attr.Scope("routine"), tenantIDAttr,
+			addMembersMeasureDone := measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Post-processing AZAddMembers edges", attr.Namespace("analysis"), attr.Function("postAzureAddMembers"), attr.Scope("routine"), tenantIDAttr,
 				slog.Int("num_groups", roleAssignments.TenantPrincipals.Get(azure.Group).Len()),
 			)
-			err = postAzureAddMembers(ctx, sink, roleAssignments)
-			addMembersMeasureDone()
 
-			if err != nil {
+			if err := postAzureAddMembers(ctx, sink, roleAssignments); err != nil {
+				addMembersMeasureDone(failureAttrs(err)...)
+				tenantMeasureDone(failureAttrs(err)...)
 				slog.ErrorContext(ctx, "Azure AddMember Post-Processing Failure", attr.Error(err))
 				return &post.AtomicPostProcessingStats{}, errors.Join(err, sink.Abort())
 			}
 
+			addMembersMeasureDone()
 			tenantMeasureDone()
 		}
 

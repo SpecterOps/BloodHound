@@ -306,17 +306,13 @@ func FetchTracker(ctx context.Context, db graph.Database, edgeKinds graph.Kinds)
 		measureDone     = measure.ContextMeasureWithThresholdAndResults(
 			ctx,
 			slog.LevelInfo,
-			"Fetched post-processed edge tracker",
+			"Fetching post-processed edge tracker",
 			attr.Namespace("analysis"),
 			attr.Function("FetchTracker"),
 			attr.Scope("routine"),
 			slog.String("edge_kinds", strings.Join(edgeKinds.Strings(), ",")),
 		)
 	)
-
-	defer func() {
-		measureDone(slog.Int("num_tracked_edges", numTrackedEdges))
-	}()
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Relationships().Filter(query.And(
@@ -332,8 +328,11 @@ func FetchTracker(ctx context.Context, db graph.Database, edgeKinds graph.Kinds)
 			return cursor.Error()
 		})
 	}); err != nil {
+		// Edges read before the failure are not a usable tracker, so report them separately from a completed fetch
+		measureDone(slog.String("outcome", "failed"), attr.Error(err), slog.Int("num_edges_read", numTrackedEdges))
 		return nil, err
 	}
 
+	measureDone(slog.String("outcome", "succeeded"), slog.Int("num_tracked_edges", numTrackedEdges))
 	return builder.Build(), nil
 }

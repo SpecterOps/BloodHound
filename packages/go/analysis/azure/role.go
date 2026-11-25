@@ -264,6 +264,7 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 		)
 
 		if err != nil && !graph.IsErrNotFound(err) {
+			principalsMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 			return err
 		}
 
@@ -278,6 +279,7 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 		rolesMeasureDone := measure.ContextLogAndMeasureWithResults(ctx, slog.LevelInfo, "Fetching tenant roles", attr.Namespace("analysis"), attr.Function("TenantRoles"), attr.Scope("routine"), tenantIDAttr)
 
 		if roles, err := TenantRoles(tx, tenant); err != nil {
+			rolesMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 			return err
 		} else {
 			var (
@@ -296,6 +298,7 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 
 			for _, group := range tenantGroups {
 				if members, err := FetchRoleAssignableGroupMembersUsers(tx, group, 0, 0); err != nil {
+					groupsMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 					return err
 				} else {
 					// set all users who have role assignable group membership
@@ -313,6 +316,7 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 			for _, node := range roles {
 				if roleTemplateID, err := node.Properties.Get(azure.RoleTemplateID.String()).String(); err != nil {
 					if !graph.IsErrPropertyNotFound(err) {
+						roleMembersMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 						return err
 					}
 				} else {
@@ -324,8 +328,12 @@ func FetchTenantRoleAssignments(ctx context.Context, db graph.Database, tenant *
 
 					if members, err := RoleMembers(tx, tenant, roleTemplateID); err != nil {
 						if !graph.IsErrNotFound(err) {
+							roleMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
+							roleMembersMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 							return err
 						}
+
+						roleMeasureDone(slog.Int("num_members", 0))
 					} else {
 						roleMap[roleTemplateID] = members.IDBitmap()
 						roleMeasureDone(slog.Int("num_members", members.Len()))

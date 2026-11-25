@@ -44,10 +44,6 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 		)
 	)
 
-	defer func() {
-		measureDone(slog.Int("num_deleted_relationships", numDeletedRelationships))
-	}()
-
 	for _, kind := range migratedRelationships {
 		var relationshipIDs []graph.ID
 
@@ -65,6 +61,7 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 			relationshipIDs = fetchedRelationshipIDs
 			return err
 		}); err != nil {
+			measureDone(slog.String("outcome", "failed"), attr.Error(err), slog.Int("num_deleted_relationships", numDeletedRelationships))
 			return err
 		}
 
@@ -88,6 +85,8 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 
 				return nil
 			}); err != nil {
+				// Relationships are only counted once their batch succeeds, so this count excludes the failed batch
+				measureDone(slog.String("outcome", "failed"), attr.Error(err), slog.Int("num_deleted_relationships", numDeletedRelationships))
 				return err
 			}
 
@@ -97,5 +96,6 @@ func MigrationForDCAPostProcessedEdges(ctx context.Context, db graph.Database, m
 		}
 	}
 
+	measureDone(slog.String("outcome", "succeeded"), slog.Int("num_deleted_relationships", numDeletedRelationships))
 	return nil
 }
