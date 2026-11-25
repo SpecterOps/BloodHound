@@ -540,6 +540,27 @@ export type UnifiedFinding = {
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
 
+export type SummaryNode = {
+    id: number;
+    platform_id: number;
+    extension_name: string;
+    name: string;
+    object_count: number;
+};
+
+export type SummaryEdge = {
+    source: number;
+    target: number;
+    edge_count: number;
+};
+
+export type SummaryGraph = {
+    nodes: SummaryNode[];
+    edges: SummaryEdge[];
+};
+
+export type SummaryGraphResponse = BasicResponse<SummaryGraph>;
+
 export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
 
 // ---------------------------------------------------------------------------

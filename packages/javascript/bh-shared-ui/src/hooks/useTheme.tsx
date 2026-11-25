@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const spacingScalar = 8;
 const spacing = (value: number = 1) => value * spacingScalar;
@@ -165,5 +165,5 @@ export const useTheme = () => {
         };
     }, [mutationCallback, updateTheme]);
 
-    return { ...theme, isDarkMode };
+    return useMemo(() => ({ ...theme, isDarkMode }), [theme, isDarkMode]);
 };
