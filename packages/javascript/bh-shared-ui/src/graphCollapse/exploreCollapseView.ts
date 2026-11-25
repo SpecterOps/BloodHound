@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { NODE_ID_PREFIX, REL_ID_PREFIX, createRelItemId } from '../utils/parseItemId';
-import { projectGraphCollapse, type CollapsePlan } from './collapsePlan';
+import { projectGraphCollapse, type CollapsePlan, type CollapseViewOptions } from './collapsePlan';
 
 function getObjectId(plan: CollapsePlan, nodeId: string): string | undefined {
     const original = plan.graph.nodes.get(nodeId)?.original;
@@ -50,9 +50,12 @@ export function getExploreCollapseGroupId(plan?: CollapsePlan, selectedId?: stri
 export function projectExploreCollapse(
     plan: CollapsePlan,
     selectedGroupId?: string,
-    protectedObjectIds: readonly (string | null | undefined)[] = []
+    protectedObjectIds: readonly (string | null | undefined)[] = [],
+    options: CollapseViewOptions = {}
 ) {
-    const expandedGroupIds = new Set<string>();
+    if (options.mode === 'expanded') return projectGraphCollapse(plan, options);
+
+    const expandedGroupIds = new Set(options.expandedGroupIds);
     if (selectedGroupId !== undefined) expandedGroupIds.add(selectedGroupId);
 
     const objectIds = new Set(protectedObjectIds.filter(Boolean));
@@ -62,7 +65,7 @@ export function projectExploreCollapse(
         }
     }
 
-    return projectGraphCollapse(plan, { expandedGroupIds });
+    return projectGraphCollapse(plan, { ...options, expandedGroupIds });
 }
 
 export function getCollapseSummaryId(

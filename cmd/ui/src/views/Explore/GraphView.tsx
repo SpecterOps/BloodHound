@@ -40,6 +40,7 @@ import {
     useAutomaticGraphActions,
     useCustomNodeKinds,
     useEdgeTraversability,
+    useExploreCollapseMode,
     useExploreParams,
     useExploreSelectedItem,
     useExploreTableAutoDisplay,
@@ -151,6 +152,7 @@ const GraphView: FC = () => {
     }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphs, pzFeatureFlag?.enabled]);
 
     const { data: originalGraphData, collapsePlan } = graphQuery;
+    const [collapseMode, setCollapseMode] = useExploreCollapseMode(collapsePlan, graphQuery.dataUpdatedAt);
     const selectedGroupId = getExploreCollapseGroupId(collapsePlan, selectedItem);
     const canvasData = useMemo(() => {
         if (!originalGraphData || !collapsePlan || displayTable) return originalGraphData;
@@ -160,11 +162,12 @@ const GraphView: FC = () => {
         return projectSigmaCollapse(
             originalGraphData,
             collapsePlan,
-            projectExploreCollapse(collapsePlan, selectedGroupId, protectedIds)
+            projectExploreCollapse(collapsePlan, selectedGroupId, protectedIds, { mode: collapseMode })
         );
     }, [
         originalGraphData,
         collapsePlan,
+        collapseMode,
         displayTable,
         selectedGroupId,
         searchType,
@@ -395,6 +398,11 @@ const GraphView: FC = () => {
             <div className='absolute top-0 h-full p-4 flex gap-2 justify-between flex-col pointer-events-none'>
                 <ExploreSearch />
                 <GraphControls
+                    collapseControl={
+                        !displayTable && collapsePlan?.groups.size
+                            ? { mode: collapseMode, onModeChange: setCollapseMode }
+                            : undefined
+                    }
                     isExploreTableSelected={isExploreTableSelected}
                     isExploreLayoutSelected={isExploreLayoutSelected}
                     layoutOptions={baseGraphLayouts}

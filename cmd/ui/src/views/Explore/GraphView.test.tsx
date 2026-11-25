@@ -255,6 +255,20 @@ describe('GraphView', () => {
         expect(captureGraph.mock.lastCall?.[0]).toBe(graph);
 
         const user = userEvent.setup();
+
+        await user.click(screen.getByRole('button', { name: 'Expand graph' }));
+        await waitFor(() => {
+            const expanded = captureGraph.mock.lastCall?.[0] as MultiDirectedGraph;
+            expect(expanded.nodes().sort()).toEqual(['1', '2', '3', '4']);
+            expect(expanded.edges().sort()).toEqual(['rel_1', 'rel_2', 'rel_3', 'rel_4', 'rel_5']);
+        });
+        await user.click(screen.getByRole('button', { name: 'Collapse graph' }));
+        await waitFor(() => {
+            const collapsed = captureGraph.mock.lastCall?.[0] as MultiDirectedGraph;
+            expect(collapsed.order).toBe(3);
+            expect(collapsed.hasNode('1')).toBe(false);
+            expect(collapsed.hasEdge('rel_5')).toBe(true);
+        });
         await user.click(screen.getByTestId('explore_graph-controls_search-current-results'));
         const search = within(screen.getByRole('search', { name: 'Search Current Nodes' })).getByRole('textbox');
         await user.type(search, 'First user');

@@ -19,9 +19,11 @@ import {
     faArrowLeft,
     faArrowRight,
     faArrowUp,
+    faCompressArrowsAlt,
     faCropAlt,
     faDiagramProject,
     faDownload,
+    faExpandArrowsAlt,
     faEye,
     faEyeSlash,
     faLeftRight,
@@ -43,6 +45,7 @@ import {
 import capitalize from 'lodash/capitalize';
 import isEmpty from 'lodash/isEmpty';
 import { Fragment, useCallback, useRef, useState } from 'react';
+import type { CollapseViewOptions } from '../../graphCollapse';
 import { useExploreParams, useKeybindings } from '../../hooks';
 import { cn } from '../../utils';
 import { exportToJson } from '../../utils/exportGraphData';
@@ -96,6 +99,10 @@ interface GraphControlsProps<T extends readonly string[]> {
     currentNodes: Record<string, any> | undefined;
     additionalExportActions?: readonly GraphExportAction[];
     layoutControls?: GraphLayoutControlOptions;
+    collapseControl?: {
+        mode: NonNullable<CollapseViewOptions['mode']>;
+        onModeChange: (mode: NonNullable<CollapseViewOptions['mode']>) => void;
+    };
 }
 
 interface SpacingControlProps {
@@ -162,7 +169,9 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
         currentNodes = {},
         additionalExportActions = [],
         layoutControls,
+        collapseControl,
     } = props;
+    const isExpanded = collapseControl?.mode === 'expanded';
     const { searchType } = useExploreParams();
     const [isCurrentSearchOpen, setIsCurrentSearchOpen] = useState(false);
     const searchButtonRef = useRef<HTMLButtonElement>(null);
@@ -249,6 +258,17 @@ function GraphControls<T extends readonly string[]>(props: GraphControlsProps<T>
                         );
                     })}
                 </GraphMenu>
+
+                {collapseControl && (
+                    <IconButton
+                        aria-label={isExpanded ? 'Collapse graph' : 'Expand graph'}
+                        onClick={() => collapseControl.onModeChange(isExpanded ? 'collapsed' : 'expanded')}>
+                        <FontAwesomeIcon
+                            aria-hidden='true'
+                            icon={isExpanded ? faCompressArrowsAlt : faExpandArrowsAlt}
+                        />
+                    </IconButton>
+                )}
 
                 <GraphMenu label='Export' icon={faDownload}>
                     {additionalExportActions.map((action, index) => (

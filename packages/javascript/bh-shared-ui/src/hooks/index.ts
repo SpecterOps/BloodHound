@@ -29,6 +29,7 @@ export * from './useEdgeTypes';
 export * from './useEnvironmentIdList';
 export * from './useEnvironmentParams';
 export * from './useExecuteOnFileDrag';
+export * from './useExploreCollapseMode';
 export * from './useExploreGraph';
 export * from './useExploreParams';
 export * from './useExploreSelectedItem';
