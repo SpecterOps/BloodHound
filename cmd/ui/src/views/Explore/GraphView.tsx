@@ -26,13 +26,16 @@ import {
     GraphViewErrorAlert,
     ManageColumnsComboBoxOption,
     NodeClickInfo,
+    REL_ID_PREFIX,
     WebGLDisabledAlert,
     baseGraphLayouts,
     defaultGraphLayout,
+    getExploreCollapseGroupId,
     glyphUtils,
     isNodeResponse,
     isWebGLEnabled,
     makeStoreMapFromColumnOptions,
+    projectExploreCollapse,
     useAppName,
     useAutomaticGraphActions,
     useCustomNodeKinds,
@@ -67,6 +70,7 @@ import { useAppDispatch, useAppSelector } from 'src/store';
 import { initGraph } from 'src/views/Explore/utils';
 import ContextMenu from './ContextMenu/ContextMenu';
 import ExploreSearch from './ExploreSearch/ExploreSearch';
+import { projectSigmaCollapse } from './graphCollapse/projectSigmaCollapse';
 import { transformIconDictionary } from './svgIcons';
 
 const GraphView: FC = () => {
@@ -84,9 +88,18 @@ const GraphView: FC = () => {
 
     const { selectedItem, setSelectedItem, selectedItemQuery, previousSelectedItem, clearSelectedItem } =
         useExploreSelectedItem();
-    const { searchType, setExploreParams, exploreSearchTab } = useExploreParams();
+    const {
+        searchType,
+        setExploreParams,
+        exploreSearchTab,
+        primarySearch,
+        secondarySearch,
+        tertiarySearch,
+        quaternarySearch,
+    } = useExploreParams();
 
     const graphQuery = useSigmaExploreGraph();
+    const pendingSearchFocus = useRef<{ nodeId: string; plan: typeof graphQuery.collapsePlan }>();
     const { data: edgeTraversability } = useEdgeTraversability();
     // Read at graph build time so traversability updates do not rebuild the graph or rerun its layout.
     const edgeTraversabilityRef = useRef(edgeTraversability);
@@ -137,21 +150,59 @@ const GraphView: FC = () => {
         };
     }, [theme, darkMode, customIconsQuery.data, displayTable, tagGlyphs, pzFeatureFlag?.enabled]);
 
+    const { data: originalGraphData, collapsePlan } = graphQuery;
+    const selectedGroupId = getExploreCollapseGroupId(collapsePlan, selectedItem);
+    const canvasData = useMemo(() => {
+        if (!originalGraphData || !collapsePlan || displayTable) return originalGraphData;
+
+        const protectedIds =
+            searchType === 'pathfinding' ? [primarySearch, secondarySearch, tertiarySearch, quaternarySearch] : [];
+        return projectSigmaCollapse(
+            originalGraphData,
+            collapsePlan,
+            projectExploreCollapse(collapsePlan, selectedGroupId, protectedIds)
+        );
+    }, [
+        originalGraphData,
+        collapsePlan,
+        displayTable,
+        selectedGroupId,
+        searchType,
+        primarySearch,
+        secondarySearch,
+        tertiarySearch,
+        quaternarySearch,
+    ]);
+
     // Initialize graph data for rendering with sigmajs
     useEffect(() => {
-        if (!graphQuery.data) return;
-
-        const graphData = graphQuery.data;
+        if (!canvasData) return;
 
         if (graphOptions.hideNodes) {
             setGraphologyGraph(undefined);
         } else {
             const currentEdgeTraversability = edgeTraversabilityRef.current;
-            const graph = initGraph(graphData, { ...graphOptions, edgeTraversability: currentEdgeTraversability });
+            const graph = initGraph(canvasData, { ...graphOptions, edgeTraversability: currentEdgeTraversability });
             appliedEdgeTraversabilityRef.current = currentEdgeTraversability;
             setGraphologyGraph(graph);
         }
-    }, [graphQuery.data, graphOptions]);
+    }, [canvasData, graphOptions]);
+
+    useEffect(() => {
+        const pending = pendingSearchFocus.current;
+        if (!pending) return;
+        if (pending.plan !== graphQuery.collapsePlan) {
+            pendingSearchFocus.current = undefined;
+            return;
+        }
+        if (pending.nodeId !== selectedItem || !graphologyGraph?.hasNode(pending.nodeId)) return;
+
+        const frame = requestAnimationFrame(() => {
+            pendingSearchFocus.current = undefined;
+            sigmaChartRef.current?.zoomTo(pending.nodeId);
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [graphologyGraph, graphQuery.collapsePlan, selectedItem]);
 
     // Update styles when schema metadata arrives without rebuilding the graph or its layout.
     useEffect(() => {
@@ -164,13 +215,33 @@ const GraphView: FC = () => {
         appliedEdgeTraversabilityRef.current = edgeTraversability;
     }, [graphologyGraph, edgeTraversability]);
 
+    const handleNodeClick = useCallback(
+        (id: string) => {
+            if (graphologyGraph?.hasNode(id) && !graphologyGraph.getNodeAttribute(id, 'collapseGroupId'))
+                setSelectedItem(id);
+        },
+        [graphologyGraph, setSelectedItem]
+    );
+
+    const handleEdgeClick = useCallback(
+        (id: string) => {
+            if (id.startsWith(REL_ID_PREFIX) && graphologyGraph?.hasEdge(id)) setSelectedItem(id);
+        },
+        [graphologyGraph, setSelectedItem]
+    );
+
     /* useCallback Event Handlers must appear before return statement */
     const handleContextMenu = useCallback(
         (event: SigmaNodeEventPayload) => {
+            if (
+                !graphologyGraph?.hasNode(event.node) ||
+                graphologyGraph.getNodeAttribute(event.node, 'collapseGroupId')
+            )
+                return;
             setSelectedItem(event.node);
             setContextMenu({ mouseX: event.event.original.clientX, mouseY: event.event.original.clientY });
         },
-        [setContextMenu, setSelectedItem]
+        [graphologyGraph, setContextMenu, setSelectedItem]
     );
 
     const handleKebabMenuClick = useCallback(
@@ -312,8 +383,8 @@ const GraphView: FC = () => {
             <SigmaChart
                 graph={graphologyGraph}
                 highlightedItem={selectedItem}
-                onClickEdge={setSelectedItem}
-                onClickNode={setSelectedItem}
+                onClickEdge={handleEdgeClick}
+                onClickNode={handleNodeClick}
                 onClickStage={clearSelectedItem}
                 handleContextMenu={handleContextMenu}
                 showNodeLabels={showNodeLabels}
@@ -337,8 +408,14 @@ const GraphView: FC = () => {
                     onReset={() => sigmaChartRef.current?.resetCamera()}
                     currentNodes={graphQuery.data?.nodes}
                     onSearchedNodeClick={(node) => {
-                        node.id && setSelectedItem(node.id);
-                        sigmaChartRef?.current?.zoomTo(node.id);
+                        if (!node.id) return;
+                        if (graphologyGraph?.hasNode(node.id)) {
+                            pendingSearchFocus.current = undefined;
+                            sigmaChartRef.current?.zoomTo(node.id);
+                        } else {
+                            pendingSearchFocus.current = { nodeId: node.id, plan: graphQuery.collapsePlan };
+                        }
+                        setSelectedItem(node.id);
                     }}
                 />
             </div>

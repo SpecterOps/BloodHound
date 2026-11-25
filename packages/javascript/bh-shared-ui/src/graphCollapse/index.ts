@@ -16,4 +16,5 @@
 
 export * from './collapsePlan';
 export * from './collapseSimilarLeaves';
+export * from './exploreCollapseView';
 export * from './sourceGraph';

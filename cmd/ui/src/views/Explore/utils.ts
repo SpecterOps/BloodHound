@@ -30,10 +30,11 @@ import {
 import { MultiDirectedGraph } from 'graphology';
 import { random } from 'graphology-layout';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
-import { GraphData, GraphEdge, GraphEdges, GraphNode, GraphNodes } from 'js-client-library';
+import { GraphNode } from 'js-client-library';
 import { Glyph, GlyphLocation } from 'src/rendering/programs/node.glyphs';
 import { RankDirection, setDagreLayout } from 'src/rendering/utils/dagre';
 import { EdgeDirection, EdgeParams, NodeParams, ThemedOptions } from 'src/utils';
+import type { SigmaExploreEdge, SigmaExploreItems } from './graphCollapse/projectSigmaCollapse';
 
 export const standardLayout = (graph: MultiDirectedGraph) => {
     forceAtlas2.assign(graph, {
@@ -70,10 +71,10 @@ type GraphOptions = {
     edgeTraversability?: EdgeTraversability;
 };
 
-export const initGraph = (items: GraphData, options: GraphOptions) => {
+export const initGraph = (items: SigmaExploreItems, options: GraphOptions) => {
     const graph = new MultiDirectedGraph();
 
-    const { nodes, edges } = items;
+    const { nodes, edges, summaryNodes } = items;
     const { theme } = options;
     const themedOptions = {
         labels: {
@@ -91,7 +92,7 @@ export const initGraph = (items: GraphData, options: GraphOptions) => {
         },
     };
 
-    initGraphNodes(graph, nodes, { ...options, themedOptions });
+    initGraphNodes(graph, nodes, { ...options, themedOptions }, summaryNodes);
     initGraphEdges(graph, edges, { ...options, themedOptions });
 
     random.assign(graph, { scale: 1000 });
@@ -163,10 +164,19 @@ export const getNodeGlyphs = (
     return glyphs;
 };
 
+const getCountGlyphImage = (count: number, darkMode: boolean) => {
+    const text = String(count);
+    const fontSize = Math.min(40, 84 / text.length);
+    const color = darkMode ? 'black' : 'white';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><text x="32" y="32" text-anchor="middle" dominant-baseline="central" font-family="sans-serif" font-size="${fontSize}" font-weight="bold" fill="${color}">${text}</text></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
 const initGraphNodes = (
     graph: MultiDirectedGraph,
-    nodes: GraphNodes,
-    options: GraphOptions & { themedOptions: ThemedOptions }
+    nodes: SigmaExploreItems['nodes'],
+    options: GraphOptions & { themedOptions: ThemedOptions },
+    summaryNodes: SigmaExploreItems['summaryNodes']
 ) => {
     const { themedOptions, customIcons, hideNodes } = options;
 
@@ -188,6 +198,14 @@ const initGraphNodes = (
         nodeParams.image = iconInfo.url || '';
 
         const glyphs = getNodeGlyphs(node, options, GLYPHS);
+        const summary = summaryNodes?.get(key);
+        if (summary) {
+            glyphs.push({
+                location: GlyphLocation.TOP_LEFT,
+                image: getCountGlyphImage(summary.count, options.darkMode),
+                ...themedOptions.glyph.colors,
+            });
+        }
         if (glyphs.length > 0) {
             nodeParams.glyphs = glyphs;
             nodeParams.type = 'glyphs';
@@ -197,41 +215,45 @@ const initGraphNodes = (
             size: 25,
             borderColor: themedOptions.nodeBorderColor,
             ...nodeParams,
+            ...(summary && { collapseGroupId: summary.groupId, collapseCount: summary.count }),
         });
     });
 };
 
 const initGraphEdges = (
     graph: MultiDirectedGraph,
-    edges: GraphEdges,
+    edges: SigmaExploreEdge[],
     options: GraphOptions & { themedOptions: ThemedOptions }
 ) => {
     const { themedOptions, edgeTraversability } = options;
 
     // Group edges with the same start and end nodes into arrays. Should be grouped regardless of direction
     const lookupSet = new Set<string>();
-    const groupedEdges = edges.reduce<Record<string, GraphEdges>>((groups, edge) => {
-        const groupKey = getEdgeGroupKey(edge);
-        const edgeKey = getEdgeKey(edge);
+    const groupedEdges = edges.reduce<Record<string, { edge: SigmaExploreEdge; id: string }[]>>(
+        (groups, edge, index) => {
+            const groupKey = getEdgeGroupKey(edge);
+            const id = getSigmaEdgeId(edge, index);
 
-        if (!groups[groupKey]) {
-            groups[groupKey] = [];
-        }
+            if (!groups[groupKey]) {
+                groups[groupKey] = [];
+            }
 
-        // Dedupe edges before they are added to groups so that curved edges get counted and rendered correctly
-        if (!lookupSet.has(edgeKey)) {
-            lookupSet.add(edgeKey);
-            groups[groupKey].push(edge);
-        }
+            // Dedupe edges before they are added to groups so that curved edges get counted and rendered correctly
+            if (!lookupSet.has(id)) {
+                lookupSet.add(id);
+                groups[groupKey].push({ edge, id });
+            }
 
-        return groups;
-    }, {});
+            return groups;
+        },
+        {}
+    );
 
     // Loop through our group arrays
     for (const group in groupedEdges) {
         const groupSize = groupedEdges[group].length;
 
-        for (const [i, edge] of groupedEdges[group].entries()) {
+        for (const [i, { edge, id }] of groupedEdges[group].entries()) {
             const key = getEdgeKey(edge);
 
             // Set default values for single edges
@@ -270,16 +292,31 @@ const initGraphEdges = (
                 edgeParams.groupSize = groupSize;
             }
 
-            graph.addEdgeWithKey(`${REL_ID_PREFIX}${edge.id}`, edge.source, edge.target, edgeParams);
+            graph.addEdgeWithKey(id, edge.source, edge.target, {
+                ...edgeParams,
+                ...('summaryId' in edge && { collapseGroupId: edge.collapseGroupId }),
+            });
         }
     }
 };
 
-const getEdgeKey = (edge: GraphEdge) => {
+function getSigmaEdgeId(edge: SigmaExploreEdge, index: number): string {
+    if ('summaryId' in edge) return edge.summaryId;
+    if (
+        edge.exploreGraphId?.startsWith(REL_ID_PREFIX) &&
+        /^\d+$/.test(edge.exploreGraphId.slice(REL_ID_PREFIX.length))
+    ) {
+        return edge.exploreGraphId;
+    }
+    const id = String(edge.id ?? '');
+    return id === '' ? `anonymous-edge:${index}` : REL_ID_PREFIX + id;
+}
+
+const getEdgeKey = (edge: SigmaExploreEdge) => {
     return `${edge.source}_${edge.kind}_${edge.target}`;
 };
 
-const getEdgeGroupKey = (edge: GraphEdge) => {
+const getEdgeGroupKey = (edge: SigmaExploreEdge) => {
     const identifiers = [edge.source, edge.target].sort();
     return `${identifiers[0]}_${identifiers[1]}`;
 };

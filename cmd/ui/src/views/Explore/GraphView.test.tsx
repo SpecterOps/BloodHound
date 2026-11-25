@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import { customNodeKindsKeys, featureFlagKeys } from 'bh-shared-ui';
 import {
     createAuthStateWithPermissions,
     cypherTestResponse,
@@ -27,27 +28,33 @@ import { MultiDirectedGraph } from 'graphology';
 import { GraphEdge } from 'js-client-library';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { render, screen, waitFor, within } from 'src/test-utils';
+import { QueryClient } from 'react-query';
+import { act, render, screen, waitFor, within } from 'src/test-utils';
 import GraphView from './GraphView';
 
 const captureGraph = vi.hoisted(() => vi.fn());
+const captureNodeClick = vi.hoisted(() => vi.fn());
+const zoomToMock = vi.hoisted(() => vi.fn());
 
 // Mock sigma here to avoid rendering conflicts in jsdom
 vi.mock('src/components/SigmaChart', async () => {
     const { forwardRef, useImperativeHandle } = await import('react');
 
     return {
-        default: forwardRef<unknown, { graph?: MultiDirectedGraph }>((props, ref) => {
-            captureGraph(props.graph);
-            useImperativeHandle(ref, () => ({
-                runStandardLayout: vi.fn(),
-                runSequentialLayout: vi.fn(),
-                resetCamera: vi.fn(),
-                zoomTo: vi.fn(),
-            }));
+        default: forwardRef<unknown, { graph?: MultiDirectedGraph; onClickNode?: (id: string) => void }>(
+            (props, ref) => {
+                captureGraph(props.graph);
+                captureNodeClick(props.onClickNode);
+                useImperativeHandle(ref, () => ({
+                    runStandardLayout: vi.fn(),
+                    runSequentialLayout: vi.fn(),
+                    resetCamera: vi.fn(),
+                    zoomTo: zoomToMock,
+                }));
 
-            return <div data-testid='sigma-container-wrapper' />;
-        }),
+                return <div data-testid='sigma-container-wrapper' />;
+            }
+        ),
     };
 });
 
@@ -190,6 +197,74 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('GraphView', () => {
+    it('renders a counted summary leaf with its original direction and keeps parallel relationships', async () => {
+        const relationship = (id: number, source: string, target: string, kind: string): GraphEdge => ({
+            id,
+            source,
+            target,
+            kind,
+            label: kind,
+            lastSeen: '',
+        });
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) =>
+                res(
+                    ctx.json({
+                        data: {
+                            nodes: {
+                                '1': { ...searchedNode, label: 'First user' },
+                                '2': { ...searchedNode, label: 'Second user' },
+                                '3': { ...searchedNode, label: 'Group', kind: 'Group', kinds: ['Group'] },
+                                '4': { ...searchedNode, label: 'Computer', kind: 'Computer', kinds: ['Computer'] },
+                            },
+                            edges: [
+                                relationship(1, '1', '3', 'MemberOf'),
+                                relationship(2, '2', '3', 'MemberOf'),
+                                relationship(3, '3', '4', 'GenericAll'),
+                                relationship(4, '3', '4', 'GenericWrite'),
+                                relationship(5, '3', '4', 'GenericWrite'),
+                            ],
+                        },
+                    })
+                )
+            )
+        );
+        const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+        queryClient.setQueryData(customNodeKindsKeys.all, {});
+        queryClient.setQueryData(featureFlagKeys.all, [{ key: 'tier_management_engine', enabled: false }]);
+        render(<GraphView />, { queryClient, route: '/explore?searchType=cypher&cypherSearch=encodedquery' });
+
+        await waitFor(() => {
+            const graph = captureGraph.mock.lastCall?.[0] as MultiDirectedGraph | undefined;
+            expect(graph?.order).toBe(3);
+            const summary = graph!.findNode((_id, attributes) => attributes.collapseCount === 2);
+            expect(summary).toBeDefined();
+            const glyphs = graph!.getNodeAttribute(summary!, 'glyphs') as { image: string }[];
+            expect(glyphs.some((glyph) => decodeURIComponent(glyph.image).includes('>2</text>'))).toBe(true);
+            expect(graph!.hasNode('1')).toBe(false);
+            expect(graph!.hasNode('2')).toBe(false);
+            expect(graph!.hasDirectedEdge(summary!, '3')).toBe(true);
+            expect(graph!.hasEdge('rel_3')).toBe(true);
+            expect(graph!.hasEdge('rel_4')).toBe(true);
+            expect(graph!.hasEdge('rel_5')).toBe(true);
+        });
+
+        const graph = captureGraph.mock.lastCall?.[0] as MultiDirectedGraph;
+        const clickNode = captureNodeClick.mock.lastCall?.[0];
+        await act(() => clickNode('3'));
+        expect(captureGraph.mock.lastCall?.[0]).toBe(graph);
+
+        const user = userEvent.setup();
+        await user.click(screen.getByTestId('explore_graph-controls_search-current-results'));
+        const search = within(screen.getByRole('search', { name: 'Search Current Nodes' })).getByRole('textbox');
+        await user.type(search, 'First user');
+        const searchResult = await screen.findByTestId('explore_search_result-list-item');
+        await act(async () => {
+            await user.click(searchResult);
+        });
+        await waitFor(() => expect(zoomToMock).toHaveBeenCalledWith('1'));
+    });
+
     it('applies traversability when metadata arrives without replacing the graph', async () => {
         let releaseMetadata!: () => void;
         const metadataReady = new Promise<void>((resolve) => {
