@@ -19,11 +19,15 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"log/slog"
 	"slices"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/cespare/xxhash/v2"
+	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/query"
@@ -296,7 +300,19 @@ func (s *EdgeTrackerBuilder) Build() *Tracker {
 // this data to then build a Tracker. Edge properties are included in the tracker so that property changes
 // are detected during delta filtering.
 func FetchTracker(ctx context.Context, db graph.Database, edgeKinds graph.Kinds) (*Tracker, error) {
-	builder := NewTrackerBuilder()
+	var (
+		builder         = NewTrackerBuilder()
+		numTrackedEdges = 0
+		measureDone     = measure.ContextMeasureWithThresholdAndResults(
+			ctx,
+			slog.LevelInfo,
+			"Fetching post-processed edge tracker",
+			attr.Namespace("analysis"),
+			attr.Function("FetchTracker"),
+			attr.Scope("routine"),
+			slog.String("edge_kinds", strings.Join(edgeKinds.Strings(), ",")),
+		)
+	)
 
 	if err := db.ReadTransaction(ctx, func(tx graph.Transaction) error {
 		return tx.Relationships().Filter(query.And(
@@ -305,14 +321,18 @@ func FetchTracker(ctx context.Context, db graph.Database, edgeKinds graph.Kinds)
 			query.Not(query.KindIn(query.End(), graphschema.Meta, graphschema.MetaDetail)),
 		)).Fetch(func(cursor graph.Cursor[*graph.Relationship]) error {
 			for relationship := range cursor.Chan() {
+				numTrackedEdges += 1
 				builder.TrackEdge(relationship.ID.Uint64(), relationship.StartID.Uint64(), relationship.EndID.Uint64(), relationship.Kind, relationship.Properties.Map)
 			}
 
 			return cursor.Error()
 		})
 	}); err != nil {
+		// Edges read before the failure are not a usable tracker, so report them separately from a completed fetch
+		measureDone(slog.String("outcome", "failed"), attr.Error(err), slog.Int("num_edges_read", numTrackedEdges))
 		return nil, err
 	}
 
+	measureDone(slog.String("outcome", "succeeded"), slog.Int("num_tracked_edges", numTrackedEdges))
 	return builder.Build(), nil
 }
