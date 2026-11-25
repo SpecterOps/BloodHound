@@ -290,6 +290,7 @@ func (s *tenantReadWriteAllGroupTargets) Fetch(ctx context.Context, tx graph.Tra
 
 	relationships, err := fetchTenantContainsReadWriteAllGroupRelationships(tx, s.tenant)
 	if err != nil {
+		measureDone(slog.String("outcome", "failed"), attr.Error(err))
 		return nil, err
 	}
 
@@ -334,11 +335,13 @@ func postAppRoleAssignmentsForTenant(ctx context.Context, db graph.Database, sin
 
 		tenantContainsServicePrincipalRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.ServicePrincipal)
 		if err != nil {
+			fetchMeasureDone(slog.String("outcome", "failed"), attr.Error(err))
 			return err
 		}
 
 		tenantContainsAppRelationships, err := fetchTenantContainsRelationships(tx, tenant, azure.App)
 		if err != nil {
+			fetchMeasureDone(slog.String("outcome", "failed"), attr.Error(err), slog.Int("num_service_principals", len(tenantContainsServicePrincipalRelationships)))
 			return err
 		}
 
