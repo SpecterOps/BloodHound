@@ -1,0 +1,147 @@
+# Copyright 2026 Specter Ops, Inc.
+#
+# Licensed under the Apache License, Version 2.0
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+type: object
+additionalProperties: false
+required:
+  - manifest_version
+  - display_name
+  - extension_name
+  - version
+  - description
+  - platform 
+  - capability 
+  - author 
+  - type
+  - logo_url
+properties:
+  manifest_version:
+    type: integer
+  display_name:
+    type: string
+  extension_name:
+    type: string
+  version: 
+    type: string 
+    description: "Extension version."
+  description: 
+    type: string
+  platform: 
+    type: string
+  capability: 
+    type: string
+    enum: [
+      "Collect data",
+      "Extend graph coverage",
+      "Enrich entities",
+      "Integrations",
+      "Visualize data",
+    ]
+  author: 
+    type: string
+  support: 
+    type: string
+    enum: [
+      "SpecterOps",
+      "Community",
+      "unvalidated"
+    ]
+  type: 
+    type: string
+    enum: [
+      "extension", 
+      "integration"
+    ]
+  lifecycle: 
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items: 
+      type: string
+      enum: [
+        "ea",
+        "general",
+        "enterprise",
+        "community",
+        "new",
+        "beta",
+        "coming-soon",
+        "deprecated"
+      ]
+  required_collection_access:
+    type: array
+    items: 
+      type: object
+      required: [
+        "text"
+      ]
+      properties:
+        text:
+          type: string
+        documentation_url:
+          type: string
+          format: uri
+          pattern: "^https://"
+  installation: 
+    description: Required unless lifecycle contains coming-soon.
+    oneOf: 
+      - type: object
+        required: 
+          - artifact_key
+        additionalProperties: false
+        properties:
+          artifact_key: 
+            type: string
+            description: "Exact artifact path inside the bucket."
+            example: "marketplace/extension-bundles/Okta/Okta-v0.0.0.zip"
+      
+      - type: object
+        required: 
+          - documentation_url
+        additionalProperties: false
+        properties:
+          documentation_url:
+            type: string 
+            format: uri
+            pattern: "^https://"
+  logo_url:
+    type: string
+    format: uri
+    readOnly: true
+    description: "s3 URL or external logo URL"
+  installation_status: 
+    type: string
+    enum: [
+      "installed",
+      "update-available"
+    ]
+    description: Omitted for extensions not installed, or for instruction-only / Community listings.
+  installed_version: 
+    type: string
+    description: Omitted if the extension is not installed, or is an instruction-only / Community listing.
+anyOf:
+  # this rule enforces that installation is NOT required if the lifecycle is `coming-soon`
+  - required:
+      - installation
+  - required:
+      - lifecycle
+    properties:
+      lifecycle:
+        not:
+          type: array
+          items:
+            not:
+              enum: [coming-soon]
