@@ -91,6 +91,7 @@ import {
     CreateWebhookResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
+    EnterpriseViewGraphResponse,
     Environment,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
@@ -142,7 +143,6 @@ import {
     SavedQueryPermissionsResponse,
     SourceKindsResponse,
     StartFileIngestResponse,
-    SummaryGraphResponse,
     SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
     UpdateCollectorJobScheduleResponse,
@@ -638,8 +638,8 @@ class BHEAPIClient {
             Object.assign({ params: { skip } }, options)
         );
 
-    getPlatformSummaryNodes = (options?: RequestOptions) => {
-        return this.baseClient.get<SummaryGraphResponse>('/api/v2/summary-nodes/platforms', options);
+    getEnterpriseViewGraph = (options?: RequestOptions) => {
+        return this.baseClient.get<EnterpriseViewGraphResponse>('/api/v2/enterprise-view/graph', options);
     };
 
     exportRiskFindings = (environmentId: string, findingName: string, accepted?: boolean, options?: RequestOptions) =>

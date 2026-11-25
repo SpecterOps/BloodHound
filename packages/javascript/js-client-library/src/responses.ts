@@ -544,7 +544,7 @@ export type UnifiedFinding = {
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
 
-export type SummaryNode = {
+export type EnterpriseViewGraphNode = {
     id: number;
     platform_id: number;
     extension_name: string;
@@ -552,18 +552,18 @@ export type SummaryNode = {
     object_count: number;
 };
 
-export type SummaryEdge = {
+export type EnterpriseViewGraphEdge = {
     source: number;
     target: number;
     edge_count: number;
 };
 
-export type SummaryGraph = {
-    nodes: SummaryNode[];
-    edges: SummaryEdge[];
+export type EnterpriseViewGraph = {
+    nodes: EnterpriseViewGraphNode[];
+    edges: EnterpriseViewGraphEdge[];
 };
 
-export type SummaryGraphResponse = BasicResponse<SummaryGraph>;
+export type EnterpriseViewGraphResponse = BasicResponse<EnterpriseViewGraph>;
 
 export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
 
