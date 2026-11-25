@@ -15,10 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faListUl, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { DocsPage } from '@storybook/blocks';
-import type { Meta, StoryObj } from '@storybook/react';
-import { expect, fn, within } from '@storybook/test';
-import { useTheme } from '@storybook/theming';
+import { DocsPage } from '@storybook/addon-docs/blocks';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, fn, within } from 'storybook/test';
+import { useTheme } from 'storybook/theming';
 import { Button, TextButton as TextButtonComponent } from './Button';
 
 const ButtonDocsPage = () => {

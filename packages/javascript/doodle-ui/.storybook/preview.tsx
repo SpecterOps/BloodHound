@@ -18,7 +18,7 @@ import '@fontsource/figtree/500.css';
 import '@fontsource/nunito-sans/600.css';
 import '@fontsource/nunito-sans/700.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
-import type { Preview, ReactRenderer } from '@storybook/react';
+import type { Preview, ReactRenderer } from '@storybook/react-vite';
 import '../src/input.css';
 
 const preview: Preview = {

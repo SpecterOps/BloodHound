@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MagnifyingGlass } from '../../styleguide/components/AppIcons/components/MagnifyingGlass';
 import { User } from '../../styleguide/components/AppIcons/components/User';
 import { UserCog } from '../../styleguide/components/AppIcons/components/UserCog';

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ColumnPinningState } from '@tanstack/react-table';
 import { useState } from 'react';
 import { Button } from '../Button';

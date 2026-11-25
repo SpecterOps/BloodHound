@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { useArgs } from '@storybook/preview-api';
-import type { Meta, StoryObj } from '@storybook/react';
+import { useArgs } from 'storybook/preview-api';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useRef, useState } from 'react';
 import { Slider } from './Slider';
 

@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faCaretDown, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Meta, StoryObj } from '@storybook/react';
-import { expect, fn, userEvent, within } from '@storybook/test';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '../Menu';
