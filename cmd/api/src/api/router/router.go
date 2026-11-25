@@ -138,6 +138,12 @@ func (s *Route) Use(middleware ...mux.MiddlewareFunc) {
 	s.handler.Use(middleware...)
 }
 
+// TrackMetrics marks the route for per-handler API request metrics.
+func (s *Route) TrackMetrics() *Route {
+	s.mux.Handler(middleware.TrackMetrics(s.mux.GetHandler()))
+	return s
+}
+
 func (s *Route) RequireAuth() *Route {
 	return s.RequirePermissions()
 }
@@ -221,6 +227,11 @@ func NewRouter(cfg config.Configuration, authorizer auth.Authorizer, contentSecu
 // chain. It only runs when a registered route matches the request.
 func (s Router) UsePostrouting(middleware ...mux.MiddlewareFunc) {
 	s.postroutingMiddleware.AppendAfterAuthentication(middleware...)
+}
+
+// Authorizer returns the configured authorization policy.
+func (s Router) Authorizer() auth.Authorizer {
+	return s.authorizer
 }
 
 // UsePanicRecovery registers post-routing middleware that wraps all subsequent

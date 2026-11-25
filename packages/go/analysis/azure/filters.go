@@ -80,16 +80,35 @@ func FilterGroupMembers() graph.Criteria {
 	)
 }
 
+// FilterRoleAssignableGroupMembersUsers matches user membership in role assignable groups. The property criteria must
+// stay consistent with isRoleAssignableGroup.
 func FilterRoleAssignableGroupMembersUsers() graph.Criteria {
 	return query.And(
 		query.Kind(query.Relationship(), azure.MemberOf),
 		query.Kind(query.Start(), azure.User),
-		query.Equals(query.EndProperty(azure.IsAssignableToRole.String()), "true"),
+		// Current ingestion writes a boolean. Match legacy string "true" as well so
+		// both representations populate the membership set used to exclude targets.
+		query.Or(
+			query.Equals(query.EndProperty(azure.IsAssignableToRole.String()), true),
+			query.Equals(query.EndProperty(azure.IsAssignableToRole.String()), "true"),
+		),
 	)
 }
 
 func FilterContains() graph.Criteria {
 	return query.KindIn(query.Relationship(), azure.Contains)
+}
+
+// isRoleAssignableGroup reports whether the given group node is marked as role assignable. Current ingestion stores a
+// boolean, but older data can contain the string "true"; both are accepted. False, missing, or invalid values are not.
+// This must stay consistent with the property criteria in FilterRoleAssignableGroupMembersUsers.
+func isRoleAssignableGroup(group *graph.Node) bool {
+	switch group.Properties.Get(azure.IsAssignableToRole.String()).Any() {
+	case true, "true":
+		return true
+	default:
+		return false
+	}
 }
 
 func roleDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bool {
@@ -108,9 +127,9 @@ func roleDescentFilter(ctx *ops.TraversalContext, segment *graph.PathSegment) bo
 				groupVisited = true
 			}
 
-			// If the group does not allow role inheritance then we do not inherit the terminal role
-			if isRoleAssignable, err := end.Properties.Get(azure.IsAssignableToRole.String()).Bool(); err != nil || !isRoleAssignable {
-				if graph.IsErrPropertyNotFound(err) {
+			// False, missing, or invalid values must stop traversal through this group.
+			if !isRoleAssignableGroup(end) {
+				if end.Properties.Get(azure.IsAssignableToRole.String()).IsNil() {
 					slog.Warn(
 						"Node is missing property isassignabletorole",
 						slog.Uint64("node_id", uint64(end.ID)),

@@ -130,7 +130,11 @@ properties:
       properties:
         key:
           type: string
-          description: A stable identifier for reconciling rules between extension upserts.
+          description: |
+            A stable identifier for reconciling rules between extension upserts.
+            It must start with the extension namespace followed by an underscore
+            and a suffix that contains at least one non-whitespace character.
+          example: OGE_environment-nodes
         name:
           type: string
         description:
@@ -172,8 +176,11 @@ properties:
       properties:
         query_key:
           type: string
-          description: A stable identifier for reconciling the saved query.
-          example: critical-assets
+          description: |
+            A stable identifier for reconciling the saved query.
+            It must start with the extension namespace followed by an underscore
+            and a suffix that contains at least one non-whitespace character.
+          example: OGE_all-node-kind-1
         name:
           type: string
           description: The saved query's display name.

@@ -82,6 +82,7 @@ export const useTagFormUtils = () => {
         isLabelPage,
         isZonePage,
         isUpdateZoneLocation,
+        isUpdateLabelLocation,
         showAnalysisToggle,
         showDeleteButton,
         handleCreateNavigate,

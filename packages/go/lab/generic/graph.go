@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"strings"
 	"testing"
 
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -112,11 +113,51 @@ func LoadGraphFromFile(fSys fs.FS, path string) (Graph, error) {
 
 	decoder := json.NewDecoder(fh)
 	decoder.DisallowUnknownFields()
+	decoder.UseNumber()
 	if err := decoder.Decode(&graphFixture); err != nil {
 		return graphFixture.Graph, fmt.Errorf("could not parse graph data file: %w", err)
-	} else {
-		return graphFixture.Graph, nil
 	}
+
+	for _, node := range graphFixture.Graph.Nodes {
+		if _, err := normalizeFixtureNumbers(node.Properties); err != nil {
+			return Graph{}, fmt.Errorf("could not parse properties of node %s: %w", node.ID, err)
+		}
+	}
+	for _, edge := range graphFixture.Graph.Edges {
+		if _, err := normalizeFixtureNumbers(edge.Properties); err != nil {
+			return Graph{}, fmt.Errorf("could not parse properties of edge %s: %w", edge.Kind, err)
+		}
+	}
+
+	return graphFixture.Graph, nil
+}
+
+// Match dawgs' property decoding without rounding JSON integers through float64.
+func normalizeFixtureNumbers(value any) (any, error) {
+	switch typedValue := value.(type) {
+	case json.Number:
+		if strings.ContainsAny(string(typedValue), ".eE") {
+			return typedValue.Float64()
+		}
+		return typedValue.Int64()
+	case map[string]any:
+		for key, item := range typedValue {
+			normalizedValue, err := normalizeFixtureNumbers(item)
+			if err != nil {
+				return nil, fmt.Errorf("property %q: %w", key, err)
+			}
+			typedValue[key] = normalizedValue
+		}
+	case []any:
+		for index, item := range typedValue {
+			normalizedValue, err := normalizeFixtureNumbers(item)
+			if err != nil {
+				return nil, fmt.Errorf("index %d: %w", index, err)
+			}
+			typedValue[index] = normalizedValue
+		}
+	}
+	return value, nil
 }
 
 func AssertDatabaseGraph(t *testing.T, ctx context.Context, db graph.Database, expected *Graph) {

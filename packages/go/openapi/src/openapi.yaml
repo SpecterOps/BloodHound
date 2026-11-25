@@ -200,6 +200,8 @@ x-tagGroups:
       - Asset Scores
       - Meta Entities
       - Alerts
+      - Graph Retention Policies
+      - Marketplace
 paths:
   ##
   # Community + Enterprise Endpoints
@@ -390,10 +392,14 @@ paths:
     $ref: './paths/graph.graphs.relay-targets.yaml'
   /api/v2/graphs/acl-inheritance:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
-  # /api/v2/graph-retention-policies/base/policy:
-  #   $ref: './paths/graph-retention-policies.base.policy.yaml'
-  # /api/v2/graph-retention-policies/extensions/{extension_id}/policy:
-  #   $ref: './paths/graph-retention-policies.extensions.id.policy.yaml'
+
+  # graph retention policies
+  # /api/v2/graph-retention-policies:
+  #  $ref: './paths/graph-retention-policies.yaml'
+  /api/v2/graph-retention-policies/base/policy:
+    $ref: './paths/graph-retention-policies.base.policy.yaml'
+  /api/v2/graph-retention-policies/extensions/{extension_id}/policy:
+    $ref: './paths/graph-retention-policies.extensions.id.policy.yaml'
 
   # opengraph extensions
   /api/v2/extensions:
@@ -656,8 +662,12 @@ paths:
     $ref: './paths/data-quality.platform.id.data-quality-stats.yaml'
   /api/v2/data-quality-stats:
     $ref: './paths/data-quality.data-quality-stats.yaml'
+#  /api/v2/data-quality-stats/counts:
+#    $ref: './paths/data-quality.data-quality-stats.counts.yaml'
   /api/v2/data-quality-stats-aggregations:
     $ref: './paths/data-quality.data-quality-stats-aggregations.yaml'
+#  /api/v2/data-quality-stats-aggregations/counts:
+#    $ref: './paths/data-quality.data-quality-stats-aggregations.counts.yaml'
   /api/v2/clear-database:
     $ref: './paths/data-quality.clear-database.yaml'
 
@@ -892,6 +902,15 @@ paths:
     $ref: './paths/alerts.alert-attempts.yaml'
   /api/v2/alert-attempts/retry:
     $ref: './paths/alerts.alert-attempts.retry.yaml'
+  
+  
+  # marketplace 
+  # /api/v2/marketplace/platforms:
+  #   $ref: './paths/marketplace.platforms.yaml'
+  # /api/v2/marketplace/items: 
+  #   $ref: paths/marketplace.marketplace-items.yaml
+  # /api/v2/marketplace/install:
+  #   $ref: paths/marketplace.install-extension.yaml
 
   # graph schema findings
   #/api/v2/extensions-findings:

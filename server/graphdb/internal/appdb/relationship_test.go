@@ -21,7 +21,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/pashagolub/pgxmock/v6"
 	"github.com/specterops/bloodhound/server/graphdb/internal/appdb"
 	"github.com/specterops/bloodhound/server/graphdb/internal/appdb/mocks"
 	"github.com/specterops/bloodhound/server/graphdb/internal/services"

@@ -20,15 +20,22 @@ package services
 
 import (
 	"context"
+
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
 // Database describes the persistence capabilities the opengraphschema Service requires.
 type Database interface {
+	ListExtensions(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]Extension, int, error)
 	GetEnvironmentsFiltered(ctx context.Context, onlyBuiltin bool) ([]Environment, error)
 	GetNodeKind(ctx context.Context, id int32) (NodeKind, error)
 	GetKindInfos(ctx context.Context, kindName string) ([]KindInfo, error)
 	GetExtension(ctx context.Context, id int32) (Extension, error)
 	GetRelationshipKind(ctx context.Context, id int32) (RelationshipKind, error)
+}
+
+type FeatureFlag interface {
+	IsEnabled(ctx context.Context, key string) (bool, error)
 }
 
 // Service implements the OpenGraph schema use cases on top of a Database implementation.

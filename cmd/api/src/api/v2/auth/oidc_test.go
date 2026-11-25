@@ -18,22 +18,32 @@ package auth_test
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 	"github.com/specterops/bloodhound/cmd/api/src/api"
+	apimocks "github.com/specterops/bloodhound/cmd/api/src/api/mocks"
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
 	"github.com/specterops/bloodhound/cmd/api/src/database/mocks"
 	oidcmock "github.com/specterops/bloodhound/cmd/api/src/services/oidc/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/specterops/bloodhound/cmd/api/src/api/v2/apitest"
 	v2auth "github.com/specterops/bloodhound/cmd/api/src/api/v2/auth"
@@ -145,6 +155,23 @@ func TestManagementResource_CreateOIDCProvider(t *testing.T) {
 			OnHandlerFunc(resources.CreateOIDCProvider).
 			Require().
 			ResponseStatusCode(http.StatusBadRequest)
+	})
+
+	t.Run("error issuer uses HTTP", func(t *testing.T) {
+		test.Request(t).
+			WithBody(v2auth.UpsertOIDCProviderRequest{
+				Name:     "test",
+				Issuer:   "http://test-issuer.com",
+				ClientID: "bloodhound",
+				Config:   &model.SSOProviderConfig{},
+			}).
+			OnHandlerFunc(resources.CreateOIDCProvider).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest).
+			ResponseJSONBody(api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: "Issuer: URL must use HTTPS"}},
+			})
 	})
 
 	t.Run("error creating oidc provider db entry", func(t *testing.T) {
@@ -276,6 +303,21 @@ func TestManagementResource_UpdateOIDCProvider(t *testing.T) {
 			OnHandlerFunc(resources.UpdateSSOProvider).
 			Require().
 			ResponseStatusCode(http.StatusBadRequest)
+	})
+
+	t.Run("error issuer uses HTTP", func(t *testing.T) {
+		mockDB.EXPECT().GetSSOProviderById(gomock.Any(), int32(1)).Return(baseProvider, nil)
+
+		test.Request(t).
+			WithURLPathVars(urlParams).
+			WithBody(v2auth.UpsertOIDCProviderRequest{Issuer: "http://test-issuer.com"}).
+			OnHandlerFunc(resources.UpdateSSOProvider).
+			Require().
+			ResponseStatusCode(http.StatusBadRequest).
+			ResponseJSONBody(api.ErrorWrapper{
+				HTTPStatus: http.StatusBadRequest,
+				Errors:     []api.ErrorDetails{{Message: "oidc provider issuer url invalid: URL must use HTTPS"}},
+			})
 	})
 
 	t.Run("error creating oidc provider db entry", func(t *testing.T) {
@@ -430,11 +472,12 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 						ClientID: "test-client-id",
 					},
 				}, nil)
-				mocks.mockOIDC.EXPECT().NewProvider(gomock.Any(), "https://test-issuer.com").Return(&oidc.Provider{}, nil)
+				providerConfig := oidc.ProviderConfig{AuthURL: "https://test-issuer.com/authorize"}
+				mocks.mockOIDC.EXPECT().NewProvider(gomock.Any(), "https://test-issuer.com").Return(providerConfig.NewProvider(context.Background()), nil)
 			},
 			expected: expected{
 				responseCode:   http.StatusFound,
-				responseHeader: http.Header{"Location": []string{"?access_type=offline&client_id=test-client-id&code_challenge=challenge&code_challenge_method=S256&redirect_uri=%2Fapi%2Fv2%2Fsso%2Fslug%2Flogin%2Fapi%2Fv2%2Fsso%2Ftest-provider%2Fcallback&response_mode=form_post&response_type=code&scope=openid+profile+email&state=state"}, "Set-Cookie": []string{"pkce=pkce; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None", "state=state; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None"}},
+				responseHeader: http.Header{"Location": []string{"https://test-issuer.com/authorize?access_type=offline&client_id=test-client-id&code_challenge=challenge&code_challenge_method=S256&redirect_uri=%2Fapi%2Fv2%2Fsso%2Fslug%2Flogin%2Fapi%2Fv2%2Fsso%2Ftest-provider%2Fcallback&response_mode=form_post&response_type=code&scope=openid+profile+email&state=state"}, "Set-Cookie": []string{"pkce=pkce; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None", "state=state; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=None"}},
 			},
 		},
 	}
@@ -469,10 +512,19 @@ func TestManagementResource_OIDCLoginHandler(t *testing.T) {
 			header = test.ModifyCookieAttribute(header, "state", "state")
 			header = test.ModifyCookieAttribute(header, "pkce", "pkce")
 
-			// The specified Location parameters are regenerated in every response therefore the
-			// they needed to be overwritten.
-			header = test.OverwriteQueryParamIfHeaderAndParamExist(header, "Location", "code_challenge", "challenge")
-			header = test.OverwriteQueryParamIfHeaderAndParamExist(header, "Location", "state", "state")
+			// Normalize the generated query parameters while retaining the authorization URL
+			location, err := url.Parse(header.Get("Location"))
+			require.NoError(t, err)
+
+			query := location.Query()
+
+			for name, value := range map[string]string{"code_challenge": "challenge", "state": "state"} {
+				if query.Has(name) {
+					query.Set(name, value)
+					location.RawQuery = query.Encode()
+					header.Set("Location", location.String())
+				}
+			}
 
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, header)
@@ -886,6 +938,235 @@ func TestManagementResource_OIDCCallbackHandler(t *testing.T) {
 
 			assert.Equal(t, testCase.expected.responseCode, status)
 			assert.Equal(t, testCase.expected.responseHeader, updatedHeader)
+		})
+	}
+}
+
+type oidcTestTransport func(*http.Request) (*http.Response, error)
+
+func (s oidcTestTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+	return s(request)
+}
+
+func TestManagementResource_OIDCRequiresHTTPS(t *testing.T) {
+	const (
+		issuer         = "https://idp.example"
+		clientID       = "test-client"
+		userEmail      = "user@example.com"
+		discoveryPath  = "/.well-known/openid-configuration"
+		authorizePath  = "/authorize"
+		tokenPath      = "/token"
+		tokenRedirect  = "/token/redirected"
+		keysPath       = "/keys"
+		issuerError    = "Your SSO provider's issuer URL must be a valid HTTPS URL. Ask your administrator to update it"
+		downgradeError = "OIDC redirect must use HTTPS"
+	)
+
+	signingKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	idToken, err := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss":   issuer,
+		"aud":   clientID,
+		"sub":   "test-user",
+		"email": userEmail,
+		"exp":   time.Now().Add(time.Hour).Unix(),
+	}).SignedString(signingKey)
+	require.NoError(t, err)
+
+	invalidIDToken := idToken[:strings.LastIndex(idToken, ".")+1] + "AA"
+
+	tests := []struct {
+		name             string
+		handler          func(v2auth.ManagementResource, http.ResponseWriter, *http.Request, model.SSOProvider)
+		httpIssuer       bool
+		httpEndpoint     string
+		redirectPath     string
+		redirectLocation string
+		invalidSignature bool
+		expectedRequests []string
+		expectedError    string
+	}{
+		{
+			name:          "login rejects stored HTTP issuer",
+			handler:       v2auth.ManagementResource.OIDCLoginHandler,
+			httpIssuer:    true,
+			expectedError: issuerError,
+		},
+		{
+			name:          "callback rejects stored HTTP issuer",
+			handler:       v2auth.ManagementResource.OIDCCallbackHandler,
+			httpIssuer:    true,
+			expectedError: issuerError,
+		},
+		{
+			name:             "login rejects HTTP authorization endpoint",
+			handler:          v2auth.ManagementResource.OIDCLoginHandler,
+			httpEndpoint:     authorizePath,
+			expectedRequests: []string{discoveryPath},
+			expectedError:    "authorization endpoint must be a valid HTTPS URL",
+		},
+		{
+			name:             "callback rejects HTTP token endpoint",
+			handler:          v2auth.ManagementResource.OIDCCallbackHandler,
+			httpEndpoint:     tokenPath,
+			expectedRequests: []string{discoveryPath},
+			expectedError:    "invalid OIDC token endpoint: URL must use HTTPS",
+		},
+		{
+			name:             "callback rejects HTTP signing-key endpoint",
+			handler:          v2auth.ManagementResource.OIDCCallbackHandler,
+			httpEndpoint:     keysPath,
+			expectedRequests: []string{discoveryPath},
+			expectedError:    "invalid OIDC signing-key URL: URL must use HTTPS",
+		},
+		{
+			name:             "discovery rejects HTTP redirect",
+			handler:          v2auth.ManagementResource.OIDCLoginHandler,
+			redirectPath:     discoveryPath,
+			redirectLocation: "http://idp.example/discovery",
+			expectedRequests: []string{discoveryPath},
+			expectedError:    "Your SSO connection failed due to misconfiguration",
+		},
+		{
+			name:             "token exchange rejects HTTP redirect",
+			handler:          v2auth.ManagementResource.OIDCCallbackHandler,
+			redirectPath:     tokenPath,
+			redirectLocation: "http://idp.example" + tokenRedirect,
+			expectedRequests: []string{discoveryPath, tokenPath},
+			expectedError:    downgradeError,
+		},
+		{
+			name:             "signing-key retrieval rejects HTTP redirect",
+			handler:          v2auth.ManagementResource.OIDCCallbackHandler,
+			redirectPath:     keysPath,
+			redirectLocation: "http://idp.example/keys/redirected",
+			expectedRequests: []string{discoveryPath, tokenPath, keysPath},
+			expectedError:    downgradeError,
+		},
+		{
+			name:             "invalid signature prevents session creation",
+			handler:          v2auth.ManagementResource.OIDCCallbackHandler,
+			invalidSignature: true,
+			expectedRequests: []string{discoveryPath, tokenPath, keysPath},
+			expectedError:    "failed to verify signature",
+		},
+		{
+			name:             "valid HTTPS callback reaches session creation",
+			handler:          v2auth.ManagementResource.OIDCCallbackHandler,
+			expectedRequests: []string{discoveryPath, tokenPath, keysPath},
+		},
+		{
+			name:             "token exchange follows HTTPS redirect",
+			handler:          v2auth.ManagementResource.OIDCCallbackHandler,
+			redirectPath:     tokenPath,
+			redirectLocation: issuer + tokenRedirect,
+			expectedRequests: []string{discoveryPath, tokenPath, tokenRedirect, keysPath},
+		},
+	}
+
+	// Keep these subtests sequential while they replace the default transport.
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				requests []string
+				provider = model.SSOProvider{OIDCProvider: &model.OIDCProvider{Issuer: issuer, ClientID: clientID}}
+				ctrl     = gomock.NewController(t)
+			)
+
+			if testCase.httpIssuer {
+				provider.OIDCProvider.Issuer = "http://idp.example"
+			}
+
+			endpointURL := func(path string) string {
+				if testCase.httpEndpoint == path {
+					return "http://idp.example" + path
+				}
+				return issuer + path
+			}
+
+			originalTransport := http.DefaultTransport
+			t.Cleanup(func() { http.DefaultTransport = originalTransport })
+
+			http.DefaultTransport = oidcTestTransport(func(request *http.Request) (*http.Response, error) {
+				if request.URL.Scheme != "https" {
+					requests = append(requests, request.URL.String())
+					return nil, errors.New("unexpected plaintext OIDC request")
+				}
+
+				requests = append(requests, request.URL.Path)
+				if request.URL.Path == testCase.redirectPath {
+					return &http.Response{
+						StatusCode: http.StatusTemporaryRedirect,
+						Header:     http.Header{"Location": []string{testCase.redirectLocation}},
+						Body:       http.NoBody,
+					}, nil
+				}
+
+				var body any
+
+				switch request.URL.Path {
+				case discoveryPath:
+					body = oidc.ProviderConfig{
+						IssuerURL: issuer,
+						AuthURL:   endpointURL(authorizePath),
+						TokenURL:  endpointURL(tokenPath),
+						JWKSURL:   endpointURL(keysPath),
+					}
+				case tokenPath, tokenRedirect:
+					if request.Method != http.MethodPost {
+						return nil, fmt.Errorf("unexpected token request method: %s", request.Method)
+					}
+
+					responseIDToken := idToken
+					if testCase.invalidSignature {
+						responseIDToken = invalidIDToken
+					}
+
+					body = map[string]string{"access_token": "test-access-token", "id_token": responseIDToken}
+				case keysPath:
+					body = map[string]any{"keys": []map[string]string{{
+						"kty": "RSA",
+						"n":   base64.RawURLEncoding.EncodeToString(signingKey.N.Bytes()),
+						"e":   "AQAB",
+					}}}
+				default:
+					return nil, fmt.Errorf("unexpected OIDC request to %s", request.URL)
+				}
+
+				responseBody, err := json.Marshal(body)
+				if err != nil {
+					return nil, err
+				}
+
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{"Content-Type": []string{"application/json"}},
+					Body:       io.NopCloser(strings.NewReader(string(responseBody))),
+				}, nil
+			})
+
+			mockAuthenticator := apimocks.NewMockAuthenticator(ctrl)
+			if testCase.expectedError == "" {
+				mockAuthenticator.EXPECT().CreateSSOSession(gomock.Any(), gomock.Any(), userEmail, provider)
+			}
+
+			resource := v2auth.NewManagementResource(config.Configuration{}, nil, auth.Authorizer{}, mockAuthenticator, nil, nil, nil)
+			request := httptest.NewRequest(http.MethodGet, "https://bloodhound.example/sso?code=test&state=test", nil)
+			request = request.WithContext(context.WithValue(request.Context(), bhctx.ValueKey, &bhctx.Context{Host: request.URL}))
+			request.AddCookie(&http.Cookie{Name: api.AuthStateCookieName, Value: "test"})
+			request.AddCookie(&http.Cookie{Name: api.AuthPKCECookieName, Value: "test"})
+			response := httptest.NewRecorder()
+
+			testCase.handler(resource, response, request, provider)
+
+			assert.Equal(t, testCase.expectedRequests, requests)
+			if testCase.expectedError != "" {
+				assert.Equal(t, http.StatusFound, response.Code)
+				location, err := url.Parse(response.Header().Get("Location"))
+				require.NoError(t, err)
+				assert.Contains(t, location.Query().Get("error"), testCase.expectedError)
+			}
 		})
 	}
 }

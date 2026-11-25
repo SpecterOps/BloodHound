@@ -58,12 +58,6 @@ type ACE struct {
 	InheritanceHash string
 }
 
-type SPNTarget struct {
-	ComputerSID string
-	Port        int
-	Service     string
-}
-
 func (s ACE) Kind() graph.Kind {
 	return parseADKind(s.PrincipalType)
 }
@@ -247,7 +241,6 @@ type Group struct {
 type User struct {
 	IngestBase
 	AllowedToDelegate       []TypedPrincipal
-	SPNTargets              []SPNTarget
 	PrimaryGroupSID         string
 	HasSIDHistory           []TypedPrincipal
 	DomainSID               string

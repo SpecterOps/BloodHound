@@ -32,12 +32,14 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/api"
 	"github.com/specterops/bloodhound/cmd/api/src/api/middleware"
 	"github.com/specterops/bloodhound/cmd/api/src/api/router"
+	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/database"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/model/appcfg"
 	"github.com/specterops/bloodhound/cmd/api/src/services/dogtags"
+	"github.com/specterops/bloodhound/cmd/api/src/services/graphretention"
 	"github.com/specterops/bloodhound/server/internal/servertest"
 	"github.com/specterops/bloodhound/server/modules"
 	"github.com/specterops/dawgs/graph"
@@ -93,6 +95,7 @@ func TestGetDatapipeStatus(t *testing.T) {
 				Pool:                    db.Pool(),
 				Graph:                   &graph.DatabaseSwitch{},
 				DogTags:                 testDogTags(),
+				IdentityResolver:        auth.NewIdentityResolver(),
 				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
@@ -271,7 +274,9 @@ func TestGetAppConfigs(t *testing.T) {
 				Pool:                    db.Pool(),
 				Graph:                   &graph.DatabaseSwitch{},
 				DogTags:                 testDogTags(),
+				IdentityResolver:        auth.NewIdentityResolver(),
 				ConfigUpdateSideEffects: db,
+				GraphRetentionManager:   graphretention.GraphRetentionAdapter{},
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
 				},
@@ -431,6 +436,7 @@ func TestSetAppConfigs(t *testing.T) {
 				Pool:                    db.Pool(),
 				Graph:                   &graph.DatabaseSwitch{},
 				DogTags:                 testDogTags(),
+				IdentityResolver:        auth.NewIdentityResolver(),
 				ConfigUpdateSideEffects: db,
 				RateLimitMiddleware: func() mux.MiddlewareFunc {
 					return middleware.DefaultRateLimitMiddleware(db)
@@ -452,6 +458,7 @@ func TestSetAppConfigs(t *testing.T) {
 		token                  = servertest.MintJWT(t, ctx, db, harness.Auther, user)
 		lackingPermissionsUser = model.User{
 			PrincipalName: "test-user@example.com",
+			EULAAccepted:  true,
 			EmailAddress:  null.StringFrom("test-user@example.com"),
 		}
 		lackingPermissionsToken = servertest.MintJWT(t, ctx, db, harness.Auther, lackingPermissionsUser)
@@ -461,6 +468,43 @@ func TestSetAppConfigs(t *testing.T) {
 			"key":"auth.password_expiration_window",
 			"value":{"duration":"P45D"}
 		}`
+
+	t.Run("ingest runtime updates round trip and reject invalid values", func(t *testing.T) {
+		var requestBody = `{"key":"pipeline.ingest_runtime","value":{"download_workers":3,"download_window":8,"archive_ready_entries":4,"cleanup_workers":2,"cleanup_queue_size":128}}`
+		for _, test := range []struct {
+			name, body, authToken string
+			expectedStatus        int
+		}{
+			{name: "valid", body: requestBody, authToken: token, expectedStatus: http.StatusOK},
+			{name: "invalid range", body: strings.Replace(requestBody, `"cleanup_workers":2`, `"cleanup_workers":0`, 1), authToken: token, expectedStatus: http.StatusBadRequest},
+			{name: "invalid relationship", body: strings.Replace(requestBody, `"download_window":8`, `"download_window":1`, 1), authToken: token, expectedStatus: http.StatusBadRequest},
+			{name: "requires configuration permission", body: requestBody, authToken: lackingPermissionsToken, expectedStatus: http.StatusForbidden},
+		} {
+			t.Run(test.name, func(t *testing.T) {
+				request, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(test.body))
+				require.NoError(t, err)
+				request.Header.Set("Authorization", "Bearer "+test.authToken)
+				response, err := http.DefaultClient.Do(request)
+				require.NoError(t, err)
+				defer response.Body.Close()
+				require.Equal(t, test.expectedStatus, response.StatusCode)
+			})
+		}
+		// Rejected writes must not change the previously saved valid configuration.
+		request, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/api/v2/config?parameter=eq:pipeline.ingest_runtime", nil)
+		require.NoError(t, err)
+		request.Header.Set("Authorization", "Bearer "+token)
+		response, err := http.DefaultClient.Do(request)
+		require.NoError(t, err)
+		defer response.Body.Close()
+		require.Equal(t, http.StatusOK, response.StatusCode)
+		var envelope getConfigsResponseEnvelope
+		require.NoError(t, json.NewDecoder(response.Body).Decode(&envelope))
+		require.Len(t, envelope.Data, 1)
+		var actual appcfg.IngestRuntimeParameter
+		require.NoError(t, envelope.Data[0].Map(&actual))
+		require.Equal(t, appcfg.IngestRuntimeParameter{DownloadWorkers: 3, DownloadWindow: 8, ArchiveReadyEntries: 4, CleanupWorkers: 2, CleanupQueueSize: 128}, actual)
+	})
 
 	t.Run("returns 200 OK updating a config", func(t *testing.T) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL+"/api/v2/config", strings.NewReader(testBody))

@@ -30,6 +30,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/duration"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers"
 	"github.com/specterops/bloodhound/server/appcfg/internal/handlers/mocks"
@@ -135,7 +136,7 @@ func TestHandlers_GetDatapipeStatus(t *testing.T) {
 			var (
 				mockSvc      = mocks.NewMockService(t)
 				mockFFReader = mocks.NewMockFeatureFlagReader(t)
-				h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
+				h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, nil)
 				rr           = httptest.NewRecorder()
 				req          = newRequest(t)
 			)
@@ -168,6 +169,8 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 	assert.NoError(t, err)
 	fixtureValue2, err := types.NewJSONBObject(map[string]any{"name": "bestiest pond"})
 	assert.NoError(t, err)
+	fixturePruneTTLValue, err := types.NewJSONBObject(map[string]any{"base_ttl": "P14D", "has_session_edge_ttl": "P4D"})
+	assert.NoError(t, err)
 
 	var (
 		unexpectedErr = errors.New("unexpected database failure")
@@ -185,6 +188,13 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 			Description: "The name of this pond",
 			Value:       fixtureValue2,
 		}
+		fixturePruneTTL = services.Parameter{
+			ID:          2,
+			Key:         services.PruneTTL,
+			Name:        "prune ttl",
+			Description: "prune ttl",
+			Value:       fixturePruneTTLValue,
+		}
 	)
 
 	type happyEnvelope struct {
@@ -201,7 +211,7 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -225,11 +235,75 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		assert.Equal(t, fixture1.Value, envelope.Data[0].Value)
 	})
 
+	t.Run("Get all params does backcompat filling of base retention policy", func(t *testing.T) {
+		var (
+			mockSvc              = mocks.NewMockService(t)
+			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
+			mockRetentionManager = mocks.NewMockGraphRetentionBaseTTLManager(t)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, mockRetentionManager)
+			rr                   = httptest.NewRecorder()
+			req                  = newRequest(t)
+		)
+
+		mockSvc.EXPECT().
+			GetAllApplicationConfigurations(req.Context()).
+			Return(services.Parameters{fixturePruneTTL, fixture1}, nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, "retention_policies").
+			Return(true, nil).
+			Once()
+		mockRetentionManager.EXPECT().GetBaseRetentionPolicyTTL(req.Context()).
+			Return(duration.ISODuration(time.Hour*24*21), nil).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		var envelope = happyEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		require.Len(t, envelope.Data, 2)
+
+		assert.Equal(t, services.PruneTTL, envelope.Data[0].Key)
+		var pruneTTLResult services.PruneTTLParameter
+		err = envelope.Data[0].Value.Map(&pruneTTLResult)
+		require.NoError(t, err)
+		assert.Equal(t, float64(24*21), time.Duration(pruneTTLResult.BaseTTL).Hours())
+		assert.Equal(t, float64(24*4), time.Duration(pruneTTLResult.HasSessionEdgeTTL).Hours())
+	})
+
+	t.Run("Get all params returns err if get base retention policy returns err", func(t *testing.T) {
+		var (
+			mockSvc              = mocks.NewMockService(t)
+			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
+			mockRetentionManager = mocks.NewMockGraphRetentionBaseTTLManager(t)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, mockRetentionManager)
+			rr                   = httptest.NewRecorder()
+			req                  = newRequest(t)
+		)
+
+		mockSvc.EXPECT().
+			GetAllApplicationConfigurations(req.Context()).
+			Return(services.Parameters{fixturePruneTTL, fixture1}, nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, "retention_policies").
+			Return(true, nil).
+			Once()
+		mockRetentionManager.EXPECT().GetBaseRetentionPolicyTTL(req.Context()).
+			Return(0, fmt.Errorf("OH NOOOO")).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	})
+
 	t.Run("Get all params returns 500 on unexpected database error", func(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -251,7 +325,7 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -286,11 +360,106 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		assert.Equal(t, fixture1.Value, envelope.Data[0].Value)
 	})
 
+	t.Run("querying a single param executes backcompat", func(t *testing.T) {
+		var (
+			mockSvc              = mocks.NewMockService(t)
+			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
+			mockRetentionManager = mocks.NewMockGraphRetentionBaseTTLManager(t)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, mockRetentionManager)
+			rr                   = httptest.NewRecorder()
+			req                  = newRequest(t)
+		)
+
+		filter := params.Filter{
+			Field:    "parameter",
+			Operator: "eq",
+			Value:    string(fixturePruneTTL.Key),
+		}
+		req = bhctx.SetRequestContext(req, &bhctx.Context{Filters: params.Filters{"parameter": []params.Filter{filter}}})
+
+		mockSvc.EXPECT().
+			GetApplicationConfiguration(req.Context(), services.ParameterKey(filter.Value)).
+			Return(fixturePruneTTL, nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, "retention_policies").
+			Return(true, nil).
+			Once()
+		mockRetentionManager.EXPECT().GetBaseRetentionPolicyTTL(req.Context()).
+			Return(duration.ISODuration(time.Hour*24*21), nil).
+			Once()
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.ParameterKey(filter.Value)).
+			Return(true).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		var envelope = happyEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		require.Len(t, envelope.Data, 1)
+
+		assert.Equal(t, services.PruneTTL, envelope.Data[0].Key)
+		var pruneTTLResult services.PruneTTLParameter
+		err = envelope.Data[0].Value.Map(&pruneTTLResult)
+		require.NoError(t, err)
+		assert.Equal(t, float64(24*21), time.Duration(pruneTTLResult.BaseTTL).Hours())
+		assert.Equal(t, float64(24*4), time.Duration(pruneTTLResult.HasSessionEdgeTTL).Hours())
+
+	})
+
+	t.Run("querying a single param does not execute backcompat with false feature flag", func(t *testing.T) {
+		var (
+			mockSvc              = mocks.NewMockService(t)
+			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
+			mockRetentionManager = mocks.NewMockGraphRetentionBaseTTLManager(t)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, mockRetentionManager)
+			rr                   = httptest.NewRecorder()
+			req                  = newRequest(t)
+		)
+
+		filter := params.Filter{
+			Field:    "parameter",
+			Operator: "eq",
+			Value:    string(fixturePruneTTL.Key),
+		}
+		req = bhctx.SetRequestContext(req, &bhctx.Context{Filters: params.Filters{"parameter": []params.Filter{filter}}})
+
+		mockSvc.EXPECT().
+			GetApplicationConfiguration(req.Context(), services.ParameterKey(filter.Value)).
+			Return(fixturePruneTTL, nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, "retention_policies").
+			Return(false, nil).
+			Once()
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.ParameterKey(filter.Value)).
+			Return(true).
+			Once()
+
+		h.GetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		var envelope = happyEnvelope{}
+		require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &envelope))
+		require.Len(t, envelope.Data, 1)
+
+		assert.Equal(t, services.PruneTTL, envelope.Data[0].Key)
+		var pruneTTLResult services.PruneTTLParameter
+		err = envelope.Data[0].Value.Map(&pruneTTLResult)
+		require.NoError(t, err)
+		assert.Equal(t, float64(24*14), time.Duration(pruneTTLResult.BaseTTL).Hours())
+		assert.Equal(t, float64(24*4), time.Duration(pruneTTLResult.HasSessionEdgeTTL).Hours())
+
+	})
+
 	t.Run("returns 400 querying a single protected param", func(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -319,7 +488,7 @@ func TestHandlers_GetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, nil)
 			rr           = httptest.NewRecorder()
 			req          = newRequest(t)
 		)
@@ -372,7 +541,7 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, nil)
 			rr           = httptest.NewRecorder()
 			inputBody    = `{"key":"akey","value":{"subparam":"avalue"}}`
 			req          = newRequest(t, inputBody)
@@ -404,7 +573,7 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 			mockSvc                      = mocks.NewMockService(t)
 			mockFFReader                 = mocks.NewMockFeatureFlagReader(t)
 			mockScheduledAnalysisUpdater = mocks.NewMockDataPipeSideEffects(t)
-			h                            = handlers.NewHandlers(mockSvc, mockFFReader, mockScheduledAnalysisUpdater, nil)
+			h                            = handlers.NewHandlers(mockSvc, mockFFReader, mockScheduledAnalysisUpdater, nil, nil)
 			rr                           = httptest.NewRecorder()
 			inputBody                    = `{"key":"analysis.scheduled","value":{"enabled":true,"rrule":"DTSTART:20260101T000000Z\nRRULE:FREQ=DAILY;INTERVAL=1"}}`
 			req                          = newRequest(t, inputBody)
@@ -432,12 +601,115 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rr.Code)
 	})
 
+	t.Run("updating pruneTTL updates retention policy", func(t *testing.T) {
+		var (
+			mockSvc              = mocks.NewMockService(t)
+			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
+			mockRetentionManager = mocks.NewMockGraphRetentionBaseTTLManager(t)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, mockRetentionManager)
+			rr                   = httptest.NewRecorder()
+			inputBody            = `{"key":"prune.ttl","value":{"base_ttl":"P8D", "has_session_edge_ttl":"P4D"}}`
+			req                  = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.PruneTTL).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.PruneTTL, mock.Anything).
+			Return(nil).
+			Once()
+		mockSvc.EXPECT().
+			UpsertApplicationConfiguration(req.Context(), services.PruneTTL, mock.Anything).
+			Return(nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, "retention_policies").
+			Return(true, nil).
+			Once()
+		mockRetentionManager.EXPECT().
+			SetBaseRetentionPolicyTTL(req.Context(), duration.ISODuration(time.Hour*24*8)).
+			Return(nil).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("updating pruneTTL with false feature flag doesn't update retention policy", func(t *testing.T) {
+		var (
+			mockSvc              = mocks.NewMockService(t)
+			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
+			mockRetentionManager = mocks.NewMockGraphRetentionBaseTTLManager(t)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, mockRetentionManager)
+			rr                   = httptest.NewRecorder()
+			inputBody            = `{"key":"prune.ttl","value":{"base_ttl":"P8D", "has_session_edge_ttl":"P4D"}}`
+			req                  = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.PruneTTL).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.PruneTTL, mock.Anything).
+			Return(nil).
+			Once()
+		mockSvc.EXPECT().
+			UpsertApplicationConfiguration(req.Context(), services.PruneTTL, mock.Anything).
+			Return(nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, "retention_policies").
+			Return(false, nil).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("updating pruneTTL retention policy error fails request", func(t *testing.T) {
+		var (
+			mockSvc              = mocks.NewMockService(t)
+			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
+			mockRetentionManager = mocks.NewMockGraphRetentionBaseTTLManager(t)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, mockRetentionManager)
+			rr                   = httptest.NewRecorder()
+			inputBody            = `{"key":"prune.ttl","value":{"base_ttl":"P8D", "has_session_edge_ttl":"P4D"}}`
+			req                  = newRequest(t, inputBody)
+		)
+
+		mockSvc.EXPECT().
+			IsAPIAllowedKey(services.PruneTTL).
+			Return(true).
+			Once()
+		mockSvc.EXPECT().
+			ValidateValue(services.PruneTTL, mock.Anything).
+			Return(nil).
+			Once()
+		mockFFReader.EXPECT().
+			IsEnabled(mock.Anything, "retention_policies").
+			Return(true, nil).
+			Once()
+		mockRetentionManager.EXPECT().
+			SetBaseRetentionPolicyTTL(req.Context(), duration.ISODuration(time.Hour*24*8)).
+			Return(fmt.Errorf("DISASTER")).
+			Once()
+
+		h.SetApplicationConfiguration(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	})
+
 	t.Run("scheduled analysis disable clears the next run time", func(t *testing.T) {
 		var (
 			mockSvc                      = mocks.NewMockService(t)
 			mockFFReader                 = mocks.NewMockFeatureFlagReader(t)
 			mockScheduledAnalysisUpdater = mocks.NewMockDataPipeSideEffects(t)
-			h                            = handlers.NewHandlers(mockSvc, mockFFReader, mockScheduledAnalysisUpdater, nil)
+			h                            = handlers.NewHandlers(mockSvc, mockFFReader, mockScheduledAnalysisUpdater, nil, nil)
 			rr                           = httptest.NewRecorder()
 			inputBody                    = `{"key":"analysis.scheduled","value":{"enabled":false}}`
 			req                          = newRequest(t, inputBody)
@@ -470,7 +742,7 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 			mockSvc                      = mocks.NewMockService(t)
 			mockFFReader                 = mocks.NewMockFeatureFlagReader(t)
 			mockScheduledAnalysisUpdater = mocks.NewMockDataPipeSideEffects(t)
-			h                            = handlers.NewHandlers(mockSvc, mockFFReader, mockScheduledAnalysisUpdater, nil)
+			h                            = handlers.NewHandlers(mockSvc, mockFFReader, mockScheduledAnalysisUpdater, nil, nil)
 			rr                           = httptest.NewRecorder()
 			inputBody                    = `{"key":"analysis.scheduled","value":{"enabled":false}}`
 			req                          = newRequest(t, inputBody)
@@ -502,7 +774,7 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 		var (
 			mockSvc      = mocks.NewMockService(t)
 			mockFFReader = mocks.NewMockFeatureFlagReader(t)
-			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil)
+			h            = handlers.NewHandlers(mockSvc, mockFFReader, nil, nil, nil)
 			rr           = httptest.NewRecorder()
 			inputBody    = `{"key":"` + string(services.APITokenExpiration) + `","value":{"subparam":"avalue"}}`
 			req          = newRequest(t, inputBody)
@@ -534,7 +806,7 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 			mockSvc              = mocks.NewMockService(t)
 			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
 			mockAuthTokenUpdater = mocks.NewMockAuthTokensSideEffects(t)
-			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, mockAuthTokenUpdater)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, mockAuthTokenUpdater, nil)
 			rr                   = httptest.NewRecorder()
 			inputBody            = `{"key":"` + string(services.APITokenExpiration) + `","value":{"subparam":"avalue"}}`
 			req                  = newRequest(t, inputBody)
@@ -571,7 +843,7 @@ func TestHandlers_SetApplicationConfiguration(t *testing.T) {
 			mockSvc              = mocks.NewMockService(t)
 			mockFFReader         = mocks.NewMockFeatureFlagReader(t)
 			mockAuthTokenUpdater = mocks.NewMockAuthTokensSideEffects(t)
-			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, mockAuthTokenUpdater)
+			h                    = handlers.NewHandlers(mockSvc, mockFFReader, nil, mockAuthTokenUpdater, nil)
 			rr                   = httptest.NewRecorder()
 			inputBody            = `{"key":"auth.api_token_expiration","value":{"enabled":true,"expiration_period":100}}`
 			req                  = newRequest(t, inputBody)

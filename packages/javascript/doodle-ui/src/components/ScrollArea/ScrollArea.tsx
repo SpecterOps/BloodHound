@@ -13,9 +13,11 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
+
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import * as React from 'react';
 import { cn } from '../utils';
+import { scrollAreaScrollbarClasses, scrollAreaThumbClasses } from './ScrollArea.styles';
 
 interface ScrollbarProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> {
     scrollbarWidth?: number;
@@ -110,10 +112,7 @@ const ScrollAreaScrollbar = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
     <ScrollAreaPrimitive.Scrollbar
         ref={ref}
-        className={cn(
-            'transition-all data-[state=hidden]:animate-fade-out data-[state=visible]:animate-fade-in',
-            className
-        )}
+        className={cn(scrollAreaScrollbarClasses, className)}
         orientation='vertical'
         {...props}>
         {children}
@@ -125,7 +124,7 @@ const ScrollAreaThumb = React.forwardRef<
     React.ElementRef<typeof ScrollAreaPrimitive.Thumb>,
     React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Thumb>
 >(({ className, ...props }, ref) => (
-    <ScrollAreaPrimitive.Thumb ref={ref} className={cn('flex-1 bg-neutral-400 rounded-[10px]', className)} {...props} />
+    <ScrollAreaPrimitive.Thumb ref={ref} className={cn(scrollAreaThumbClasses, className)} {...props} />
 ));
 ScrollAreaThumb.displayName = 'ScrollAreaThumb';
 

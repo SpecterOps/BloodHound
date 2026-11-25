@@ -125,7 +125,7 @@
   ],
   "queries": [
     {
-      "query_key": "dogs-and-owners",
+      "query_key": "dogpark_dogs-and-owners",
       "name": "Dogs and Their Owners",
       "query": "MATCH p=(:dogpark_Dog)-[:dogpark_OwnedBy]->(:dogpark_Patron) RETURN p",
       "description": "Lists dogs and their registered owners.",
@@ -134,7 +134,7 @@
   ],
   "pz_rules": [
     {
-      "key": "large_dog_area",
+      "key": "dogpark_large_dog_area",
       "name": "Large Dog Area",
       "description": "Protects all Large Dog Area environment nodes in the dog park.",
       "enabled": true,

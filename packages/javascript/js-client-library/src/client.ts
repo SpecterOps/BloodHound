@@ -54,6 +54,7 @@ import {
     UpdateCertificationRequest,
     UpdateCollectorJobProfileRequest,
     UpdateCollectorJobScheduleRequest,
+    UpdateCollectorJobSecretRequest,
     UpdateConfigurationRequest,
     UpdateOIDCProviderRequest,
     UpdateOpenHoundClientRequest,
@@ -145,6 +146,7 @@ import {
     SupportBundleDownloadURLResponse,
     UnifiedFindingResponse,
     UpdateCollectorJobScheduleResponse,
+    UpdateCollectorJobSecretResponse,
     UpdateConfigurationResponse,
     UploadFileToIngestResponse,
     WebhookTestResponse,
@@ -918,6 +920,13 @@ class BHEAPIClient {
     createCollectorJobSecret = (request: CreateCollectorJobSecretRequest, options?: RequestOptions) =>
         this.baseClient.post<CreateCollectorJobSecretResponse>('/api/v2/collie-job-secrets', request, options);
 
+    updateCollectorJobSecret = (secretId: string, request: UpdateCollectorJobSecretRequest, options?: RequestOptions) =>
+        this.baseClient.patch<UpdateCollectorJobSecretResponse>(
+            `/api/v2/collie-job-secrets/${secretId}`,
+            request,
+            options
+        );
+
     deleteCollectorJobSecret = (secretId: string, options?: RequestOptions) =>
         this.baseClient.delete<void>(`/api/v2/collie-job-secrets/${secretId}`, options);
 
@@ -1573,6 +1582,7 @@ class BHEAPIClient {
             )
         );
 
+    /** @deprecated The SQLAdmin relationship has been retired. */
     getComputerSQLAdminsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/computers/${id}/sql-admins`,
@@ -2270,6 +2280,7 @@ class BHEAPIClient {
             )
         );
 
+    /** @deprecated The SQLAdmin relationship has been retired. */
     getUserSQLAdminRightsV2 = (id: string, skip?: number, limit?: number, type?: string, options?: RequestOptions) =>
         this.baseClient.get(
             `/api/v2/users/${id}/sql-admin-rights`,

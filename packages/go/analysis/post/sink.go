@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/specterops/bloodhound/packages/go/bhlog/attr"
+	"github.com/specterops/bloodhound/packages/go/bhlog/measure"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
 	"github.com/specterops/dawgs/graph"
 	"github.com/specterops/dawgs/util/channels"
@@ -158,7 +159,19 @@ func (s *FilteredRelationshipSink) deltaFilterWorker(ctx context.Context, filter
 // deleteMissingEdges removes any lingering edges that were not part of the current operation. This ensures
 // that only valid relationships remain after the sink completes its work.
 func (s *FilteredRelationshipSink) deleteMissingEdges(ctx context.Context) error {
-	deletedEdges := s.edgeTracker.Deleted()
+	var (
+		deletedEdges = s.edgeTracker.Deleted()
+		measureDone  = measure.ContextMeasureWithThresholdAndResults(
+			ctx,
+			slog.LevelInfo,
+			"Deleting stale post-processed relationships",
+			attr.Namespace("analysis"),
+			attr.Function("FilteredRelationshipSink.deleteMissingEdges"),
+			attr.Scope("routine"),
+			slog.String("operation", s.operationName),
+			slog.Int("num_candidate_relationships", len(deletedEdges)),
+		)
+	)
 
 	if err := s.db.BatchOperation(ctx, func(batch graph.Batch) error {
 		for _, deletedEdge := range deletedEdges {
@@ -169,8 +182,12 @@ func (s *FilteredRelationshipSink) deleteMissingEdges(ctx context.Context) error
 
 		return nil
 	}); err != nil {
+		// Report the outcome explicitly so candidates are not presented as completed deletions.
+		measureDone(slog.String("outcome", "failed"))
 		return err
 	}
+
+	measureDone(slog.String("outcome", "succeeded"), slog.Int("num_deleted_relationships", len(deletedEdges)))
 
 	postOperationsVec.With(map[string]string{
 		"kind":      "all",
@@ -293,6 +310,16 @@ func (s *FilteredRelationshipSink) shutdown(prune bool) {
 // Done drains submitted jobs and removes obsolete relationships only if processing succeeded.
 // Repeated calls return the same result. Producers must complete successfully before calling Done.
 func (s *FilteredRelationshipSink) Done() error {
+	defer measure.ContextMeasureWithThreshold(
+		s.ctx,
+		slog.LevelInfo,
+		"Flushed post-processing relationship sink",
+		attr.Namespace("analysis"),
+		attr.Function("FilteredRelationshipSink.Done"),
+		attr.Scope("routine"),
+		slog.String("operation", s.operationName),
+	)()
+
 	s.shutdown(true)
 	return s.doneError
 }

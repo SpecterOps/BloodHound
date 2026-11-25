@@ -126,6 +126,46 @@ func ContextLogAndMeasureWithThreshold(ctx context.Context, level slog.Level, ms
 	}
 }
 
+// ContextLogAndMeasureWithResults behaves like ContextLogAndMeasure but the returned function accepts additional attributes
+// that are only known once the measured work completes (counts of nodes fetched, edges submitted, etc.). The result
+// attributes are only included in the completion log message.
+func ContextLogAndMeasureWithResults(ctx context.Context, level slog.Level, msg string, args ...slog.Attr) func(results ...slog.Attr) {
+	var (
+		pairID = logMeasurePairCounter.Add(1)
+		then   = time.Now()
+	)
+
+	args = append(args, slog.Uint64(FieldMeasurementID, pairID))
+	slog.LogAttrs(ctx, level, msg, args...)
+
+	return func(results ...slog.Attr) {
+		completionArgs := make([]slog.Attr, 0, len(args)+len(results)+1)
+		completionArgs = append(completionArgs, args...)
+		completionArgs = append(completionArgs, results...)
+		completionArgs = append(completionArgs, slog.Duration(FieldElapsed, time.Since(then)))
+
+		slog.LogAttrs(ctx, level, msg, completionArgs...)
+	}
+}
+
+// ContextMeasureWithThresholdAndResults behaves like ContextMeasureWithThreshold but the returned function accepts
+// additional attributes that are only known once the measured work completes. The log message is only output if the
+// measured work requires >1 second to complete.
+func ContextMeasureWithThresholdAndResults(ctx context.Context, level slog.Level, msg string, args ...slog.Attr) func(results ...slog.Attr) {
+	then := time.Now()
+
+	return func(results ...slog.Attr) {
+		if elapsed := time.Since(then); elapsed >= measureThreshold {
+			completionArgs := make([]slog.Attr, 0, len(args)+len(results)+1)
+			completionArgs = append(completionArgs, args...)
+			completionArgs = append(completionArgs, results...)
+			completionArgs = append(completionArgs, slog.Duration(FieldElapsed, elapsed))
+
+			slog.LogAttrs(ctx, level, msg, completionArgs...)
+		}
+	}
+}
+
 // LogAndMeasure will measure the duration an individual function call takes and generate the associated log message at a given slog.Level.
 // This function should be used to output critical application behavior which must be logged for troubleshooting purposes.
 // If your log message may be noisy or should only output when taking an extended duration, use `LogAndMeasureWithThreshold` instead.

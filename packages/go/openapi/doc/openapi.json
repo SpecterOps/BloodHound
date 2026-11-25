@@ -591,7 +591,7 @@
                   "issuer": {
                     "type": "string",
                     "format": "url",
-                    "description": "URL of the OIDC issuer"
+                    "description": "URL of the OIDC issuer. The URL must use HTTPS."
                   },
                   "client_id": {
                     "type": "string",
@@ -814,7 +814,7 @@
                   "issuer": {
                     "type": "string",
                     "format": "url",
-                    "description": "URL of the OIDC issuer"
+                    "description": "URL of the OIDC issuer. The URL must use HTTPS."
                   },
                   "client_id": {
                     "type": "string",
@@ -1347,7 +1347,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are `user_id`, `client_id`, `name`, `last_access`, `created_at`, `updated_at`, `deleted_at`.\n",
+            "description": "Sortable columns are `name`, `last_access`, `created_at`, `updated_at`, `expires_at`.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -1361,10 +1361,17 @@
             }
           },
           {
-            "name": "key",
+            "name": "created_by",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/api.params.predicate.filter.string"
+              "$ref": "#/components/schemas/api.params.predicate.filter.uuid-nullable-required"
+            }
+          },
+          {
+            "name": "expires_at",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/api.params.predicate.filter.time-nullable-required"
             }
           },
           {
@@ -1393,9 +1400,6 @@
           },
           {
             "$ref": "#/components/parameters/query.updated-at"
-          },
-          {
-            "$ref": "#/components/parameters/query.deleted-at"
           }
         ],
         "responses": {
@@ -7822,6 +7826,443 @@
         }
       }
     },
+    "/api/v2/graph-retention-policies/base/policy": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        }
+      ],
+      "get": {
+        "operationId": "GetBaseRetentionPolicy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions.",
+        "summary": "Get Base Retention Policy",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "UpdateBaseRetentionPolicy",
+        "summary": "Update Base Retention Policy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions. Creates the base policy if it is missing; otherwise updates it, and returns the saved policy with 200 OK.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "TTL must be an ISO 8601 duration between 4 and 30 days inclusive (P4D to P30D).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/model.graph-retention-policy"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved base retention policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "PatchBaseRetentionPolicy",
+        "summary": "Enable/Disable Base Retention Policy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions. Disabling the base retention policy stops graph data pruning and causes more-specific retention policies to be ignored. The TTL remains unchanged. Returns 404 if the base policy does not exist.\n",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "enabled"
+                    ],
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated base retention policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
+    "/api/v2/graph-retention-policies/extensions/{extension_id}/policy": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/header.prefer"
+        },
+        {
+          "name": "extension_id",
+          "description": "Required positive identifier of the extension whose policy is being interacted with.",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          }
+        }
+      ],
+      "get": {
+        "operationId": "GetExtensionRetentionPolicy",
+        "summary": "Get Extension Retention Policy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-extension-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "UpdateExtensionRetentionPolicy",
+        "summary": "Update Extension Retention Policy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions. Creates or updates the given extension policy and returns the saved policy with 200 OK.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "TTL must be an ISO 8601 duration between 4 and 30 days inclusive (P4D to P30D).",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "$ref": "#/components/schemas/model.graph-retention-policy"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved extension retention policy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/model.graph-retention-policy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "PatchExtensionRetentionPolicy",
+        "summary": "Enable/Disable Extension Retention Policy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions. Changes only the enabled state of an existing extension retention policy, its TTL remains unchanged. Returns 404 if the extension is unknown or its policy does not exist.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Both data and data.enabled are required, enabled must be a boolean.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "enabled"
+                    ],
+                    "properties": {
+                      "enabled": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "data": {
+                  "enabled": false
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated extension policy, including the required extension_id, enabled, and the unchanged ttl field.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/model.graph-extension-retention-policy"
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "extension_id"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DeleteExtensionRetentionPolicy",
+        "summary": "Delete Extension Retention Policy",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "responses": {
+          "204": {
+            "description": "Extension retention policy deleted."
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/extensions": {
       "put": {
         "description": "**Experimental** - Upserts the OpenGraph extension.\n\nThe request body may be a JSON extension payload or a ZIP bundle. A ZIP bundle must contain `schema.json`, without embedded optional components, and may contain `pz_rules.json` and `saved_queries.json`. Recognized components may be at the ZIP root or one folder deep. For ZIP bundles, findings require `pz_rules.json` with at least one rule. Duplicate components and unexpected files are rejected.\n\nThe root `__MACOSX` entry and everything under `__MACOSX/`, along with hidden files at the ZIP root, are ignored. Top-level directory entries are ignored; deeper directory entries and files more than one folder deep are rejected. All other files remain subject to normal component validation.\n\nEach recognized ZIP component is limited to 10 MiB after decompression; an oversized component is rejected as a bad request.\n",
@@ -7931,9 +8372,21 @@
                         }
                       }
                     ],
+                    "pz_rules": [
+                      {
+                        "key": "OGE_environment-nodes",
+                        "name": "Environment Nodes",
+                        "seeds": [
+                          {
+                            "type": 2,
+                            "value": "MATCH (n:OGE_Environment_Kind) RETURN n"
+                          }
+                        ]
+                      }
+                    ],
                     "queries": [
                       {
-                        "query_key": "all-node-kind-1",
+                        "query_key": "OGE_all-node-kind-1",
                         "name": "All Node Kind 1",
                         "query": "MATCH (n:OGE_Node_Kind_1) RETURN n",
                         "description": "Lists all OGE_Node_Kind_1 nodes.",
@@ -10452,7 +10905,8 @@
       "get": {
         "operationId": "GetComputerEntitySqlAdmins",
         "summary": "Get computer entity SQL admins",
-        "description": "Get a list, graph, or count of the principals that have SQL admin rights on this computer.",
+        "deprecated": true,
+        "description": "The SQLAdmin relationship has been retired. Returns an empty list or graph.",
         "tags": [
           "Computers",
           "Community",
@@ -13901,7 +14355,8 @@
       "get": {
         "operationId": "GetUserEntitySqlAdminRights",
         "summary": "Get User entity SQL admin rights",
-        "description": "Get a list, graph, or count of the systems this user has SQL admin rights to.",
+        "deprecated": true,
+        "description": "The SQLAdmin relationship has been retired. Returns an empty list or graph.",
         "tags": [
           "AD Users",
           "Community",
@@ -14843,7 +15298,7 @@
       "get": {
         "operationId": "GetDataQualityStats",
         "summary": "Get environment-specific data quality stats",
-        "description": "Time series list of data quality stats for a given environment",
+        "description": "Time series list of data quality stats, optionally scoped to an environment",
         "tags": [
           "Data Quality",
           "Community",
@@ -14852,8 +15307,7 @@
         "parameters": [
           {
             "name": "environment_id",
-            "description": "Required. Filters results to the given environment.",
-            "required": true,
+            "description": "Optional. Filters results to the given environment.",
             "in": "query",
             "schema": {
               "type": "string"
@@ -14861,7 +15315,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are created_at, updated_at.",
+            "description": "Sortable columns are created_at, updated_at, metric_value.",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -14951,7 +15405,7 @@
       "get": {
         "operationId": "GetDataQualityAggregations",
         "summary": "Get data quality aggregations by environment kind",
-        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
+        "description": "Returns data quality metric counts aggregated per environment kind, optionally scoped to an OpenGraph schema extension or environment, combined across environment instances for each collection run. Results can be filtered, sorted, and paginated.\n",
         "tags": [
           "Data Quality",
           "Community",
@@ -14959,10 +15413,17 @@
         ],
         "parameters": [
           {
-            "name": "schema_environment_kind_id",
-            "description": "Required. Scopes the aggregation to a single environment kind id.\n",
+            "name": "environment_id",
+            "description": "Optional. Scopes the aggregation to a single environment.",
             "in": "query",
-            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "schema_environment_kind_id",
+            "description": "Optional. Scopes the aggregation to a single environment kind id.\n",
+            "in": "query",
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -14979,7 +15440,7 @@
           },
           {
             "name": "sort_by",
-            "description": "Sortable columns are created_at, updated_at.\n",
+            "description": "Sortable columns are created_at, updated_at, metric_value.\n",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/api.params.query.sort-by"
@@ -15641,6 +16102,9 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.jobs.hydrate-last-job"
+          },
+          {
             "$ref": "#/components/parameters/query.created-at"
           },
           {
@@ -15763,7 +16227,26 @@
                         "data": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/model.client-display"
+                            "allOf": [
+                              {
+                                "$ref": "#/components/schemas/model.client-display"
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "last_job": {
+                                    "type": "object",
+                                    "nullable": true,
+                                    "description": "The most recent job record for this client. Omitted when hydrateLastJob is false or not supplied. When true, null if no job record exists.\n",
+                                    "allOf": [
+                                      {
+                                        "$ref": "#/components/schemas/model.client-scheduled-job-display"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
                           }
                         }
                       }
@@ -18263,6 +18746,9 @@
         ],
         "parameters": [
           {
+            "$ref": "#/components/parameters/query.jobs.hydrate-last-job"
+          },
+          {
             "$ref": "#/components/parameters/query.skip"
           },
           {
@@ -18329,7 +18815,26 @@
                             "profiles": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/model.collector-job-profile"
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/model.collector-job-profile"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "last_job": {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "description": "The most recent job record for this collector job profile. Omitted when hydrateLastJob is false or not supplied. When true, null if no job record exists.\n",
+                                        "allOf": [
+                                          {
+                                            "$ref": "#/components/schemas/model.collector-job-history"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
+                                ]
                               }
                             }
                           }
@@ -19435,6 +19940,95 @@
           },
           "404": {
             "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "UpdateCollectorJobSecret",
+        "summary": "Update a collector job secret",
+        "description": "Updates collector job secret mutable fields: name, external_key_id, and value.\nIn-flight jobs retain their snapshotted key reference.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "external_key_id": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Collector Jobs (Experimental)",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "secret"
+                      ],
+                      "properties": {
+                        "secret": {
+                          "$ref": "#/components/schemas/model.collector-job-secret"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "409": {
+            "description": "**Conflict**\nThe supplied `name` collides with an existing collector job secret\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api.error-wrapper"
+                }
+              }
+            }
           },
           "429": {
             "$ref": "#/components/responses/too-many-requests"
@@ -25616,6 +26210,16 @@
           "type": "integer"
         }
       },
+      "query.jobs.hydrate-last-job": {
+        "name": "hydrate_last_job",
+        "in": "query",
+        "required": false,
+        "description": "When true, includes a last_job field containing the most recent job record for each returned client or collector job profile. When false or not supplied, last_job is omitted entirely.",
+        "schema": {
+          "type": "boolean",
+          "default": false
+        }
+      },
       "query.clients.hydrate-domains": {
         "name": "hydrate_domains",
         "description": "When a value of `true` is passed, any Domains associated with scheduled and finished jobs for each client will have expanded properties including `name` and `type`. When a value of `false` is passed, these same Domains will only return as a list of `objectid`s.",
@@ -26709,6 +27313,16 @@
         "type": "string",
         "pattern": "^((eq|neq):)?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
         "description": "Filter results by column string-formatted uuid value. Valid filter predicates are `eq`, `neq`.\n"
+      },
+      "api.params.predicate.filter.uuid-nullable-required": {
+        "type": "string",
+        "pattern": "^((eq|neq):[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|(eq|neq):null)$",
+        "description": "Filter results by a UUID value using a required predicate.\nValid filter predicates are `eq` and `neq`.\nUse `eq:null` or `neq:null` to compare against null.\nExample: `eq:12345678-1234-1234-1234-123456789abc`\n"
+      },
+      "api.params.predicate.filter.time-nullable-required": {
+        "type": "string",
+        "pattern": "^((eq|neq|gt|gte|lt|lte):[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,9})?([Zz]|[+-][0-9]{2}:[0-9]{2})|(eq|neq):null)$",
+        "description": "Filter by timestamp using a required predicate.\nValid timestamp predicates are `eq`, `neq`, `gt`, `gte`, `lt`, and `lte`.\nUse `eq:null` or `neq:null` to compare against null.\n"
       },
       "api.requests.user.update": {
         "type": "object",
@@ -28424,6 +29038,41 @@
           }
         }
       },
+      "model.graph-retention-policy": {
+        "type": "object",
+        "description": "The core data to describe a retention policy",
+        "required": [
+          "enabled",
+          "ttl"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "ttl": {
+            "type": "string",
+            "description": "Retention duration expressed as an ISO 8601 duration string, between 4 and 30 days inclusive (P4D to P30D).",
+            "example": "P14D"
+          }
+        }
+      },
+      "model.graph-extension-retention-policy": {
+        "type": "object",
+        "description": "The data to describe an extension retention policy",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.graph-retention-policy"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "extension_id": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      },
       "api.response.graph-extensions-info": {
         "type": "object",
         "properties": {
@@ -28442,7 +29091,9 @@
                     "name",
                     "version",
                     "is_builtin",
-                    "namespace"
+                    "namespace",
+                    "created_at",
+                    "updated_at"
                   ],
                   "properties": {
                     "id": {
@@ -28460,6 +29111,16 @@
                     },
                     "namespace": {
                       "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "readOnly": true
                     }
                   }
                 }
@@ -28478,7 +29139,9 @@
                 "name": "Active Directory",
                 "version": "v1.0.0",
                 "is_builtin": true,
-                "namespace": "AD"
+                "namespace": "AD",
+                "created_at": "2026-01-01T00:00:00Z",
+                "updated_at": "2026-01-01T00:00:00Z"
               }
             ]
           }
@@ -28658,7 +29321,8 @@
               "properties": {
                 "key": {
                   "type": "string",
-                  "description": "A stable identifier for reconciling rules between extension upserts."
+                  "description": "A stable identifier for reconciling rules between extension upserts.\nIt must start with the extension namespace followed by an underscore\nand a suffix that contains at least one non-whitespace character.\n",
+                  "example": "OGE_environment-nodes"
                 },
                 "name": {
                   "type": "string"
@@ -28715,8 +29379,8 @@
               "properties": {
                 "query_key": {
                   "type": "string",
-                  "description": "A stable identifier for reconciling the saved query.",
-                  "example": "critical-assets"
+                  "description": "A stable identifier for reconciling the saved query.\nIt must start with the extension namespace followed by an underscore\nand a suffix that contains at least one non-whitespace character.\n",
+                  "example": "OGE_all-node-kind-1"
                 },
                 "name": {
                   "type": "string",
@@ -29356,20 +30020,19 @@
               },
               "metric_type": {
                 "type": "string",
-                "enum": [
-                  "node",
-                  "relationship"
-                ]
+                "description": "Metric category. Built-in categories include node and relationship.\nExtension-defined categories use <namespace>_<metric-type>.\nAdditional categories may be introduced by installed extensions.\n",
+                "example": "AD_session_completeness"
               },
               "metric_name": {
-                "type": "string"
+                "type": "string",
+                "description": "Graph kind name or extension-defined metric component name."
               },
               "metric_value": {
                 "type": "number",
                 "format": "double"
               },
               "kind_id": {
-                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "description": "The graph kind ID when the metric name resolves to a known kind; otherwise null.",
                 "type": "integer",
                 "format": "int32",
                 "nullable": true
@@ -29406,20 +30069,19 @@
               },
               "metric_type": {
                 "type": "string",
-                "enum": [
-                  "node",
-                  "relationship"
-                ]
+                "description": "Metric category. Built-in categories include node and relationship.\nExtension-defined categories use <namespace>_<metric-type>.\nAdditional categories may be introduced by installed extensions.\n",
+                "example": "AD_session_completeness"
               },
               "metric_name": {
-                "type": "string"
+                "type": "string",
+                "description": "Graph kind name or extension-defined metric component name."
               },
               "metric_value": {
                 "type": "number",
                 "format": "double"
               },
               "kind_id": {
-                "description": "The kind ID for the counted node kind. Present when `metric_type` is `node`; otherwise null.",
+                "description": "The graph kind ID when the metric name resolves to a known kind; otherwise null.",
                 "type": "integer",
                 "format": "int32",
                 "nullable": true
@@ -30027,86 +30689,6 @@
           }
         ]
       },
-      "model.collector-job-schedule": {
-        "description": "Recurring schedule that materializes jobs for its linked profiles.",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/model.collector-job-schedule-minimal"
-          },
-          {
-            "type": "object",
-            "required": [
-              "disabled_at",
-              "disabled_by",
-              "profiles",
-              "created_at",
-              "updated_at"
-            ],
-            "properties": {
-              "disabled_at": {
-                "$ref": "#/components/schemas/null.time.response"
-              },
-              "disabled_by": {
-                "$ref": "#/components/schemas/null.string.response"
-              },
-              "profiles": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/model.collector-job-profile-minimal"
-                }
-              },
-              "created_at": {
-                "type": "string",
-                "format": "date-time"
-              },
-              "updated_at": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
-          }
-        ]
-      },
-      "model.collector-job-secret": {
-        "type": "object",
-        "description": "Reference to collector credentials held externally, secret values are never stored.",
-        "required": [
-          "id",
-          "type",
-          "key_id",
-          "external_key_id",
-          "name",
-          "created_at"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "auth_key"
-            ]
-          },
-          "key_id": {
-            "type": "string",
-            "description": "Identifier redeemed by the collector against external secret manager."
-          },
-          "external_key_id": {
-            "type": "string",
-            "description": "Operator-facing identifier for the referenced key."
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the secret reference."
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "model.collector-job-history": {
         "type": "object",
         "description": "Immutable terminal record for a collector job queue entry.",
@@ -30198,6 +30780,86 @@
           },
           "failure_reason": {
             "$ref": "#/components/schemas/null.string.response"
+          }
+        }
+      },
+      "model.collector-job-schedule": {
+        "description": "Recurring schedule that materializes jobs for its linked profiles.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/model.collector-job-schedule-minimal"
+          },
+          {
+            "type": "object",
+            "required": [
+              "disabled_at",
+              "disabled_by",
+              "profiles",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "disabled_at": {
+                "$ref": "#/components/schemas/null.time.response"
+              },
+              "disabled_by": {
+                "$ref": "#/components/schemas/null.string.response"
+              },
+              "profiles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/model.collector-job-profile-minimal"
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "model.collector-job-secret": {
+        "type": "object",
+        "description": "Reference to collector credentials held externally, secret values are never stored.",
+        "required": [
+          "id",
+          "type",
+          "key_id",
+          "external_key_id",
+          "name",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "auth_key"
+            ]
+          },
+          "key_id": {
+            "type": "string",
+            "description": "Identifier redeemed by the collector against external secret manager."
+          },
+          "external_key_id": {
+            "type": "string",
+            "description": "Operator-facing identifier for the referenced key."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the secret reference."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -31614,7 +32276,9 @@
         "Risk Posture",
         "Asset Scores",
         "Meta Entities",
-        "Alerts"
+        "Alerts",
+        "Graph Retention Policies",
+        "Marketplace"
       ]
     }
   ]

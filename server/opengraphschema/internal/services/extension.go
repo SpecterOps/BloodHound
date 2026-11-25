@@ -19,10 +19,21 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
+
+	"github.com/specterops/bloodhound/packages/go/params"
 )
 
-// ErrExtensionNotFound indicates that no extension exists for the requested id.
-var ErrExtensionNotFound = errors.New("extension not found")
+var (
+	// ErrExtensionNotFound indicates that no extension exists for the requested id.
+	ErrExtensionNotFound = errors.New("extension not found")
+
+	ErrDuplicateExtensionNamespace = errors.New("duplicate extension namespace")
+
+	ErrDuplicateExtensionName = errors.New("duplicate extension name")
+
+	ErrGraphExtensionBuiltIn = errors.New("cannot modify a built-in graph extension")
+)
 
 // Extension is the domain representation of a schema_extensions row.
 type Extension struct {
@@ -32,8 +43,14 @@ type Extension struct {
 	Namespace   string
 	IsBuiltin   bool
 	Version     string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func (s *Service) GetExtension(ctx context.Context, id int32) (Extension, error) {
 	return s.db.GetExtension(ctx, id)
+}
+
+func (s *Service) ListExtensions(ctx context.Context, extensionFilters params.Filters, sort params.SortItems, skip, limit int) ([]Extension, int, error) {
+	return s.db.ListExtensions(ctx, extensionFilters, sort, skip, limit)
 }

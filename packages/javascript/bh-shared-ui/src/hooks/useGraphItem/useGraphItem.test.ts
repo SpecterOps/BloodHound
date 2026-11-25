@@ -24,6 +24,7 @@ import {
     useGetNodeById,
     useGetRelationshipById,
     useGraphItem,
+    useNodeByObjectId,
 } from './useGraphItem';
 
 const MOCK_NODE_ID = 42;
@@ -218,6 +219,42 @@ describe('useGetRelationshipById', () => {
             expect.objectContaining({ params: { 'include-info': true } })
         );
         expect(result.current.data).toEqual(MOCK_RELATIONSHIP_RESPONSE);
+    });
+});
+
+describe('useNodeByObjectId', () => {
+    it.each([
+        {
+            objectId: MOCK_OBJECT_ID,
+            expectedQuery: "MATCH (n) WHERE n.objectid = 'S-1-5-21-000' RETURN n LIMIT 1",
+        },
+        {
+            objectId: "node-'id\\",
+            expectedQuery: "MATCH (n) WHERE n.objectid = 'node-\\'id\\\\' RETURN n LIMIT 1",
+        },
+    ])('uses a single escaped string literal for $objectId', async ({ objectId, expectedQuery }) => {
+        server.use(
+            rest.post('/api/v2/graphs/cypher', (_req, res, ctx) => {
+                return res(
+                    ctx.json({
+                        data: {
+                            nodes: {
+                                [MOCK_NODE_ID]: { kinds: ['AZApp'], properties: { objectid: objectId } },
+                            },
+                            edges: [],
+                        },
+                    })
+                );
+            })
+        );
+
+        const cypherSearchSpy = vi.spyOn(apiClient, 'cypherSearch');
+        const { result } = renderHook(() => useNodeByObjectId(objectId));
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+        expect(cypherSearchSpy).toHaveBeenCalledWith(expectedQuery, undefined, true);
+        expect(result.current.data?.properties.objectid).toBe(objectId);
     });
 });
 

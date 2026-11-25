@@ -1256,32 +1256,6 @@ func CreateOutboundLocalGroupPathDelegate(edge graph.Kind) PathDelegate {
 	}
 }
 
-func CreateSQLAdminPathDelegate(direction graph.Direction) PathDelegate {
-	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
-		return ops.TraversePaths(tx, ops.TraversalPlan{
-			Root:      node,
-			Direction: direction,
-			BranchQuery: func() graph.Criteria {
-				return query.Kind(query.Relationship(), ad.SQLAdmin)
-			},
-		})
-	}
-}
-
-func CreateSQLAdminListDelegate(direction graph.Direction) ListDelegate {
-	return func(tx graph.Transaction, node *graph.Node, skip, limit int) (graph.NodeSet, error) {
-		return ops.AcyclicTraverseTerminals(tx, ops.TraversalPlan{
-			Root:      node,
-			Direction: direction,
-			BranchQuery: func() graph.Criteria {
-				return query.Kind(query.Relationship(), ad.SQLAdmin)
-			},
-			Skip:  skip,
-			Limit: limit,
-		})
-	}
-}
-
 func CreateConstrainedDelegationPathDelegate(direction graph.Direction) PathDelegate {
 	return func(tx graph.Transaction, node *graph.Node) (graph.PathSet, error) {
 		return ops.TraversePaths(tx, ops.TraversalPlan{
@@ -1575,9 +1549,14 @@ const (
 	fourteenDays = time.Hour * 24 * 14
 )
 
-func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (float64, error) {
-	completeness := float64(0)
+type LocalGroupCompletenessResult struct {
+	ActiveComputerCountWithAdmins float64
+	ActiveComputerCount           float64
+}
 
+// FetchLocalGroupCompleteness anchors the activity window to referenceTime, or to
+// the most recent eligible computer logon when referenceTime is zero.
+func FetchLocalGroupCompleteness(tx graph.Transaction, referenceTime time.Time, domainSIDs ...string) (LocalGroupCompletenessResult, error) {
 	if computers, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		filters := []graph.Criteria{
 			query.Kind(query.Node(), ad.Computer),
@@ -1592,30 +1571,32 @@ func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (fl
 
 		return query.And(filters...)
 	})); err != nil {
-		return completeness, err
+		return LocalGroupCompletenessResult{}, err
 	} else {
-		mostRecentLogonTimestamp := time.Unix(0, 0)
-
-		for _, computer := range computers {
-			if lastLogonTimestamp, err := computer.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
-				return completeness, err
-			} else if lastLogonTimestamp.After(mostRecentLogonTimestamp) {
-				mostRecentLogonTimestamp = lastLogonTimestamp
+		activityReferenceTime := referenceTime
+		if activityReferenceTime.IsZero() {
+			activityReferenceTime = time.Unix(0, 0)
+			for _, computer := range computers {
+				if lastLogonTimestamp, err := computer.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
+					return LocalGroupCompletenessResult{}, err
+				} else if lastLogonTimestamp.After(activityReferenceTime) {
+					activityReferenceTime = lastLogonTimestamp
+				}
 			}
 		}
 
-		activityThreshold := mostRecentLogonTimestamp.Add(-fourteenDays)
+		activityThreshold := activityReferenceTime.Add(-fourteenDays)
 
 		for _, computer := range computers {
 			if passwordLastSet, err := computer.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
-				return completeness, err
+				return LocalGroupCompletenessResult{}, err
 			} else if passwordLastSet.Before(activityThreshold) {
 				computers.Remove(computer.ID)
 			}
 		}
 
 		if computers.Len() == 0 {
-			return 0, nil
+			return LocalGroupCompletenessResult{}, nil
 		}
 
 		var (
@@ -1636,18 +1617,26 @@ func FetchLocalGroupCompleteness(tx graph.Transaction, domainSIDs ...string) (fl
 
 			return nil
 		}); err != nil {
-			return completeness, err
+			return LocalGroupCompletenessResult{}, err
 		} else {
 			activeComputerCountWithAdmins += float64(computerBmp.Cardinality())
 		}
 
-		return activeComputerCountWithAdmins / activeComputerCount, nil
+		return LocalGroupCompletenessResult{
+			ActiveComputerCountWithAdmins: activeComputerCountWithAdmins,
+			ActiveComputerCount:           activeComputerCount,
+		}, nil
 	}
 }
 
-func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (float64, error) {
-	completeness := float64(0)
+type UserSessionCompletenessResult struct {
+	ActiveUserCountWithSessions float64
+	ActiveUserCount             float64
+}
 
+// FetchUserSessionCompleteness anchors the activity window to referenceTime, or to
+// the most recent eligible user logon when referenceTime is zero.
+func FetchUserSessionCompleteness(tx graph.Transaction, referenceTime time.Time, domainSIDs ...string) (UserSessionCompletenessResult, error) {
 	if users, err := ops.FetchNodeSet(tx.Nodes().Filterf(func() graph.Criteria {
 		filters := []graph.Criteria{
 			query.Kind(query.Node(), ad.User),
@@ -1661,30 +1650,32 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 
 		return query.And(filters...)
 	})); err != nil {
-		return completeness, err
+		return UserSessionCompletenessResult{}, err
 	} else {
-		mostRecentLogonTimestamp := time.Unix(0, 0)
-
-		for _, user := range users {
-			if userLastLogonTimestamp, err := user.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
-				return completeness, err
-			} else if userLastLogonTimestamp.After(mostRecentLogonTimestamp) {
-				mostRecentLogonTimestamp = userLastLogonTimestamp
+		activityReferenceTime := referenceTime
+		if activityReferenceTime.IsZero() {
+			activityReferenceTime = time.Unix(0, 0)
+			for _, user := range users {
+				if userLastLogonTimestamp, err := user.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
+					return UserSessionCompletenessResult{}, err
+				} else if userLastLogonTimestamp.After(activityReferenceTime) {
+					activityReferenceTime = userLastLogonTimestamp
+				}
 			}
 		}
 
-		activityThreshold := mostRecentLogonTimestamp.Add(-fourteenDays)
+		activityThreshold := activityReferenceTime.Add(-fourteenDays)
 
 		for _, user := range users {
 			if userLastLogonTimestamp, err := user.Properties.Get(ad.LastLogonTimestamp.String()).Time(); err != nil {
-				return completeness, err
+				return UserSessionCompletenessResult{}, err
 			} else if userLastLogonTimestamp.Before(activityThreshold) {
 				users.Remove(user.ID)
 			}
 		}
 
 		if users.Len() == 0 {
-			return 0, nil
+			return UserSessionCompletenessResult{}, nil
 		}
 
 		var (
@@ -1706,12 +1697,15 @@ func FetchUserSessionCompleteness(tx graph.Transaction, domainSIDs ...string) (f
 
 			return nil
 		}); err != nil {
-			return completeness, err
+			return UserSessionCompletenessResult{}, err
 		} else {
 			activeUserCountWithSessions += float64(userBmp.GetCardinality())
 		}
 
-		return activeUserCountWithSessions / activeUserCount, nil
+		return UserSessionCompletenessResult{
+			ActiveUserCountWithSessions: activeUserCountWithSessions,
+			ActiveUserCount:             activeUserCount,
+		}, nil
 	}
 }
 

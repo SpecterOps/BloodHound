@@ -18,6 +18,7 @@ parameters:
   - $ref: './../parameters/header.prefer.yaml'
 get:
   operationId: GetBaseRetentionPolicy
+  description: Requires enabled `retention_policies` feature flag. Requires admin permissions.
   summary: Get Base Retention Policy
   tags:
     - Graph Retention Policies
@@ -48,7 +49,9 @@ get:
 put:
   operationId: UpdateBaseRetentionPolicy
   summary: Update Base Retention Policy
-  description: Creates the base policy if it is missing; otherwise updates it, and returns the saved policy with 200 OK.
+  description: >-
+    Requires enabled `retention_policies` feature flag. Requires admin permissions.
+    Creates the base policy if it is missing; otherwise updates it, and returns the saved policy with 200 OK.
   tags:
     - Graph Retention Policies
     - Enterprise
@@ -86,3 +89,58 @@ put:
       $ref: './../responses/too-many-requests.yaml'
     500:
       $ref: './../responses/internal-server-error.yaml'
+
+patch:
+  operationId: PatchBaseRetentionPolicy
+  summary: Enable/Disable Base Retention Policy
+  description: >
+    Requires enabled `retention_policies` feature flag. Requires admin permissions.
+    Disabling the base retention policy stops graph data pruning and causes
+    more-specific retention policies to be ignored. The TTL remains unchanged.
+    Returns 404 if the base policy does not exist.
+  tags:
+    - Graph Retention Policies
+    - Enterprise
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          additionalProperties: false
+          required:
+            - data
+          properties:
+            data:
+              type: object
+              additionalProperties: false
+              required:
+                - enabled
+              properties:
+                enabled:
+                  type: boolean
+  responses:
+    200:
+      description: Updated base retention policy.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                $ref: './../schemas/model.graph-retention-policy.yaml'
+    400:
+      $ref: './../responses/bad-request.yaml'
+    401:
+      $ref: './../responses/unauthorized.yaml'
+    403:
+      $ref: './../responses/forbidden.yaml'
+    404:
+      $ref: './../responses/not-found.yaml'
+    429:
+      $ref: './../responses/too-many-requests.yaml'
+    500:
+      $ref: './../responses/internal-server-error.yaml'
+

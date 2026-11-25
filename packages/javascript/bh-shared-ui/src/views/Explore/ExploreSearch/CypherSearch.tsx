@@ -17,7 +17,7 @@ import { faChevronCircleRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@neo4j-cypher/codemirror/css/cypher-codemirror.css';
 import { CypherEditor } from '@neo4j-cypher/react-codemirror';
-import { AccessibleIcon, Button, ButtonVariants, CheckboxWithLabel } from 'doodle-ui';
+import { AccessibleIcon, Button, ButtonGroup, ButtonVariants, CheckboxWithLabel } from 'doodle-ui';
 import { FlatGraphResponse, GraphResponse, UpdateUserQueryRequest } from 'js-client-library';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { UncommonSearches } from '../../../commonSearchesAGT';
@@ -291,7 +291,7 @@ const CypherSearchInner = ({
         <>
             <div className='flex flex-col h-full' data-testid='cypher-search-section'>
                 {/* PRE BUILT SEARCHES SECTION */}
-                <div className={cn('grow min-h-0 bg-[#f4f4f4] dark:bg-[#222222] shadow-outer-1 py-0 rounded-lg mb-4')}>
+                <div className='grow min-h-0 bg-neutral-2 py-0 border-b border-neutral-light-4 dark:border-neutral-900'>
                     <CommonSearches
                         onSetCypherQuery={setCypherQuery}
                         onPerformCypherSearch={handleSavedSearch}
@@ -300,7 +300,7 @@ const CypherSearchInner = ({
                     />
                 </div>
                 {/* CYPHER EDITOR SECTION */}
-                <div className='bg-[#f4f4f4] dark:bg-[#222222] p-4 rounded-lg shadow-outer-1'>
+                <div className='bg-neutral-2 p-4 rounded-b-lg'>
                     <div className='flex items-center justify-between mb-2'>
                         <CypherSearchMessage messageState={messageState} setMessageState={setMessageState} />
                         <div className='flex items-center whitespace-nowrap gap-2 pr-2'>
@@ -375,17 +375,17 @@ const CypherSearchInner = ({
                             {checkPermission(Permission.GRAPH_DB_WRITE) && privilegeZonesEnabled && (
                                 <TagToZoneLabel cypherQuery={cypherSearchState.cypherQuery}></TagToZoneLabel>
                             )}
-                            <div className='flex'>
+                            <ButtonGroup aria-label='Save query actions'>
                                 <Button
                                     variant='secondary'
                                     onClick={handleClickSave}
                                     aria-label='Save query'
                                     size='small'
-                                    className='rounded-r-none px-4 text-base/none'>
+                                    className='px-4 text-base/none'>
                                     Save
                                 </Button>
                                 <SaveQueryActionMenu saveAs={handleSaveAs} />
-                            </div>
+                            </ButtonGroup>
 
                             {/* below is a link, rather than a Button, as it launches to a new page */}
                             <a

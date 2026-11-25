@@ -21,6 +21,7 @@ package ad_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/specterops/bloodhound/cmd/api/src/test"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
@@ -1163,46 +1164,6 @@ func TestCreateInboundLocalGroupListDelegate(t *testing.T) {
 	})
 }
 
-func TestCreateSQLAdminPathDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.LocalGroupSQL.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		path, err := adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionInbound)(tx, harness.LocalGroupSQL.ComputerA)
-
-		test.RequireNilErr(t, err)
-		nodes := path.AllNodes().IDs()
-		require.Contains(t, nodes, harness.LocalGroupSQL.UserC.ID)
-		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerA.ID)
-		require.Equal(t, 2, len(nodes))
-
-		path, err = adAnalysis.CreateSQLAdminPathDelegate(graph.DirectionOutbound)(tx, harness.LocalGroupSQL.UserC)
-		test.RequireNilErr(t, err)
-		nodes = path.AllNodes().IDs()
-		require.Contains(t, nodes, harness.LocalGroupSQL.UserC.ID)
-		require.Contains(t, nodes, harness.LocalGroupSQL.ComputerA.ID)
-		require.Equal(t, 2, len(nodes))
-	})
-}
-
-func TestCreateSQLAdminListDelegate(t *testing.T) {
-	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
-	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
-		harness.LocalGroupSQL.Setup(testContext)
-		return nil
-	}, func(harness integration.HarnessDetails, tx graph.Transaction) {
-		admins, err := adAnalysis.CreateSQLAdminListDelegate(graph.DirectionInbound)(tx, harness.LocalGroupSQL.ComputerA, 0, 0)
-
-		test.RequireNilErr(t, err)
-		require.Equal(t, 1, admins.Len())
-
-		computers, err := adAnalysis.CreateSQLAdminListDelegate(graph.DirectionOutbound)(tx, harness.LocalGroupSQL.UserC, 0, 0)
-		test.RequireNilErr(t, err)
-		require.Equal(t, 1, computers.Len())
-	})
-}
-
 func TestCreateConstrainedDelegationPathDelegate(t *testing.T) {
 	testContext := integration.NewGraphTestContext(t, graphschema.DefaultGraphSchema())
 	testContext.WriteTransactionTestWithSetup(func(harness *integration.HarnessDetails) error {
@@ -1857,9 +1818,11 @@ func TestFetchLocalGroupCompleteness(t *testing.T) {
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		// why does this function ask for a transaction type?
-		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, "DOMAIN123")
+		completeness, err := adAnalysis.FetchLocalGroupCompleteness(tx, time.Time{}, "DOMAIN123")
 		require.NoError(t, err)
-		assert.Equal(t, .5, completeness)
+		assert.Equal(t, float64(1), completeness.ActiveComputerCountWithAdmins)
+		assert.Equal(t, float64(2), completeness.ActiveComputerCount)
+		assert.Equal(t, .5, completeness.ActiveComputerCountWithAdmins/completeness.ActiveComputerCount)
 		return nil
 	})
 	assert.NoError(t, err)
@@ -1879,9 +1842,11 @@ func TestFetchUserSessionCompleteness(t *testing.T) {
 
 	err = graphDB.ReadTransaction(testCtx.Context(), func(tx graph.Transaction) error {
 		// why does this function ask for a transaction type?
-		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, "DOMAIN123")
+		completeness, err := adAnalysis.FetchUserSessionCompleteness(tx, time.Time{}, "DOMAIN123")
 		require.NoError(t, err)
-		assert.Equal(t, .5, completeness)
+		assert.Equal(t, float64(2), completeness.ActiveUserCountWithSessions)
+		assert.Equal(t, float64(4), completeness.ActiveUserCount)
+		assert.Equal(t, .5, completeness.ActiveUserCountWithSessions/completeness.ActiveUserCount)
 		return nil
 	})
 	assert.NoError(t, err)

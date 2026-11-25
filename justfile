@@ -212,6 +212,7 @@ bh-watch target='dev' *ARGS='--no-up':
   @docker compose --profile {{target}} -f docker-compose.dev.yml -f docker-compose.watch.yml watch {{ARGS}}
 
 # build local BHCE container image (ex: just build-bhce-container <linux/arm64|linux/amd64> edge v5.0.0)
+# collectors default to latest stable releases and can be overwritten with: --build-arg SHARPHOUND_VERSION=vX.Y.Z --build-arg AZUREHOUND_VERSION=vX.Y.Z
 build-bhce-container platform='linux/amd64' tag='edge' version='v5.0.0' *ARGS='':
   @docker buildx build -f dockerfiles/bloodhound.Dockerfile -t specterops/bloodhound:{{tag}} --platform={{platform}} --load --build-arg version={{version}}-{{tag}} {{ARGS}} .
 

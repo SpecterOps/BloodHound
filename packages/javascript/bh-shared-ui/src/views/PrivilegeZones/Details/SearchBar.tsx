@@ -109,7 +109,7 @@ const SearchBar: React.FC<{ showTags?: boolean }> = ({ showTags = true }) => {
     });
 
     return (
-        <div className='min-w-96 px-2 mr-2'>
+        <div className='min-w-96'>
             <Popover open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
                 <PopoverAnchor>
                     <div className='relative'>

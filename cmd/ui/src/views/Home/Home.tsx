@@ -14,11 +14,21 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { clearLoginRedirect, getLoginDestination } from 'bh-shared-ui';
+import { useEffect, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { loginRedirectOptions } from 'src/routes/constants';
 
 const Home: React.FC = () => {
-    return <Navigate to='/explore' replace />;
+    const { state } = useLocation();
+    // Snapshot the destination for this mount, before the effect clears storage.
+    const [destination] = useState(() => getLoginDestination(state, loginRedirectOptions));
+
+    useEffect(() => {
+        clearLoginRedirect();
+    }, []);
+
+    return <Navigate to={destination} replace />;
 };
 
 export default Home;

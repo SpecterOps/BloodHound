@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/auth"
 	"github.com/specterops/bloodhound/cmd/api/src/bhctx"
 	"github.com/specterops/bloodhound/cmd/api/src/config"
+	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/auth/internal/handlers"
 	"github.com/specterops/bloodhound/server/auth/internal/handlers/mocks"
 	"github.com/specterops/bloodhound/server/auth/internal/routes"
@@ -54,6 +55,10 @@ func TestRegister(t *testing.T) {
 	}{
 		{http.MethodPost, "/api/v2/logout", true},
 		{http.MethodGet, "/api/v2/logout", false},
+		{http.MethodGet, "/api/v2/self", true},
+		{http.MethodPost, "/api/v2/self", false},
+		{http.MethodGet, "/api/v2/sso-providers", true},
+		{http.MethodPost, "/api/v2/sso-providers", false},
 	} {
 		req := httptest.NewRequest(tc.method, tc.path, nil)
 		var match mux.RouteMatch
@@ -84,4 +89,39 @@ func TestRegister_LogoutDoesNotRequireAuthentication(t *testing.T) {
 
 	assert.NotEqual(t, http.StatusUnauthorized, recorder.Code,
 		"unauthenticated POST /api/v2/logout must not be rejected by route-level middleware")
+}
+
+func TestListAuthProviders_QueryValidation(t *testing.T) {
+	for _, query := range []string{"?sort_by=details", "?sort_by=-", "?name=gt:value", "?name=bad:value", "?details=eq:value"} {
+		t.Run(query, func(t *testing.T) {
+			var (
+				routerInstance = router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
+				serviceMock    = mocks.NewMockAuth(t)
+				request        = bhctx.SetRequestContext(httptest.NewRequest(http.MethodGet, "/api/v2/sso-providers"+query, nil), &bhctx.Context{})
+				response       = httptest.NewRecorder()
+			)
+
+			routes.Register(&routerInstance, handlers.NewHandlersContainer(serviceMock))
+			routerInstance.Handler().ServeHTTP(response, request)
+			assert.Equal(t, http.StatusBadRequest, response.Code)
+		})
+	}
+}
+
+// The listing is needed by the login screen before the user authenticates.
+func TestListAuthProviders_PublicQuery(t *testing.T) {
+	var (
+		routerInstance = router.NewRouter(config.Configuration{}, auth.NewAuthorizer(nil), "")
+		serviceMock    = mocks.NewMockAuth(t)
+		request        = bhctx.SetRequestContext(httptest.NewRequest(http.MethodGet, "/api/v2/sso-providers?name=eq:Example&sort_by=-name", nil), &bhctx.Context{Host: &url.URL{Scheme: "https", Host: "example.com"}})
+		response       = httptest.NewRecorder()
+		filters        = params.Filters{"name": {{Field: "name", Operator: params.Equals, Value: "Example", SetOperator: params.FilterAnd, IsStringData: true}}}
+		sortItems      = params.SortItems{{Field: "name", Direction: params.Descending}}
+	)
+
+	serviceMock.EXPECT().ListAuthProviders(mock.Anything, filters, sortItems).Return(nil, nil)
+
+	routes.Register(&routerInstance, handlers.NewHandlersContainer(serviceMock))
+	routerInstance.Handler().ServeHTTP(response, request)
+	assert.Equal(t, http.StatusOK, response.Code)
 }

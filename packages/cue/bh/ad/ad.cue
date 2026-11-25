@@ -28,9 +28,6 @@ RelationshipKinds: [...types.#Kind]
 ACLRelationships: [...types.#Kind]
 IngestACLRelationships: [...types.#Kind]
 PathfindingRelationships: [...types.#Kind]
-PathfindingRelationshipsMatchFrontend: [...types.#Kind]
-InboundRelationshipKinds: [...types.#Kind]
-OutboundRelationshipKinds: [...types.#Kind]
 EdgeCompositionRelationships: [...types.#Kind]
 
 // Property name enumerations
@@ -1535,11 +1532,6 @@ DumpSMSAPassword: types.#Kind & {
 	schema: "active_directory"
 }
 
-SQLAdmin: types.#Kind & {
-	symbol: "SQLAdmin"
-	schema: "active_directory"
-}
-
 AddAllowedToAct: types.#Kind & {
 	symbol: "AddAllowedToAct"
 	schema: "active_directory"
@@ -1796,26 +1788,6 @@ ClaimSpecialIdentity: types.#Kind & {
 	schema: "active_directory"
 }
 
-ContainsIdentity: types.#Kind & {
-	symbol: "ContainsIdentity"
-	schema: "active_directory"
-}
-
-PropagatesACEsTo: types.#Kind & {
-	symbol: "PropagatesACEsTo"
-	schema: "active_directory"
-}
-
-GPOAppliesTo: types.#Kind & {
-	symbol: "GPOAppliesTo"
-	schema: "active_directory"
-}
-
-CanApplyGPO: types.#Kind & {
-	symbol: "CanApplyGPO"
-	schema: "active_directory"
-}
-
 WriteAltSecurityIdentities: types.#Kind & {
 	symbol: "WriteAltSecurityIdentities"
 	schema: "active_directory"
@@ -1861,7 +1833,6 @@ RelationshipKinds: [
 	ReadLAPSPassword,
 	ReadGMSAPassword,
 	DumpSMSAPassword,
-	SQLAdmin,
 	AddAllowedToAct,
 	WriteSPN,
 	AddKeyCredentialLink,
@@ -1911,10 +1882,6 @@ RelationshipKinds: [
 	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
-	ContainsIdentity,
-	PropagatesACEsTo,
-	GPOAppliesTo,
-	CanApplyGPO,
 	HasTrustKeys,
 	WriteAltSecurityIdentities,
 	WritePublicInformation,
@@ -1965,8 +1932,8 @@ PostProcessedACLRelationships: [
 
 IngestACLRelationships: [for r in ACLRelationships if !list.Contains(PostProcessedACLRelationships, r) {r}],
 
-// these edges are common to inbound/outbound/pathfinding
-SharedRelationshipKinds: [
+// Edges that are traversable in pathfinding and analysis
+PathfindingRelationships: [
 	Owns,
 	GenericAll,
 	GenericWrite,
@@ -1991,7 +1958,6 @@ SharedRelationshipKinds: [
 	ReadLAPSPassword,
 	ReadGMSAPassword,
 	DumpSMSAPassword,
-	SQLAdmin,
 	AddAllowedToAct,
 	WriteSPN,
 	AddKeyCredentialLink,
@@ -2019,29 +1985,18 @@ SharedRelationshipKinds: [
 	ClaimSpecialIdentity,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
-	ContainsIdentity,
-	PropagatesACEsTo,
-	GPOAppliesTo,
-	CanApplyGPO,
 	HasTrustKeys,
 	WriteAltSecurityIdentities,
 	WritePublicInformation,
 	ManageCA,
 	ManageCertificates,
 	ServerIs,
+	Contains,
+	DCFor,
+	SameForestTrust,
+	SpoofSIDHistory,
+	AbuseTGTDelegation,
 ]
-
-// Edges that are used during inbound traversal
-InboundRelationshipKinds: list.Concat([SharedRelationshipKinds, [Contains]])
-
-// Edges that are used during outbound traversal
-OutboundRelationshipKinds: list.Concat([SharedRelationshipKinds,[Contains, DCFor]])
-
-// Edges that are used in pathfinding
-PathfindingRelationships: list.Concat([SharedRelationshipKinds,[Contains, DCFor, SameForestTrust, SpoofSIDHistory, AbuseTGTDelegation]])
-
-// Edges that are used in Shortest Path and match the frontend's list of traversable edges
-PathfindingRelationshipsMatchFrontend: list.Concat([[for r in PathfindingRelationships if !list.Contains([ContainsIdentity, PropagatesACEsTo, GPOAppliesTo, CanApplyGPO], r) {r}], [ProtectAdminGroups]]),
 
 
 EdgeCompositionRelationships: [
@@ -2062,6 +2017,4 @@ EdgeCompositionRelationships: [
 	CoerceAndRelayNTLMToADCSRPC,
 	CoerceAndRelayNTLMToLDAP,
 	CoerceAndRelayNTLMToLDAPS,
-	GPOAppliesTo,
-	CanApplyGPO,
 ]

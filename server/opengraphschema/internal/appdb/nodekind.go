@@ -18,6 +18,7 @@ package appdb
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -25,16 +26,19 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/specterops/bloodhound/cmd/api/src/database/types/null"
+	"github.com/specterops/bloodhound/packages/go/dbutil"
 	"github.com/specterops/bloodhound/packages/go/params"
 	"github.com/specterops/bloodhound/server/opengraphschema/internal/services"
 )
 
 const (
 	tableSchemaNodeKinds = "schema_node_kinds"
+	tableCustomNodeKinds = "custom_node_kinds"
 	// tableKind is the kind table joined when resolving node kinds to their names.
 	tableKind                                    = "kind"
 	graphSchemaNodeKindConstraintUniqueKindID    = "schema_node_kinds_kind_id_key"
 	graphSchemaNodeKindConstraintExtensionIDFKey = "schema_node_kinds_schema_extension_id_fkey"
+	customNodeKindConstraintUniqueKindID         = "custom_node_kinds_kind_id_key"
 	// PostgresUniqueViolationCode is the SQLSTATE code for unique constraint violations.
 	PostgresUniqueViolationCode = "23505"
 	// PostgresForeignKeyViolationCode is the SQLSTATE code for foreign key constraint violations.
@@ -58,6 +62,14 @@ type nodeKindRow struct {
 	DeletedAt         null.Time `db:"deleted_at"`
 }
 
+type customNodeKindRow struct {
+	ID               int32           `db:"id"`
+	KindID           int32           `db:"kind_id"`
+	KindName         string          `db:"kind_name"`
+	SchemaNodeKindID *int32          `db:"schema_node_kind_id"`
+	Config           json.RawMessage `db:"config"`
+}
+
 // toNodeKind translates a raw node kind row into the domain model. icon_color maps to
 // the domain Color, timestamps resolve via ValueOrZero, and deleted_at resolves via Ptr
 // (nil when null).
@@ -76,6 +88,22 @@ func toNodeKind(row nodeKindRow) services.NodeKind {
 		UpdatedAt:         row.UpdatedAt.ValueOrZero(),
 		DeletedAt:         row.DeletedAt.Ptr(),
 	}
+}
+
+func toCustomNodeKind(row customNodeKindRow) (services.CustomNodeKind, error) {
+	var config services.CustomNodeKindConfig
+
+	if err := json.Unmarshal(row.Config, &config); err != nil {
+		return services.CustomNodeKind{}, fmt.Errorf("decoding custom node kind config: %w", err)
+	}
+
+	return services.CustomNodeKind{
+		ID:               row.ID,
+		KindID:           row.KindID,
+		KindName:         row.KindName,
+		SchemaNodeKindId: row.SchemaNodeKindID,
+		Config:           config,
+	}, nil
 }
 
 // GetNodeKind fetches a node kind by its schema_node_kinds row id, returning
@@ -173,20 +201,18 @@ func (s *Store) CreateGraphSchemaNodeKind(ctx context.Context, extensionID int32
 	}
 }
 
-// TODO: Port custom node kind CRUD from cmd/api/src/database/customnode.go:
-// CreateCustomNodeKinds, GetCustomNodeKinds, UpdateCustomNodeKind, and DeleteCustomNodeKind.
-// Preserve auditing and schema-node icon synchronization.
-
 // GetGraphSchemaNodeKinds returns matching node kinds and the total count before pagination.
 func (s *Store) GetGraphSchemaNodeKinds(ctx context.Context, filters params.Filters, sort params.SortItems, skip, limit int) ([]services.NodeKind, int, error) {
+	return getGraphSchemaNodeKinds(ctx, s.db, filters, sort, skip, limit)
+}
+
+func getGraphSchemaNodeKinds(ctx context.Context, db pgxQuerier, filters params.Filters, sort params.SortItems, skip, limit int) ([]services.NodeKind, int, error) {
 	var (
 		selectBuilder   = sqlbuilder.PostgreSQL.NewSelectBuilder()
 		countBuilder    = sqlbuilder.PostgreSQL.NewSelectBuilder()
 		schemaNodeKinds = []services.NodeKind{}
 		nodeKindRows    []nodeKindRow
 		totalRowCount   int
-		aliasedFilters  = make(params.Filters, len(filters))
-		aliasedSorts    = make(params.SortItems, 0, len(sort))
 
 		nodeKindColumnAliases = map[string]string{
 			"schema_extension_id": "nk.schema_extension_id",
@@ -215,54 +241,23 @@ func (s *Store) GetGraphSchemaNodeKinds(ctx context.Context, filters params.Filt
 	countBuilder.From(countBuilder.As(tableSchemaNodeKinds, "nk"))
 	countBuilder.Join(countBuilder.As(tableKind, "k"), "nk.kind_id = k.id")
 
-	if len(filters) > 0 {
-		for filterColumn, filter := range filters {
-			aliasedColumn, ok := nodeKindColumnAliases[filterColumn]
-			if !ok {
-				return schemaNodeKinds, 0, fmt.Errorf("node kind filter references unknown field %q", filterColumn)
-			}
-			aliasedFilters[aliasedColumn] = filter
-		}
-	}
-	if len(sort) > 0 {
-		for _, sortItem := range sort {
-			aliasedColumn, ok := nodeKindColumnAliases[sortItem.Field]
-			if !ok {
-				return schemaNodeKinds, 0, fmt.Errorf("node kind sort references unknown field %q", sortItem.Field)
-			}
-			sortItem.Field = aliasedColumn
-			if sortItem.Direction != params.Ascending && sortItem.Direction != params.Descending {
-				return schemaNodeKinds, 0, fmt.Errorf("%w: %q", services.ErrInvalidSortDirection, sortItem.Direction)
-			}
-			aliasedSorts = append(aliasedSorts, sortItem)
-		}
-	} else {
-		aliasedSorts = append(aliasedSorts, params.SortItem{Field: "nk.id", Direction: params.Ascending})
-	}
-
-	for _, builder := range []*sqlbuilder.SelectBuilder{selectBuilder, countBuilder} {
-		if err := applyFilters(builder, aliasedFilters); err != nil {
-			return schemaNodeKinds, 0, err
-		}
-	}
-
-	for _, sortItem := range aliasedSorts {
-		if sortItem.Direction == params.Descending {
-			selectBuilder.OrderByDesc(sortItem.Field)
-		} else {
-			selectBuilder.OrderByAsc(sortItem.Field)
-		}
-	}
-
-	if limit > 0 {
-		selectBuilder.Limit(limit)
-	}
-	if skip > 0 {
-		selectBuilder.Offset(skip)
+	err := dbutil.EntityListerApplyFilterSortPagination(ctx, selectBuilder, countBuilder,
+		dbutil.FilterSortSetup{
+			ColumnAliases:    nodeKindColumnAliases,
+			DefaultSortField: "nk.id",
+		},
+		dbutil.FilterSortPaginationInput{
+			Filters: filters,
+			Sort:    sort,
+			Skip:    skip,
+			Limit:   limit,
+		})
+	if err != nil {
+		return nil, 0, err
 	}
 
 	sqlQuery, args := selectBuilder.Build()
-	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+	if rows, err := db.Query(ctx, sqlQuery, args...); err != nil {
 		return nil, 0, fmt.Errorf("error fetching node kinds: %w", err)
 	} else if nodeKindRows, err = pgx.CollectRows(rows, pgx.RowToStructByName[nodeKindRow]); err != nil {
 		return nil, 0, fmt.Errorf("error reading rows: %w", err)
@@ -273,7 +268,7 @@ func (s *Store) GetGraphSchemaNodeKinds(ctx context.Context, filters params.Filt
 	totalRowCount = len(nodeKindRows)
 	if limit > 0 || skip > 0 {
 		countQuery, countArgs := countBuilder.Build()
-		if rows, err := s.db.Query(ctx, countQuery, countArgs...); err != nil {
+		if rows, err := db.Query(ctx, countQuery, countArgs...); err != nil {
 			return []services.NodeKind{}, 0, fmt.Errorf("error counting node kinds: %w", err)
 		} else if totalRowCount, err = pgx.CollectOneRow(rows, pgx.RowTo[int]); err != nil {
 			return []services.NodeKind{}, 0, fmt.Errorf("error reading node kind count: %w", err)
@@ -289,7 +284,11 @@ func (s *Store) GetGraphSchemaNodeKinds(ctx context.Context, filters params.Filt
 
 // GetGraphSchemaNodeKindsByExtensionId - retrieves all node kinds belonging to the given extension.
 func (s *Store) GetGraphSchemaNodeKindsByExtensionId(ctx context.Context, extensionID int32) ([]services.NodeKind, error) {
-	if nodeKinds, _, err := s.GetGraphSchemaNodeKinds(ctx,
+	return getGraphSchemaNodeKindsByExtensionId(ctx, s.db, extensionID)
+}
+
+func getGraphSchemaNodeKindsByExtensionId(ctx context.Context, db pgxQuerier, extensionID int32) ([]services.NodeKind, error) {
+	if nodeKinds, _, err := getGraphSchemaNodeKinds(ctx, db,
 		params.Filters{"schema_extension_id": {{
 			Operator:    params.Equals,
 			Value:       fmt.Sprintf("%d", extensionID),
@@ -346,6 +345,40 @@ func (s *Store) UpdateGraphSchemaNodeKind(ctx context.Context, nodeKind services
 	}
 }
 
+type schemaNodeKindIconRow struct {
+	Icon      string `db:"icon"`
+	IconColor string `db:"icon_color"`
+}
+
+func updateGraphSchemaNodeKindIcon(ctx context.Context, databaseQuerier pgxQuerier, schemaNodeKindID int32, icon services.DisplayNodeIcon) (services.DisplayNodeIcon, error) {
+	updateBuilder := sqlbuilder.PostgreSQL.NewUpdateBuilder()
+
+	updateBuilder.Update(tableSchemaNodeKinds)
+	updateBuilder.Set(
+		updateBuilder.Assign("icon", icon.Name),
+		updateBuilder.Assign("icon_color", icon.Color),
+		updateBuilder.Assign("updated_at", sqlbuilder.Raw("NOW()")),
+	)
+	updateBuilder.Where(updateBuilder.Equal("id", schemaNodeKindID))
+	updateBuilder.Returning("icon", "icon_color")
+
+	sqlQuery, args := updateBuilder.Build()
+	if rows, err := databaseQuerier.Query(ctx, sqlQuery, args...); err != nil {
+		return services.DisplayNodeIcon{}, fmt.Errorf("updating schema node kind icon: %w", err)
+	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[schemaNodeKindIconRow]); errors.Is(err, pgx.ErrNoRows) {
+		return services.DisplayNodeIcon{}, services.ErrNodeKindNotFound
+	} else if err != nil {
+		return services.DisplayNodeIcon{}, fmt.Errorf("reading updated schema node kind icon: %w", err)
+	} else {
+		// The schema table stores only the name and color, so preserve the supplied type.
+		return services.DisplayNodeIcon{
+			Type:  icon.Type,
+			Name:  row.Icon,
+			Color: row.IconColor,
+		}, nil
+	}
+}
+
 // DeleteGraphSchemaNodeKind - deletes a schema_node_kinds row based on the provided id. Will return an error if that id does not exist.
 func (s *Store) DeleteGraphSchemaNodeKind(ctx context.Context, nodeKindID int32) error {
 	deleteBuilder := sqlbuilder.PostgreSQL.NewDeleteBuilder()
@@ -375,6 +408,290 @@ func checkNodeKindError(err error, name string) error {
 			postgresError.ConstraintName == graphSchemaNodeKindConstraintExtensionIDFKey:
 			return fmt.Errorf("%w: %w", services.ErrExtensionNotFound, err)
 		}
+	}
+
+	return err
+}
+
+// TODO BED-10577: re-implement auditing
+
+// CustomNodeKindStubConfig is the default display config used when a node kind is encountered during ingest
+// but has no display configuration yet. custom_node_kinds was originally scoped to OpenGraph extension kinds
+// but now serves as the runtime display registry for any non-built-in, non-framework kind.
+var CustomNodeKindStubConfig = services.CustomNodeKindConfig{
+	Icon: services.DisplayNodeIcon{
+		Name:  "question",
+		Type:  services.DisplayNodeTypeFontAwesome,
+		Color: "#FFFFFF",
+	},
+}
+
+// CreateCustomNodeKinds creates custom node kinds, registering their names in the kind table first.
+func (s *Store) CreateCustomNodeKinds(ctx context.Context, customNodeKinds []services.CustomNodeKind) ([]services.CustomNodeKind, error) {
+	var (
+		emptyCustomNodeKinds   = []services.CustomNodeKind{}
+		createdCustomNodeKinds = make([]services.CustomNodeKind, 0, len(customNodeKinds))
+	)
+
+	for _, customNodeKind := range customNodeKinds {
+		if customNodeKind.KindName == "" {
+			return emptyCustomNodeKinds, errors.New("invalid kind name")
+		}
+	}
+
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return emptyCustomNodeKinds, fmt.Errorf("beginning transaction: %s", err)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	for _, customNodeKind := range customNodeKinds {
+		// Reuse an existing kind row or create one before inserting its custom-kind record.
+		var kindSelectBuilder = sqlbuilder.PostgreSQL.NewSelectBuilder()
+
+		kindSelectBuilder.Select("id")
+		kindSelectBuilder.From("upsert_kind(" + kindSelectBuilder.Var(customNodeKind.KindName) + ")")
+
+		kindQuery, kindArgs := kindSelectBuilder.Build()
+		if rows, err := tx.Query(ctx, kindQuery, kindArgs...); err != nil {
+			return emptyCustomNodeKinds, fmt.Errorf("upserting kind %q: %w", customNodeKind.KindName, err)
+		} else if kindID, err := pgx.CollectOneRow(rows, pgx.RowTo[int32]); err != nil {
+			return emptyCustomNodeKinds, fmt.Errorf("reading upserted kind %q: %w", customNodeKind.KindName, err)
+		} else {
+			customNodeKind.KindID = kindID
+		}
+
+		// Insert the custom node kind and join kind to retrieve the non-stored kind name.
+		if row, err := insertCustomNodeKind(ctx, tx, customNodeKind); err != nil {
+			return emptyCustomNodeKinds, err
+		} else if created, err := toCustomNodeKind(row); err != nil {
+			return emptyCustomNodeKinds, fmt.Errorf("creating custom node kind %q: %w", customNodeKind.KindName, err)
+		} else {
+			createdCustomNodeKinds = append(createdCustomNodeKinds, created)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return emptyCustomNodeKinds, fmt.Errorf("committing custom node kinds transaction: %w", err)
+	}
+
+	return createdCustomNodeKinds, nil
+}
+
+// insertCustomNodeKind just inserts the given node kind returning the inserted value as a DB type.
+// It does not upsert a kind row or sync values with any other tables.
+// Duplicate key failures will be ignored.
+func insertCustomNodeKind(ctx context.Context, db pgxQuerier, customNodeKind services.CustomNodeKind) (customNodeKindRow, error) {
+	config, err := json.Marshal(customNodeKind.Config)
+	if err != nil {
+		return customNodeKindRow{}, fmt.Errorf("encoding custom node kind config for %q: %w", customNodeKind.KindName, err)
+	}
+
+	var (
+		insertBuilder = sqlbuilder.PostgreSQL.NewInsertBuilder()
+		selectBuilder = sqlbuilder.PostgreSQL.NewSelectBuilder()
+	)
+
+	// using InsertIgnore to ignore conflicts on existing rows
+	insertBuilder.InsertIgnoreInto(tableCustomNodeKinds)
+	insertBuilder.Cols("config", "schema_node_kind_id", "kind_id")
+	insertBuilder.Values(
+		sqlbuilder.Build("$0::jsonb", string(config)),
+		customNodeKind.SchemaNodeKindId,
+		customNodeKind.KindID,
+	)
+
+	insertBuilder.Returning("id", "kind_id", "schema_node_kind_id", "config")
+
+	selectBuilder.With(sqlbuilder.PostgreSQL.NewCTEBuilder().With(
+		sqlbuilder.PostgreSQL.NewCTEQueryBuilder().Table("inserted_custom_node_kind").As(insertBuilder),
+	))
+	selectBuilder.Select(
+		"cnk.id", "k.name AS kind_name", "cnk.kind_id", "cnk.schema_node_kind_id", "cnk.config",
+	)
+	selectBuilder.From(selectBuilder.As("inserted_custom_node_kind", "cnk"))
+	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "cnk.kind_id = k.id")
+
+	insertQuery, insertArgs := selectBuilder.Build()
+	if rows, err := db.Query(ctx, insertQuery, insertArgs...); err != nil {
+		return customNodeKindRow{}, checkCustomNodeKindError(fmt.Errorf("creating custom node kind %q: %w", customNodeKind.KindName, err))
+	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[customNodeKindRow]); errors.Is(err, pgx.ErrNoRows) {
+		return customNodeKindRow{}, fmt.Errorf("creating custom node kind %q: %w", customNodeKind.KindName, services.ErrDuplicateCustomNodeKindName)
+	} else if err != nil {
+		return customNodeKindRow{}, checkCustomNodeKindError(fmt.Errorf("creating custom node kind %q: %w", customNodeKind.KindName, err))
+	} else {
+		return row, nil
+	}
+}
+
+// GetCustomNodeKinds returns all custom node kinds ordered by their row id.
+func (s *Store) GetCustomNodeKinds(ctx context.Context) ([]services.CustomNodeKind, error) {
+	var (
+		selectBuilder   = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		customNodeKinds = []services.CustomNodeKind{}
+	)
+
+	selectBuilder.Select(
+		"cnk.id", "k.name AS kind_name", "cnk.kind_id", "cnk.schema_node_kind_id", "cnk.config",
+	)
+	selectBuilder.From(selectBuilder.As(tableCustomNodeKinds, "cnk"))
+	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "cnk.kind_id = k.id")
+	selectBuilder.OrderByAsc("cnk.id")
+
+	sqlQuery, args := selectBuilder.Build()
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return nil, fmt.Errorf("fetching custom node kinds: %w", err)
+	} else if customNodeKindRows, err := pgx.CollectRows(rows, pgx.RowToStructByName[customNodeKindRow]); err != nil {
+		return nil, fmt.Errorf("reading custom node kinds: %w", err)
+	} else {
+		for _, row := range customNodeKindRows {
+			if customNodeKind, err := toCustomNodeKind(row); err != nil {
+				return nil, fmt.Errorf("reading custom node kind %q: %w", row.KindName, err)
+			} else {
+				customNodeKinds = append(customNodeKinds, customNodeKind)
+			}
+		}
+	}
+
+	return customNodeKinds, nil
+}
+
+// GetCustomNodeKind returns the custom node kind registered under kindName.
+func (s *Store) GetCustomNodeKind(ctx context.Context, kindName string) (services.CustomNodeKind, error) {
+	selectBuilder := sqlbuilder.PostgreSQL.NewSelectBuilder()
+
+	selectBuilder.Select(
+		"cnk.id", "k.name AS kind_name", "cnk.kind_id", "cnk.schema_node_kind_id", "cnk.config",
+	)
+	selectBuilder.From(selectBuilder.As(tableCustomNodeKinds, "cnk"))
+	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "cnk.kind_id = k.id")
+	selectBuilder.Where(selectBuilder.Equal("k.name", kindName))
+
+	sqlQuery, args := selectBuilder.Build()
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return services.CustomNodeKind{}, fmt.Errorf("fetching custom node kind %q: %w", kindName, err)
+	} else if row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[customNodeKindRow]); errors.Is(err, pgx.ErrNoRows) {
+		return services.CustomNodeKind{}, services.ErrCustomNodeKindNotFound
+	} else if err != nil {
+		return services.CustomNodeKind{}, fmt.Errorf("reading custom node kind %q: %w", kindName, err)
+	} else if customNodeKind, err := toCustomNodeKind(row); err != nil {
+		return services.CustomNodeKind{}, fmt.Errorf("reading custom node kind %q: %w", kindName, err)
+	} else {
+		return customNodeKind, nil
+	}
+}
+
+// UpdateCustomNodeKind updates the config and optional schema-node-kind association
+// for a custom node kind.
+func (s *Store) UpdateCustomNodeKind(ctx context.Context, customNodeKind services.CustomNodeKind) (services.CustomNodeKind, error) {
+	// TODO BED-10577: add audit logging
+
+	var zeroCustomNodeKind services.CustomNodeKind
+
+	tx, err := s.db.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return zeroCustomNodeKind, fmt.Errorf("beginning custom node kind update transaction: %w", err)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	config, err := json.Marshal(customNodeKind.Config)
+	if err != nil {
+		return zeroCustomNodeKind, fmt.Errorf("encoding custom node kind config for %q: %w", customNodeKind.KindName, err)
+	}
+
+	var (
+		updateBuilder = sqlbuilder.PostgreSQL.NewUpdateBuilder()
+		selectBuilder = sqlbuilder.PostgreSQL.NewSelectBuilder()
+	)
+
+	updateBuilder.Update(tableCustomNodeKinds + " AS cnk")
+	updateBuilder.Set(
+		updateBuilder.Assign("schema_node_kind_id", sqlbuilder.Build("COALESCE($0, schema_node_kind_id)", customNodeKind.SchemaNodeKindId)),
+		updateBuilder.Assign("config", sqlbuilder.Build("$0::jsonb", string(config))),
+		updateBuilder.Assign("updated_at", sqlbuilder.Raw("NOW()")),
+	)
+	updateBuilder.From(tableKind + " AS k")
+	updateBuilder.Where(
+		"k.id = cnk.kind_id",
+		updateBuilder.Equal("k.name", customNodeKind.KindName),
+	)
+	updateBuilder.Returning("cnk.id", "cnk.kind_id", "cnk.schema_node_kind_id", "cnk.config")
+
+	selectBuilder.With(sqlbuilder.With(
+		sqlbuilder.CTEQuery("updated_custom_node_kind").As(updateBuilder),
+	))
+	selectBuilder.Select(
+		"cnk.id", "k.name AS kind_name", "cnk.kind_id", "cnk.schema_node_kind_id", "cnk.config",
+	)
+	selectBuilder.From(selectBuilder.As("updated_custom_node_kind", "cnk"))
+	selectBuilder.Join(selectBuilder.As(tableKind, "k"), "cnk.kind_id = k.id")
+
+	sqlQuery, args := selectBuilder.Build()
+	rows, err := tx.Query(ctx, sqlQuery, args...)
+	if err != nil {
+		return zeroCustomNodeKind, fmt.Errorf("updating custom node kind %q: %w", customNodeKind.KindName, err)
+	}
+
+	row, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[customNodeKindRow])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return zeroCustomNodeKind, services.ErrCustomNodeKindNotFound
+	} else if err != nil {
+		return zeroCustomNodeKind, fmt.Errorf("reading updated custom node kind %q: %w", customNodeKind.KindName, err)
+	}
+
+	updatedCustomNodeKind, err := toCustomNodeKind(row)
+	if err != nil {
+		return zeroCustomNodeKind, fmt.Errorf("reading updated custom node kind %q: %w", customNodeKind.KindName, err)
+	}
+
+	if updatedCustomNodeKind.SchemaNodeKindId != nil {
+		if _, err := updateGraphSchemaNodeKindIcon(
+			ctx, tx, *updatedCustomNodeKind.SchemaNodeKindId, customNodeKind.Config.Icon,
+		); err != nil {
+			return zeroCustomNodeKind, fmt.Errorf("updating schema node kind icon for %q: %w", customNodeKind.KindName, err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return zeroCustomNodeKind, fmt.Errorf("committing custom node kind update transaction: %w", err)
+	}
+
+	return updatedCustomNodeKind, nil
+}
+
+// DeleteCustomNodeKind deletes a custom node kind by name without deleting its kind registry entry.
+func (s *Store) DeleteCustomNodeKind(ctx context.Context, kindName string) error {
+	deleteBuilder := sqlbuilder.PostgreSQL.NewDeleteBuilder()
+
+	deleteBuilder.DeleteFrom(tableCustomNodeKinds)
+	deleteBuilder.Where(
+		"kind_id = (SELECT id FROM " + tableKind + " WHERE name = " + deleteBuilder.Var(kindName) + ")",
+	)
+	deleteBuilder.Returning("id")
+
+	sqlQuery, args := deleteBuilder.Build()
+	if rows, err := s.db.Query(ctx, sqlQuery, args...); err != nil {
+		return fmt.Errorf("deleting custom node kind %q: %w", kindName, err)
+	} else if _, err := pgx.CollectOneRow(rows, pgx.RowTo[int32]); errors.Is(err, pgx.ErrNoRows) {
+		return services.ErrCustomNodeKindNotFound
+	} else if err != nil {
+		return fmt.Errorf("reading deleted custom node kind %q: %w", kindName, err)
+	}
+
+	return nil
+}
+
+func checkCustomNodeKindError(err error) error {
+	var postgresError *pgconn.PgError
+
+	if errors.As(err, &postgresError) &&
+		postgresError.Code == PostgresUniqueViolationCode &&
+		postgresError.ConstraintName == customNodeKindConstraintUniqueKindID {
+		return fmt.Errorf("%w: %w", services.ErrDuplicateCustomNodeKindName, err)
 	}
 
 	return err

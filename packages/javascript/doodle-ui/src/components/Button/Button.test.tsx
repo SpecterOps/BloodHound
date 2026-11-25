@@ -36,14 +36,13 @@ describe('Button', () => {
     it.each([
         ['primary', 'border border-transparent bg-primary text-inverse'],
         ['secondary', 'border-[color:var(--button-secondary-border)] bg-elevation-1 text-main'],
-        ['tertiary', 'border-brand-orange bg-elevation-1 text-main'],
     ] as const)('applies the %s visual treatment', (variant, expectedClasses) => {
         render(<Button variant={variant}>{variant}</Button>);
 
         expect(screen.getByRole('button', { name: variant })).toHaveClass(
             'rounded',
             'p-2',
-            'text-sm/none',
+            'text-sm/5',
             'hover:bg-secondary',
             'hover:text-inverse',
             'focus-visible:bg-secondary',
@@ -56,7 +55,7 @@ describe('Button', () => {
     });
 
     it.each(['small', 'medium', 'large'] as const)('keeps uniform geometry for the deprecated %s size', (size) => {
-        expect(ButtonVariants({ size })).toContain('rounded p-2 text-sm/none');
+        expect(ButtonVariants({ size })).toContain('rounded p-2 text-sm/5');
     });
 
     it('keeps deprecated variants free of contained-button geometry', () => {

@@ -47,6 +47,7 @@ interface SortableHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
     classes?: {
         container?: React.HTMLAttributes<HTMLDivElement>['className'];
         button?: React.HTMLAttributes<HTMLButtonElement>['className'];
+        title?: React.HTMLAttributes<HTMLSpanElement>['className'];
     };
     onSort: () => void;
 }
@@ -55,8 +56,9 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
     const { title, tooltipText, sortOrder, disable, classes, onSort, ...rest } = props;
     const tooltipDescriptionId = useId();
 
-    const containerClass = classes && classes.container ? classes.container : '';
-    const buttonClass = classes && classes.button ? classes.button : '';
+    const containerClass = classes?.container ?? '';
+    const buttonClass = classes?.button ?? '';
+    const titleClass = classes?.title ?? '';
 
     let IconComponent = AppIcon.SortEmpty;
     if (sortOrder === 'asc') IconComponent = AppIcon.SortAsc;
@@ -78,7 +80,7 @@ export const SortableHeader: React.FC<SortableHeaderProps> = (props) => {
                             onClick={onSort}
                             onKeyDown={adaptClickHandlerToKeyDown(onSort)}
                             tabIndex={0}>
-                            {title}
+                            <span className={titleClass}>{title}</span>
                             {/* SortIcon stays inside the button when no tooltip to avoid affecting other header style layouts - example on the ObjectsAccordion used on Attack Paths and PZ Zone builder pages */}
                             {!tooltipText && <IconComponent size={12} className='absolute -right-5 m-1' />}
                             {tooltipText && (

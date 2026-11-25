@@ -53,4 +53,107 @@ func TestUrlValidator(t *testing.T) {
 		require.Len(t, errs, 1)
 		assert.ErrorContains(t, errs[0], validation.ErrorUrlHttpsInvalid)
 	})
+
+	t.Run("Invalid HTTPS option in struct tag", func(t *testing.T) {
+		type testStruct struct {
+			URL string `validate:"url,httpsOnly=typo"`
+		}
+
+		errs := validation.Validate(&testStruct{URL: "https://test.com"})
+		require.Len(t, errs, 1)
+		assert.EqualError(t, errs[0], `URL: URL validator option "httpsOnly" must be a boolean`)
+	})
+}
+
+func TestURLValidatorHostnameOption(t *testing.T) {
+	for _, testCase := range []struct {
+		name    string
+		options map[string]string
+		url     string
+		wantErr string
+	}{
+		{
+			name:    "hostname is optional by default",
+			options: map[string]string{"httpsOnly": "true"},
+			url:     "https:///path",
+		},
+		{
+			name:    "hostname requirement can be disabled",
+			options: map[string]string{"httpsOnly": "true", "hostnameRequired": "false"},
+			url:     "https:///path",
+		},
+		{
+			name:    "hostname is required when enabled",
+			options: map[string]string{"httpsOnly": "true", "hostnameRequired": "true"},
+			url:     "https:///path",
+			wantErr: validation.ErrorURLHostnameRequired,
+		},
+		{
+			name:    "hostname requirement works without requiring HTTPS",
+			options: map[string]string{"hostnameRequired": "true"},
+			url:     "http://test.com",
+		},
+		{
+			name:    "HTTPS scheme matching is case insensitive when a hostname is required",
+			options: map[string]string{"httpsOnly": "true", "hostnameRequired": "true"},
+			url:     "HTTPS://test.com",
+		},
+		{
+			name:    "HTTP is rejected when both options are enabled",
+			options: map[string]string{"httpsOnly": "true", "hostnameRequired": "true"},
+			url:     "http://test.com",
+			wantErr: validation.ErrorURLHTTPSRequired,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			errs := validation.NewUrlValidator(testCase.options).Validate(testCase.url)
+
+			if testCase.wantErr == "" {
+				require.Empty(t, errs)
+			} else {
+				require.Len(t, errs, 1)
+				assert.EqualError(t, errs[0], testCase.wantErr)
+			}
+		})
+	}
+}
+
+func TestUrlValidatorWithOptions(t *testing.T) {
+	for _, testCase := range []struct {
+		name    string
+		options map[string]string
+		wantErr string
+	}{
+		{
+			name:    "valid options construct a validator",
+			options: map[string]string{"httpsOnly": "true", "hostnameRequired": "true"},
+		},
+		{
+			name:    "invalid boolean returns an error",
+			options: map[string]string{"httpsOnly": "true", "hostnameRequired": "typo"},
+			wantErr: `URL validator option "hostnameRequired" must be a boolean`,
+		},
+		{
+			name:    "explicitly empty option returns an error",
+			options: map[string]string{"hostnameRequired": ""},
+			wantErr: `URL validator option "hostnameRequired" must be a boolean`,
+		},
+		{
+			name:    "unknown option returns an error",
+			options: map[string]string{"hostnameRequire": "true"},
+			wantErr: `unknown URL validator option "hostnameRequire"`,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			validator, err := validation.UrlValidatorWithOptions(testCase.options)
+			if testCase.wantErr == "" {
+				require.NoError(t, err)
+				require.NotNil(t, validator)
+				assert.Empty(t, validator.Validate("https://test.com"))
+			} else {
+				require.EqualError(t, err, testCase.wantErr)
+				assert.Nil(t, validator)
+			}
+		})
+	}
 }

@@ -22,7 +22,7 @@ import {
 } from 'js-client-library';
 import { useMutation, useQueryClient } from 'react-query';
 import { apiClient } from '../../utils/api';
-import { privilegeZonesKeys } from './useAssetGroupTags';
+import { getAllAssetGroupTagRules, privilegeZonesKeys } from './useAssetGroupTags';
 
 interface CreateAssetGroupTagParams {
     values: CreateAssetGroupTagRequest;
@@ -78,6 +78,38 @@ export const usePatchRule = (tagId: string | number) => {
             await queryClient.invalidateQueries(privilegeZonesKeys.rulesByTag(tagId));
         },
     });
+};
+
+export const useSetAllRulesEnabled = (tagId: string | number) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        async (enabled: boolean) => {
+            // Read every page before changing statuses so pagination cannot skip rules.
+            const rules = await getAllAssetGroupTagRules(tagId);
+            const rulesToUpdate = rules.filter((rule) => (rule.disabled_at === null) !== enabled);
+
+            if (!enabled && rulesToUpdate.some((rule) => !rule.allow_disable)) {
+                throw new Error('This label contains rules that cannot be disabled.');
+            }
+
+            let failedCount = 0;
+            for (const rule of rulesToUpdate) {
+                try {
+                    await patchRule({ tagId, ruleId: rule.id, updatedValues: { id: rule.id, disabled: !enabled } });
+                } catch {
+                    failedCount++;
+                }
+            }
+
+            return { failedCount };
+        },
+        {
+            onSettled: async () => {
+                await queryClient.invalidateQueries(privilegeZonesKeys.rulesByTag(tagId));
+                await queryClient.invalidateQueries(privilegeZonesKeys.tags());
+            },
+        }
+    );
 };
 
 export const deleteRule = async (ids: DeleteRuleParams, options?: RequestOptions) =>

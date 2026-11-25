@@ -37,12 +37,25 @@ const (
 	tableUsersRoles       = "users_roles"
 	tableETAC             = "environment_targeted_access_control"
 	tableAuthSecrets      = "auth_secrets"
+	tableAuthTokens       = "auth_tokens"
 )
 
 var (
 	validPermissionColumns = []string{"id", "authority", "name", "created_at", "updated_at"}
 	validRoleColumns       = []string{"id", "name", "description", "created_at", "updated_at"}
 )
+
+var validAuthTokenColumns = []string{
+	"user_id",
+	"name",
+	"hmac_method",
+	"last_access",
+	"id",
+	"created_at",
+	"updated_at",
+	"expires_at",
+	"created_by",
+}
 
 var validUserMinimalColumns = []string{"id", "email_address", "first_name", "last_name"}
 
@@ -911,6 +924,136 @@ func (s *Store) ListUsers(ctx context.Context, queryFilters params.Filters, sort
 	result = make([]services.User, 0, len(listedUsers))
 	for _, listedUser := range listedUsers {
 		result = append(result, toUser(listedUser, rolesByUser[listedUser.ID], etacByUser[listedUser.ID], secretByUser[listedUser.ID]))
+	}
+
+	return result, nil
+}
+
+type authTokenRow struct {
+	UserID     uuid.NullUUID  `db:"user_id"`
+	Name       sql.NullString `db:"name"`
+	HmacMethod sql.NullString `db:"hmac_method"`
+	LastAccess sql.NullTime   `db:"last_access"`
+	ID         uuid.UUID      `db:"id"`
+	CreatedAt  sql.NullTime   `db:"created_at"`
+	UpdatedAt  sql.NullTime   `db:"updated_at"`
+	ExpiresAt  sql.NullTime   `db:"expires_at"`
+	CreatedBy  uuid.NullUUID  `db:"created_by"`
+}
+
+var authTokenColumns = map[string]string{
+	"user_id":     "user_id",
+	"name":        "name",
+	"hmac_method": "hmac_method",
+	"last_access": "last_access",
+	"id":          "id",
+	"created_at":  "created_at",
+	"updated_at":  "updated_at",
+	"expires_at":  "expires_at",
+	"created_by":  "created_by",
+}
+
+func toAuthToken(row authTokenRow) services.AuthToken {
+	return services.AuthToken{
+		UserID:     row.UserID,
+		Name:       row.Name,
+		HmacMethod: row.HmacMethod.String,
+		LastAccess: row.LastAccess.Time,
+		ID:         row.ID,
+		CreatedAt:  row.CreatedAt.Time,
+		UpdatedAt:  row.UpdatedAt.Time,
+		ExpiresAt:  row.ExpiresAt,
+		CreatedBy:  row.CreatedBy,
+	}
+}
+
+func applyAuthTokenFilters(sb *sqlbuilder.SelectBuilder, queryFilters params.Filters) error {
+	for field, fieldFilters := range queryFilters {
+		column, isKnown := authTokenColumns[field]
+		if !isKnown {
+			return fmt.Errorf("auth token filter references unknown field %q", field)
+		}
+
+		setOperator := params.FilterAnd
+		if len(fieldFilters) > 0 {
+			setOperator = fieldFilters[0].SetOperator
+		}
+
+		expressions := make([]string, 0, len(fieldFilters))
+		for _, filter := range fieldFilters {
+			expression, ok := buildFilterComparison(sb, column, filter)
+			if !ok {
+				return fmt.Errorf("auth token filter uses unsupported operator %q", filter.Operator)
+			}
+			expressions = append(expressions, expression)
+		}
+
+		if setOperator == params.FilterOr {
+			sb.Where(sb.Or(expressions...))
+		} else {
+			sb.Where(sb.And(expressions...))
+		}
+	}
+
+	return nil
+}
+
+func buildAuthTokenOrderBy(sortItems params.SortItems) ([]string, error) {
+	orderBy := make([]string, 0, len(sortItems))
+	for _, sortItem := range sortItems {
+		column, isKnown := authTokenColumns[sortItem.Field]
+		if !isKnown {
+			return nil, fmt.Errorf("auth token sort references unknown field %q", sortItem.Field)
+		}
+
+		if sortItem.Direction == params.Descending {
+			orderBy = append(orderBy, column+" DESC")
+		} else {
+			orderBy = append(orderBy, column+" ASC")
+		}
+	}
+
+	return orderBy, nil
+}
+
+func (s *Store) ListAuthTokens(ctx context.Context, queryFilters params.Filters, sortItems params.SortItems) ([]services.AuthToken, error) {
+	var (
+		authTokenSB      = sqlbuilder.PostgreSQL.NewSelectBuilder()
+		authTokenRows    pgx.Rows
+		listedAuthTokens []authTokenRow
+		result           []services.AuthToken
+		orderBy          []string
+		err              error
+	)
+
+	authTokenSB.Select(validAuthTokenColumns...).From(tableAuthTokens)
+
+	if err = applyAuthTokenFilters(authTokenSB, queryFilters); err != nil {
+		return nil, err
+	}
+
+	orderBy, err = buildAuthTokenOrderBy(sortItems)
+	if err != nil {
+		return nil, err
+	}
+	if len(orderBy) > 0 {
+		authTokenSB.OrderBy(orderBy...)
+	}
+
+	authTokenQuery, authTokenArgs := authTokenSB.Build()
+
+	authTokenRows, err = s.db.Query(ctx, authTokenQuery, authTokenArgs...)
+	if err != nil {
+		return nil, err
+	}
+	listedAuthTokens, err = pgx.CollectRows(authTokenRows, pgx.RowToStructByName[authTokenRow])
+	if err != nil {
+		return nil, fmt.Errorf("collecting auth tokens: %w", err)
+	}
+
+	result = make([]services.AuthToken, 0, len(listedAuthTokens))
+	for _, row := range listedAuthTokens {
+		result = append(result, toAuthToken(row))
 	}
 
 	return result, nil

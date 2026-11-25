@@ -27,6 +27,7 @@ import (
 	"github.com/specterops/bloodhound/cmd/api/src/migrations"
 	"github.com/specterops/bloodhound/cmd/api/src/model"
 	"github.com/specterops/bloodhound/cmd/api/src/test/integration"
+	"github.com/specterops/bloodhound/cmd/api/src/version"
 	"github.com/specterops/bloodhound/packages/go/graphschema"
 	"github.com/specterops/bloodhound/packages/go/graphschema/ad"
 	"github.com/specterops/bloodhound/packages/go/graphschema/common"
@@ -129,6 +130,48 @@ func TestVersion_910_Migration(t *testing.T) {
 			})
 		})
 	})
+}
+
+func TestSQLAdminGraphMigration(t *testing.T) {
+	var (
+		suite        = setupIntegrationTestSuite(t)
+		ctx          = suite.context
+		sqlAdminKind = graph.StringKind("SQLAdmin")
+		user         = &graph.Node{Kinds: graph.Kinds{ad.Entity, ad.User}, Properties: graph.NewProperties()}
+		computer     = &graph.Node{Kinds: graph.Kinds{ad.Entity, ad.Computer}, Properties: graph.NewProperties()}
+	)
+	t.Cleanup(func() { suite.teardownIntegrationTestSuite(t) })
+
+	// Fresh graphs may never have registered the retired kind.
+	require.NoError(t, migrations.Version_9110_Migration(ctx, suite.graphDB))
+
+	suite.createNodes(t, user, computer)
+	require.NoError(t, suite.graphDB.WriteTransaction(ctx, func(tx graph.Transaction) error {
+		if _, err := tx.CreateRelationshipByIDs(user.ID, computer.ID, sqlAdminKind, graph.NewProperties()); err != nil {
+			return err
+		}
+		_, err := tx.CreateRelationshipByIDs(user.ID, computer.ID, ad.AdminTo, graph.NewProperties())
+		return err
+	}))
+	require.NoError(t, migrations.CreateMigrationData(ctx, suite.graphDB, version.Version{Major: 9, Minor: 10, Patch: 1}))
+
+	migrator := migrations.NewGraphMigrator(suite.graphDB)
+	pending, err := migrations.RequiresMigration(ctx, suite.graphDB)
+	require.NoError(t, err)
+	require.True(t, pending)
+	require.NoError(t, migrator.Migrate(ctx))
+	pending, err = migrations.RequiresMigration(ctx, suite.graphDB)
+	require.NoError(t, err)
+	require.False(t, pending)
+	require.NoError(t, migrator.Migrate(ctx))
+
+	require.NoError(t, suite.graphDB.ReadTransaction(ctx, func(tx graph.Transaction) error {
+		relationships, err := ops.FetchRelationships(tx.Relationships())
+		require.NoError(t, err)
+		require.Len(t, relationships, 1)
+		require.Equal(t, ad.AdminTo, relationships[0].Kind)
+		return nil
+	}))
 }
 
 func TestVersion_930_Migration(t *testing.T) {

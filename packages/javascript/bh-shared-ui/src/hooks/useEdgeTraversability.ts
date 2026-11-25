@@ -20,6 +20,8 @@ import {
     ActiveDirectoryRelationshipKind,
     AzurePathfindingEdges,
     AzureRelationshipKind,
+    CommonPathfindingEdges,
+    CommonRelationshipKind,
 } from '../graphSchema';
 import { useEdgeTypesQuery } from './useEdgeTypes';
 
@@ -32,12 +34,17 @@ class EdgeTraversabilityMap extends Map<string, boolean> {
     }
 }
 
-const builtinPathfindingEdges = new Set<string>([...ActiveDirectoryPathfindingEdges(), ...AzurePathfindingEdges()]);
+const builtinPathfindingEdges = new Set<string>([
+    ...ActiveDirectoryPathfindingEdges(),
+    ...AzurePathfindingEdges(),
+    ...CommonPathfindingEdges(),
+]);
 const builtinTraversability: EdgeTraversability = new EdgeTraversabilityMap(
-    [...Object.values(ActiveDirectoryRelationshipKind), ...Object.values(AzureRelationshipKind)].map((kind) => [
-        kind,
-        builtinPathfindingEdges.has(kind),
-    ])
+    [
+        ...Object.values(ActiveDirectoryRelationshipKind),
+        ...Object.values(AzureRelationshipKind),
+        ...Object.values(CommonRelationshipKind),
+    ].map((kind) => [kind, builtinPathfindingEdges.has(kind)])
 );
 
 const selectTraversability = (edgeTypes: EdgeType[]): EdgeTraversability =>
