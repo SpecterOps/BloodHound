@@ -23,8 +23,7 @@ import { cn, copyToClipboard, DATE_FIELDS, EntityField } from '../../utils';
 
 export const serializeRawPropertyValue = (value: EntityField['value']): string => {
     if (typeof value === 'string') return value;
-    if (typeof value === 'number') return String(value);
-    if (typeof value === 'boolean' || value === null) return String(value);
+    if (typeof value === 'number' || typeof value === 'boolean' || value === null) return String(value);
 
     return JSON.stringify(value);
 };
