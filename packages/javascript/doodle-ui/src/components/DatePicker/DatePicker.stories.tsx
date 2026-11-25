@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import InputMask from '@mona-health/react-input-mask';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DateTime } from 'luxon';
 import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';

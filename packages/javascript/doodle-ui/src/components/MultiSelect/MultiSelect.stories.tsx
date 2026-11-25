@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import type { MultiSelectProps } from './MultiSelect';
 import { MultiSelect, MultiSelectOptionRow } from './MultiSelect';

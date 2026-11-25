@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import { DialogClose, DialogPortal } from '@radix-ui/react-dialog';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '../Button';
 import { VisuallyHidden } from '../VisuallyHidden';
 import { Dialog, DialogActions, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from './Dialog';

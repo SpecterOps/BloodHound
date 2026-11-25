@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faCircleInfo, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ToggleGroup, ToggleGroupItem } from './ToggleGroup';
 
 const meta = {

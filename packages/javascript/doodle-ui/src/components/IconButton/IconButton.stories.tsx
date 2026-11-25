@@ -16,7 +16,7 @@
 
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AppIcon } from '../../styleguide/components/AppIcons/AppIcons';
 import { AccessibleIcon } from '../AccessibleIcon';
 import { IconButton } from './IconButton';

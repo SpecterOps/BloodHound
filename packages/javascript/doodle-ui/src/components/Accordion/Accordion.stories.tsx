@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Meta, StoryObj } from '@storybook/react';
-import { fn } from '@storybook/test';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from './Accordion';
 
 const meta = {

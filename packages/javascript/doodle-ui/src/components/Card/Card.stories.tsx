@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ChevronUp } from 'lucide-react';
 import { Badge } from '../Badge';
 import { Button } from '../Button';

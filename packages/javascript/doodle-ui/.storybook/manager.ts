@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-import { addons } from '@storybook/manager-api';
-import { themes } from '@storybook/theming';
+import { addons } from 'storybook/manager-api';
+import { themes } from 'storybook/theming';
 
 addons.setConfig({
     theme: themes.dark,
