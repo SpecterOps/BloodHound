@@ -158,12 +158,13 @@ export const Field: React.FC<EntityField> = (entityField) => {
     if (typeof formattedValue === 'string') {
         content = (
             <div className='group/property-row flex flex-wrap items-baseline justify-between p-2 text-left'>
-                <span className='inline-flex items-center'>
-                    <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                        {formattedLabel}
-                    </Typography>
+                <Typography
+                    component='span'
+                    variant='body2'
+                    className='inline-flex items-center font-semibold text-text-main'>
+                    <span className='mr-2'>{formattedLabel}</span>
                     <EntityPropertyCopyMenu property={keyprop} value={value} />
-                </span>
+                </Typography>
                 <Typography
                     component='span'
                     variant='body2'
@@ -195,16 +196,17 @@ export const Field: React.FC<EntityField> = (entityField) => {
                     key={`${keyprop}-${index}`}>
                     {/* Only render the label for the first item, since it kicks the list */}
                     {index === 0 ? (
-                        <span className='inline-flex items-center'>
-                            <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                                {formattedLabel}
-                            </Typography>
+                        <Typography
+                            component='span'
+                            variant='body2'
+                            className='inline-flex items-center font-semibold text-text-main'>
+                            <span className='mr-2'>{formattedLabel}</span>
                             <EntityPropertyCopyMenu
                                 property={keyprop}
                                 value={entityField.value}
                                 isRowHovered={isListHovered}
                             />
-                        </span>
+                        </Typography>
                     ) : (
                         <span aria-hidden='true' />
                     )}
