@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useArgs } from 'storybook/preview-api';
 import { expect, userEvent, within } from 'storybook/test';
 import { Switch } from './Switch';
 
@@ -48,6 +49,19 @@ const meta = {
         checked: false,
         label: 'Label',
         labelPosition: 'right',
+    },
+    render: function Render(args) {
+        const [, updateArgs] = useArgs();
+
+        return (
+            <Switch
+                {...args}
+                onCheckedChange={(checked) => {
+                    updateArgs({ checked });
+                    args.onCheckedChange?.(checked);
+                }}
+            />
+        );
     },
     parameters: {
         layout: 'centered',
