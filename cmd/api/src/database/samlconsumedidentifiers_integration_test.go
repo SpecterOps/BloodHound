@@ -59,7 +59,7 @@ func TestDatabase_CreateSAMLConsumedIdentifiers(t *testing.T) {
 			},
 		},
 		{
-			name: "Error: rejects and rolls back when only one identifier is a replay",
+			name: "Error: rejects and rolls back when only the SAMLResponse ID is already consumed",
 			test: func(t *testing.T, testSuite IntegrationTestSuite) {
 				ssoProviderID := registerAndGetSSOProvider(t, testSuite, "provider-partial-replay")
 				expiresAt := time.Now().Add(time.Hour)
@@ -73,6 +73,26 @@ func TestDatabase_CreateSAMLConsumedIdentifiers(t *testing.T) {
 
 				// "assertion-3-new" was never persisted and can now be consumed alongside a new SAMLResponse ID
 				err = testSuite.BHDatabase.CreateSAMLConsumedIdentifiers(testSuite.Context, ssoProviderID, idpIssuer, "response-3-new", "assertion-3-new", expiresAt)
+				require.NoError(t, err)
+			},
+		},
+		{
+			name: "Error: rejects and rolls back when only the assertion ID is already consumed",
+			test: func(t *testing.T, testSuite IntegrationTestSuite) {
+				var (
+					ssoProviderID = registerAndGetSSOProvider(t, testSuite, "provider-assertion-replay")
+					expiresAt     = time.Now().Add(time.Hour)
+					err           error
+				)
+
+				err = testSuite.BHDatabase.CreateSAMLConsumedIdentifiers(testSuite.Context, ssoProviderID, idpIssuer, "response-5", "assertion-5", expiresAt)
+				require.NoError(t, err)
+
+				err = testSuite.BHDatabase.CreateSAMLConsumedIdentifiers(testSuite.Context, ssoProviderID, idpIssuer, "response-5-new", "assertion-5", expiresAt)
+				assert.ErrorIs(t, err, database.ErrSAMLIdentifierAlreadyConsumed)
+				assert.NotContains(t, remainingSAMLConsumedIdentifiers(t, testSuite), "response-5-new")
+
+				err = testSuite.BHDatabase.CreateSAMLConsumedIdentifiers(testSuite.Context, ssoProviderID, idpIssuer, "response-5-new", "assertion-5-new", expiresAt)
 				require.NoError(t, err)
 			},
 		},
