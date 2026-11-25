@@ -37,12 +37,26 @@ type Service interface {
 
 type Client struct{}
 
-// ValidatedResponse represents a successfully parsed and validated SAML login: the verified assertion
-// and the SAMLResponse's own ID and IssueInstant
+// ValidatedResponse represents a successfully parsed and validated SAML login.
 type ValidatedResponse struct {
-	Assertion            *saml.Assertion
+	Assertion *saml.Assertion
+	// AssertionID is the plaintext assertion's unnamespaced ID from the original XML;
+	// it is empty for encrypted assertions
+	AssertionID          string
 	ResponseID           string
 	ResponseIssueInstant time.Time
+}
+
+// rawSAMLResponse captures response fields and plaintext assertion attributes
+// from the original XML so we can identify the unnamespaced assertion ID.
+type rawSAMLResponse struct {
+	XMLName      xml.Name     `xml:"urn:oasis:names:tc:SAML:2.0:protocol Response"`
+	ID           string       `xml:",attr"`
+	IssueInstant time.Time    `xml:",attr"`
+	Issuer       *saml.Issuer `xml:"urn:oasis:names:tc:SAML:2.0:assertion Issuer"`
+	Assertion    *struct {
+		Attributes []xml.Attr `xml:",any,attr"`
+	} `xml:"urn:oasis:names:tc:SAML:2.0:assertion Assertion"`
 }
 
 type assertionCounter struct {
@@ -62,8 +76,9 @@ func (s *Client) MakeAuthenticationRequest(serviceProvider saml.ServiceProvider,
 func (s *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.Request, possibleRequestIDs []string) (*ValidatedResponse, error) {
 	var (
 		fullResponse ValidatedResponse
-		samlResponse saml.Response
+		samlResponse rawSAMLResponse
 		issuer       string
+		assertionID  string
 	)
 
 	// Rejecting explicitly since BloodHound doesn't support HTTP-Artifact binding
@@ -101,12 +116,33 @@ func (s *Client) ParseResponse(serviceProvider saml.ServiceProvider, req *http.R
 	if assertion == nil {
 		return nil, fmt.Errorf("saml: assertion is nil (issuer: %q)", issuer)
 	}
-	if assertion.ID == "" {
-		return nil, fmt.Errorf("saml: assertion ID is empty (issuer: %q)", issuer)
+	//if assertion.ID == "" { //TODO - resolve after resolving encrypted assertion IDs
+	//	return nil, fmt.Errorf("saml: assertion ID is empty (issuer: %q)", issuer)
+	//}
+
+	// Read the plaintext assertion's ID directly from the raw XML, accepting only an unnamespaced ID attribute (e.g. ID="_real_id"),
+	// so namespace declarations such as xmlns:ID="urn:example" cannot supply the value
+	if samlResponse.Assertion != nil {
+		for _, attribute := range samlResponse.Assertion.Attributes {
+			if attribute.Name.Local == "ID" && attribute.Name.Space == "" {
+				if assertionID != "" {
+					return nil, fmt.Errorf("saml: assertion contains multiple unnamespaced ID attributes (issuer: %q)", issuer)
+				}
+				if attribute.Value == "" {
+					return nil, fmt.Errorf("saml: assertion ID is empty (issuer: %q)", issuer)
+				}
+				assertionID = attribute.Value
+			}
+		}
+
+		if assertionID == "" {
+			return nil, fmt.Errorf("saml: assertion is missing an unnamespaced ID attribute (issuer: %q)", issuer)
+		}
 	}
 
 	fullResponse = ValidatedResponse{
 		Assertion:            assertion,
+		AssertionID:          assertionID,
 		ResponseID:           samlResponse.ID,
 		ResponseIssueInstant: samlResponse.IssueInstant,
 	}

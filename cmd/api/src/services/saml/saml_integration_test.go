@@ -198,6 +198,89 @@ func TestParseResponse_ResponseFields(t *testing.T) {
 		"expected ResponseIssueInstant %s to equal %s", validated.ResponseIssueInstant, issueInstant)
 }
 
+// TestParseResponse_AssertionID verifies that ParseResponse reads a plaintext assertion's unnamespaced ID,
+// rejects a namespace declaration in its place, and rejects duplicate unnamespaced ID attributes.
+func TestParseResponse_AssertionID(t *testing.T) {
+	const (
+		assertionID              = "_real_assertion_id"
+		misleadingNamespaceValue = "urn:example:misleading-assertion-id"
+	)
+
+	testCases := []struct {
+		name                 string
+		removeUnnamespacedID bool
+		prependDuplicateID   bool
+		wantAssertionID      string
+		wantError            string
+	}{
+		{
+			name:            "unnamespaced ID wins over namespace declaration",
+			wantAssertionID: assertionID,
+		},
+		{
+			name:                 "namespace declaration alone is rejected",
+			removeUnnamespacedID: true,
+			wantError:            "assertion is missing an unnamespaced ID attribute",
+		},
+		{
+			name:               "duplicate unnamespaced IDs are rejected",
+			prependDuplicateID: true,
+			wantError:          "assertion contains multiple unnamespaced ID attributes",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			var (
+				idp = newTestIdP(t)
+				now = time.Now().Round(time.Millisecond).UTC()
+			)
+			acsURL, err := url.Parse(idp.acsURL)
+			require.NoError(t, err)
+
+			responseBuilder := saml.IdpAuthnRequest{
+				IDP:             idp.idp,
+				Now:             now,
+				SPSSODescriptor: &saml.SPSSODescriptor{},
+				ACSEndpoint:     &saml.IndexedEndpoint{Location: acsURL.String()},
+				Assertion:       idp.buildAssertion(assertionID, now),
+			}
+			// supplying AssertionEl leaves it unsigned while MakeResponse signs the enclosing response
+			responseBuilder.AssertionEl = responseBuilder.Assertion.Element()
+			responseBuilder.AssertionEl.CreateAttr("xmlns:ID", misleadingNamespaceValue)
+			if testCase.removeUnnamespacedID {
+				require.NotNil(t, responseBuilder.AssertionEl.RemoveAttr("ID"))
+			}
+			require.NoError(t, responseBuilder.MakeResponse())
+
+			document := etree.NewDocument()
+			document.SetRoot(responseBuilder.ResponseEl)
+			rawXML, err := document.WriteToBytes()
+			require.NoError(t, err)
+			if testCase.prependDuplicateID {
+				const assertionStart = "<saml:Assertion "
+				require.Contains(t, string(rawXML), assertionStart)
+				// etree retains the last ID for crewjam validation; raw XML still contains both IDs
+				rawXML = []byte(strings.Replace(string(rawXML), assertionStart,
+					assertionStart+`ID="_shadow_assertion_id" `, 1))
+			}
+			request := newSAMLRequest(t, base64.StdEncoding.EncodeToString(rawXML))
+
+			validated, err := (&bhceSAML.Client{}).ParseResponse(idp.newServiceProvider(), request, nil)
+
+			if testCase.wantError != "" {
+				require.Error(t, err)
+				assert.Nil(t, validated)
+				assert.Contains(t, err.Error(), testCase.wantError)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, validated)
+				assert.Equal(t, testCase.wantAssertionID, validated.AssertionID)
+			}
+		})
+	}
+}
+
 // --- TEST SETUP ---
 
 const defaultResponseID = "_response_id"
