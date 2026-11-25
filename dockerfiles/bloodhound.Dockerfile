@@ -19,43 +19,103 @@
 ########
 # Global build args
 ################
-ARG SHARPHOUND_VERSION=v2.18.0
-ARG AZUREHOUND_VERSION=v3.1.3
+# Optional collector versions; empty values use the latest stable GitHub release.
+ARG SHARPHOUND_VERSION=""
+ARG AZUREHOUND_VERSION=""
+ARG SHARPHOUND_RELEASE_SOURCE=${SHARPHOUND_VERSION:+explicit-release}
+ARG AZUREHOUND_RELEASE_SOURCE=${AZUREHOUND_VERSION:+explicit-release}
+
+########
+# Resolve collector versions
+################
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.21 AS explicit-release
+RUN touch /tmp/version
+
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.21 AS sharphound-latest-release
+ADD https://github.com/SpecterOps/SharpHound/releases/latest/download/version.txt /tmp/version
+
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.21 AS azurehound-latest-release
+ADD https://github.com/SpecterOps/AzureHound/releases/latest/download/version.txt /tmp/version
+
+# BuildKit will prune the unused version stage
+FROM --platform=$BUILDPLATFORM ${SHARPHOUND_RELEASE_SOURCE:-sharphound-latest-release} AS sharphound-release
+FROM --platform=$BUILDPLATFORM ${AZUREHOUND_RELEASE_SOURCE:-azurehound-latest-release} AS azurehound-release
+
+########
+# Validate collector versions
+################
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.21 AS collector-version-validator
+ARG SHARPHOUND_VERSION
+ARG AZUREHOUND_VERSION
+
+COPY --from=sharphound-release /tmp/version /tmp/sharphound-latest-version
+COPY --from=azurehound-release /tmp/version /tmp/azurehound-latest-version
+
+# Build arg versions take precedence over latest version
+RUN set -eu; \
+    sharphound_version="${SHARPHOUND_VERSION:-$(cat /tmp/sharphound-latest-version)}"; \
+    azurehound_version="${AZUREHOUND_VERSION:-$(cat /tmp/azurehound-latest-version)}"; \
+    sharphound_version="$(printf '%s' "${sharphound_version}" | tr -d '[:space:]')"; \
+    azurehound_version="$(printf '%s' "${azurehound_version}" | tr -d '[:space:]')"; \
+    version_regex='^v[0-9]+\.[0-9]+\.[0-9]+$'; \
+    if ! printf '%s\n' "${sharphound_version}" | grep -Eq "$version_regex"; then \
+        echo "SHARPHOUND_VERSION must match vX.Y.Z" >&2; exit 1; \
+    fi; \
+    if ! printf '%s\n' "${azurehound_version}" | grep -Eq "$version_regex"; then \
+        echo "AZUREHOUND_VERSION must match vX.Y.Z" >&2; exit 1; \
+    fi; \
+    printf 'SHARPHOUND_VERSION=%s\nAZUREHOUND_VERSION=%s\n' "${sharphound_version}" "${azurehound_version}" > /collector-versions; \
+    echo "Resolved SharpHound version: ${sharphound_version}"; \
+    echo "Resolved AzureHound version: ${azurehound_version}"
 
 ########
 # Package remote assets
 ################
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.20 AS hound-builder
-ARG SHARPHOUND_VERSION
-ARG AZUREHOUND_VERSION
-
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine:3.21 AS hound-builder
 RUN apk --no-cache add p7zip
-RUN mkdir -p /tmp/sharphound /tmp/azurehound
 
-ADD https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip /tmp/sharphound/sharphound-${SHARPHOUND_VERSION}.zip
-ADD https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256 /tmp/sharphound/sharphound-${SHARPHOUND_VERSION}.zip.sha256
+COPY --from=collector-version-validator /collector-versions /collector-versions
 
-ADD https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip.sha256 \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip \
-  https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip.sha256 \
-  /tmp/azurehound/
+# Download SharpHound artifacts
+WORKDIR /tmp/sharphound
+RUN set -eux; \
+    . /collector-versions; \
+    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip"; \
+    wget "https://github.com/SpecterOps/SharpHound/releases/download/${SHARPHOUND_VERSION}/SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip.sha256"; \
+    sha256sum -cw *.sha256
 
+# Package SharpHound in /tmp/sharphound/dist
+RUN set -eux; \
+    . /collector-versions; \
+    mkdir -p dist; \
+    mv "SharpHound_${SHARPHOUND_VERSION}_windows_x86.zip" "dist/sharphound-${SHARPHOUND_VERSION}.zip"; \
+    (cd dist && sha256sum "sharphound-${SHARPHOUND_VERSION}.zip" > "sharphound-${SHARPHOUND_VERSION}.zip.sha256")
+
+# Download Azurehound artifacts
 WORKDIR /tmp/azurehound
-RUN sha256sum -cw *.sha256
-RUN 7z x '*.zip' -oartifacts/*
+RUN set -eux; \
+    . /collector-versions; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_amd64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_darwin_arm64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_amd64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_linux_arm64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_amd64.zip.sha256"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip"; \
+    wget "https://github.com/SpecterOps/AzureHound/releases/download/${AZUREHOUND_VERSION}/AzureHound_${AZUREHOUND_VERSION}_windows_arm64.zip.sha256"; \
+    sha256sum -cw *.sha256
 
-WORKDIR /tmp/azurehound/artifacts
-RUN 7z a -tzip -mx9 azurehound-${AZUREHOUND_VERSION}.zip *
-RUN sha256sum azurehound-${AZUREHOUND_VERSION}.zip > azurehound-${AZUREHOUND_VERSION}.zip.sha256
+# Package AzureHound in /tmp/azurehound/dist
+RUN set -eux; \
+    . /collector-versions; \
+    mkdir -p artifacts dist; \
+    7z x '*.zip' -oartifacts/*; \
+    (cd artifacts && 7z a -tzip -mx9 "../dist/azurehound-${AZUREHOUND_VERSION}.zip" *); \
+    (cd dist && sha256sum "azurehound-${AZUREHOUND_VERSION}.zip" > "azurehound-${AZUREHOUND_VERSION}.zip.sha256")
 
 ########
 # UI Build
@@ -81,15 +141,15 @@ COPY .git ./.git
 # sort by semver version to grab latest and convert to required ldflags
 # (see https://git-scm.com/docs/git-config#Documentation/git-config.txt-versionsortsuffix)
 RUN git --no-pager -c 'versionsort.suffix=-rc' tag --list v*.*.* --sort=-v:refname | head -n 1 | sed 's/^v//' | awk \
-  -F'[.+-]' \
-  -v pkg="$VERSION_PKG" \
-  '{ major = $1; minor = $2; patch = $3; pre = ""; if ($4) pre = $4; \
-  printf("-X '\''%s.majorVersion=%s'\'' ", pkg, major); \
-  printf("-X '\''%s.minorVersion=%s'\'' ", pkg, minor); \
-  printf("-X '\''%s.patchVersion=%s'\''", pkg, patch); \
-  if (pre != "") \
-  printf(" -X '\''%s.prereleaseVersion=%s'\''", pkg, pre); \
-  }' > LDFLAGS
+    -F'[.+-]' \
+    -v pkg="$VERSION_PKG" \
+    '{ major = $1; minor = $2; patch = $3; pre = ""; if ($4) pre = $4; \
+    printf("-X '\''%s.majorVersion=%s'\'' ", pkg, major); \
+    printf("-X '\''%s.minorVersion=%s'\'' ", pkg, minor); \
+    printf("-X '\''%s.patchVersion=%s'\''", pkg, patch); \
+    if (pre != "") \
+    printf(" -X '\''%s.prereleaseVersion=%s'\''", pkg, pre); \
+    }' > LDFLAGS
 
 ########
 # API Build
@@ -115,17 +175,13 @@ RUN --mount=type=cache,target=/go/pkg/mod go build -C cmd/api/src -o /bloodhound
 # Package BloodHound
 ################
 FROM gcr.io/distroless/static-debian12 AS bloodhound
-ARG SHARPHOUND_VERSION
-ARG AZUREHOUND_VERSION
 
 COPY --from=api-builder /bloodhound /opt/bloodhound /etc/bloodhound /var/log /
 COPY dockerfiles/configs/bloodhound.config.json /bloodhound.config.json
 
 # api/v2/collectors/[collector-type]/[version] for collector download specifically expects
 # '[collector-type]-[version].zip(.sha256)' - all lowercase for embedded files
-COPY --from=hound-builder /tmp/sharphound/sharphound-${SHARPHOUND_VERSION}.zip /etc/bloodhound/collectors/sharphound/
-COPY --from=hound-builder /tmp/sharphound/sharphound-${SHARPHOUND_VERSION}.zip.sha256 /etc/bloodhound/collectors/sharphound/
-COPY --from=hound-builder /tmp/azurehound/artifacts/azurehound-${AZUREHOUND_VERSION}.zip /etc/bloodhound/collectors/azurehound/
-COPY --from=hound-builder /tmp/azurehound/artifacts/azurehound-${AZUREHOUND_VERSION}.zip.sha256 /etc/bloodhound/collectors/azurehound/
+COPY --from=hound-builder /tmp/sharphound/dist/ /etc/bloodhound/collectors/sharphound/
+COPY --from=hound-builder /tmp/azurehound/dist/ /etc/bloodhound/collectors/azurehound/
 
 ENTRYPOINT ["/bloodhound", "-configfile", "/bloodhound.config.json"]
