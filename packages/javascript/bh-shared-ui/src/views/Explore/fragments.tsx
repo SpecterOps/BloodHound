@@ -16,6 +16,7 @@
 
 import { Alert, Typography, VisuallyHidden } from 'doodle-ui';
 import React, { PropsWithChildren } from 'react';
+import { EntityPropertyCopyMenu } from '../../components/EntityInfo/EntityPropertyCopyMenu';
 import { ActiveDirectoryKindProperties, AzureKindProperties, CommonKindProperties } from '../../graphSchema';
 import { EntityField, cn, format } from '../../utils';
 import { adaptClickHandlerToKeyDown } from '../../utils/adaptClickHandlerToKeyDown';
@@ -137,6 +138,7 @@ const getEmptyValueAccessibleLabel = (value: EntityField['value']): string | und
 
 export const Field: React.FC<EntityField> = (entityField) => {
     const { label, value, keyprop } = entityField;
+    const [isListHovered, setIsListHovered] = React.useState(false);
 
     try {
         if (
@@ -155,9 +157,13 @@ export const Field: React.FC<EntityField> = (entityField) => {
     let content: React.ReactNode;
     if (typeof formattedValue === 'string') {
         content = (
-            <div className='flex flex-wrap items-baseline justify-between p-2 text-left'>
-                <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                    {formattedLabel}
+            <div className='group/property-row flex flex-wrap items-baseline justify-between p-2 text-left'>
+                <Typography
+                    component='span'
+                    variant='body2'
+                    className='inline-flex items-center font-semibold text-text-main'>
+                    <span className='mr-2'>{formattedLabel}</span>
+                    <EntityPropertyCopyMenu property={keyprop} value={value} />
                 </Typography>
                 <Typography
                     component='span'
@@ -184,12 +190,22 @@ export const Field: React.FC<EntityField> = (entityField) => {
 
             return (
                 <div
-                    className='flex flex-wrap items-baseline justify-between p-2 text-left'
+                    className='group/property-row flex flex-wrap items-baseline justify-between p-2 text-left'
+                    onMouseEnter={() => setIsListHovered(true)}
+                    onMouseLeave={() => setIsListHovered(false)}
                     key={`${keyprop}-${index}`}>
                     {/* Only render the label for the first item, since it kicks the list */}
                     {index === 0 ? (
-                        <Typography component='span' variant='body2' className='mr-2 font-semibold text-text-main'>
-                            {formattedLabel}
+                        <Typography
+                            component='span'
+                            variant='body2'
+                            className='inline-flex items-center font-semibold text-text-main'>
+                            <span className='mr-2'>{formattedLabel}</span>
+                            <EntityPropertyCopyMenu
+                                property={keyprop}
+                                value={entityField.value}
+                                isRowHovered={isListHovered}
+                            />
                         </Typography>
                     ) : (
                         <span aria-hidden='true' />
@@ -227,7 +243,7 @@ export const ObjectInfoFields: React.FC<{ fields: EntityField[] }> = ({ fields }
                         kind={field.kind}
                         label={field.label}
                         value={field.value}
-                        keyprop={`${field.keyprop}`}
+                        keyprop={field.keyprop}
                         key={`${field.keyprop}-${field.label}`}
                     />
                 );

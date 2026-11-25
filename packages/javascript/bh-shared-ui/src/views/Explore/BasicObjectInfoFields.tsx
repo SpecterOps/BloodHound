@@ -86,6 +86,9 @@ const basicObjectFields = [
     CommonKindProperties.ObjectID,
 ] satisfies (KnownNodeProperties | CommonKindProperties | 'zone' | 'labels')[];
 
+const isRawBasicProperty = (properties: Record<string, any>, field: string): boolean =>
+    !['zone', 'labels', 'nodeType'].includes(field) && Object.hasOwn(properties, field);
+
 export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
     properties: props,
     handleSourceNodeSelected,
@@ -100,7 +103,14 @@ export const BasicObjectInfoFields: React.FC<BasicObjectInfoFieldsProps> = ({
                 const value = fieldValues[field];
                 if (value === undefined) return null; // <Field /> doesn't support undefined values
 
-                return <Field key={field} label={`${formatPotentiallyUnknownLabel(field) ?? field}:`} value={value} />;
+                return (
+                    <Field
+                        key={field}
+                        label={`${formatPotentiallyUnknownLabel(field) ?? field}:`}
+                        value={value}
+                        keyprop={isRawBasicProperty(props, field) ? field : undefined}
+                    />
+                );
             })}
             {handleSourceNodeSelected && (
                 <>
