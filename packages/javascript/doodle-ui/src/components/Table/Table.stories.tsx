@@ -111,7 +111,7 @@ const invoices = [
 
 export const Default: Story = {
     render: () => (
-        <Table className='w-full border-b-[length:var(--table-row-border-width)] [&_th]:px-4 [&_td]:pl-4'>
+        <Table className='w-full border-b-[length:--table-row-border-width] [&_th]:px-4 [&_td]:pl-4'>
             <TableCaption>A list of your recent TODOs.</TableCaption>
             <TableHeader>
                 <TableRow>
