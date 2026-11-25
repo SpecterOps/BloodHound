@@ -4393,7 +4393,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/addon-a11y@npm:10.6.8":
+"@storybook/addon-a11y@npm:^10.6.8":
   version: 10.6.8
   resolution: "@storybook/addon-a11y@npm:10.6.8"
   dependencies:
@@ -4405,7 +4405,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/addon-docs@npm:10.6.8":
+"@storybook/addon-docs@npm:^10.6.8":
   version: 10.6.8
   resolution: "@storybook/addon-docs@npm:10.6.8"
   dependencies:
@@ -4426,7 +4426,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/addon-links@npm:10.6.8":
+"@storybook/addon-links@npm:^10.6.8":
   version: 10.6.8
   resolution: "@storybook/addon-links@npm:10.6.8"
   dependencies:
@@ -4444,7 +4444,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/addon-onboarding@npm:10.6.8":
+"@storybook/addon-onboarding@npm:^10.6.8":
   version: 10.6.8
   resolution: "@storybook/addon-onboarding@npm:10.6.8"
   peerDependencies:
@@ -4453,7 +4453,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/addon-themes@npm:10.6.8":
+"@storybook/addon-themes@npm:^10.6.8":
   version: 10.6.8
   resolution: "@storybook/addon-themes@npm:10.6.8"
   dependencies:
@@ -4510,7 +4510,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/react-vite@npm:10.6.8":
+"@storybook/react-vite@npm:^10.6.8":
   version: 10.6.8
   resolution: "@storybook/react-vite@npm:10.6.8"
   dependencies:
@@ -6807,7 +6807,7 @@ __metadata:
     eslint-plugin-react: "patch:eslint-plugin-react@npm%3A7.34.1#~/.yarn/patches/eslint-plugin-react-npm-7.34.1-93be695b40.patch"
     eslint-plugin-react-hooks: "npm:4.6.0"
     eslint-plugin-react-refresh: "npm:0.4.6"
-    eslint-plugin-storybook: "npm:10.6.8"
+    eslint-plugin-storybook: "npm:^10.6.8"
     oxlint: "npm:1.89.0"
     prettier: "npm:^3.2.5"
     typescript: "npm:^5.9.3"
@@ -8076,12 +8076,12 @@ __metadata:
     "@radix-ui/react-toggle": "npm:^1.1.10"
     "@radix-ui/react-toggle-group": "npm:^1.1.11"
     "@radix-ui/react-visually-hidden": "npm:^1.1.0"
-    "@storybook/addon-a11y": "npm:10.6.8"
-    "@storybook/addon-docs": "npm:10.6.8"
-    "@storybook/addon-links": "npm:10.6.8"
-    "@storybook/addon-onboarding": "npm:10.6.8"
-    "@storybook/addon-themes": "npm:10.6.8"
-    "@storybook/react-vite": "npm:10.6.8"
+    "@storybook/addon-a11y": "npm:^10.6.8"
+    "@storybook/addon-docs": "npm:^10.6.8"
+    "@storybook/addon-links": "npm:^10.6.8"
+    "@storybook/addon-onboarding": "npm:^10.6.8"
+    "@storybook/addon-themes": "npm:^10.6.8"
+    "@storybook/react-vite": "npm:^10.6.8"
     "@tanstack/react-table": "npm:^8.17.3"
     "@tanstack/react-virtual": "npm:^3.13.12"
     "@testing-library/jest-dom": "npm:6.5.0"
@@ -8100,7 +8100,7 @@ __metadata:
     eslint-plugin-jsx-a11y: "npm:^6.10.2"
     eslint-plugin-react-hooks: "npm:^4.6.0"
     eslint-plugin-react-refresh: "npm:^0.4.6"
-    eslint-plugin-storybook: "npm:10.6.8"
+    eslint-plugin-storybook: "npm:^10.6.8"
     jsdom: "npm:^24.1.0"
     lucide-react: "npm:^0.436.0"
     luxon: "npm:^3.7.1"
@@ -8112,7 +8112,7 @@ __metadata:
     prettier-plugin-organize-imports: "npm:^4.2.0"
     react-day-picker: "npm:8.10.1"
     react-hook-form: "npm:^7.61.1"
-    storybook: "npm:10.6.8"
+    storybook: "npm:^10.6.8"
     tailwind-merge: "npm:^2.3.0"
     tailwindcss: "npm:^3.4.3"
     tailwindcss-animate: "npm:^1.0.7"
@@ -8763,7 +8763,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-storybook@npm:10.6.8":
+"eslint-plugin-storybook@npm:^10.6.8":
   version: 10.6.8
   resolution: "eslint-plugin-storybook@npm:10.6.8"
   dependencies:
@@ -14788,7 +14788,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"storybook@npm:10.6.8":
+"storybook@npm:^10.6.8":
   version: 10.6.8
   resolution: "storybook@npm:10.6.8"
   dependencies:
