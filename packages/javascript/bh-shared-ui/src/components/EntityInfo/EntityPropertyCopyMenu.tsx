@@ -18,12 +18,12 @@ import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconButton, Menu, MenuContent, MenuItem, MenuTrigger } from 'doodle-ui';
 import { DateTime } from 'luxon';
-import { useAnnounce, useNotifications } from '../../providers';
+import { useNotifications } from '../../providers';
 import { cn, copyToClipboard, DATE_FIELDS, EntityField } from '../../utils';
 
 export const serializeRawPropertyValue = (value: EntityField['value']): string => {
     if (typeof value === 'string') return value;
-    if (typeof value === 'number') return Object.is(value, -0) ? '-0' : String(value);
+    if (typeof value === 'number') return String(value);
     if (typeof value === 'boolean' || value === null) return String(value);
 
     return JSON.stringify(value);
@@ -37,8 +37,9 @@ export const serializeISO8601PropertyValue = (property: string, value: EntityFie
         return date.isValid ? date.toUTC().toISO() : null;
     }
 
-    if (typeof value !== 'number' || !Number.isFinite(value) || !DATE_FIELDS.includes(property) || value <= 0)
+    if (typeof value !== 'number' || !Number.isFinite(value) || !DATE_FIELDS.includes(property) || value <= 0) {
         return null;
+    }
 
     return DateTime.fromSeconds(value).toUTC().toISO();
 };
@@ -52,7 +53,6 @@ export const EntityPropertyCopyMenu = ({
     value: EntityField['value'];
     isRowHovered?: boolean;
 }) => {
-    const announce = useAnnounce();
     const { addNotification } = useNotifications();
 
     if (!property) return null;
@@ -63,11 +63,9 @@ export const EntityPropertyCopyMenu = ({
             await copyToClipboard(text);
             const message = `${kind === 'field name' ? 'Field name' : kind === 'raw value' ? 'Raw value' : 'ISO 8601 value'} copied to clipboard`;
             addNotification(message, `copy-property-${kind.replace(' ', '-')}`);
-            announce(message);
         } catch {
             const message = `Unable to copy ${kind}`;
             addNotification(message, `copy-property-${kind.replace(' ', '-')}-error`);
-            announce(message, 'assertive');
         }
     };
 

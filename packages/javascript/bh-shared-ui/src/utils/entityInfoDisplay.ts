@@ -292,7 +292,7 @@ export const EMPTY_VALUE_DISPLAY = '—';
 export const EMPTY_ARRAY_DISPLAY = 'NONE';
 
 export const formatPrimitive = (
-    value: string | number | boolean | Record<string, unknown> | null,
+    value: string | number | boolean | null,
     kind?: EntityPropertyKind,
     keyprop?: string
 ): string => {
@@ -312,8 +312,16 @@ export const formatPrimitive = (
 
             return value;
         default:
-            return JSON.stringify(value);
+            return String(value);
     }
+};
+
+const formatPropertyValue = (value: EntityField['value'], kind?: EntityPropertyKind, keyprop?: string): string => {
+    if (value !== null && typeof value === 'object') {
+        return JSON.stringify(value);
+    }
+
+    return formatPrimitive(value, kind, keyprop);
 };
 
 export const formatList = (field: EntityField) => {
@@ -323,7 +331,7 @@ export const formatList = (field: EntityField) => {
 
     const fields: string[] = [];
     list.forEach((value) => {
-        fields.push(formatPrimitive(value, field.kind, field.keyprop));
+        fields.push(formatPropertyValue(value, field.kind, field.keyprop));
     });
     return fields;
 };
@@ -334,7 +342,7 @@ export const format = (field: EntityField): string | string[] => {
     if (Array.isArray(value)) {
         return formatList(field);
     } else {
-        return formatPrimitive(value, kind, keyprop);
+        return formatPropertyValue(value, kind, keyprop);
     }
 };
 

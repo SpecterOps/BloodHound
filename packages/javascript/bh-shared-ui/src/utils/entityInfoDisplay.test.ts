@@ -180,6 +180,15 @@ describe('Formatting list properties', () => {
 
         expect(formatList(testEntityField)).toEqual([EMPTY_ARRAY_DISPLAY]);
     });
+
+    it('formats objects and nested arrays as compact JSON while preserving primitive formatting', () => {
+        expect(formatList({ label: 'Mixed values', value: [{ nested: true }, ['value'], false, null] })).toEqual([
+            '{"nested":true}',
+            '["value"]',
+            'FALSE',
+            EMPTY_VALUE_DISPLAY,
+        ]);
+    });
 });
 
 describe('Formatting object information fields', () => {

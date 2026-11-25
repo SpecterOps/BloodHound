@@ -154,7 +154,14 @@ test.describe('WCAG A/AA Violations - Explore - Entity Information Panel', () =>
         await expect(page.getByRole('menu')).toBeHidden();
         await expect(trigger).toBeFocused();
         await expect(trigger).toHaveCSS('opacity', '1');
+    });
 
+    test('Copy menu supports mouse interaction and hides after an outside click', async ({ page }) => {
+        await mockCommonRoutes(page);
+        await selectMockedGPO(page);
+
+        const trigger = page.getByRole('button', { name: 'Copy objectid', exact: true });
+        await expect(trigger).toBeVisible();
         const outsideLabel = page.getByText('Node Type', { exact: true });
         await outsideLabel.click();
         await trigger.hover();

@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import userEvent from '@testing-library/user-event';
+import AppNotifications from '../../components/AppNotifications';
 import {
     serializeISO8601PropertyValue,
     serializeRawPropertyValue,
@@ -98,7 +99,12 @@ describe('Field', () => {
 
     it('copies the raw property key and value rather than their display formatting', async () => {
         const user = userEvent.setup();
-        render(<Field label='Last logon:' value={0} keyprop='lastlogon' />);
+        render(
+            <>
+                <Field label='Last logon:' value={0} keyprop='lastlogon' />
+                <AppNotifications />
+            </>
+        );
 
         await user.click(screen.getByRole('button', { name: 'Copy lastlogon' }));
         await user.click(screen.getByRole('menuitem', { name: 'Copy field name' }));
@@ -107,6 +113,10 @@ describe('Field', () => {
         await user.click(screen.getByRole('button', { name: 'Copy lastlogon' }));
         await user.click(screen.getByRole('menuitem', { name: 'Copy raw value' }));
         expect(await navigator.clipboard.readText()).toBe('0');
+        expect(
+            (await screen.findByText('Raw value copied to clipboard')).closest('[role="alert"]')
+        ).toBeInTheDocument();
+        expect(screen.getAllByText('Raw value copied to clipboard')).toHaveLength(1);
     });
 
     it('supports object properties by displaying and copying their JSON value', async () => {
@@ -120,15 +130,21 @@ describe('Field', () => {
         expect(await navigator.clipboard.readText()).toBe('{"nested":["value"]}');
     });
 
-    it('announces clipboard failures', async () => {
+    it('reports clipboard failures once through an accessible notification', async () => {
         const user = userEvent.setup();
         const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValueOnce(new Error('denied'));
-        render(<Field label='Test field:' value='value' keyprop='testfield' />);
+        render(
+            <>
+                <Field label='Test field:' value='value' keyprop='testfield' />
+                <AppNotifications />
+            </>
+        );
 
         await user.click(screen.getByRole('button', { name: 'Copy testfield' }));
         await user.click(screen.getByRole('menuitem', { name: 'Copy raw value' }));
 
-        expect(await screen.findByText('Unable to copy raw value')).toBeInTheDocument();
+        expect(await screen.findByRole('alert')).toHaveTextContent('Unable to copy raw value');
+        expect(screen.getAllByText('Unable to copy raw value')).toHaveLength(1);
         writeText.mockRestore();
     });
 
