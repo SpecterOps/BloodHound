@@ -14,12 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+import { Card } from 'doodle-ui';
 import { FC } from 'react';
 import { EntityInfoDataTable, EntityInfoPanel } from '../../../../components';
 import { useAssetGroupTagInfo, useGetNodeById, useMemberInfo, useRuleInfo } from '../../../../hooks';
 import { DetailsTabOption, ObjectTabValue, RuleTabValue, TagTabValue } from '../../utils';
 import DynamicDetails from '../DynamicDetails';
 import EntityRulesInformation from '../EntityRulesInformation';
+import { OpenObjectInExploreLink } from '../OpenObjectInExploreLink';
 
 type SelectedDetailsTabContent = {
     currentDetailsTab: DetailsTabOption;
@@ -39,19 +41,24 @@ export const SelectedDetailsTabContent: FC<SelectedDetailsTabContent> = ({
     const ruleQuery = useRuleInfo(tagId, ruleId);
 
     const memberQuery = useMemberInfo(tagId, memberId);
-    const { data: selectedNode } = useGetNodeById(memberQuery.data?.id);
+    const { data: selectedNode, isPreviousData } = useGetNodeById(memberQuery.data?.id);
 
-    if (memberQuery?.data && currentDetailsTab === ObjectTabValue) {
+    if (memberQuery.data && currentDetailsTab === ObjectTabValue) {
+        const { object_id: objectId, id: nodeId } = memberQuery.data;
         return (
-            <div className='h-full'>
+            <div className='inline-flex h-full flex-col gap-2'>
+                <Card className='shrink-0 px-4 py-2'>
+                    <OpenObjectInExploreLink nodeId={nodeId} />
+                </Card>
                 <EntityInfoPanel
+                    className='min-h-0'
                     panelClassName='bg-neutral-1 border border-solid border-neutral-light-4 dark:border-neutral-900'
-                    selectedNode={selectedNode}
+                    selectedNode={isPreviousData ? undefined : selectedNode}
                     showPlaceholderMessage={true}
                     DataTable={EntityInfoDataTable}
                     additionalTables={[
                         {
-                            sectionProps: { id: memberQuery.data.object_id, label: 'Rules' },
+                            sectionProps: { id: objectId, label: 'Rules' },
                             TableComponent: EntityRulesInformation,
                         },
                     ]}

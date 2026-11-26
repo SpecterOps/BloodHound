@@ -116,7 +116,7 @@ export const useGetNodeById = (id?: number) => {
 
             return enrichBuiltInNodeProperties(node, signal);
         },
-        enabled: !!id,
+        enabled: Number.isSafeInteger(id),
         retryOnMount: false,
         retry: false,
         refetchOnWindowFocus: false,
