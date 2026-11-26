@@ -100,3 +100,29 @@ func TestVersion_IsDevelopment(t *testing.T) {
 		t.Fatalf("Expected version %s to not be a development version", parsed)
 	}
 }
+
+func TestVersion_IsReleaseCandidate(t *testing.T) {
+	testCases := []struct {
+		rawVersion         string
+		isReleaseCandidate bool
+	}{
+		{rawVersion: "v9.10.1-rc1", isReleaseCandidate: true},
+		{rawVersion: "v9.10.1-rc12", isReleaseCandidate: true},
+		{rawVersion: "v9.10.1", isReleaseCandidate: false},
+		{rawVersion: "v9.10.1-rc", isReleaseCandidate: false},
+		{rawVersion: "v9.10.1-rc0", isReleaseCandidate: false},
+		{rawVersion: "v9.10.1-beta1", isReleaseCandidate: false},
+		{rawVersion: "v9.10.1-rc1.1", isReleaseCandidate: false},
+		{rawVersion: "v999.999.999", isReleaseCandidate: false},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.rawVersion, func(t *testing.T) {
+			if parsed, err := Parse(testCase.rawVersion); err != nil {
+				t.Fatalf("Parsing version failed: %v", err)
+			} else if parsed.IsReleaseCandidate() != testCase.isReleaseCandidate {
+				t.Fatalf("Expected IsReleaseCandidate() for %s to be %t", parsed, testCase.isReleaseCandidate)
+			}
+		})
+	}
+}
