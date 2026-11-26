@@ -37,6 +37,7 @@ export * from './Diamond';
 export * from './Disabled';
 export * from './DownArrow';
 export * from './Download';
+export * from './Earth';
 export * from './EclipseCircle';
 export * from './Equals';
 export * from './FileMagnifyingGlass';

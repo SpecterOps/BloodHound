@@ -91,6 +91,7 @@ import {
     CreateWebhookResponse,
     DatapipeStatusResponse,
     EndFileIngestResponse,
+    EnterpriseViewGraphResponse,
     Environment,
     FileIngestCompletedTasksResponse,
     FindingSchemaResponse,
@@ -636,6 +637,10 @@ class BHEAPIClient {
             '/api/v2/extensions-findings',
             Object.assign({ params: { skip } }, options)
         );
+
+    getEnterpriseViewGraph = (options?: RequestOptions) => {
+        return this.baseClient.get<EnterpriseViewGraphResponse>('/api/v2/enterprise-view/graph', options);
+    };
 
     exportRiskFindings = (environmentId: string, findingName: string, accepted?: boolean, options?: RequestOptions) =>
         this.baseClient.get(

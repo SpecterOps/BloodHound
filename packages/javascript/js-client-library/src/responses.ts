@@ -544,6 +544,27 @@ export type UnifiedFinding = {
 
 export type UnifiedFindingResponse = PaginatedResponse<UnifiedFinding[]>;
 
+export type EnterpriseViewGraphNode = {
+    id: number;
+    platform_id: number;
+    extension_name: string;
+    name: string;
+    object_count: number;
+};
+
+export type EnterpriseViewGraphEdge = {
+    source: number;
+    target: number;
+    edge_count: number;
+};
+
+export type EnterpriseViewGraph = {
+    nodes: EnterpriseViewGraphNode[];
+    edges: EnterpriseViewGraphEdge[];
+};
+
+export type EnterpriseViewGraphResponse = BasicResponse<EnterpriseViewGraph>;
+
 export type SourceKindsResponse = BasicResponse<{ kinds: SourceKind[] }>;
 
 // ---------------------------------------------------------------------------
