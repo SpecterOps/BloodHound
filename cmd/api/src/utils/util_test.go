@@ -454,14 +454,44 @@ func TestGetLimitParamForGraphQuery(t *testing.T) {
 }
 
 func TestGetOrderForNeo4jQuery(t *testing.T) {
-	expectedResult := "n.someColumn, n.anotherColumn DESC"
+	t.Run("valid ascending and descending columns", func(t *testing.T) {
+		expectedResult := "n.someColumn, n.anotherColumn DESC"
 
-	params := url.Values{}
-	params.Add("sort_by", "someColumn")
-	params.Add("sort_by", "-anotherColumn")
+		params := url.Values{}
+		params.Add("sort_by", "someColumn")
+		params.Add("sort_by", "-anotherColumn")
 
-	result := utils.GetOrderForNeo4jQuery(params)
-	require.Equal(t, expectedResult, result)
+		result := utils.GetOrderForNeo4jQuery(params)
+		require.Equal(t, expectedResult, result)
+	})
+
+	t.Run("empty sort_by values do not panic and are ignored", func(t *testing.T) {
+		params := url.Values{}
+		params.Add("sort_by", "")
+
+		result := utils.GetOrderForNeo4jQuery(params)
+		require.Equal(t, "", result)
+	})
+
+	t.Run("bare hyphen sort_by values do not produce invalid clauses and are ignored", func(t *testing.T) {
+		params := url.Values{}
+		params.Add("sort_by", "-")
+
+		result := utils.GetOrderForNeo4jQuery(params)
+		require.Equal(t, "", result)
+	})
+
+	t.Run("mixed invalid and valid columns preserves valid order", func(t *testing.T) {
+		params := url.Values{}
+		params.Add("sort_by", "")
+		params.Add("sort_by", "someColumn")
+		params.Add("sort_by", "-")
+		params.Add("sort_by", "-anotherColumn")
+		params.Add("sort_by", "-id")
+
+		result := utils.GetOrderForNeo4jQuery(params)
+		require.Equal(t, "n.someColumn, n.anotherColumn DESC, n.objectid DESC", result)
+	})
 }
 
 func TestHeaderMatches(t *testing.T) {
