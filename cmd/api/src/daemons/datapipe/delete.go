@@ -108,11 +108,7 @@ func wipeAllGraphData(ctx context.Context, graphDB graph.Database, wiper graphWi
 	}
 
 	return wiper.WipeGraph(ctx, func(tx graph.Transaction) error {
-		if _, err := tx.CreateNode(graph.AsProperties(map[string]any{
-			"Major": migrationData.Major,
-			"Minor": migrationData.Minor,
-			"Patch": migrationData.Patch,
-		}), common.MigrationData); err != nil {
+		if _, err := tx.CreateNode(migrations.NewMigrationDataProperties(migrationData), common.MigrationData); err != nil {
 			return fmt.Errorf("recreating migration data after graph wipe: %w", err)
 		}
 

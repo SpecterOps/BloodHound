@@ -47,11 +47,7 @@ func expectMigrationDataLookup(mockCtrl *gomock.Controller, mockGraphDB *graphMo
 }
 
 func newMigrationDataNode(migrationVersion version.Version) *graph.Node {
-	return graph.NewNode(1, graph.AsProperties(map[string]any{
-		"Major": migrationVersion.Major,
-		"Minor": migrationVersion.Minor,
-		"Patch": migrationVersion.Patch,
-	}), common.MigrationData)
+	return graph.NewNode(1, migrations.NewMigrationDataProperties(migrationVersion), common.MigrationData)
 }
 
 func TestRequiresMigration(t *testing.T) {
@@ -80,4 +76,69 @@ func TestRequiresMigration(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, requiresMigration)
 	})
+
+	t.Run("migration data at current version with a different prerelease requires migration", func(t *testing.T) {
+		var (
+			mockCtrl         = gomock.NewController(t)
+			mockGraphDB      = graphMocks.NewMockDatabase(mockCtrl)
+			migrationVersion = version.GetVersion()
+		)
+
+		migrationVersion.Prerelease = "rc1"
+		expectMigrationDataLookup(mockCtrl, mockGraphDB, newMigrationDataNode(migrationVersion), nil)
+
+		requiresMigration, err := migrations.RequiresMigration(context.Background(), mockGraphDB)
+		require.NoError(t, err)
+		require.True(t, requiresMigration)
+	})
+
+	t.Run("legacy migration data without a prerelease property is read as a final release", func(t *testing.T) {
+		var (
+			mockCtrl       = gomock.NewController(t)
+			mockGraphDB    = graphMocks.NewMockDatabase(mockCtrl)
+			currentVersion = version.GetVersion()
+			legacyNode     = graph.NewNode(1, graph.AsProperties(map[string]any{
+				"Major": currentVersion.Major,
+				"Minor": currentVersion.Minor,
+				"Patch": currentVersion.Patch,
+			}), common.MigrationData)
+		)
+
+		expectMigrationDataLookup(mockCtrl, mockGraphDB, legacyNode, nil)
+
+		migrationData, err := migrations.GetMigrationData(context.Background(), mockGraphDB)
+		require.NoError(t, err)
+		require.Empty(t, migrationData.Prerelease)
+		require.True(t, migrationData.Equals(currentVersion))
+	})
+}
+
+func TestVersionRequiresMigration(t *testing.T) {
+	testCases := []struct {
+		name                    string
+		runningVersion          string
+		recordedVersion         string
+		expectRequiresMigration bool
+	}{
+		{name: "same final release", runningVersion: "v9.10.1", recordedVersion: "v9.10.1", expectRequiresMigration: false},
+		{name: "same release candidate", runningVersion: "v9.10.1-rc1", recordedVersion: "v9.10.1-rc1", expectRequiresMigration: false},
+		{name: "newer release", runningVersion: "v9.11.0", recordedVersion: "v9.10.1", expectRequiresMigration: true},
+		{name: "older release", runningVersion: "v9.10.0", recordedVersion: "v9.10.1", expectRequiresMigration: false},
+		{name: "next release candidate", runningVersion: "v9.10.1-rc2", recordedVersion: "v9.10.1-rc1", expectRequiresMigration: true},
+		{name: "release candidate promoted to final release", runningVersion: "v9.10.1", recordedVersion: "v9.10.1-rc2", expectRequiresMigration: true},
+		{name: "release candidate over legacy final release data", runningVersion: "v9.10.1-rc1", recordedVersion: "v9.10.1", expectRequiresMigration: true},
+		{name: "development version", runningVersion: "v999.999.999", recordedVersion: "v999.999.999", expectRequiresMigration: false},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			runningVersion, err := version.Parse(testCase.runningVersion)
+			require.NoError(t, err)
+
+			recordedVersion, err := version.Parse(testCase.recordedVersion)
+			require.NoError(t, err)
+
+			require.Equal(t, testCase.expectRequiresMigration, migrations.VersionRequiresMigration(runningVersion, recordedVersion))
+		})
+	}
 }

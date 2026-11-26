@@ -49,7 +49,7 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 			return false, fmt.Errorf("unable to get graph db migration data: %w", err)
 		}
 	} else {
-		return version.GetVersion().GreaterThan(currentMigration), nil
+		return VersionRequiresMigration(version.GetVersion(), currentMigration), nil
 	}
 }
 

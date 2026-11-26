@@ -38,9 +38,6 @@ var (
 	// See: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
 	semverParsingRegex = regexp.MustCompile(`^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`)
 
-	// releaseCandidateRegex matches prerelease identifiers for release candidate builds, for example "rc1"
-	releaseCandidateRegex = regexp.MustCompile(`^rc[1-9]\d*$`)
-
 	ErrUnexpectedVersionFormat = errors.New("expected version to be formatted: <major>.<minor>.<patch>[-<prerelease>]")
 	ErrMissingPrefix           = fmt.Errorf("prefix `%s` is missing", Prefix)
 
@@ -66,12 +63,6 @@ func (s *Version) IsPrerelease() bool {
 // IsDevelopment returns true if this version matches the default development version.
 func (s Version) IsDevelopment() bool {
 	return s.Equals(DevelopmentVersion)
-}
-
-// IsReleaseCandidate returns true if this version's prerelease identifier denotes a release candidate, for example
-// v9.10.1-rc1.
-func (s Version) IsReleaseCandidate() bool {
-	return releaseCandidateRegex.MatchString(s.Prerelease)
 }
 
 func (s *Version) unmarshal(buffer []byte, unmarshalFunc func(buffer []byte, target any) error) error {
