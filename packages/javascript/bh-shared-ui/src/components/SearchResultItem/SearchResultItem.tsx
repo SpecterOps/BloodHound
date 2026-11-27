@@ -27,6 +27,7 @@ export type NodeSearchResult = {
     kind: string;
     id?: string;
     distinguishedName?: string;
+    platform?: string;
 };
 
 const SearchResultItem: FC<{
@@ -38,6 +39,14 @@ const SearchResultItem: FC<{
     keyword?: string;
     showDistinguishedName?: boolean;
 }> = ({ style, item, index, highlightedIndex, keyword, getItemProps, showDistinguishedName = false }) => {
+    const subtitle = [
+        item.platform,
+        item.platform ? item.kind : undefined,
+        showDistinguishedName ? item.distinguishedName : undefined,
+    ]
+        .filter(Boolean)
+        .join(' | ');
+
     return (
         <ListItem
             dense
@@ -69,9 +78,9 @@ const SearchResultItem: FC<{
                                     <HighlightedText text={item.label || item.objectId} search={keyword} inheritColor />
                                 </div>
                             </Tooltip>
-                            {showDistinguishedName && item.distinguishedName && (
+                            {subtitle && (
                                 <Tooltip
-                                    tooltip={item.distinguishedName}
+                                    tooltip={subtitle}
                                     contentProps={{
                                         className:
                                             'z-[1400] max-w-80 break-words dark:bg-neutral-dark-5 dark:text-white border-0',
@@ -80,12 +89,12 @@ const SearchResultItem: FC<{
                                         variant='caption'
                                         className={cn(
                                             // TODO: Tokenize when available
-                                            'truncate text-[#505050] dark:text-[#CDCDCD] group-hover:text-common-white group-hover:dark:text-common-dark group-focus:text-common-white group-focus:dark:text-common-dark group-focus-visible:text-common-white group-focus-visible:dark:text-common-dark',
+                                            'line-clamp-1 break-words text-[#505050] dark:text-[#CDCDCD] group-hover:text-common-white group-hover:dark:text-common-dark group-focus:text-common-white group-focus:dark:text-common-dark group-focus-visible:text-common-white group-focus-visible:dark:text-common-dark',
                                             {
                                                 'text-common-white dark:text-common-dark': highlightedIndex === index,
                                             }
                                         )}>
-                                        {item.distinguishedName}
+                                        {subtitle}
                                     </Typography>
                                 </Tooltip>
                             )}

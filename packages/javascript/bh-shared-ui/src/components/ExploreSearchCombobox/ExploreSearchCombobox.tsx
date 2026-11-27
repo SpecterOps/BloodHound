@@ -18,11 +18,16 @@ import { List, ListItem, ListItemText, Paper, TextField, TextFieldVariants } fro
 import { Typography } from 'doodle-ui';
 import { useCombobox } from 'downshift';
 import { useMemo, useRef } from 'react';
+import { ActiveDirectoryNodeKind, AzureNodeKind, CommonNodeKind } from '../../graphSchema';
 import { SearchResult, getEmptyResultsText, useKeywordAndTypeValues, useSearch, useTheme } from '../../hooks';
 import { SearchValue } from '../../views/Explore/ExploreSearch/types';
 import NodeIcon from '../NodeIcon';
 import SearchResultItem from '../SearchResultItem';
 import { getDuplicateDisplayNames } from './utils';
+
+const activeDirectoryKinds = new Set<string>(Object.values(ActiveDirectoryNodeKind));
+const azureKinds = new Set<string>(Object.values(AzureNodeKind));
+const bloodHoundKinds = new Set<string>([...Object.values(CommonNodeKind), 'Meta']);
 
 const ExploreSearchCombobox: React.FC<{
     labelText: string;
@@ -72,7 +77,6 @@ const ExploreSearchCombobox: React.FC<{
         itemToString: (item) => item?.name || item?.objectid || '',
     });
 
-    // Search result's distinguished name is shown only when another result has the same displayed label name or objectid
     const duplicateDisplayNames = useMemo(() => getDuplicateDisplayNames(data ?? []), [data]);
 
     const disabledText: string = getEmptyResultsText(
@@ -161,6 +165,12 @@ const ExploreSearchCombobox: React.FC<{
                             </ListItem>
                         ) : (
                             data?.map((item: SearchResult, index: any) => {
+                                let platform = 'OpenGraph';
+                                if (activeDirectoryKinds.has(item.type)) platform = 'Active Directory';
+                                else if (azureKinds.has(item.type)) platform = 'Azure';
+                                else if (bloodHoundKinds.has(item.type)) platform = 'BloodHound';
+                                else if (!item.type || item.type === 'Unknown') platform = 'Unknown platform';
+
                                 return (
                                     <SearchResultItem
                                         item={{
@@ -168,13 +178,17 @@ const ExploreSearchCombobox: React.FC<{
                                             objectId: item.objectid,
                                             kind: item.type,
                                             distinguishedName: item.distinguishedname,
+                                            platform,
                                         }}
                                         index={index}
                                         key={index}
                                         highlightedIndex={highlightedIndex}
                                         keyword={keyword}
                                         getItemProps={getItemProps}
-                                        showDistinguishedName={duplicateDisplayNames.has(item.name || item.objectid)}
+                                        showDistinguishedName={
+                                            item.type === ActiveDirectoryNodeKind.OU ||
+                                            duplicateDisplayNames.has(item.name || item.objectid)
+                                        }
                                     />
                                 );
                             })
