@@ -18,7 +18,7 @@ import userEvent from '@testing-library/user-event';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import ExploreSearchCombobox from '.';
-import { ActiveDirectoryNodeKind } from '../../graphSchema';
+import { ActiveDirectoryNodeKind, AzureNodeKind, CommonNodeKind } from '../../graphSchema';
 import { mockKindsHandler } from '../../mocks';
 import { mockGetConfigurationHandler } from '../../mocks/handlers';
 import { act, render, screen, within } from '../../test-utils';
@@ -169,8 +169,8 @@ describe('icon rendering', () => {
     });
 });
 
-describe('ExploreSearchCombobox with duplicate display names', () => {
-    const duplicateNameResults = {
+describe('ExploreSearchCombobox result metadata', () => {
+    const searchResults = {
         data: [
             {
                 name: 'ADMIN@TESTLAB.LOCAL',
@@ -190,18 +190,29 @@ describe('ExploreSearchCombobox with duplicate display names', () => {
                 type: 'Computer',
                 distinguishedname: 'CN=Unique,OU=Computers,DC=testlab,DC=local',
             },
+            {
+                name: 'SUPPORT@TESTLAB.LOCAL',
+                objectid: '4',
+                type: ActiveDirectoryNodeKind.OU,
+                distinguishedname: 'OU=Support,OU=Corporate,DC=testlab,DC=local',
+            },
+            { name: 'LAB@TESTLAB.LOCAL', objectid: '5', type: ActiveDirectoryNodeKind.OU, distinguishedname: '' },
+            { name: 'Cloud Admin', objectid: '6', type: AzureNodeKind.User },
+            { name: 'Example Repo', objectid: '7', type: 'GitHubRepository' },
+            { name: 'Tier Zero', objectid: '8', type: CommonNodeKind.Zone },
+            { name: 'Unclassified node', objectid: '9', type: 'Unknown' },
         ],
     };
 
     beforeEach(() => {
         server.use(
             rest.get(`/api/v2/search`, (req, res, ctx) => {
-                return res(ctx.json(duplicateNameResults));
+                return res(ctx.json(searchResults));
             })
         );
     });
 
-    it('shows the distinguished name only for results with duplicate display names', async () => {
+    it('shows platform and type for each result and appends available DNs for OUs and duplicate names', async () => {
         const user = userEvent.setup();
         const labelText: string = 'test label';
 
@@ -220,9 +231,25 @@ describe('ExploreSearchCombobox with duplicate display names', () => {
         await user.click(screen.getByLabelText(labelText));
         await screen.findAllByRole('option');
 
-        expect(screen.getByText('CN=Admin,OU=Users,DC=testlab,DC=local')).toBeInTheDocument();
-        expect(screen.getByText('CN=Admin,OU=Groups,DC=testlab,DC=local')).toBeInTheDocument();
-        expect(screen.queryByText('CN=Unique,OU=Computers,DC=testlab,DC=local')).not.toBeInTheDocument();
+        expect(screen.getByText('Active Directory | User | CN=Admin,OU=Users,DC=testlab,DC=local')).toBeVisible();
+        expect(screen.getByText('Active Directory | Group | CN=Admin,OU=Groups,DC=testlab,DC=local')).toBeVisible();
+        expect(screen.getByText('Active Directory | OU | OU=Support,OU=Corporate,DC=testlab,DC=local')).toBeVisible();
+        expect(
+            within(screen.getByRole('option', { name: /LAB@TESTLAB\.LOCAL/ })).getByText('Active Directory | OU')
+        ).toBeVisible();
+        expect(
+            within(screen.getByRole('option', { name: /UNIQUE@TESTLAB\.LOCAL/ })).getByText(
+                'Active Directory | Computer'
+            )
+        ).toBeVisible();
+        expect(within(screen.getByRole('option', { name: /Cloud Admin/ })).getByText('Azure | AZUser')).toBeVisible();
+        expect(
+            within(screen.getByRole('option', { name: /Example Repo/ })).getByText('OpenGraph | GitHubRepository')
+        ).toBeVisible();
+        expect(within(screen.getByRole('option', { name: /Tier Zero/ })).getByText('BloodHound | Zone')).toBeVisible();
+        expect(
+            within(screen.getByRole('option', { name: /Unclassified node/ })).getByText('Unknown platform | Unknown')
+        ).toBeVisible();
     });
 });
 
