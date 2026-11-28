@@ -41,7 +41,13 @@ import (
 	"github.com/specterops/dawgs/query"
 )
 
+// RequiresMigration reports whether the graph requires a migration for the running BloodHound version.
 func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
+	return RequiresMigrationForVersion(ctx, db, version.GetVersion())
+}
+
+// RequiresMigrationForVersion reports whether the graph requires a migration for the given running version.
+func RequiresMigrationForVersion(ctx context.Context, db graph.Database, runningVersion version.Version) (bool, error) {
 	if currentMigration, err := GetMigrationData(ctx, db); err != nil {
 		if errors.Is(err, graph.ErrNoResultsFound) || errors.Is(err, ErrNoMigrationData) {
 			return true, nil
@@ -49,7 +55,7 @@ func RequiresMigration(ctx context.Context, db graph.Database) (bool, error) {
 			return false, fmt.Errorf("unable to get graph db migration data: %w", err)
 		}
 	} else {
-		return version.GetVersion().GreaterThan(currentMigration), nil
+		return VersionRequiresMigration(runningVersion, currentMigration), nil
 	}
 }
 

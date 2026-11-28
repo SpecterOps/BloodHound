@@ -39,6 +39,32 @@ type Migration struct {
 
 type MigrationsByVersion = map[version.Version][]Migration
 
+const (
+	migrationDataMajorProperty      = "Major"
+	migrationDataMinorProperty      = "Minor"
+	migrationDataPatchProperty      = "Patch"
+	migrationDataPrereleaseProperty = "Prerelease"
+)
+
+// NewMigrationDataProperties returns the graph properties that record the given version on the MigrationData node.
+func NewMigrationDataProperties(migrationVersion version.Version) *graph.Properties {
+	return graph.AsProperties(map[string]any{
+		migrationDataMajorProperty:      migrationVersion.Major,
+		migrationDataMinorProperty:      migrationVersion.Minor,
+		migrationDataPatchProperty:      migrationVersion.Patch,
+		migrationDataPrereleaseProperty: migrationVersion.Prerelease,
+	})
+}
+
+// VersionRequiresMigration returns true if the running version is newer than the recorded graph migration version, or
+// if both share a major, minor and patch version but differ in prerelease. Prerelease builds (for example release
+// candidates) share a version with their eventual release, so a prerelease change must still trigger a graph migration
+// to re-assert the schema.
+func VersionRequiresMigration(runningVersion, recordedVersion version.Version) bool {
+	return runningVersion.GreaterThan(recordedVersion) ||
+		(runningVersion.Equals(recordedVersion) && runningVersion.Prerelease != recordedVersion.Prerelease)
+}
+
 func UpdateMigrationData(ctx context.Context, db graph.Database, target version.Version) error {
 	var node *graph.Node
 
@@ -55,9 +81,10 @@ func UpdateMigrationData(ctx context.Context, db graph.Database, target version.
 	}); err != nil {
 		return fmt.Errorf("could not query exisiting migration data: %w", err)
 	} else {
-		node.Properties.Set("Major", target.Major)
-		node.Properties.Set("Minor", target.Minor)
-		node.Properties.Set("Patch", target.Patch)
+		node.Properties.Set(migrationDataMajorProperty, target.Major)
+		node.Properties.Set(migrationDataMinorProperty, target.Minor)
+		node.Properties.Set(migrationDataPatchProperty, target.Patch)
+		node.Properties.Set(migrationDataPrereleaseProperty, target.Prerelease)
 
 		return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
 			if err := tx.UpdateNode(node); err != nil {
@@ -96,21 +123,21 @@ func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, 
 			attr.Error(err),
 		)
 		return currentMigration, ErrNoMigrationData
-	} else if major, err := node.Properties.Get("Major").Int(); err != nil {
+	} else if major, err := node.Properties.Get(migrationDataMajorProperty).Int(); err != nil {
 		slog.WarnContext(
 			ctx,
 			"Unable to get Major property from migration data node",
 			attr.Error(err),
 		)
 		return currentMigration, ErrNoMigrationData
-	} else if minor, err := node.Properties.Get("Minor").Int(); err != nil {
+	} else if minor, err := node.Properties.Get(migrationDataMinorProperty).Int(); err != nil {
 		slog.WarnContext(
 			ctx,
 			"Unable to get Minor property from migration data node",
 			attr.Error(err),
 		)
 		return currentMigration, ErrNoMigrationData
-	} else if patch, err := node.Properties.Get("Patch").Int(); err != nil {
+	} else if patch, err := node.Properties.Get(migrationDataPatchProperty).Int(); err != nil {
 		slog.WarnContext(
 			ctx,
 			"Unable to get Patch property from migration data node",
@@ -121,6 +148,13 @@ func GetMigrationData(ctx context.Context, db graph.Database) (version.Version, 
 		currentMigration.Major = major
 		currentMigration.Minor = minor
 		currentMigration.Patch = patch
+
+		// Migration data written before prerelease tracking has no Prerelease property; treat it as a final release
+		if prerelease, err := node.Properties.Get(migrationDataPrereleaseProperty).String(); err != nil {
+			currentMigration.Prerelease = ""
+		} else {
+			currentMigration.Prerelease = prerelease
+		}
 	}
 
 	return currentMigration, nil
@@ -185,11 +219,7 @@ func (s *GraphMigrator) Migrate(ctx context.Context) error {
 
 func CreateMigrationData(ctx context.Context, db graph.Database, currentVersion version.Version) error {
 	return db.WriteTransaction(ctx, func(tx graph.Transaction) error {
-		if _, err := tx.CreateNode(graph.AsProperties(map[string]any{
-			"Major": currentVersion.Major,
-			"Minor": currentVersion.Minor,
-			"Patch": currentVersion.Patch,
-		}), common.MigrationData); err != nil {
+		if _, err := tx.CreateNode(NewMigrationDataProperties(currentVersion), common.MigrationData); err != nil {
 			return fmt.Errorf("could not create migration data: %w", err)
 		}
 		return nil
@@ -235,11 +265,12 @@ func (s *GraphMigrator) executeMigrations(ctx context.Context, originalVersion v
 		}
 	}
 
-	if releaseVersion := version.GetVersion(); releaseVersion.GreaterThan(mostRecentVersion) {
+	// Record the running release version, including its prerelease, when it is at or beyond the most recent migration
+	if releaseVersion := version.GetVersion(); !releaseVersion.LessThan(mostRecentVersion) {
 		mostRecentVersion = releaseVersion
 	}
 
-	if mostRecentVersion.GreaterThan(originalVersion) {
+	if VersionRequiresMigration(mostRecentVersion, originalVersion) {
 		return UpdateMigrationData(ctx, s.db, mostRecentVersion)
 	}
 
