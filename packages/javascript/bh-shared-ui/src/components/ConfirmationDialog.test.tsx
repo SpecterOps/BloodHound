@@ -41,6 +41,7 @@ describe('ConfirmationDialog', () => {
     it('should display correctly', () => {
         expect(screen.queryByText('text-test')).toBeInTheDocument();
         expect(screen.queryByText('title-test')).toBeInTheDocument();
+        expect(screen.getByRole('dialog', { name: 'title-test' })).toHaveAccessibleDescription('text-test');
         expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /confirm/i })).toBeInTheDocument();
     });
@@ -57,6 +58,63 @@ describe('ConfirmationDialog', () => {
 
         expect(testonCancel).toHaveBeenCalledTimes(0);
         expect(testOnConfirm).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the dialog open on Escape by default', async () => {
+        await user.keyboard('{Escape}');
+
+        expect(testonCancel).not.toHaveBeenCalled();
+        expect(screen.getByRole('dialog', { name: 'title-test' })).toBeVisible();
+    });
+
+    it('focuses Cancel before interactive dialog content when requested', async () => {
+        cleanup();
+        render(
+            <ConfirmationDialog
+                open
+                onConfirm={testOnConfirm}
+                onCancel={testonCancel}
+                text={
+                    <>
+                        <p id='schedule-warning'>A short description</p>
+                        <button type='button'>Retry</button>
+                    </>
+                }
+                title='Delete schedule?'
+                initialFocus='cancel'
+                aria-describedby='schedule-warning'
+            />
+        );
+
+        expect(screen.getByRole('dialog', { name: 'Delete schedule?' })).toHaveAccessibleDescription(
+            'A short description'
+        );
+        expect(screen.getByRole('button', { name: 'Retry' })).toBeVisible();
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus());
+    });
+
+    it('routes opted-in Escape to Cancel when idle and restores focus on close', async () => {
+        cleanup();
+        const restoreFocus = vi.fn();
+        const props = {
+            title: 'Delete schedule?',
+            text: 'A short description',
+            onConfirm: testOnConfirm,
+            onCancel: testonCancel,
+            onRestoreFocus: restoreFocus,
+            canDismissOnEscape: true,
+        };
+        const { rerender } = render(<ConfirmationDialog {...props} open isLoading />);
+
+        await user.keyboard('{Escape}');
+        expect(testonCancel).not.toHaveBeenCalled();
+
+        rerender(<ConfirmationDialog {...props} open />);
+        await user.keyboard('{Escape}');
+        expect(testonCancel).toHaveBeenCalledTimes(1);
+
+        rerender(<ConfirmationDialog {...props} open={false} />);
+        await waitFor(() => expect(restoreFocus).toHaveBeenCalledTimes(1));
     });
 
     it.each(['cancel', 'confirm'])('cancels the %s reset timer on unmount', (action) => {

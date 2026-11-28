@@ -32,6 +32,10 @@ const ConfirmationDialog: React.FC<{
     text: string | JSX.Element;
     onCancel: () => void;
     onConfirm: () => void;
+    initialFocus?: 'cancel';
+    canDismissOnEscape?: boolean;
+    onRestoreFocus?: () => void;
+    'aria-describedby'?: string;
     challengeText?: string;
     isLoading?: boolean;
     isConfirmDisabled?: boolean;
@@ -47,6 +51,10 @@ const ConfirmationDialog: React.FC<{
     title,
     text,
     onCancel,
+    initialFocus,
+    canDismissOnEscape = false,
+    onRestoreFocus,
+    'aria-describedby': describedBy,
     isLoading,
     isConfirmDisabled,
     error,
@@ -61,6 +69,7 @@ const ConfirmationDialog: React.FC<{
 }) => {
     const [challengeTextReply, setChallengeTextReply] = useState<string>('');
     const resetTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         if (open) {
@@ -100,7 +109,25 @@ const ConfirmationDialog: React.FC<{
     return (
         <Dialog open={open} data-testid='confirmation-dialog'>
             <DialogPortal>
-                <DialogContent>
+                <DialogContent
+                    {...(describedBy === undefined ? {} : { 'aria-describedby': describedBy })}
+                    onOpenAutoFocus={(event) => {
+                        const cancelButton = cancelButtonRef.current;
+                        if (initialFocus !== 'cancel' || !cancelButton || cancelButton.disabled) return;
+                        event.preventDefault();
+                        cancelButton.focus();
+                    }}
+                    onCloseAutoFocus={(event) => {
+                        if (!onRestoreFocus) return;
+                        event.preventDefault();
+                        onRestoreFocus();
+                    }}
+                    onEscapeKeyDown={(event) => {
+                        if (!canDismissOnEscape) return;
+                        event.stopPropagation();
+                        event.preventDefault();
+                        if (!isLoading) handleClose();
+                    }}>
                     <DialogTitle className='text-lg'>{title}</DialogTitle>
                     <DialogDescription asChild className='text-lg'>
                         {/* Description can contain block elements that cannot be nested inside a paragraph, so using a div asChild */}
@@ -123,6 +150,7 @@ const ConfirmationDialog: React.FC<{
                     <DialogActions>
                         {error && <p className='content-center text-error text-xs mt-[3px]'>{error}</p>}
                         <Button
+                            ref={cancelButtonRef}
                             variant='secondary'
                             onClick={handleClose}
                             disabled={isLoading}
