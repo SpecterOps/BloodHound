@@ -7826,6 +7826,96 @@
         }
       }
     },
+    "/api/v2/graph-retention-policies": {
+      "get": {
+        "operationId": "GetRetentionPolicies",
+        "summary": "Get configured graph retention policies",
+        "description": "Requires enabled `retention_policies` feature flag. Requires admin permissions. Includes the base policy and persisted extension overrides only; no filtering is supported.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "responses": {
+          "200": {
+            "description": "The base policy and all configured extension overrides.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.graph-retention-policies.response"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      },
+      "put": {
+        "operationId": "UpdateRetentionPolicies",
+        "summary": "Create or replace included graph retention policies",
+        "description": "Requires admin permissions and the retention_policies feature flag (404 while disabled). Each included policy is a full replacement requiring enabled and ttl; extension policies also require extension_id. Omitted policies remain unchanged. All replacements and the successful-change audit are committed atomically; errors never partially apply the request. Empty updates, duplicate extension IDs, missing required fields, invalid IDs, unknown extensions, unknown fields, and invalid TTLs return 400. This endpoint cannot reset or delete policies; extension reset belongs to the dedicated extension DELETE endpoint. HasSession settings are separate and are not accepted or returned.",
+        "tags": [
+          "Graph Retention Policies",
+          "Enterprise"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/model.graph-retention-policies.payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The base policy and all configured extension overrides.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/model.graph-retention-policies.response"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/bad-request"
+          },
+          "401": {
+            "$ref": "#/components/responses/unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/not-found"
+          },
+          "429": {
+            "$ref": "#/components/responses/too-many-requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/internal-server-error"
+          }
+        }
+      }
+    },
     "/api/v2/graph-retention-policies/base/policy": {
       "parameters": [
         {
@@ -29041,6 +29131,7 @@
       "model.graph-retention-policy": {
         "type": "object",
         "description": "The core data to describe a retention policy",
+        "unevaluatedProperties": false,
         "required": [
           "enabled",
           "ttl"
@@ -29059,6 +29150,12 @@
       "model.graph-extension-retention-policy": {
         "type": "object",
         "description": "The data to describe an extension retention policy",
+        "unevaluatedProperties": false,
+        "required": [
+          "enabled",
+          "ttl",
+          "extension_id"
+        ],
         "allOf": [
           {
             "$ref": "#/components/schemas/model.graph-retention-policy"
@@ -29067,11 +29164,81 @@
             "type": "object",
             "properties": {
               "extension_id": {
-                "type": "integer"
+                "type": "integer",
+                "format": "int32",
+                "minimum": 1
               }
             }
           }
         ]
+      },
+      "model.graph-retention-policies.response": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "base_policy",
+              "extension_policies"
+            ],
+            "properties": {
+              "base_policy": {
+                "$ref": "#/components/schemas/model.graph-retention-policy"
+              },
+              "extension_policies": {
+                "type": "array",
+                "description": "Only configured overrides, ordered by ascending extension_id. Includes disabled overrides. An extension absent from this list inherits the base policy.",
+                "items": {
+                  "$ref": "#/components/schemas/model.graph-extension-retention-policy"
+                }
+              }
+            }
+          }
+        }
+      },
+      "model.graph-retention-policies.payload": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "unevaluatedProperties": false,
+            "description": "At least one policy is required. base_policy and extension_policies are optional. Omitted or null optional fields are ignored. An empty extension_policies list is allowed with a base policy; by itself it is rejected. Neither omission nor an empty list deletes or resets policies.",
+            "anyOf": [
+              {
+                "required": [
+                  "base_policy"
+                ],
+                "properties": {
+                  "base_policy": {
+                    "$ref": "#/components/schemas/model.graph-retention-policy"
+                  }
+                }
+              },
+              {
+                "required": [
+                  "extension_policies"
+                ],
+                "properties": {
+                  "extension_policies": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/model.graph-extension-retention-policy"
+                    },
+                    "minItems": 1,
+                    "nullable": false
+                  }
+                }
+              }
+            ]
+          }
+        }
       },
       "api.response.graph-extensions-info": {
         "type": "object",

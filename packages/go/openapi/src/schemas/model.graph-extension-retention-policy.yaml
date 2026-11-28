@@ -16,10 +16,17 @@
 
 type: object
 description: The data to describe an extension retention policy
+unevaluatedProperties: false
+required:
+  - enabled
+  - ttl
+  - extension_id
 allOf:
   - $ref: './model.graph-retention-policy.yaml'
   - type: object
     properties:
       extension_id:
         type: integer
+        format: int32
+        minimum: 1
   

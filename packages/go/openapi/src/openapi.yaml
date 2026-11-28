@@ -394,8 +394,8 @@ paths:
     $ref: './paths/graph.graphs.acl-inheritance.yaml'
 
   # graph retention policies
-  # /api/v2/graph-retention-policies:
-  #  $ref: './paths/graph-retention-policies.yaml'
+  /api/v2/graph-retention-policies:
+    $ref: './paths/graph-retention-policies.yaml'
   /api/v2/graph-retention-policies/base/policy:
     $ref: './paths/graph-retention-policies.base.policy.yaml'
   /api/v2/graph-retention-policies/extensions/{extension_id}/policy:
