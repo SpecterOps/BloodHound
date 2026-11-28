@@ -92,12 +92,11 @@ export const Labeled: Story = {
     },
 };
 
-export const SmallLabeled: Story = {
+export const Outlined: Story = {
     args: {
-        type: 'sm-labeled',
-        color: colors.moderate,
-        label: '50%',
-        outlined: false,
+        type: 'md-circle',
+        color: 'primary',
+        outlined: true,
     },
 };
 
@@ -118,10 +117,18 @@ export const Small: Story = {
     },
 };
 
-export const Outlined: Story = {
+export const SmallLabeled: Story = {
     args: {
-        type: 'md-circle',
-        color: 'primary',
+        type: 'sm-labeled',
+        color: colors.moderate,
+        label: '50%',
+        outlined: false,
+    },
+};
+
+export const SmallLabeledOutlined: Story = {
+    args: {
+        ...SmallLabeled.args,
         outlined: true,
     },
 };

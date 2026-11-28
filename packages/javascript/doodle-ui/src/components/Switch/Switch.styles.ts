@@ -45,3 +45,8 @@ export const LabelVariants = cva('text-base text-main transition-all ease-in-out
         disabled: false,
     },
 });
+
+export const switchStyles = {
+    labeledWrapper: 'py-0',
+    checkedLabel: 'data-[state=checked]:font-medium',
+};

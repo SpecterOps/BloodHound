@@ -59,6 +59,7 @@ import {
     dataTableHeaderRowClasses,
     dataTableRowClasses,
     dataTableSelectedRowClasses,
+    dataTableStyles,
     dataTableWrapperClasses,
 } from './DataTable.styles';
 import NoDataFallback from './NoDataFallback';
@@ -178,7 +179,8 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
             return columnsProp.concat([
                 columnHelper.display({
                     id: 'empty-column',
-                    header: () => <span className='sr-only'>empty placeholder column</span>,
+                    enableResizing: false,
+                    header: () => <span className={dataTableStyles.screenReader}>empty placeholder column</span>,
                 }),
             ]);
         }
@@ -480,30 +482,43 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                 className={cn(
                     dataTableWrapperClasses,
                     shouldFillHeight &&
-                        (virtualizationOptionsProp.getScrollElement ? 'flex-auto' : 'flex-1 min-h-0 overflow-auto'),
+                        (virtualizationOptionsProp.getScrollElement
+                            ? dataTableStyles.externalScroll
+                            : dataTableStyles.fillHeight),
                     className,
-                    shouldFillEmptyState && 'pb-0'
+                    shouldFillEmptyState && dataTableStyles.emptyWrapper
                 )}
                 {...wrapperRest}
                 ref={parentRef}>
                 <div style={heightContainerStyle} className={cn(heightContainerClassName)}>
                     <Table
                         {...restTableProps}
-                        tableContainerClassName={cn(shouldFillEmptyState && 'h-full', tableContainerClassName)}
+                        tableContainerClassName={cn(
+                            shouldFillEmptyState && dataTableStyles.fillContainer,
+                            tableContainerClassName
+                        )}
                         style={{
                             width: tableWidth,
                         }}
                         className={cn(
                             dataTableClasses,
-                            enableResizing && haveLeftPinnedColumns && 'table-fixed',
-                            shouldFillEmptyState && 'h-full after:hidden',
+                            enableResizing && haveLeftPinnedColumns && dataTableStyles.fixedLayout,
+                            shouldFillEmptyState && dataTableStyles.empty,
                             tableClassName
                         )}>
                         <TableHeader
                             {...restHeaderProps}
-                            className={cn(headerClassName, dataTableHeaderClasses, shouldFillEmptyState && 'h-px')}
+                            className={cn(
+                                headerClassName,
+                                dataTableHeaderClasses,
+                                shouldFillEmptyState && dataTableStyles.emptyHeader
+                            )}
                             ref={tableHeaderRef}>
                             {table.getHeaderGroups().map((headerGroup) => {
+                                const lastDataHeader = headerGroup.headers
+                                    .filter((header) => header.column.id !== 'empty-column')
+                                    .pop();
+
                                 return (
                                     <TableRow
                                         key={headerGroup.id}
@@ -541,7 +556,7 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                     enableDragging={enableDragAndDrop && isColDraggingEnabled}
                                                     className={cn(
                                                         dataTableHeadClasses,
-                                                        `${header.column.getIsResizing() ? 'isResizing' : ''}`,
+                                                        `${header.column.getIsResizing() ? dataTableStyles.resizingHead : ''}`,
                                                         propsClassName
                                                     )}
                                                     {...tableHeadRest}
@@ -561,12 +576,13 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                               header.getContext()
                                                           )}
 
-                                                    {header.column.getCanResize() && (
-                                                        <ResizeIndicator
-                                                            header={header as Header<TData, TValue>}
-                                                            onSetExpanded={setExpanded}
-                                                        />
-                                                    )}
+                                                    {header.column.getCanResize() &&
+                                                        !(growLastColumn && header.id === lastDataHeader?.id) && (
+                                                            <ResizeIndicator
+                                                                header={header as Header<TData, TValue>}
+                                                                onSetExpanded={setExpanded}
+                                                            />
+                                                        )}
                                                 </TableHead>
                                             );
 
@@ -638,8 +654,8 @@ const DataTable = <TData, TValue>(props: DataTableProps<TData, TValue>) => {
                                                 {
                                                     // Border is tricky on <tr> https://github.com/TanStack/virtual/issues/620
                                                     [dataTableSelectedRowClasses]: row.getIsSelected(),
-                                                    'cursor-pointer': onRowClick,
-                                                    'cursor-default': !onRowClick,
+                                                    [dataTableStyles.pointerRow]: onRowClick,
+                                                    [dataTableStyles.defaultRow]: !onRowClick,
                                                     [dataTableClickableRowClasses]: onRowClick,
                                                 },
 

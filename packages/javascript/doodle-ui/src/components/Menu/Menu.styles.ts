@@ -49,3 +49,12 @@ export const menuSubContentStyles = cn(
 );
 
 export const menuSeparatorStyles = 'my-1 h-px bg-[color:var(--menu-separator-fill)]';
+
+export const menuStyles = {
+    trigger: 'focus:outline-none focus-visible:focus-ring data-[state=open]:focus-ring',
+    itemIcon: 'mr-2 flex items-center',
+    itemLabel: 'flex-1 leading-4',
+    submenuIcon: 'ml-2',
+    label: 'px-2 py-1.5 text-sm font-semibold',
+    subTriggerLabel: 'flex flex-1 items-center',
+};

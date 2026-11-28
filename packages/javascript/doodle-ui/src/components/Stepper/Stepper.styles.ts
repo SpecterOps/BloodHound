@@ -57,3 +57,11 @@ export const stepperTriggerClasses = cn(
     'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded px-2 py-1 text-left outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-secondary disabled:pointer-events-none disabled:opacity-60',
     'max-sm:group-data-[orientation=horizontal]/stepper-nav:flex-col max-sm:group-data-[orientation=horizontal]/stepper-nav:text-center'
 );
+
+export const stepperStyles = {
+    loadingIcon: 'size-4 text-inherit',
+    basicNav: 'shrink-0',
+    description: 'text-muted leading-4',
+    panel: 'w-full',
+    hiddenContent: 'hidden',
+};

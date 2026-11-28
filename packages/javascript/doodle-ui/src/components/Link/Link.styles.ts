@@ -36,4 +36,5 @@ export const linkVariants = cva('inline-flex items-center rounded-sm focus:outli
     },
 });
 
+export const linkScreenReaderClasses = 'sr-only';
 export const linkExternalIconClasses = 'ml-1.5 shrink-0 text-[0.85em] align-baseline';

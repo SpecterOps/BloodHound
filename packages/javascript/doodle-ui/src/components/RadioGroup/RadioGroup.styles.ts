@@ -36,3 +36,8 @@ export const radioItemControlClasses = cn(
 
 export const radioItemIndicatorClasses =
     'bg-[color:var(--radio-indicator-fill)] w-2 h-2 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
+
+export const radioGroupStyles = {
+    root: 'rounded-md focus-within:focus-ring',
+    row: 'flex',
+};

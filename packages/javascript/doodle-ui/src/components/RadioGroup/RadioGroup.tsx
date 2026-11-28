@@ -18,7 +18,12 @@ import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
 import React from 'react';
 import { Label } from '../Label';
 import { cn } from '../utils';
-import { radioItemControlClasses, radioItemIndicatorClasses, radioItemLabelClasses } from './RadioGroup.styles';
+import {
+    radioGroupStyles,
+    radioItemControlClasses,
+    radioItemIndicatorClasses,
+    radioItemLabelClasses,
+} from './RadioGroup.styles';
 
 interface RadioGroupProps extends React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> {
     row?: boolean;
@@ -37,7 +42,7 @@ const RadioGroup = React.forwardRef<React.ElementRef<typeof RadioGroupPrimitive.
     ({ className, children, row, ...props }, ref) => (
         <RadioGroupPrimitive.Root
             ref={ref}
-            className={cn('rounded-md focus-within:focus-ring', row ? 'flex' : '', className)}
+            className={cn(radioGroupStyles.root, row ? radioGroupStyles.row : '', className)}
             {...props}>
             {children}
         </RadioGroupPrimitive.Root>

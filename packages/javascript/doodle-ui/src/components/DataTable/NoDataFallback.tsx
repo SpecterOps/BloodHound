@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import React from 'react';
 import { TableCell, TableRow } from '../Table';
+import { dataTableStyles } from './DataTable.styles';
 
 interface NoDataFallbackProps {
     fallback: string | React.ReactNode;
@@ -27,7 +28,7 @@ const NoDataFallback: React.FC<NoDataFallbackProps> = ({ fallback, colSpan }) =>
     return (
         <TableRow>
             {/* tabIndex for screen reader support*/}
-            <TableCell colSpan={colSpan} className='h-24 text-center' tabIndex={0}>
+            <TableCell colSpan={colSpan} className={dataTableStyles.noData} tabIndex={0}>
                 No results.
             </TableCell>
         </TableRow>

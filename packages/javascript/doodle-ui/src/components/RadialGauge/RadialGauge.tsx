@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react';
 import { ColorOptions } from '../../types';
 import { cn, getCssColor } from '../utils';
 
-import { radialGaugeIndicatorClasses, radialGaugeTrackClasses } from './RadialGauge.styles';
+import { radialGaugeIndicatorClasses, radialGaugeStyles, radialGaugeTrackClasses } from './RadialGauge.styles';
 import { clampNumber, getCircumference } from './utils';
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
@@ -48,8 +48,11 @@ function RadialGauge(props: Props) {
     const fillColor = getCssColor(color);
 
     return (
-        <div className='relative' style={{ width: containerDimension, height: containerDimension }} {...rest}>
-            <svg className='w-full h-full' viewBox='0 0 100 100'>
+        <div
+            className={radialGaugeStyles.root}
+            style={{ width: containerDimension, height: containerDimension }}
+            {...rest}>
+            <svg className={radialGaugeStyles.svg} viewBox='0 0 100 100'>
                 <circle
                     className={radialGaugeTrackClasses}
                     strokeWidth={strokeWidth}
@@ -61,7 +64,7 @@ function RadialGauge(props: Props) {
                 <circle
                     style={{ color: fillColor }}
                     className={cn(radialGaugeIndicatorClasses, {
-                        'transition-[stroke-dashoffset] duration-300': !hideAnimation,
+                        [radialGaugeStyles.animation]: !hideAnimation,
                     })}
                     strokeWidth={strokeWidth}
                     strokeLinecap='round'

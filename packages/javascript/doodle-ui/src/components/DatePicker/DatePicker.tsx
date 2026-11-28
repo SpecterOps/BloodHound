@@ -23,7 +23,12 @@ import { IconButton } from '../IconButton';
 import { Input, InputProps } from '../Input';
 import { Popover, PopoverContent, PopoverTrigger } from '../Popover';
 import { cn } from '../utils';
-import { datePickerContentClasses, datePickerInputClasses, datePickerTriggerClasses } from './DatePicker.styles';
+import {
+    datePickerContentClasses,
+    datePickerInputClasses,
+    datePickerStyles,
+    datePickerTriggerClasses,
+} from './DatePicker.styles';
 
 interface DatePickerProps extends InputHTMLAttributes<HTMLInputElement>, InputProps {
     calendarProps?: CalendarProps;
@@ -42,7 +47,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
 
         return (
             <Popover onOpenChange={handleOpenChange} open={calendarOpen}>
-                <div className='relative'>
+                <div className={datePickerStyles.wrapper}>
                     {InputElement ? (
                         <InputElement
                             {...props}
@@ -58,7 +63,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                     )}
                     <PopoverTrigger asChild>
                         <IconButton
-                            triggerClassName='absolute right-2 top-1/2 -translate-y-1/2'
+                            triggerClassName={datePickerStyles.iconTrigger}
                             className={datePickerTriggerClasses}
                             aria-label='Choose Date'>
                             <FontAwesomeIcon aria-hidden='true' size='lg' icon={faCalendarDay} />
@@ -66,7 +71,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(
                     </PopoverTrigger>
                 </div>
                 <PopoverContent align='end' alignOffset={-7} className={datePickerContentClasses}>
-                    <Calendar classNames={{ day_selected: 'bg-primary text-neutral-light-1' }} {...calendarProps} />
+                    <Calendar classNames={{ day_selected: datePickerStyles.selectedDay }} {...calendarProps} />
                 </PopoverContent>
             </Popover>
         );

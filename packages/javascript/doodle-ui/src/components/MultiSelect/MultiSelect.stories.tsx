@@ -119,25 +119,6 @@ export const OptionRows: Story = {
     },
 };
 
-export const WithSelectAll: Story = {
-    args: {
-        options: itemOptions,
-        value: [],
-        onValueChange: () => {},
-        placeholder: 'Select Items',
-        selectAllLabel: 'All Items',
-    },
-    render: (args) => {
-        const [value, setValue] = useState<string[]>(args.value ?? []);
-
-        return (
-            <div className='w-60'>
-                <MultiSelect {...args} value={value} onValueChange={setValue} />
-            </div>
-        );
-    },
-};
-
 export const PartialSelection: Story = {
     args: {
         options: itemOptions,
@@ -157,7 +138,7 @@ export const PartialSelection: Story = {
     },
 };
 
-export const AllSelected: Story = {
+export const SelectAll: Story = {
     args: {
         options: itemOptions,
         value: itemOptions.map((option) => option.value),
@@ -229,7 +210,7 @@ export const Disabled: Story = {
 
 export const WithDisabledOption: Story = {
     args: {
-        options: [...itemOptions, { value: 'g', label: 'Menu Item G', disabled: true }],
+        options: [{ value: 'g', label: 'Menu Item Disabled', disabled: true }, ...itemOptions],
         value: [],
         onValueChange: () => {},
         placeholder: 'Select Items',

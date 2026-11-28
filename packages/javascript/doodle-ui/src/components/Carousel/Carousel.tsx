@@ -23,7 +23,12 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../Button';
 import { IconButton } from '../IconButton';
 import { cn } from '../utils';
-import { carouselIndicatorClasses, carouselItemClasses, carouselSelectedIndicatorClasses } from './Carousel.styles';
+import {
+    carouselIndicatorClasses,
+    carouselItemClasses,
+    carouselSelectedIndicatorClasses,
+    carouselStyles,
+} from './Carousel.styles';
 
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
@@ -157,7 +162,7 @@ const Carousel = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
                 <div
                     ref={ref}
                     onKeyDownCapture={handleKeyDown}
-                    className={cn('relative', className)}
+                    className={cn(carouselStyles.root, className)}
                     role='region'
                     aria-roledescription='carousel'
                     {...props}>
@@ -174,10 +179,14 @@ const CarouselContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HT
         const { carouselRef, orientation } = useCarousel();
 
         return (
-            <div ref={carouselRef} className='overflow-hidden'>
+            <div ref={carouselRef} className={carouselStyles.viewport}>
                 <div
                     ref={ref}
-                    className={cn('flex', orientation === 'horizontal' ? '-ml-4' : '-mt-4 flex-col', className)}
+                    className={cn(
+                        carouselStyles.content,
+                        carouselStyles.contentOrientation[orientation ?? 'vertical'],
+                        className
+                    )}
                     {...props}
                 />
             </div>
@@ -195,7 +204,11 @@ const CarouselItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
                 ref={ref}
                 role='group'
                 aria-roledescription='slide'
-                className={cn(carouselItemClasses, orientation === 'horizontal' ? 'pl-4' : 'pt-4', className)}
+                className={cn(
+                    carouselItemClasses,
+                    carouselStyles.itemOrientation[orientation ?? 'vertical'],
+                    className
+                )}
                 {...props}
             />
         );
@@ -220,7 +233,7 @@ const CarouselDots = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
     const { selectedIndex, onDotButtonClick, scrollSnaps } = useCarousel();
 
     return (
-        <div className='flex flex-row'>
+        <div className={carouselStyles.dots}>
             {scrollSnaps.map((_, index) => {
                 const isCurrent = selectedIndex === index;
 

@@ -52,3 +52,8 @@ export const dialogMaxWidthClasses = {
     sm: 'max-w-[600px]',
     xs: 'max-w-[444px]',
 };
+
+export const dialogStyles = {
+    scrollableContent: 'overflow-y-auto',
+    titleLayout: 'flex text-left',
+};

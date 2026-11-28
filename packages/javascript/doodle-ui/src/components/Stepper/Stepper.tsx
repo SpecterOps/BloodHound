@@ -40,6 +40,7 @@ import {
     stepperItemClasses,
     stepperNavClasses,
     stepperSeparatorClasses,
+    stepperStyles,
     stepperTitleClasses,
     stepperTriggerClasses,
 } from './Stepper.styles';
@@ -84,13 +85,13 @@ const BasicStepper = ({
     panelHeader,
     navClassName,
     indicators = {
-        loading: <LoadingSpinner className='size-4 text-inherit' />,
+        loading: <LoadingSpinner className={stepperStyles.loadingIcon} />,
     },
     ...props
 }: BasicStepperProps) => {
     return (
         <Stepper {...props} indicators={indicators} className={cn(basicStepperClasses, className)}>
-            <StepperNav className={cn('shrink-0', navClassName)}>
+            <StepperNav className={cn(stepperStyles.basicNav, navClassName)}>
                 {steps.map((step, index) => (
                     <StepperItem
                         key={step.title}
@@ -405,7 +406,7 @@ function StepperDescription({ children, className, ...props }: ComponentProps<'d
             data-slot='stepper-description'
             variant='subtitle2'
             data-state={state}
-            className={cn('text-muted leading-4', className)}>
+            className={cn(stepperStyles.description, className)}>
             {children}
         </Typography>
     );
@@ -432,7 +433,11 @@ function StepperPanel({ children, className, ...props }: ComponentProps<'div'>) 
     const { activeStep } = useStepper();
 
     return (
-        <div {...props} data-slot='stepper-panel' data-state={activeStep} className={cn('w-full', className)}>
+        <div
+            {...props}
+            data-slot='stepper-panel'
+            data-state={activeStep}
+            className={cn(stepperStyles.panel, className)}>
             {children}
         </div>
     );
@@ -457,7 +462,7 @@ function StepperContent({ value, forceMount, children, className, ...props }: St
             aria-labelledby={`${stepperId}-tab-${value}`}
             data-slot='stepper-content'
             data-state={activeStep}
-            className={cn('w-full', className, !isActive && 'hidden')}
+            className={cn(stepperStyles.panel, className, !isActive && stepperStyles.hiddenContent)}
             hidden={!isActive}>
             {(isActive || forceMount) && children}
         </div>

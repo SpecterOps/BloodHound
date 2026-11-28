@@ -34,3 +34,5 @@ export const tooltipContentWidthClasses = {
     md: 'w-fit max-w-[225px]',
     sm: 'w-fit max-w-[150px]',
 };
+
+export const tooltipPositionerClasses = 'z-[1700]';

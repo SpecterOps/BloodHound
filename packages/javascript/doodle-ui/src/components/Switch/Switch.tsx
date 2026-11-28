@@ -17,7 +17,7 @@ import * as SwitchPrimitives from '@radix-ui/react-switch';
 import * as React from 'react';
 import { forwardRef } from 'react';
 import { cn } from '../utils';
-import { LabelVariants, switchRootStyles, switchThumbStyles, switchWrapperStyles } from './Switch.styles';
+import { LabelVariants, switchRootStyles, switchStyles, switchThumbStyles, switchWrapperStyles } from './Switch.styles';
 
 type SwitchProps = Omit<React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>, 'checked'> & {
     checked: boolean;
@@ -33,13 +33,13 @@ const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, Switch
         const switchId = id ?? generatedId;
 
         return (
-            <div className={cn(switchWrapperStyles, label && 'py-0')}>
+            <div className={cn(switchWrapperStyles, label && switchStyles.labeledWrapper)}>
                 {labelPosition === 'left' && label && (
                     <label
                         data-state={props.checked ? 'checked' : 'unchecked'}
                         className={cn(
                             LabelVariants({ position: 'left', disabled }),
-                            'data-[state=checked]:font-medium',
+                            switchStyles.checkedLabel,
                             labelClassName
                         )}
                         htmlFor={switchId}>
@@ -62,7 +62,7 @@ const Switch = forwardRef<React.ElementRef<typeof SwitchPrimitives.Root>, Switch
                         data-state={props.checked ? 'checked' : 'unchecked'}
                         className={cn(
                             LabelVariants({ position: 'right', disabled }),
-                            'data-[state=checked]:font-medium',
+                            switchStyles.checkedLabel,
                             labelClassName
                         )}
                         htmlFor={switchId}>

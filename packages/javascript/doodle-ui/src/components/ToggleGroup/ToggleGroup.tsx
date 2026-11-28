@@ -18,8 +18,8 @@ import { type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 
 import { ToggleVariants } from '../Toggle';
-import { toggleGroupClasses } from '../Toggle/Toggle.styles';
 import { cn } from '../utils';
+import { toggleGroupClasses } from './ToggleGroup.styles';
 
 const ToggleGroupContext = React.createContext<VariantProps<typeof ToggleVariants>>({
     size: 'sm',
