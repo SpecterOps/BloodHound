@@ -252,8 +252,7 @@ export const formatNumber = (value: number, kind?: EntityPropertyKind, keyprop?:
     //Time of now
     const secondsUpperBound = Math.round(new Date().getTime() / 1000);
 
-    if (value > secondsLowerBound && value < secondsUpperBound) {
-        //Assume this is unix time
+    if (keyprop && DATE_FIELDS.includes(keyprop) && value > secondsLowerBound && value < secondsUpperBound) {
         return DateTime.fromSeconds(value).toFormat(LuxonFormat.DATETIME);
     } else if (value > 0 && value < 1) {
         //Assume this is a percentage
