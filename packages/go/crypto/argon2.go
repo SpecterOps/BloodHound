@@ -18,9 +18,11 @@ package crypto
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -145,16 +147,24 @@ type Argon2Digest struct {
 	Digest          []byte
 }
 
-func (s Argon2Digest) Validate(content string) bool {
-	contentDigest := argon2.IDKey([]byte(content), s.Salt, s.NumIterations, s.MemoryKibibytes, s.NumThreads, Argon2DigestByteLength)
+// validArgon2DigestLength reports whether length falls inside the RFC 9106 §3.1
+// tag length bounds of 4 through 2^32-1 bytes.
+func validArgon2DigestLength(length uint64) bool {
+	return length >= 4 && length <= math.MaxUint32
+}
 
-	for idx := 0; idx < len(contentDigest); idx++ {
-		if s.Digest[idx] != contentDigest[idx] {
-			return false
-		}
+func (s Argon2Digest) Validate(content string) bool {
+	// Reject tag lengths outside the RFC 9106 §3.1 range before converting to
+	// uint32 so the conversion cannot wrap (e.g. 2^32 wraps to zero).
+	if !validArgon2DigestLength(uint64(len(s.Digest))) {
+		return false
 	}
 
-	return true
+	contentDigest := argon2.IDKey([]byte(content), s.Salt, s.NumIterations, s.MemoryKibibytes, s.NumThreads, uint32(len(s.Digest)))
+
+	// Compare digests in constant time so validation timing does not leak how
+	// many leading bytes match a stored digest.
+	return subtle.ConstantTimeCompare(contentDigest, s.Digest) == 1
 }
 
 func (s Argon2Digest) String() string {
