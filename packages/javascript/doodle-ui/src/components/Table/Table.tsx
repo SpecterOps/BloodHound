@@ -16,7 +16,8 @@
 
 import * as React from 'react';
 
-import { useSortable } from '@dnd-kit/sortable';
+import { type DragMoveEvent, useDndContext, useDndMonitor } from '@dnd-kit/core';
+import { hasSortableData, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { faGripVertical } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -40,19 +41,44 @@ import {
     tableRowClasses,
 } from './Table.styles';
 
+type TableDragDelta = { x: number; y: number };
+const TableDragDeltasContext = React.createContext<React.MutableRefObject<Map<string, TableDragDelta>> | null>(null);
+
+const TableDragMonitor = ({ onMove, onReset }: { onMove: (event: DragMoveEvent) => void; onReset: () => void }) => {
+    useDndMonitor({ onDragMove: onMove, onDragEnd: onReset, onDragCancel: onReset });
+    return null;
+};
+
 const Table = React.forwardRef<
     HTMLTableElement,
     React.HTMLAttributes<HTMLTableElement> & { disableDefaultOverflowAuto?: boolean; tableContainerClassName?: string }
->(({ className, disableDefaultOverflowAuto, tableContainerClassName, ...props }, ref) => (
-    <div
-        className={cn(
-            tableContainerClasses,
-            !disableDefaultOverflowAuto && tableContainerOverflowClasses,
-            tableContainerClassName
-        )}>
-        <table ref={ref} className={cn(tableClasses, className)} {...props} />
-    </div>
-));
+>(({ className, disableDefaultOverflowAuto, tableContainerClassName, ...props }, ref) => {
+    const { active } = useDndContext();
+    const dragDeltas = React.useRef(new Map<string, TableDragDelta>());
+
+    const recordDragDelta = ({ active, delta }: DragMoveEvent) => {
+        if (typeof active.id === 'string') {
+            dragDeltas.current.set(active.id, delta);
+        }
+    };
+    const resetDragDeltas = () => dragDeltas.current.clear();
+
+    return (
+        <TableDragDeltasContext.Provider value={dragDeltas}>
+            {hasSortableData(active) && (
+                <TableDragMonitor onMove={recordDragDelta} onReset={resetDragDeltas} />
+            )}
+            <div
+                className={cn(
+                    tableContainerClasses,
+                    !disableDefaultOverflowAuto && tableContainerOverflowClasses,
+                    tableContainerClassName
+                )}>
+                <table ref={ref} className={cn(tableClasses, className)} {...props} />
+            </div>
+        </TableDragDeltasContext.Provider>
+    );
+});
 Table.displayName = 'Table';
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
@@ -138,14 +164,48 @@ interface TableCellProps<TData, TValue> extends React.TdHTMLAttributes<HTMLTable
     enableDragging?: boolean;
 }
 
+// Mounted only during a drag, when a DndContext is present. Plain tables do not
+// require a DndContext.
+const TableCellDragMonitor = ({ onMove }: { onMove: (delta: TableDragDelta) => void }) => {
+    useDndMonitor({
+        onDragMove: ({ delta }) => onMove(delta),
+        onDragEnd: () => onMove({ x: 0, y: 0 }),
+        onDragCancel: () => onMove({ x: 0, y: 0 }),
+    });
+    return null;
+};
+
 const TableCell = React.forwardRef(function TableCell<TData, TValue>(
     { className, cell, enableDragging = true, style: propsStyle, ...props }: TableCellProps<TData, TValue>,
     ref: React.ForwardedRef<HTMLTableCellElement>
 ) {
-    const { isDragging, setNodeRef, transform } = useSortable({
-        id: cell?.column.id ?? '',
-        disabled: !enableDragging || !cell,
-    });
+    const { active, over, activeNodeRect, droppableRects } = useDndContext();
+    const sharedDragDeltas = React.useContext(TableDragDeltasContext);
+    const columnId = cell?.column.id;
+    const items = hasSortableData(active) ? active.data.current.sortable.items : [];
+    const index = cell ? items.indexOf(cell.column.id) : -1;
+    const activeIndex = active ? items.indexOf(active.id) : -1;
+    const overIndex = over ? items.indexOf(over.id) : -1;
+    const isDragging = activeIndex >= 0 && index === activeIndex;
+    const isInDisplacementRange =
+        (activeIndex < overIndex && index > activeIndex && index <= overIndex) ||
+        (activeIndex > overIndex && index >= overIndex && index < activeIndex);
+    const [dragDelta, setDragDelta] = React.useState<TableDragDelta>(
+        () => (columnId ? sharedDragDeltas?.current.get(columnId) : undefined) ?? { x: 0, y: 0 }
+    );
+    // Only headers register sortable nodes. All cells in the active column follow its header.
+    const transform =
+        (enableDragging || isDragging || isInDisplacementRange) && index >= 0 && activeIndex >= 0 && overIndex >= 0
+            ? isDragging
+                ? { ...dragDelta, scaleX: 1, scaleY: 1 }
+                : horizontalListSortingStrategy({
+                      rects: items.map((id) => droppableRects.get(id)!),
+                      activeNodeRect,
+                      activeIndex,
+                      overIndex,
+                      index,
+                  })
+            : null;
     const cellStyle: React.CSSProperties = {
         opacity: isDragging ? 0.8 : 1,
         position: 'relative',
@@ -155,11 +215,11 @@ const TableCell = React.forwardRef(function TableCell<TData, TValue>(
     const leftValue = isDragging && cell?.column.getIsPinned() ? 'initial' : '';
     return (
         <td
-            ref={setNodeRef}
             className={cn(tableCellClasses, className, isDragging ? tableDraggingCellClasses : '')}
             {...props}
             style={{ ...cellStyle, ...propsStyle, zIndex: zIndex, left: leftValue }}>
             <div ref={ref}>{props.children}</div>
+            {isDragging && <TableCellDragMonitor onMove={setDragDelta} />}
         </td>
     );
 }) as (<TData, TValue>(
