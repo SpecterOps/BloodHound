@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, fireEvent, renderHook, waitFor } from '@testing-library/react';
 import { useInfiniteScroll } from './useInfiniteScroll';
 
 const makeScrollElement = ({
@@ -121,5 +121,44 @@ describe('useInfiniteScroll', () => {
         rerender({ loadedCount: 25 });
 
         await waitFor(() => expect(fetchMore).toHaveBeenCalledTimes(1));
+    });
+
+    it('observes an external page container and removes its listener on unmount', async () => {
+        const pageContainer = makeScrollElement({ scrollTop: 0 });
+        const scrollContainerRef = { current: pageContainer };
+        const { fetchMore, unmount } = setup({ scrollContainerRef });
+        expect(fetchMore).not.toHaveBeenCalled();
+        Object.defineProperty(pageContainer, 'scrollTop', { configurable: true, value: 850 });
+        fireEvent.scroll(pageContainer);
+        fireEvent.scroll(pageContainer);
+        expect(fetchMore).toHaveBeenCalledTimes(1);
+        await act(async () => {});
+        unmount();
+        fireEvent.scroll(pageContainer);
+        expect(fetchMore).toHaveBeenCalledTimes(1);
+    });
+
+    it('checks an underfilled external container and respects terminal and fetching states', async () => {
+        const pageContainer = makeScrollElement({ scrollHeight: 50 });
+        const scrollContainerRef = { current: pageContainer };
+        const { fetchMore } = setup({ scrollContainerRef });
+        await waitFor(() => expect(fetchMore).toHaveBeenCalledTimes(1));
+        const blockedFetch = vi.fn().mockResolvedValue(undefined);
+        const { rerender } = renderHook(
+            ({ canFetchMore, isFetching }) =>
+                useInfiniteScroll({
+                    scrollContainerRef,
+                    canFetchMore,
+                    isFetching,
+                    fetchMore: blockedFetch,
+                    loadedCount: 0,
+                }),
+            { initialProps: { canFetchMore: true, isFetching: true } }
+        );
+        fireEvent.scroll(pageContainer);
+        expect(blockedFetch).not.toHaveBeenCalled();
+        rerender({ canFetchMore: false, isFetching: false });
+        fireEvent.scroll(pageContainer);
+        expect(blockedFetch).not.toHaveBeenCalled();
     });
 });
