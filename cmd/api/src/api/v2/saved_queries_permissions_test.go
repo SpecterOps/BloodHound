@@ -491,6 +491,13 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 
 		// User role owned
 		{
+			name:        "User cannot make another user's public query private",
+			user:        userRoleUser,
+			payload:     v2.SavedQueryPermissionRequest{UserIDs: []uuid.UUID{}, Public: false},
+			scope:       database.SavedQueryScopes{Public: true},
+			expectedErr: v2.ErrForbidden,
+		},
+		{
 			name:    "User owned, query shared to self error",
 			comment: "RoleUser cannot share own query to themselves",
 			user:    userRoleUser,
@@ -557,6 +564,13 @@ func TestResources_ShareSavedQueriesPermissions_CanUpdateSavedQueriesPermission(
 			},
 			scope:       database.SavedQueryScopes{Owned: true},
 			expectedErr: v2.ErrInvalidSelfShare,
+		},
+		{
+			name:        "Power User cannot make another user's public query private",
+			user:        powerUser,
+			payload:     v2.SavedQueryPermissionRequest{UserIDs: []uuid.UUID{}, Public: false},
+			scope:       database.SavedQueryScopes{Public: true},
+			expectedErr: v2.ErrForbidden,
 		},
 		{
 			name:    "PowerUser-owned, public query set to private (no shares)",
@@ -1626,7 +1640,7 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		}, nil)
 
 		payload := v2.DeleteSavedQueryPermissionsRequest{
-			UserIds: []uuid.UUID{userId2, userId3},
+			UserIds: []uuid.UUID{userId, userId2, userId3},
 		}
 
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), gomock.Any()).Return(nil)
@@ -1653,7 +1667,7 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		payload := v2.DeleteSavedQueryPermissionsRequest{
-			UserIds: []uuid.UUID{userId2, userId3},
+			UserIds: []uuid.UUID{userId, userId2, userId3},
 		}
 
 		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
@@ -1721,7 +1735,7 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		}, nil)
 		mockDB.EXPECT().DeleteSavedQueryPermissionsForUsers(gomock.Any(), int64(1), []uuid.UUID{userId}).Return(nil)
 
-		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -1749,7 +1763,7 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
 			Shared: false,
 		}, nil)
-		req, err := http.NewRequestWithContext(createContextWithAdminOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		req, err := http.NewRequestWithContext(createContextWithOwnerId(userId), http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
 		require.Nil(t, err)
 
 		req.Header.Set(headers.ContentType.String(), mediatypes.ApplicationJson.String())
@@ -1760,6 +1774,27 @@ func TestResources_DeleteSavedQueryPermissions(t *testing.T) {
 
 		handler.ServeHTTP(response, req)
 		require.Equal(t, http.StatusBadRequest, response.Code)
+	})
+
+	t.Run("recipient cannot revoke another recipient's share", func(t *testing.T) {
+		var (
+			mockDB    = mocks.NewMockDatabase(gomock.NewController(t))
+			resources = v2.Resources{DB: mockDB}
+			payload   = v2.DeleteSavedQueryPermissionsRequest{UserIds: []uuid.UUID{userId, userId2}}
+		)
+
+		mockDB.EXPECT().GetScopeForSavedQuery(gomock.Any(), int64(1), userId).Return(database.SavedQueryScopes{
+			Shared: true,
+		}, nil)
+
+		request := httptest.NewRequest(http.MethodDelete, fmt.Sprintf(endpoint, savedQueryId), must.MarshalJSONReader(payload))
+		request = request.WithContext(createContextWithOwnerId(userId))
+		request = mux.SetURLVars(request, map[string]string{api.URIPathVariableSavedQueryID: savedQueryId})
+		response := httptest.NewRecorder()
+
+		resources.DeleteSavedQueryPermissions(response, request)
+
+		require.Equal(t, http.StatusForbidden, response.Code)
 	})
 
 	t.Run("error checking if query is shared with user", func(t *testing.T) {

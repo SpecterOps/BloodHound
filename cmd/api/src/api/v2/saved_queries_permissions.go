@@ -52,36 +52,33 @@ func CanUpdateSavedQueriesPermission(user model.User, createRequest SavedQueryPe
 		return ErrNotModifiable
 	}
 
-	// Treat Administrator, User, and Power User the same for updating saved query sharing permissions
-	hasPrivilegedRole :=
-		user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) ||
+	var (
+		isAdmin           = user.Roles.Has(model.Role{Name: auth.RoleAdministrator})
+		hasPrivilegedRole = isAdmin ||
 			user.Roles.Has(model.Role{Name: auth.RoleUser}) ||
 			user.Roles.Has(model.Role{Name: auth.RolePowerUser})
+	)
 
 	if hasPrivilegedRole {
 		if createRequest.Public && dbSavedQueryScope.Owned {
 			return nil
-		} else if len(createRequest.UserIDs) == 0 && (dbSavedQueryScope.Owned || dbSavedQueryScope.Public) {
+		} else if len(createRequest.UserIDs) == 0 && (dbSavedQueryScope.Owned || (isAdmin && dbSavedQueryScope.Public)) {
 			return nil
 		} else if len(createRequest.UserIDs) > 0 && !createRequest.Public {
 			if dbSavedQueryScope.Public {
 				return ErrInvalidPublicShare
 			}
 			if dbSavedQueryScope.Owned {
-				for _, sharedUserID := range createRequest.UserIDs {
-					if sharedUserID == user.ID {
-						return ErrInvalidSelfShare
-					}
+				if slices.Contains(createRequest.UserIDs, user.ID) {
+					return ErrInvalidSelfShare
 				}
 				return nil
 			}
 		}
 	} else if dbSavedQueryScope.Owned && !dbSavedQueryScope.Public {
 		if len(createRequest.UserIDs) > 0 && !createRequest.Public {
-			for _, sharedUserID := range createRequest.UserIDs {
-				if sharedUserID == user.ID {
-					return ErrInvalidSelfShare
-				}
+			if slices.Contains(createRequest.UserIDs, user.ID) {
+				return ErrInvalidSelfShare
 			}
 		}
 		return nil
@@ -237,24 +234,19 @@ func (s Resources) DeleteSavedQueryPermissions(response http.ResponseWriter, req
 			return
 		}
 
-		// Check if the user is attempting to unshare a query from themselves
-		if slices.Contains(deleteRequest.UserIds, user.ID) {
+		if !dbSavedQueryScope.Owned && !user.Roles.Has(model.Role{Name: auth.RoleAdministrator}) {
+			// An empty list revokes all shares. A recipient may only revoke their own share.
+			if len(deleteRequest.UserIds) == 0 || slices.ContainsFunc(deleteRequest.UserIds, func(userID uuid.UUID) bool {
+				return userID != user.ID
+			}) {
+				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Query does not belong to the user", request), response)
+				return
+			}
+
 			if !dbSavedQueryScope.Shared {
-				// The user cannot unshare a saved query if a saved query permission does not exist for them. This means a user cannot unshare a query that they don't own, or hasn't been shared with them
 				api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusBadRequest, "User cannot unshare a query from themselves that is not shared to them", request), response)
 				return
 			}
-		} else {
-			// User is attempting to unshare a query from another user
-			isAdmin := user.Roles.Has(model.Role{Name: auth.RoleAdministrator})
-			if !isAdmin {
-				// If a user is not admin, then they need to own the query in order to unshare it
-				if !dbSavedQueryScope.Owned {
-					api.WriteErrorResponse(request.Context(), api.BuildErrorResponse(http.StatusForbidden, "Query does not belong to the user", request), response)
-					return
-				}
-			}
-
 		}
 
 		// Unshare the queries
