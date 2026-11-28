@@ -162,15 +162,3 @@ export const baseAzureHoundEvent: AzureHoundEvent = {
     client_id: '',
     rrule: 'RRULE:FREQ=DAILY;INTERVAL=1',
 };
-
-export interface DataPoint {
-    x: number;
-    y: number;
-    name?: string;
-}
-
-interface Color {
-    color: string;
-}
-
-export type FindingSeverityDataPoint = DataPoint & Color;
