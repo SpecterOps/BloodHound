@@ -466,6 +466,7 @@ go.work*
 # integration tests allure results
 allure-results
 allure-report
+.allure-history
 go-test-results.json
 
 # Playwright generated
